@@ -5,11 +5,24 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "kaa",
+    "scheme": "com.kaa.mobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kaa.mobile",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "This app uses Face ID to securely log you in to your account."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -20,12 +33,28 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.kaa.mobile"
+      "package": "com.kaa.mobile",
+      "permissions": [
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "build": {
+        "babel": {
+          "include": []
+        }
+      },
+      "config": {
+        "notification": {
+          "serviceWorkerPath": "firebase-messaging-sw.js"
+        }
+      }
     },
     "plugins": [
       "expo-router",
@@ -40,11 +69,51 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "kaa-native",
+          "organization": "optiflow-softwares"
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Kaa SaaS to use Face ID to log you in."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#0891b2"
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "requireAuthentication": true
+        }
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "514a30a3-d1a4-486a-92e3-32014b65d708"
+      }
+    },
+    "notification": {
+      "vapidPublicKey": "BE-gudd5MEoeWaUkLS9tX8FHquRJbS4ECF1I2UJBZm7cAh_FGAljiA3MiXrMnniGClws8qnCMQa2v1Q3yAuGQKo"
+    },
+    "owner": "kelvince"
   }
 }
