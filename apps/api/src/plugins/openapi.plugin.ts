@@ -2,8 +2,8 @@ import { openapi } from "@elysiajs/openapi";
 import config from "@kaa/config/api";
 
 const openapiDocs = openapi({
-  path: "/api/docs",
-  specPath: "/api/docs/json",
+  path: "/docs",
+  specPath: "/docs/json",
   documentation: {
     info: {
       title: config.app.name,
@@ -56,18 +56,18 @@ const openapiDocs = openapi({
     version: "latest",
     layout: "modern",
     spec: {
-      url: "/api/docs/json",
+      // url: "/docs/json",
     },
     theme: "bluePlanet",
   },
   exclude: {
     paths: [
-      "/",
+      // "/",
       "/metrics",
       "/health",
       "/ws",
       "/stop",
-      "/api/docs",
+      // "/docs",
     ] as string[],
   },
 });
