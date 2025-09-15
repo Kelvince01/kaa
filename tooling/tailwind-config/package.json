@@ -1,0 +1,17 @@
+{
+  "name": "@kaa/tailwind-config",
+  "private": true,
+  "version": "0.1.0",
+  "main": "./index.js",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "format": "prettier --check \"**/*.{mjs,json}\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "nativewind": "^4.1.23",
+    "react-native-reanimated": "~3.17.4",
+    "tailwindcss": "^3.4.17",
+    "tailwindcss-animate": "^1.0.7"
+  }
+}
