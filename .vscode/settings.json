@@ -1,4 +1,5 @@
 {
+    "editor.defaultFormatter": "biomejs.biome",
     "[javascript]": {
         "editor.defaultFormatter": "biomejs.biome"
     },
@@ -23,6 +24,9 @@
     "[graphql]": {
         "editor.defaultFormatter": "biomejs.biome"
     },
+    "files.associations": {
+        "*.css": "tailwindcss"
+    },
     "typescript.tsdk": "node_modules/typescript/lib",
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
@@ -44,6 +48,7 @@
         "elysiajs",
         "evilmartians",
         "favicons",
+        "favourites",
         "fumadocs",
         "HSTS",
         "iconify",
@@ -57,12 +62,14 @@
         "MAPBOX",
         "mapboxgl",
         "mjml",
+        "MMKV",
         "mpesa",
         "MQTT",
         "nativewind",
         "nosniff",
         "nuqs",
         "Nyumba",
+        "oklch",
         "optiflow",
         "oxlint",
         "papaparse",

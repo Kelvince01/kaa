@@ -90,14 +90,17 @@
   "trustedDependencies": [
     "@evilmartians/lefthook",
     "@kaa/docs",
+    "@sentry/cli",
     "@tailwindcss/oxide",
     "core-js",
     "core-js-pure",
     "esbuild",
+    "msgpackr-extract",
     "protobufjs",
     "sharp"
   ],
   "dependencies": {
-    "elysia-ip": "^1.0.10"
+    "elysia-ip": "^1.0.10",
+    "nativewind": "^4.2.1"
   }
 }
