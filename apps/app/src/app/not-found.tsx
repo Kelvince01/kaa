@@ -15,7 +15,7 @@ export default function NotFoundPage() {
         </p>
         <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
           <Link
-            className="inline-flex items-center justify-center rounded-md bg-primary-600 px-5 py-3 font-medium text-base text-white transition-colors hover:bg-primary-700"
+            className="inline-flex items-center justify-center rounded-md bg-primary/80 px-5 py-3 font-medium text-base text-white transition-colors hover:bg-primary-700"
             href="/"
           >
             <Home className="mr-2" />

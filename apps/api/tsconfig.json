@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "incremental": true,
+    "composite": true,
     "tsBuildInfoFile": "./.tsbuildinfo",
     "target": "ES2022",
     "lib": ["ES2022"],
@@ -14,13 +15,13 @@
     },
     "types": ["bun"],
     "resolveJsonModule": true,
-    "noEmit": true,
+    "noEmit": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "instrument.ts"],
   "exclude": ["node_modules", "dist", "build", "**/*.test.ts", "**/*.spec.ts"]
 }

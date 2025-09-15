@@ -59,6 +59,7 @@
         "mjml",
         "mpesa",
         "MQTT",
+        "nativewind",
         "nosniff",
         "nuqs",
         "Nyumba",
@@ -66,17 +67,21 @@
         "oxlint",
         "papaparse",
         "partialize",
+        "Pressable",
         "QUICKBOOKS",
         "retryable",
         "RTCICE",
         "Runned",
         "shadcn",
         "simplewebauthn",
+        "stardazed",
         "Subsecond",
         "tauri",
         "turbopack",
+        "Turborepo",
         "ultracite",
         "uncolorize",
+        "ungap",
         "unlisten",
         "unmaximize",
         "vaul",
@@ -84,6 +89,7 @@
         "virtuals",
         "webp",
         "webrtc",
-        "webxr"
+        "webxr",
+        "worklets"
     ]
 }

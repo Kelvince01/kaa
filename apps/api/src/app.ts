@@ -7,7 +7,6 @@ import { Elysia } from "elysia";
 import { helmet } from "elysia-helmet";
 import { i18next } from "elysia-i18next";
 import { Logestic } from "logestic";
-
 import { AppRoutes } from "./app.routes";
 import {
   DEFAULT_LOCALE,
