@@ -1,0 +1,11 @@
+<mj-section background-color="{{theme.colors.background}}" padding-top="30px" padding-bottom="30px">
+  <mj-column>
+    <mj-image 
+      width="200px" 
+      src="{{logoUrl}}" 
+      alt="Kaa Logo" 
+      align="center"
+      href="{{appUrl}}"
+    />
+  </mj-column>
+</mj-section>

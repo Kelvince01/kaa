@@ -1,0 +1,138 @@
+<mjml>
+  <mj-head>
+    <mj-title>Reminder: Reference Request for {{tenantName}} - Action Required</mj-title>
+    <mj-preview>Friendly reminder - {{providerName}}, please respond to {{tenantName}}'s reference request</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Helvetica Neue', Arial, sans-serif"></mj-all>
+      <mj-text padding="0px 25px" font-size="16px" line-height="22px" color="#525252"></mj-text>
+      <mj-button background-color="#2563EB" border-radius="6px" font-size="16px" font-weight="600" padding="12px 24px"></mj-button>
+    </mj-attributes>
+    <mj-style inline="inline">
+      .reference-type { background-color: #EFF6FF; color: #1D4ED8; padding: 8px 12px; border-radius: 4px; font-weight: 600; }
+      .urgency-badge { background-color: #FEF3C7; color: #92400E; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+      .expires-soon { background-color: #FEE2E2; color: #991B1B; }
+      .reminder-icon { font-size: 48px; margin: 10px 0; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f8fafc">
+    <!-- Header -->
+    <mj-section background-color="#F59E0B" padding="0">
+      <mj-column>
+        <mj-text align="center" color="#ffffff" font-size="24px" font-weight="bold" padding="30px 20px">
+          ⏰ Reference Reminder
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Main Content -->
+    <mj-section background-color="#ffffff" padding="40px 20px">
+      <mj-column>
+        <!-- Reminder Icon -->
+        <mj-text align="center" class="reminder-icon" padding-bottom="20px">
+          🔔
+        </mj-text>
+
+        <!-- Greeting -->
+        <mj-text font-size="18px" font-weight="600" color="#1f2937" padding-bottom="15px">
+          Hello {{providerName}},
+        </mj-text>
+
+        <!-- Reminder Message -->
+        <mj-text padding-bottom="20px">
+          This is a friendly reminder that <strong>{{tenantName}}</strong> is still waiting for your reference response. 
+          You were listed as a <strong>{{referenceType}}</strong> reference for their rental application at {{propertyName}}.
+        </mj-text>
+
+        <!-- Original Request Date -->
+        <mj-text padding-bottom="20px" color="#6b7280" font-size="14px">
+          Original request sent: {{originalRequestDate}}
+        </mj-text>
+
+        <!-- Urgency Level -->
+        {{#if isUrgent}}
+        <mj-text align="center" padding="20px" background-color="#fef2f2" border-radius="6px">
+          <span class="urgency-badge expires-soon">⚠️ URGENT - Only {{daysUntilExpiry}} {{#ifEquals daysUntilExpiry 1}}day{{else}}days{{/ifEquals}} left to respond!</span>
+        </mj-text>
+        {{else}}
+        <mj-text align="center" padding="15px" background-color="#fef3c7" border-radius="6px">
+          <span class="urgency-badge">⏳ {{daysUntilExpiry}} {{#ifEquals daysUntilExpiry 1}}day{{else}}days{{/ifEquals}} remaining - Please respond soon</span>
+        </mj-text>
+        {{/if}}
+
+        <!-- Reference Summary -->
+        <mj-table padding="25px 0">
+          <tr>
+            <td style="background-color: #f9fafb; padding: 20px; border-radius: 8px; border-left: 4px solid #F59E0B;">
+              <h3 style="color: #374151; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">Reference Summary</h3>
+              <div style="margin-bottom: 8px;"><strong>For:</strong> {{tenantName}} {{#if tenantEmail}}({{tenantEmail}}){{/if}}</div>
+              <div style="margin-bottom: 8px;"><strong>Property:</strong> {{propertyName}}</div>
+              <div style="margin-bottom: 8px;"><strong>Your Role:</strong> <span class="reference-type">{{referenceType}}</span></div>
+              <div style="margin-bottom: 8px;"><strong>Expires:</strong> {{expiresAt}}</div>
+              <div><strong>Attempt:</strong> {{attemptNumber}} of {{maxAttempts}}</div>
+            </td>
+          </tr>
+        </mj-table>
+
+        <!-- Why This Matters -->
+        <mj-text padding-bottom="20px">
+          <strong>Your response matters:</strong> {{tenantName}} has chosen you as someone they trust to provide an honest reference. 
+          Your input helps landlords make fair decisions and supports a transparent rental market.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Action Buttons -->
+    <mj-section background-color="#ffffff" padding="0 20px 40px">
+      <mj-column>
+        <mj-text align="center" font-weight="600" color="#374151" padding-bottom="20px">
+          Please respond now - it only takes a few minutes:
+        </mj-text>
+      </mj-column>
+      
+      <mj-group>
+        <mj-column>
+          <mj-button href="{{respondUrl}}" background-color="#10B981" width="100%">
+            ✅ Provide Reference
+          </mj-button>
+        </mj-column>
+        <mj-column>
+          <mj-button href="{{respondUrl}}" background-color="#EF4444" width="100%">
+            ❌ Decline Request
+          </mj-button>
+        </mj-column>
+      </mj-group>
+    </mj-section>
+
+    <!-- Help Section -->
+    <mj-section background-color="#f9fafb" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="14px" color="#6b7280" align="center">
+          <strong>Need help or have concerns?</strong><br>
+          If you're unable to provide a reference or have questions about this request, 
+          you can still respond by declining with a brief explanation. This helps {{tenantName}} understand the situation.
+        </mj-text>
+
+        <mj-text font-size="14px" color="#6b7280" align="center" padding-top="15px">
+          Contact our support team: <a href="mailto:{{supportEmail}}" style="color: #2563EB;">{{supportEmail}}</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-divider border-color="#e5e7eb" border-width="1px" padding="0 0 20px 0"></mj-divider>
+        
+        <mj-text font-size="12px" color="#9ca3af" align="center">
+          This is reminder {{attemptNumber}} of {{maxAttempts}} for {{tenantName}}'s reference request. 
+          We send these reminders to ensure important requests aren't missed.
+        </mj-text>
+
+        <mj-text font-size="12px" color="#9ca3af" align="center" padding="10px 0 0 0">
+          Kaa Properties - Making rental processes transparent and trustworthy<br>
+          © {{year}} Kaa Properties. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

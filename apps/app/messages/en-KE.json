@@ -1,0 +1,753 @@
+{
+  "metadata": {
+    "default_title": "Kaa - Rental Property Platform",
+    "default_description": "Find your perfect home with Kaa - The premier rental property platform in Kenya",
+    "accounts_title": "Account Management",
+    "accounts_description": "Sign in, register, or manage your Kaa account",
+    "dashboard_title": "Dashboard",
+    "dashboard_description": "Manage your properties and rental activities",
+    "properties_title": "Properties",
+    "properties_description": "Browse, search and discover rental properties",
+    "profile_title": "My Profile",
+    "profile_description": "View and edit your account details",
+    "settings_title": "Account Settings"
+  },
+  "common": {
+    "dashboard": "Dashboard",
+    "properties": "Properties",
+    "profile": "Profile",
+    "logout": "Logout",
+    "account": "Account",
+    "account_settings": "Account Settings",
+    "account_settings_text": "Manage your account settings and preferences",
+    "account_management": "Account Management",
+    "account_management_text": "Sign in, register, or manage your Kaa account",
+    "dashboard_text": "Manage your properties and rental activities",
+    "properties_text": "Browse, search and discover rental properties",
+    "profile_text": "View and edit your account details",
+    "settings_text": "Manage your account settings and preferences",
+    "back_to_dashboard": "Back to Dashboard",
+    "back_to_properties": "Back to Properties",
+    "back_to_profile": "Back to Profile",
+    "back_to_settings": "Back to Settings",
+    "back_to_account_management": "Back to Account Management",
+    "back_to_account_settings": "Back to Account Settings",
+    "back_to_account": "Back to Account",
+    "back_to_accounts": "Back to Accounts",
+    "back_to_accounts_text": "Sign in, register, or manage your Kaa account",
+    "status_text": "Status",
+    "unit_number": "unit_number",
+    "rent": "rent",
+    "bedrooms": "bedrooms",
+    "bathrooms": "bathrooms",
+    "unit": "Unit",
+    "units": "Units",
+    "login": "Login",
+    "register": "Register",
+    "with": "With",
+    "passkey": "Passkey",
+    "test_email": "Test email only",
+    "test_email_text": "Send a test email to yourself",
+    "send": "Send",
+    "send_test_email": "Send test email",
+    "roles": "Roles",
+    "subject": "Subject",
+    "timezone": "Timezone",
+    "default_language": "Default language",
+    "default_language_text": "The language that will be given to new members.",
+    "language": "Language",
+    "languages": "Languages",
+    "website_url": "Website url",
+    "notification_email": "Notification email",
+    "notification_email_text": "Receive announcements and product updates through this email address.",
+    "notifications": "Notifications",
+    "short_name": "Short name",
+    "email": "Email",
+    "email_domains": "Email domains",
+    "email_domains_text": "Enforce members to have an organizational email domain, ie {{domain}}.",
+    "emails": "Emails",
+    "resource_logo": "{resource} logo",
+    "resource_handle": "{resource} handle",
+    "resource_handle_text": "A unique handle for {resource} URL",
+    "newsletter": "Newsletter",
+    "newsletter_text": "Create a newsletter and send it to specific users in the selected organizations.",
+    "create": "Create",
+    "your_role": "Your Role",
+    "subscription": "Subscription",
+    "organizations": "Organizations",
+    "admins": "Admins",
+    "members": "Members",
+    "edit_resource": "Edit {resource}",
+    "general": "General",
+    "edit": "Edit",
+    "file_upload_warning": "Files are currently being stored in IndexedDB for preview purposes. Please enable 'imado' in the config for proper functionality and file handling.",
+    "country": "Country",
+    "county": "County",
+    "constituency": "Constituency",
+    "address": {
+      "line1": "Address Line 1",
+      "line2": "Address Line 2",
+      "town": "Town",
+      "postal_code": "Postal Code"
+    },
+    "save_changes": "Save changes",
+    "title": "Title",
+    "description": "Description",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "skip": "Skip",
+    "previous": "Previous",
+    "create_resource": "Create {resource}",
+    "skip_org_creation": {
+      "text": "You don't have any organizations yet. You can create one later."
+    },
+    "organization": "Organization",
+    "explain": {
+      "invite_email": {
+        "text": "Invite members by entering their email addresses"
+      },
+      "invite_search": {
+        "text": "Invite members by searching for users which are already in the system"
+      }
+    },
+    "invite_by_email": "Invite by email",
+    "invite_by_name": "Invite by name",
+    "invite_members_search": {
+      "text": "Invite members by searching for users which are already in the system"
+    },
+    "search_users": "Search users",
+    "users": "Users",
+    "settings": "Settings",
+    "cover": "Cover",
+    "invalid": {
+      "email": "Invalid email address",
+      "min_items": "At least {items_count} {item} is required"
+    },
+    "add_email": "Add email",
+    "remove_resource": "Remove {resource}",
+    "remove_members": "Are you sure you want to remove {emails} from {entity}?",
+    "remove_members_description": "This action cannot be undone.",
+    "name": "Name",
+    "last_seen_at": "Last Seen At",
+    "invite_users": {
+      "text": "Invite users"
+    },
+    "invites": "Invites",
+    "pending": "Pending",
+    "pending_invitations": "Pending Invitations",
+    "pending_invitations_text": "View and manage pending invitations for {entity}",
+    "role": "Role",
+    "expires_at": "Expires At",
+    "invited_at": "Invited At",
+    "invited_by": "Invited By",
+    "all": "All",
+    "revert": "Revert",
+    "revert_handle": "Revert to original slug",
+    "member": "Member",
+    "user": "User",
+    "tenant": "Tenant",
+    "landlord": "Landlord",
+    "agent": "Agent",
+    "select_resource": "Select {resource}",
+    "select": "Select",
+    "search": "Search",
+    "clear_all": "Clear all",
+    "upload": "Upload",
+    "upload_item": "Upload {item}",
+    "upload_img_max_10mb": {
+      "text": "Max 10MB"
+    },
+    "profile_picture": "Profile Picture",
+    "unsaved_changes": "Unsaved changes",
+    "viewing": "Viewing",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "success": {
+      "signed_out": "Signed out successfully",
+      "user_invited": "User invited successfully",
+      "delete_resources": "Deleted {resources} successfully",
+      "update_item": "Updated {item} successfully",
+      "upload_cover": "Cover uploaded successfully",
+      "update_resource": "Updated { resource } successfully",
+      "create_resource": "Created { resource } successfully",
+      "role_updated": "Your role has been updated.",
+      "test_email": "Test email has been sent to yourself",
+      "create_newsletter": "Newsletter has been sent",
+      "passkey_added": "Passkey created and added successfully.",
+      "passkey_removed": "Passkey removed.",
+      "delete_members": "Delete members"
+    },
+    "error": {
+      "signed_out_failed": "Failed to sign out"
+    },
+    "confirm": {
+      "delete_resources": "Are you sure you want to delete {resources}?",
+      "remove_members": "Are you sure you want to remove {emails} from {entity}?",
+      "remove_members_description": "This action cannot be undone."
+    },
+    "bookings": "Bookings",
+    "focus_view": "Focus view",
+    "leave_focus_view": "Leave focus view",
+    "entered_focus": {
+      "text": "Entered focus view"
+    },
+    "left_focus": {
+      "text": "Left focus view"
+    },
+    "invite": "Invite",
+    "remove": "Remove",
+    "notes": "Notes",
+    "booking_status": "Booking Status",
+    "request_type": "Request Type",
+    "message": "Message",
+    "created_at": "Created At",
+    "experiment_notice": {
+      "text": "This is a pre-release version of the app. Please report any issues you encounter."
+    },
+    "placeholder": {
+      "search": "Search",
+      "email_domains": "Enter email domains (e.g. @gmail.com, @yahoo.com)",
+      "select_country": "Select country",
+      "search_country": "Search country",
+      "select_county": "Select county",
+      "search_county": "Search county",
+      "select_constituency": "Select constituency",
+      "search_constituency": "Search constituency",
+      "select_sub_county": "Select sub-county",
+      "search_sub_county": "Search sub-county",
+      "select_language": "Select language",
+      "select_languages": "Select languages",
+      "select_role": "Select role",
+      "select_timezone": "Select timezone",
+      "search_timezone": "Search timezone",
+      "type_name": "Type name",
+      "your_email": "Your email",
+      "subject": "Type subject",
+      "select_county_first": "Please select a county first",
+      "no_constituencies": "No constituencies found"
+    },
+    "filter": "Filter",
+    "clear": "Clear",
+    "found": "found",
+    "rows_per_page": "Rows per page",
+    "page_of_pages": "Page {page} of {pages} ({count})",
+    "page": "Page {page}",
+    "previous_page": "Previous page",
+    "next_page": "Next page",
+    "no_resource_found": "No {resource} found",
+    "results": "Results",
+    "no_resource_yet": "No {resource} yet",
+    "columns_view": "Column view",
+    "view": "View",
+    "export_pdf_csv": "Export PDF/CSV",
+    "export": "Export",
+    "max_1k_rows": "Max 1k rows",
+    "selected": "Selected",
+    "no_selection": "None selected",
+    "continue": "Continue",
+    "status_page": "Status Page",
+    "offline": {
+      "title": "Offline",
+      "load_more": "Can't load more while offline",
+      "text": "Connection lost. Limited functionality available.",
+      "text_with_info": "Connection lost. Limited functionality available. Data entered in forms will be saved."
+    },
+    "offline_access": {
+      "title": "Offline access",
+      "offline": "Connection lost. <site_anchor>Continue</site_anchor> in offline mode.",
+      "text": "Enable offline access so you can safely work on your content when internet is down. Changes will be synced as you get back online!",
+      "off_text": "{{appName}} cleared offline cache and stopped syncing.",
+      "on_text": "{{appName}} keeps your content synced so you can work offline."
+    },
+    "action": {
+      "offline": {
+        "text": "Action disabled during offline mode."
+      }
+    },
+    "maintenance_mode": {
+      "title": "Maintenance mode",
+      "text": "The site is currently under maintenance. Please check back later."
+    },
+    "auth_unavailable": {
+      "title": "Authentication unavailable",
+      "text": "The site is currently under maintenance. Please check back later."
+    },
+    "navigation": {
+      "home": "Home",
+      "dashboard": "Dashboard",
+      "properties": "Properties",
+      "favorites": "Favorites",
+      "messages": "Messages",
+      "notifications": "Notifications",
+      "profile": "Profile",
+      "settings": "Settings",
+      "help": "Help & Support",
+      "logout": "Logout"
+    },
+    "buttons": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirm": "Confirm",
+      "apply": "Apply",
+      "reset": "Reset",
+      "back": "Back",
+      "next": "Next",
+      "previous": "Previous",
+      "loading": "Loading...",
+      "search": "Search",
+      "filter": "Filter",
+      "sort": "Sort",
+      "view": "View Details",
+      "add": "Add New"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "pending": "Pending",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "rejected": "Rejected",
+      "approved": "Approved",
+      "expired": "Expired"
+    },
+    "errors": {
+      "general": "Something went wrong. Please try again.",
+      "network": "Network error. Please check your connection.",
+      "not_found": "The page you are looking for does not exist.",
+      "unauthorized": "You must be logged in to access this page.",
+      "forbidden": "You don't have permission to access this page.",
+      "validation": "Please correct the errors in the form."
+    }
+  },
+  "about": {
+    "prerelease": "Pre-release"
+  },
+  "auth": {
+    "metadata": {
+      "accounts_title": "Account Management",
+      "accounts_description": "Sign in, register, or manage your Kaa account",
+      "login_title": "Sign In",
+      "login_description": "Sign in to your Kaa account",
+      "register_title": "Create Account",
+      "register_description": "Join Kaa and discover rental properties across Kenya",
+      "verify_email_title": "Verify Email",
+      "verify_email_description": "Verify your email address to complete your registration",
+      "two_factor_title": "Two-Factor Authentication",
+      "two_factor_description": "Verify your identity with two-factor authentication",
+      "recovery_title": "Recovery Code",
+      "recovery_description": "Use a recovery code to access your account",
+      "forgot_password_title": "Forgot Password",
+      "forgot_password_description": "Reset your password to regain access to your account",
+      "reset_password_title": "Reset Password",
+      "reset_password_description": "Create a new password for your account"
+    },
+    "common": {
+      "back_to_login": "Back to login",
+      "error": "An error occurred",
+      "loading": "Loading...",
+      "verifying": "Verifying..."
+    },
+    "login": {
+      "title": "Sign in",
+      "create_account": "Or create a new account",
+      "create_account_link": "Create an account",
+      "email_label": "Email",
+      "email_description": "Your registered email address",
+      "password_label": "Password",
+      "remember_me": "Remember me",
+      "forgot_password": "Forgot your password?",
+      "submit": "Sign in",
+      "signing_in": "Signing in...",
+      "success": "Login successful!",
+      "failed": "Login failed",
+      "continue_with": "Or continue with",
+      "google": "Sign in with Google",
+      "microsoft": "Sign in with Microsoft",
+      "unverified_email": "Please verify your email before logging in",
+      "unauthorized": "Unauthorized",
+      "rate_limit_exceeded": "Rate limit exceeded",
+      "login_failed": "Login failed"
+    },
+    "register": {
+      "title": "Create an account",
+      "already_have_account": "Already have an account?",
+      "sign_in": "Sign in",
+      "email_label": "Email",
+      "password_label": "Password",
+      "password_strength": "Password strength",
+      "password_strength_weak": "Weak",
+      "password_strength_medium": "Medium",
+      "password_strength_strong": "Strong",
+      "password_strength_very_strong": "Very strong",
+      "password_confirmation_label": "Confirm Password",
+      "first_name_label": "First Name",
+      "last_name_label": "Last Name",
+      "phone_label": "Phone Number",
+      "role_label": "I am a",
+      "tenant": "Tenant",
+      "tenant_description": "Looking for a place to rent",
+      "landlord": "Landlord",
+      "landlord_description": "Have properties to rent out",
+      "agent": "Agent",
+      "terms": "I agree to the",
+      "terms_link": "Terms of Service",
+      "and": "and",
+      "privacy_policy": "Privacy Policy",
+      "submit": "Create Account",
+      "creating": "Creating your account...",
+      "success": "Your account has been successfully created! Please verify your email",
+      "failed": "Failed to create account",
+      "password_requirements": "Your password must have:",
+      "password_requirement_minLength": "At least 8 characters",
+      "password_requirement_hasUppercase": "At least one uppercase letter (A-Z)",
+      "password_requirement_hasLowercase": "At least one lowercase letter (a-z)",
+      "password_requirement_hasNumber": "At least one number (0-9)",
+      "password_requirement_hasSpecial": "At least one special character (!@#$...)"
+    },
+    "verify_email": {
+      "title": "Verify Your Email",
+      "description": "We've sent a verification email to <email>{email}</email>. Please check your inbox and click the verification link.",
+      "check_spam": "If you don't see the email, please check your spam folder or request a new verification link.",
+      "resend_button": "Resend Verification Email",
+      "email_required": "Email is required",
+      "sending": "Sending...",
+      "resend_success": "Verification email has been resent. Please check your inbox",
+      "verification_progress": "Verifying your email address...",
+      "verification_success": "Your email has been successfully verified! Redirecting to login..."
+    },
+    "two_factor": {
+      "title": "Two-Factor Authentication",
+      "description": "Please enter the verification code from your authenticator app.",
+      "code_label": "Verification Code",
+      "submit": "Verify",
+      "use_recovery": "Use recovery code instead",
+      "success": "Authentication successful!"
+    },
+    "recovery_code": {
+      "title": "Recovery Code",
+      "description": "Enter a recovery code to access your account.",
+      "code_label": "Recovery Code",
+      "submit": "Verify",
+      "use_authenticator": "Use authenticator app instead"
+    },
+    "forgot_password": {
+      "title": "Forgot Password",
+      "description": "Enter your email address and we'll send you a link to reset your password.",
+      "email_label": "Email",
+      "submit": "Send Reset Link",
+      "sending": "Sending...",
+      "success": "If an account with that email exists, we've sent password reset instructions to your email.",
+      "failed": "Failed to request password reset. Please try again.",
+      "back_to_login": "Back to login",
+      "send_reset_link": "Send Reset Link",
+      "email_placeholder": "Enter your email"
+    },
+    "reset_password": {
+      "title": "Reset Password",
+      "description": "Enter your new password below.",
+      "password_label": "New Password",
+      "confirm_password_label": "Confirm New Password",
+      "submit": "Reset Password",
+      "resetting": "Resetting...",
+      "success": "Your password has been reset successfully. You can now log in with your new password."
+    },
+    "oauth": {
+      "no_token": "No authentication token received",
+      "auth_failed": "Authentication failed. Please try again.",
+      "error_title": "Authentication Error",
+      "return_to_login": "Return to Login",
+      "completing_auth": "Completing Authentication",
+      "please_wait": "Please wait while we log you in...",
+      "success": "Authentication successful"
+    },
+    "email": {
+      "required": "Email is required"
+    }
+  },
+  "2fa": {
+    "setup_success": "Two-factor authentication has been successfully enabled!",
+    "verification_success": "Two-factor authentication has been successfully verified!",
+    "disabled_success": "Two-factor authentication has been successfully disabled!",
+    "backup_codes_regenerated": "Backup codes have been successfully regenerated!",
+    "invalid_2fa_token": "Invalid two-factor authentication token",
+    "invalid_backup_code": "Invalid backup code",
+    "failed_to_setup_2fa": "Failed to enable two-factor authentication",
+    "failed_to_verify_2fa": "Failed to verify two-factor authentication",
+    "failed_to_disable_2fa": "Failed to disable two-factor authentication",
+    "failed_to_regenerate_backup_codes": "Failed to regenerate backup codes",
+    "failed_to_load_2fa_status": "Failed to load two-factor authentication status"
+  },
+  "payments": {
+    "title": "Payments",
+    "successMessage": "Payment successful!",
+    "pendingMessage": "Payment pending...",
+    "failureMessage": "Payment failed",
+    "mpesaSupport": "For support, contact support@kaa.co.ke",
+    "paymentTimeout": "Payment timed out. Please try again.",
+    "paymentError": "Payment failed. Please try again.",
+    "paymentSuccess": "Payment successful!",
+    "paymentPending": "Payment pending...",
+    "paymentFailed": "Payment failed.",
+    "phoneNumber": "Phone Number",
+    "phoneNumberDescription": "Enter your phone number to receive payment instructions",
+    "amount": "Amount",
+    "amountDescription": "Enter the amount you want to pay",
+    "paymentMethod": "Payment Method",
+    "paymentMethodDescription": "Select the payment method you want to use",
+    "paymentMethodMpesa": "M-Pesa",
+    "processing": "Processing...",
+    "payNow": "Pay Now",
+    "makePayment": "Make Payment",
+    "mpesaDescription": "Pay using your M-Pesa account",
+    "stripeDescription": "Pay using your card",
+    "paymentMethodStripe": "Card"
+  },
+  "dashboard": {
+    "overview": {
+      "title": "Dashboard",
+      "welcome": "Welcome back, {name}",
+      "summary": "Here's a summary of your rental activity",
+      "properties": {
+        "title": "Properties",
+        "total": "Total Properties",
+        "available": "Available",
+        "unavailable": "Unavailable",
+        "pending": "Pending Approval"
+      },
+      "applications": {
+        "title": "Applications",
+        "new": "New",
+        "processing": "Processing",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "payments": {
+        "title": "Payments",
+        "due": "Due",
+        "overdue": "Overdue",
+        "paid": "Paid",
+        "pending": "Pending"
+      },
+      "recent_activity": "Recent Activity",
+      "no_activity": "No recent activity",
+      "view_all": "View All"
+    },
+    "properties": {
+      "title": "My Properties",
+      "add_new": "Add New Property",
+      "empty_state": "You don't have any properties yet.",
+      "filters": {
+        "all": "All Properties",
+        "active": "Active Listings",
+        "pending": "Pending Approval",
+        "inactive": "Inactive Listings",
+        "rented": "Rented Properties"
+      },
+      "sort": {
+        "newest": "Newest First",
+        "oldest": "Oldest First",
+        "price_high": "Price: High to Low",
+        "price_low": "Price: Low to High"
+      },
+      "property_card": {
+        "edit": "Edit Property",
+        "view": "View Details",
+        "delete": "Delete Property",
+        "status": "Status: {status}",
+        "availability": "Available: {status}",
+        "views": "{count} views",
+        "inquiries": "{count} inquiries",
+        "price": "KES {amount} / month"
+      }
+    }
+  },
+  "admin": {
+    "settings": {
+      "title": "Settings",
+      "general": "General",
+      "payments": "Payments",
+      "notifications": "Notifications",
+      "mpesa": {
+        "title": "M-Pesa Settings",
+        "consumerKey": "Consumer Key",
+        "consumerSecret": "Consumer Secret",
+        "shortcode": "Shortcode",
+        "passkey": "Passkey"
+      }
+    }
+  },
+  "profile": {
+    "title": "My Profile",
+    "personal_info": {
+      "title": "Personal Information",
+      "first_name": "First Name",
+      "last_name": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "date_of_birth": "Date of Birth",
+      "id_number": "ID Number",
+      "bio": "About Me"
+    },
+    "address": {
+      "title": "Address",
+      "street": "Street Address",
+      "city": "City",
+      "state": "County/State",
+      "zip": "Postal Code",
+      "country": "Country"
+    },
+    "preferences": {
+      "title": "Preferences",
+      "email_notifications": "Email Notifications",
+      "sms_notifications": "SMS Notifications",
+      "push_notifications": "Push Notifications",
+      "language": "Language",
+      "currency": "Currency"
+    },
+    "account": {
+      "title": "Account Settings",
+      "change_password": "Change Password",
+      "two_factor": "Two-Factor Authentication",
+      "delete_account": "Delete Account",
+      "download_data": "Download My Data"
+    },
+    "messages": {
+      "saved": "Profile updated successfully",
+      "error": "Failed to update profile"
+    }
+  },
+  "properties": {
+    "new": {
+      "rentAmount": "Rent Amount",
+      "securityDeposit": "Security Deposit",
+      "general": "General Information",
+      "location": "Location",
+      "details": "Property Details",
+      "pricing": "Pricing & Availability",
+      "media": "Media",
+      "amenities": "Amenities",
+      "features": "Features",
+      "description": "Description",
+      "rules": "Rules",
+      "contact": "Contact Information",
+      "publish": "Publish Property",
+      "start": {
+        "title": "Welcome to {appName}",
+        "description": "Let's get you started with your property listing",
+        "button_text": "Get Started"
+      },
+      "completed": {
+        "title": "Property Created",
+        "description": "Your property has been created successfully. You can now start listing it on the platform."
+      }
+    },
+    "listing": {
+      "title": "Properties",
+      "results_count": "{count} properties found",
+      "no_results": "No properties found matching your criteria",
+      "filter_title": "Filter Properties",
+      "search_placeholder": "Search by location or property name"
+    },
+    "filters": {
+      "property_type": "Property Type",
+      "price_range": "Price Range",
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
+      "furnishing": "Furnishing",
+      "amenities": "Amenities",
+      "pet_policy": "Pet Policy",
+      "available_date": "Available From",
+      "clear_all": "Clear All Filters",
+      "apply_filters": "Apply Filters"
+    },
+    "detail": {
+      "overview": "Overview",
+      "features": "Features",
+      "location": "Location",
+      "gallery": "Gallery",
+      "floor_plan": "Floor Plan",
+      "contact": "Contact Landlord",
+      "apply": "Apply Now",
+      "save": "Save Property",
+      "share": "Share",
+      "report": "Report Listing"
+    },
+    "units": {
+      "title": "Units",
+      "add_new": "Add New Unit",
+      "empty_state": "You don't have any units yet.",
+      "filters": {},
+      "status": {
+        "available": "Available",
+        "occupied": "Occupied",
+        "maintenance": "Maintenance",
+        "reserved": "Reserved",
+        "unavailable": "Unavailable"
+      },
+      "unit_number": "Unit Number",
+      "unit_type": "Unit Type",
+      "rent_amount": "Rent Amount",
+      "security_deposit": "Security Deposit",
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
+      "rent_due_day": "Rent Due Day",
+      "size": "Size",
+      "size_description": "The size of the unit in square meters",
+      "status_text": "Status",
+      "features": "Features",
+      "features_description": "The features of the unit",
+      "is_active_description": "Whether the unit is active or not",
+      "is_active": "Is Active",
+      "floor": "Floor",
+      "notes": "Notes",
+      "create_success": "Unit created successfully",
+      "update_success": "Unit updated successfully",
+      "error": "Failed to create unit",
+      "error_update": "Failed to update unit",
+      "saving": "Saving...",
+      "saving_success": "Unit saved successfully",
+      "saving_error": "Failed to save unit",
+      "update": "Update",
+      "create": "Create",
+      "types": {
+        "studio": "Studio",
+        "1br": "1 Bedroom",
+        "2br": "2 Bedroom",
+        "3br": "3 Bedroom",
+        "commercial": "Commercial",
+        "other": "Other"
+      }
+    }
+  },
+  "danger_zone": {
+    "dialog": {
+      "title": "Danger Zone",
+      "description": "This action is irreversible and will delete the unit permanently.",
+      "placeholder": "Type DELETE to confirm",
+      "confirm": "Delete Unit"
+    }
+  },
+  "errors": {
+    "error": "Error",
+    "image_upload_failed": "Failed to upload image",
+    "no_user_found": "User not found",
+    "request_failed": "Request failed",
+    "general": "Something went wrong. Please try again.",
+    "network_error": "Network error. Please check your connection.",
+    "bad_request_action": "Bad request",
+    "unauthorized_action": "Unauthorized",
+    "forbidden_action": "Forbidden",
+    "not_found": "Not found",
+    "too_many_requests": "Too many requests",
+    "no_selected_rows": "Export cannot proceed as no rows are selected.",
+    "load_more_failed": "Failed to load more data. Please try again.",
+    "slug_exists": "Slug already exists",
+    "passkey_add_failed": "Registering passkey failed. Try again later.",
+    "passkey_failed": "Passkey verification failed",
+    "passkey_failed_text": "Passkey verification failed. Please try again or use another method.",
+    "passkey_remove_failed": "Removing passkey failed. Try again later.",
+    "passkey_sign_in": "Passkey verification failed."
+  }
+}

@@ -1,0 +1,87 @@
+{
+    "[javascript]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[css]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[graphql]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "emmet.showExpandedAbbreviation": "never",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.biome": "explicit",
+        "source.organizeImports.biome": "explicit"
+    },
+    "cSpell.words": [
+        "africas",
+        "autotable",
+        "bullmq",
+        "bunx",
+        "cmdk",
+        "cmyr",
+        "contenteditable",
+        "contentlayer",
+        "elysia",
+        "elysiajs",
+        "evilmartians",
+        "favicons",
+        "fumadocs",
+        "HSTS",
+        "iconify",
+        "intellectronica",
+        "IOTP",
+        "jspdf",
+        "keyval",
+        "Logestic",
+        "luxon",
+        "MAPBOX",
+        "mapboxgl",
+        "mjml",
+        "mpesa",
+        "MQTT",
+        "nosniff",
+        "nuqs",
+        "Nyumba",
+        "oxlint",
+        "papaparse",
+        "partialize",
+        "QUICKBOOKS",
+        "retryable",
+        "RTCICE",
+        "Runned",
+        "shadcn",
+        "simplewebauthn",
+        "Subsecond",
+        "tauri",
+        "turbopack",
+        "ultracite",
+        "uncolorize",
+        "unlisten",
+        "unmaximize",
+        "vaul",
+        "virtua",
+        "virtuals",
+        "webp",
+        "webrtc",
+        "webxr"
+    ]
+}

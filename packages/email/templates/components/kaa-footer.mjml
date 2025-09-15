@@ -1,0 +1,40 @@
+<mj-section background-color="{{theme.colors.background}}" padding="{{theme.spacing.medium}}">
+  <mj-column>
+    <mj-text 
+      font-size="12px" 
+      color="{{theme.colors.muted}}" 
+      align="center"
+      line-height="18px"
+    >
+      If you have any questions, please contact us at 
+      <a href="mailto:{{supportEmail}}" style="color: {{theme.colors.primary}}; text-decoration: none;">
+        {{supportEmail}}
+      </a>
+    </mj-text>
+
+    <mj-text 
+      font-size="12px" 
+      color="{{theme.colors.muted}}" 
+      align="center"
+      padding-top="10px"
+      line-height="18px"
+    >
+      &copy; {{year}} Kaa. All rights reserved.<br>
+      Nairobi, Kenya | <a href="{{appUrl}}/privacy" style="color: {{theme.colors.primary}}; text-decoration: none;">Privacy Policy</a> | 
+      <a href="{{appUrl}}/terms" style="color: {{theme.colors.primary}}; text-decoration: none;">Terms of Service</a>
+    </mj-text>
+
+    <mj-text 
+      font-size="10px" 
+      color="{{theme.colors.muted}}" 
+      align="center"
+      padding-top="10px"
+    >
+      You received this email because you have an account with Kaa.<br>
+      To stop receiving these emails, 
+      <a href="{{appUrl}}/unsubscribe?email={{email}}" style="color: {{theme.colors.primary}}; text-decoration: none;">
+        unsubscribe here
+      </a>.
+    </mj-text>
+  </mj-column>
+</mj-section>

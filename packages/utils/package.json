@@ -1,0 +1,28 @@
+{
+  "name": "@kaa/utils",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "bullmq": "^5.58.5",
+    "chalk": "^5.6.2",
+    "elysia": "latest",
+    "http-status-codes": "^2.3.0",
+    "redis": "^5.8.2",
+    "typescript": "^5.9.2",
+    "ua-parser-js": "^2.0.5",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "@kaa/tsconfig": "workspace:*",
+    "@types/bun": "^1.2.21",
+    "typescript": "^5.9.2"
+  }
+}

@@ -1,0 +1,88 @@
+<mjml>
+  <mj-head>
+    <mj-title>Booking Status Update</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" color="#333333" line-height="24px" />
+      <mj-section padding="20px" />
+    </mj-attributes>
+    <mj-style>
+      a {
+        color: #0066cc;
+        text-decoration: none;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f5f5f5">
+    <mj-section padding-top="30px" padding-bottom="30px">
+      <mj-column>
+        <mj-image width="200px" src="{{logoUrl}}" alt="Kaa Logo" />
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#ffffff" border-radius="5px">
+      <mj-column>
+        <mj-text font-size="24px" font-weight="bold" align="center" color="{{statusColor}}"> Booking {{status}} </mj-text>
+
+        <mj-text padding-top="20px"> Hello {{tenantName}}, </mj-text>
+
+        <mj-text> Your booking request for "<strong>{{propertyTitle}}</strong>" has been <strong>{{status}}</strong>. </mj-text>
+
+        {{#if isRejected}}
+          <mj-text padding-top="10px" color="#D32F2F"> <strong>Reason:</strong> {{rejectionReason}} </mj-text>
+        {{/if}}
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#f8f9fa" border-radius="5px" padding="15px">
+      <mj-column>
+        <mj-text font-size="18px" font-weight="bold" color="#4CAF50"> Booking Details: </mj-text>
+
+        <mj-table padding-top="10px">
+          <tr>
+            <td style="padding: 5px 0; width: 40%"><strong>Property:</strong></td>
+            <td style="padding: 5px 0">{{propertyTitle}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0"><strong>Start Date:</strong></td>
+            <td style="padding: 5px 0">{{startDate}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0"><strong>End Date:</strong></td>
+            <td style="padding: 5px 0">{{endDate}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0"><strong>Total Amount:</strong></td>
+            <td style="padding: 5px 0">KES {{totalAmount}}</td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column>
+
+        {{#if isApproved}}
+          <mj-text padding-top="20px"> Please proceed with the payment to confirm your booking. </mj-text>
+
+          <mj-button background-color="#4CAF50" color="white" border-radius="4px" font-size="16px" font-weight="bold" href="{{paymentUrl}}" width="300px"> Proceed to Payment </mj-button>
+        {{/if}}
+
+        <mj-text padding-top="20px"> Thank you for using our platform. </mj-text>
+
+        <mj-text padding-top="20px">
+          Best regards,<br />
+          The Kaa Team
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column>
+        <mj-text font-size="12px" color="#999999" align="center"> If you have any questions, please contact us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a> </mj-text>
+
+        <mj-text font-size="12px" color="#999999" align="center"> &copy; {{year}} Kaa. All rights reserved. </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

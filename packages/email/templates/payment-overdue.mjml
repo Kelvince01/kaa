@@ -1,0 +1,72 @@
+<mjml>
+  <mj-head>
+    <mj-title>Overdue Payment Notice</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" color="#333333" line-height="24px" />
+      <mj-section padding="20px" />
+    </mj-attributes>
+    <mj-style>
+      a {
+        color: #0066cc;
+        text-decoration: none;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f5f5f5">
+    <mj-section padding-top="30px" padding-bottom="30px">
+      <mj-column>
+        <mj-image width="200px" src="{{logoUrl}}" alt="Kaa Logo" />
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#ffffff" border-radius="5px">
+      <mj-column>
+        <mj-text font-size="24px" font-weight="bold" align="center" color="#dc2626">
+          Overdue Payment Notice
+        </mj-text>
+        
+        <mj-text padding-top="20px">
+          Dear {{tenantName}},
+        </mj-text>
+        
+        <mj-text>
+          Our records indicate that your rent payment of <strong>KES {{amount}}</strong> for {{unitNumber}} at {{propertyName}} was due on {{dueDate}} and is now {{daysOverdue}} days overdue.
+        </mj-text>
+        
+        <mj-text>
+          Please make the payment as soon as possible to avoid any late fees or penalties.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column>
+        <mj-button background-color="#0891b2" color="white" border-radius="5px" font-size="16px" font-weight="bold" href="{{paymentLink}}" width="300px">
+          Pay Now
+        </mj-button>
+        
+        <mj-text>
+          If you are experiencing any difficulties, please contact us immediately to discuss payment arrangements.
+        </mj-text>
+        
+        <mj-text padding-top="20px">
+          Best regards,<br />
+          Kenya Rental System
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column>
+        <mj-text font-size="12px" color="#999999" align="center">
+          If you have any questions, please contact us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>
+        </mj-text>
+        
+        <mj-text font-size="12px" color="#999999" align="center">
+          &copy; {{year}} Kenya Rental System. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

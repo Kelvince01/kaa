@@ -1,0 +1,1 @@
+Hi {{tenantName}}, maintenance update for unit {{unitNumber}}: {{uppercase status}}. {{#if description}}{{description}}{{/if}} {{#if contactNumber}}Contact: {{contactNumber}}{{/if}}

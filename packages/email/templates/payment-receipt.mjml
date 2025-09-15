@@ -1,0 +1,95 @@
+<mjml>
+  <mj-head>
+    <mj-title>Payment Receipt</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" color="#333333" line-height="24px" />
+      <mj-section padding="20px" />
+    </mj-attributes>
+    <mj-style>
+      a {
+        color: #0066cc;
+        text-decoration: none;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f5f5f5">
+    <mj-section padding-top="30px" padding-bottom="30px">
+      <mj-column>
+        <mj-image width="200px" src="{{logoUrl}}" alt="Kaa Logo" />
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#ffffff" border-radius="5px">
+      <mj-column>
+        <mj-text font-size="24px" font-weight="bold" align="center" color="#333333">
+          Payment Receipt
+        </mj-text>
+        
+        <mj-text padding-top="20px">
+          Dear {{tenantName}},
+        </mj-text>
+        
+        <mj-text>
+          Thank you for your payment. Here are your payment details:
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#f8f9fa" border-radius="5px" padding="15px">
+      <mj-column>
+        <mj-table padding-top="10px">
+          <tr>
+            <td style="padding: 5px 0; width: 40%"><strong>Receipt Number:</strong></td>
+            <td style="padding: 5px 0">{{receiptNumber}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0"><strong>Amount:</strong></td>
+            <td style="padding: 5px 0">KES {{amount}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0"><strong>Property:</strong></td>
+            <td style="padding: 5px 0">{{propertyName}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0"><strong>Unit:</strong></td>
+            <td style="padding: 5px 0">{{unitNumber}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0"><strong>Payment Date:</strong></td>
+            <td style="padding: 5px 0">{{paymentDate}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0"><strong>Transaction ID:</strong></td>
+            <td style="padding: 5px 0">{{transactionId}}</td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column>
+        <mj-button background-color="#0891b2" color="white" border-radius="5px" font-size="16px" font-weight="bold" href="{{receiptLink}}" width="300px">
+          Download Receipt
+        </mj-button>
+        
+        <mj-text padding-top="20px">
+          Best regards,<br />
+          Kenya Rental System
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column>
+        <mj-text font-size="12px" color="#999999" align="center">
+          If you have any questions, please contact us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>
+        </mj-text>
+        
+        <mj-text font-size="12px" color="#999999" align="center">
+          &copy; {{year}} Kenya Rental System. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

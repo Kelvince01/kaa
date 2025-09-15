@@ -1,0 +1,227 @@
+<mjml>
+  <mj-head>
+    <mj-title>🎉 Congratulations! Your Profile is Now Verified</mj-title>
+    <mj-preview>{{tenantName}}, you've achieved full profile verification - you're ready to apply for rentals!</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Helvetica Neue', Arial, sans-serif"></mj-all>
+      <mj-text padding="0px 25px" font-size="16px" line-height="22px" color="#525252"></mj-text>
+      <mj-button background-color="#2563EB" border-radius="6px" font-size="16px" font-weight="600" padding="12px 24px"></mj-button>
+    </mj-attributes>
+    <mj-style inline="inline">
+      .verified-badge { background-color: #DCFCE7; color: #166534; padding: 12px 24px; border-radius: 50px; font-weight: 700; font-size: 18px; }
+      .benefit-item { background-color: #f0fdf4; padding: 15px; margin: 8px 0; border-radius: 8px; border-left: 4px solid #10B981; }
+      .progress-complete { background-color: #10B981; height: 12px; border-radius: 6px; width: 100%; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f8fafc">
+    <!-- Header -->
+    <mj-section background-color="#10B981" padding="0">
+      <mj-column>
+        <mj-text align="center" color="#ffffff" font-size="28px" font-weight="bold" padding="40px 20px">
+          🎉 Profile Verified!
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Celebration Message -->
+    <mj-section background-color="#ffffff" padding="40px 20px">
+      <mj-column>
+        <!-- Celebration Icon -->
+        <mj-text align="center" font-size="64px" padding-bottom="20px">
+          🏆
+        </mj-text>
+
+        <!-- Congratulations Message -->
+        <mj-text font-size="20px" font-weight="600" color="#1f2937" align="center" padding-bottom="15px">
+          Congratulations, {{tenantName}}!
+        </mj-text>
+
+        <mj-text align="center" font-size="18px" padding-bottom="20px">
+          Your rental profile is now <strong>fully verified</strong> and ready to impress landlords across Kenya!
+        </mj-text>
+
+        <!-- Verification Badge -->
+        <mj-text align="center" padding="30px 0">
+          <span class="verified-badge">✓ 100% VERIFIED PROFILE</span>
+        </mj-text>
+
+        <!-- Progress Bar -->
+        <mj-text align="center" color="#6b7280" font-size="14px" padding-bottom="10px">
+          Verification Progress
+        </mj-text>
+        <div style="background-color: #e5e7eb; height: 12px; border-radius: 6px; overflow: hidden; margin: 0 25px 20px 25px;">
+          <div class="progress-complete"></div>
+        </div>
+        <mj-text align="center" font-size="16px" font-weight="600" color="#10B981">
+          {{verificationPercentage}}% Complete
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Benefits Section -->
+    <mj-section background-color="#ffffff" padding="0 20px 30px">
+      <mj-column>
+        <mj-text font-size="18px" font-weight="600" color="#374151" padding-bottom="20px" align="center">
+          🌟 Your Verified Status Unlocks:
+        </mj-text>
+
+        <mj-table class="benefit-item">
+          <tr>
+            <td style="width: 60px; vertical-align: top;">
+              <span style="color: #10B981; font-size: 24px;">⚡</span>
+            </td>
+            <td>
+              <strong>Priority Applications</strong>
+              <div style="color: #6b7280; font-size: 14px; margin-top: 5px;">
+                Your applications are processed faster and given priority consideration by landlords
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+
+        <mj-table class="benefit-item">
+          <tr>
+            <td style="width: 60px; vertical-align: top;">
+              <span style="color: #10B981; font-size: 24px;">🛡️</span>
+            </td>
+            <td>
+              <strong>Trust Badge Display</strong>
+              <div style="color: #6b7280; font-size: 14px; margin-top: 5px;">
+                Your verified badge shows landlords you're a serious, trustworthy tenant
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+
+        <mj-table class="benefit-item">
+          <tr>
+            <td style="width: 60px; vertical-align: top;">
+              <span style="color: #10B981; font-size: 24px;">🏠</span>
+            </td>
+            <td>
+              <strong>Access to Premium Properties</strong>
+              <div style="color: #6b7280; font-size: 14px; margin-top: 5px;">
+                Some landlords only accept applications from verified tenants
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+
+        <mj-table class="benefit-item">
+          <tr>
+            <td style="width: 60px; vertical-align: top;">
+              <span style="color: #10B981; font-size: 24px;">💰</span>
+            </td>
+            <td>
+              <strong>Better Negotiating Power</strong>
+              <div style="color: #6b7280; font-size: 14px; margin-top: 5px;">
+                Verified profiles often get better terms and reduced deposits
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Call to Action -->
+    <mj-section background-color="#f0fdf4" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="18px" font-weight="600" color="#166534" align="center" padding-bottom="15px">
+          Ready to find your perfect home? 🏡
+        </mj-text>
+
+        <mj-text color="#166534" align="center" padding-bottom="20px">
+          With your verified profile, you're now ready to apply for rental properties with confidence. 
+          Landlords will see your verified status and trust your application.
+        </mj-text>
+
+        <mj-button href="{{profileUrl}}" background-color="#10B981" width="60%">
+          View Your Profile
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- Next Steps -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          What's next?
+        </mj-text>
+
+        <mj-text padding-bottom="12px">
+          🔍 <strong>Browse Properties:</strong> Start searching for your ideal rental with confidence
+        </mj-text>
+
+        <mj-text padding-bottom="12px">
+          📝 <strong>Apply with Ease:</strong> Your verified status will be displayed on all applications
+        </mj-text>
+
+        <mj-text padding-bottom="12px">
+          📧 <strong>Get Updates:</strong> We'll notify you of property matches and application updates
+        </mj-text>
+
+        <mj-text padding-bottom="12px">
+          🤝 <strong>Connect with Landlords:</strong> Build trust quickly with your verified profile
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Social Proof -->
+    <mj-section background-color="#f9fafb" padding="30px 20px">
+      <mj-column>
+        <mj-text align="center" color="#6b7280" font-size="16px" padding-bottom="15px">
+          <strong>Join thousands of verified tenants</strong>
+        </mj-text>
+
+        <mj-text align="center" color="#6b7280" font-size="14px">
+          "Getting verified was the best decision I made. I found my apartment within a week 
+          and the landlord was impressed with my complete profile." - Sarah M., Verified Tenant
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Maintain Your Status -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          💡 Tips to maintain your verified status:
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          • Keep your profile information up to date
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          • Respond promptly to any landlord inquiries
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          • Maintain good relationships with your references
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          • Update your employment information if it changes
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-divider border-color="#e5e7eb" border-width="1px" padding="0 0 20px 0"></mj-divider>
+        
+        <mj-text font-size="12px" color="#9ca3af" align="center">
+          🎉 Congratulations again on achieving full verification! This email confirms your verified status 
+          has been activated. Your profile now displays the verified badge to all landlords.
+        </mj-text>
+
+        <mj-text font-size="12px" color="#9ca3af" align="center" padding="15px 0 0 0">
+          Questions? Contact us at <a href="mailto:{{supportEmail}}" style="color: #2563EB;">{{supportEmail}}</a>
+          <br><br>
+          Kaa Properties - Your trusted rental partner in Kenya<br>
+          © {{year}} Kaa Properties. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

@@ -1,0 +1,86 @@
+<mjml>
+  <mj-head>
+    <mj-title>New Booking Request</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" color="#333333" line-height="24px" />
+      <mj-section padding="20px" />
+    </mj-attributes>
+    <mj-style>
+      a {
+        color: #0066cc;
+        text-decoration: none;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f5f5f5">
+    <mj-section padding-top="30px" padding-bottom="30px">
+      <mj-column>
+        <mj-image width="200px" src="{{logoUrl}}" alt="Kaa Logo" />
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#ffffff" border-radius="5px">
+      <mj-column>
+        <mj-text font-size="24px" font-weight="bold" align="center" color="#333333"> New Booking Request </mj-text>
+
+        <mj-text padding-top="20px"> Hello {{landlordName}}, </mj-text>
+
+        <mj-text> You have a new booking request for your property "<strong>{{propertyTitle}}</strong>". </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#f8f9fa" border-radius="5px" padding="15px">
+      <mj-column>
+        <mj-text font-size="18px" font-weight="bold" color="#4CAF50"> Booking Details: </mj-text>
+
+        <mj-table padding-top="10px">
+          <tr>
+            <td style="padding: 5px 0; width: 40%"><strong>Tenant:</strong></td>
+            <td style="padding: 5px 0">{{tenantName}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0"><strong>Start Date:</strong></td>
+            <td style="padding: 5px 0">{{startDate}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0"><strong>End Date:</strong></td>
+            <td style="padding: 5px 0">{{endDate}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0"><strong>Booking Type:</strong></td>
+            <td style="padding: 5px 0">{{bookingType}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0"><strong>Total Amount:</strong></td>
+            <td style="padding: 5px 0">KES {{totalAmount}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0"><strong>Special Requests:</strong></td>
+            <td style="padding: 5px 0">{{specialRequests}}</td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column>
+        <mj-text padding-top="20px"> Please review this booking request and respond as soon as possible. </mj-text>
+
+        <mj-button background-color="#4CAF50" color="white" border-radius="4px" font-size="16px" font-weight="bold" href="{{dashboardUrl}}" width="300px"> Review Booking </mj-button>
+
+        <mj-text padding-top="20px">
+          Best regards,<br />
+          The Kaa Team
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column>
+        <mj-text font-size="12px" color="#999999" align="center"> If you have any questions, please contact us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a> </mj-text>
+
+        <mj-text font-size="12px" color="#999999" align="center"> &copy; {{year}} Kaa. All rights reserved. </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

@@ -1,0 +1,39 @@
+{
+  "extends": "@kaa/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "incremental": true,
+    "allowArbitraryExtensions": true,
+    "baseUrl": ".",
+    "jsx": "preserve",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@kaa/ui/*": [
+        "../packages/ui/src/*"
+      ],
+      "~/*": [
+        "../api/src/*"
+      ]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "../../packages/config/*",
+    "../api/**/*",
+    "./.next/types/**/*.ts",
+    "./src/types/next-int.d.ts",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "./.next"
+  ]
+}

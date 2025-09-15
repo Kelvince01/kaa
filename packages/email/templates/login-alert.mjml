@@ -1,0 +1,36 @@
+<mjml>
+  <mj-head>
+    <mj-title>New Login Alert</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Dm Sans" />
+      <mj-text font-size="16px" color="#333333" line-height="24px" />
+      <mj-section padding="20px" />
+    </mj-attributes>
+    <mj-style>
+      a {
+        color: #0066cc;
+        text-decoration: none;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f5f5f5">
+    <mj-section padding-top="30px" padding-bottom="30px">
+      <mj-column>
+        <mj-image width="200px" src="{{logoUrl}}" alt="Kaa Logo" />
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column>
+        <mj-text>
+          <h2>New Login Alert</h2>
+          <p>A new login was detected on your Kaa account.</p>
+          <p><strong>IP Address:</strong> {{ip}}</p>
+          <p><strong>Device:</strong> {{userAgent}}</p>
+          <p><strong>Time:</strong> {{date}}</p>
+          <p>If this wasn't you, please change your password immediately.</p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

@@ -1,0 +1,14 @@
+{
+  "extends": "@kaa/tsconfig/base.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "declarationMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@kaa/models/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

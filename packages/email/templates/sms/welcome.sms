@@ -1,0 +1,1 @@
+Hi {{firstName}}, Welcome to {{appName}}! Thank you for joining our platform. Login to your account to explore properties and manage your rentals. {{#if appUrl}}Visit: {{appUrl}}{{/if}}

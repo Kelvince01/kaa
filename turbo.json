@@ -1,6 +1,29 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "NODE_ENV",
+    "MONGODB_URI",
+    "PORT",
+    "JWT_SECRET",
+    "CLIENT_URL",
+    "BLOB_READ_WRITE_TOKEN",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "MICROSOFT_CLIENT_ID",
+    "MICROSOFT_CLIENT_SECRET",
+    "RESEND_API_KEY",
+    "EMAIL_FROM_NAME",
+    "EMAIL_FROM",
+    "SUPPORT_EMAIL",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "NEXT_PUBLIC_API_URL",
+    "NEXT_PUBLIC_MAPBOX_TOKEN",
+    "NEXT_PUBLIC_STRIPE_SECRET_KEY",
+    "NEXT_PUBLIC_STRIPE_PUBLIC_KEY",
+    "VAPID_PRIVATE_KEY"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

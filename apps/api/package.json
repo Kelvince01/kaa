@@ -1,0 +1,63 @@
+{
+  "name": "api",
+  "version": "1.0.50",
+  "description": "API for Kaa SaaS",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "check-types-": "bun --max-old-space-size=4096 --bun tsc --noEmit",
+    "build": "tsdown",
+    "check-types": "tsc -b",
+    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
+    "dev-hot": "bun run --hot src/index.ts",
+    "start": "bun run dist/index.js",
+    "lint": "bun biome check .",
+    "lint:fix": "bun biome check --write .",
+    "format": "biome format --write ./src",
+    "clean": "rm -rf dist node_modules",
+    "security-scan": "bun audit --production && gitleaks detect"
+  },
+  "dependencies": {
+    "@bull-board/elysia": "^6.12.7",
+    "@elysiajs/bearer": "^1.4.1",
+    "@elysiajs/cookie": "^0.8.0",
+    "@elysiajs/cors": "^1.4.0",
+    "@elysiajs/jwt": "^1.4.0",
+    "@elysiajs/openapi": "^1.4.0",
+    "@elysiajs/opentelemetry": "^1.4.0",
+    "@elysiajs/server-timing": "^1.4.0",
+    "@elysiajs/static": "^1.4.0",
+    "@kaa/config": "workspace:*",
+    "@kaa/models": "workspace:*",
+    "@kaa/services": "workspace:*",
+    "@kaa/utils": "workspace:*",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.205.0",
+    "@opentelemetry/sdk-trace-node": "^2.1.0",
+    "@sentry/bun": "^10.11.0",
+    "bullmq": "^5.58.5",
+    "chalk": "^5.6.2",
+    "elysia": "latest",
+    "elysia-helmet": "^3.0.0",
+    "elysia-i18next": "^4.0.3",
+    "i18next": "^25.5.2",
+    "logestic": "^1.2.4",
+    "mongoose": "^8.18.1",
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "@kaa/tsconfig": "workspace:*",
+    "@types/bun": "^1.2.21",
+    "tsdown": "^0.15.1",
+    "typescript": "^5.9.2"
+  },
+  "module": "src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kelvince01/kaa.git"
+  },
+  "author": "Kelvince Phillips",
+  "bugs": {
+    "url": "https://github.com/Kelvince01/kaa/issues"
+  },
+  "homepage": "https://github.com/Kelvince01/kaa#readme"
+}

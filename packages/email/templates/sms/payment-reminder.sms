@@ -1,0 +1,1 @@
+Hi {{tenantName}}, your rent payment of {{formatCurrency amount}} for unit {{unitNumber}} is due on {{formatDate dueDate}}. {{#if paymentLink}}Pay now: {{smsLimit paymentLink 40}}{{/if}}

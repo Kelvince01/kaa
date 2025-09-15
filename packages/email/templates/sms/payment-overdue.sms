@@ -1,0 +1,1 @@
+URGENT: Hi {{tenantName}}, your rent payment of {{formatCurrency amount}} for unit {{unitNumber}} is {{daysOverdue}} days overdue. {{#if paymentLink}}Pay now: {{smsLimit paymentLink 40}}{{/if}}

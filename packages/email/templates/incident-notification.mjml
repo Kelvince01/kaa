@@ -1,0 +1,84 @@
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-all font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"></mj-all>
+      <mj-text font-weight="400" font-size="16px" color="#000000" line-height="24px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f4f4f4">
+    <mj-section background-color="#ffffff" padding-bottom="20px" padding-top="20px">
+      <mj-column width="100%">
+        <mj-text align="center" font-size="24px" color="#1a1a1a" font-weight="bold" padding-bottom="20px">
+          {{incident.title}}
+        </mj-text>
+        <mj-divider border-width="1px" border-style="dashed" border-color="lightgrey" padding="0 20px" />
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#ffffff" padding="20px 0">
+      <mj-column width="100%">
+        <mj-text color="#1a1a1a" font-size="16px" line-height="24px" padding="0 25px">
+          <p>Hello {{recipientName}},</p>
+          <p>A new incident has been reported that requires your attention:</p>
+          
+          <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 12px 20px; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0; font-weight: 600;">{{incident.title}}</p>
+            <p style="margin: 0 0 5px 0; color: #6c757d;">
+              <strong>Status:</strong> 
+              <span style="color: {{#if (eq incident.status 'resolved')}}#28a745{{else if (eq incident.status 'investigating')}}#ffc107{{else}}#dc3545{{/if}}; font-weight: 600;">
+                {{incident.status}}
+              </span>
+            </p>
+            <p style="margin: 5px 0;"><strong>Reported at:</strong> {{formatDate incident.createdAt}}</p>
+            {{#if incident.assignedTo}}
+              <p style="margin: 5px 0;"><strong>Assigned to:</strong> {{incident.assignedTo}}</p>
+            {{/if}}
+          </div>
+
+          <h3 style="color: #1a1a1a; font-size: 18px; margin: 20px 0 10px 0;">Description</h3>
+          <p style="margin: 0 0 20px 0;">{{incident.description}}</p>
+
+          {{#if incident.impact}}
+            <h3 style="color: #1a1a1a; font-size: 18px; margin: 20px 0 10px 0;">Impact</h3>
+            <p style="margin: 0 0 20px 0;">{{incident.impact}}</p>
+          {{/if}}
+
+          {{#if incident.updates}}
+            <h3 style="color: #1a1a1a; font-size: 18px; margin: 20px 0 10px 0;">Latest Updates</h3>
+            {{#each incident.updates}}
+              <div style="margin-bottom: 15px; padding-left: 15px; border-left: 3px solid #e9ecef;">
+                <p style="margin: 0 0 5px 0; font-style: italic;">{{this.message}}</p>
+                <p style="margin: 0; font-size: 14px; color: #6c757d;">
+                  — {{this.updatedBy}}, {{formatDate this.updatedAt}}
+                </p>
+              </div>
+            {{/each}}
+          {{/if}}
+
+          <p style="margin: 25px 0 15px 0;">
+            <a href="{{dashboardUrl}}" style="background-color: #007bff; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: 500; display: inline-block;">
+              View Incident in Dashboard
+            </a>
+          </p>
+
+          <p style="margin: 20px 0 0 0; color: #6c757d; font-size: 14px;">
+            If you have any questions, please contact our support team at 
+            <a href="mailto:{{supportEmail}}" style="color: #007bff; text-decoration: none;">{{supportEmail}}</a>.
+          </p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#f8f9fa" padding="20px 0" text-align="center">
+      <mj-column width="100%">
+        <mj-text color="#6c757d" font-size="12px" line-height="18px">
+          <p style="margin: 0;">© {{year}} {{appName}}. All rights reserved.</p>
+          <p style="margin: 5px 0 0 0;">
+            <a href="{{appUrl}}/privacy" style="color: #6c757d; text-decoration: underline;">Privacy Policy</a> • 
+            <a href="{{appUrl}}/terms" style="color: #6c757d; text-decoration: underline;">Terms of Service</a>
+          </p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

@@ -1,0 +1,16 @@
+{
+  "extends": "@kaa/tsconfig/base.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@kaa/email/*": ["./src/*"]
+    },
+    "outDir": "./dist",
+    "rootDir": "./",
+    "types": ["bun"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

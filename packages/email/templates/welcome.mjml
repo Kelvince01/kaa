@@ -1,0 +1,77 @@
+<mjml>
+  <mj-head>
+    <mj-title>Welcome to Kaa!</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Dm Sans" />
+      <mj-text font-size="16px" color="#333333" line-height="24px" />
+      <mj-section padding="20px" />
+    </mj-attributes>
+    <mj-style>
+      a {
+        color: #0066cc;
+        text-decoration: none;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f5f5f5">
+    <mj-section padding-top="30px" padding-bottom="30px">
+      <mj-column>
+        <mj-image width="200px" src="{{logoUrl}}" alt="Kaa Logo" />
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#ffffff" border-radius="5px">
+      <mj-column>
+        <mj-text font-size="24px" font-weight="bold" align="center" color="#333333">
+          Welcome to Kaa!
+        </mj-text>
+
+        <mj-text padding-top="20px">
+          Hello {{firstName}},
+        </mj-text>
+
+        <mj-text>
+          Thank you for verifying your email address. Your account is now fully activated, and you're all set to get started with Kaa - your go-to rental property platform.
+        </mj-text>
+
+        <mj-text>
+          Here are a few things you can do:
+        </mj-text>
+
+        <mj-text>
+          <ul>
+            <li>Complete your profile with additional information</li>
+            <li>Browse available properties</li>
+            <li>Save your favorite listings</li>
+            <li>Contact property owners directly through our platform</li>
+          </ul>
+        </mj-text>
+
+        <mj-button background-color="#4CAF50" color="white" border-radius="4px" font-size="16px" font-weight="bold" href="{{loginUrl}}" width="300px">
+          Get Started
+        </mj-button>
+
+        <mj-text padding-top="20px">
+          If you have any questions or need assistance, don't hesitate to reach out to our support team.
+        </mj-text>
+
+        <mj-text padding-top="20px">
+          Best regards,<br />
+          The Kaa Team
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column>
+        <mj-text font-size="12px" color="#999999" align="center">
+          If you have any questions, please contact us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>
+        </mj-text>
+
+        <mj-text font-size="12px" color="#999999" align="center">
+          &copy; {{year}} Kaa. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

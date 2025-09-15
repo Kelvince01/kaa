@@ -1,0 +1,202 @@
+<mjml>
+  <mj-head>
+    <mj-title>Reference Completed - Thank You {{providerName}}</mj-title>
+    <mj-preview>Thank you for completing the reference for {{tenantName}}'s rental application</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Helvetica Neue', Arial, sans-serif"></mj-all>
+      <mj-text padding="0px 25px" font-size="16px" line-height="22px" color="#525252"></mj-text>
+      <mj-button background-color="#2563EB" border-radius="6px" font-size="16px" font-weight="600" padding="12px 24px"></mj-button>
+    </mj-attributes>
+    <mj-style inline="inline">
+      .success-badge { background-color: #DCFCE7; color: #166534; padding: 8px 16px; border-radius: 20px; font-weight: 600; }
+      .rating-stars { color: #F59E0B; font-size: 18px; }
+      .verification-status { padding: 12px; border-radius: 6px; margin: 10px 0; }
+      .status-positive { background-color: #DCFCE7; color: #166534; }
+      .status-neutral { background-color: #FEF3C7; color: #92400E; }
+      .status-negative { background-color: #FEE2E2; color: #991B1B; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f8fafc">
+    <!-- Header -->
+    <mj-section background-color="#10B981" padding="0">
+      <mj-column>
+        <mj-text align="center" color="#ffffff" font-size="24px" font-weight="bold" padding="30px 20px">
+          ✅ Reference Completed
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Success Message -->
+    <mj-section background-color="#ffffff" padding="40px 20px">
+      <mj-column>
+        <!-- Success Icon -->
+        <mj-text align="center" font-size="48px" padding-bottom="20px">
+          🎉
+        </mj-text>
+
+        <!-- Thank You Message -->
+        <mj-text font-size="18px" font-weight="600" color="#1f2937" align="center" padding-bottom="15px">
+          Thank you, {{providerName}}!
+        </mj-text>
+
+        <mj-text align="center" padding-bottom="20px">
+          Your reference for <strong>{{tenantName}}</strong> has been successfully submitted and is now part of their rental application for {{propertyName}}.
+        </mj-text>
+
+        <!-- Completion Badge -->
+        <mj-text align="center" padding="20px 0">
+          <span class="success-badge">✓ Reference Submitted on {{completedAt}}</span>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Reference Summary -->
+    <mj-section background-color="#ffffff" padding="0 20px 30px">
+      <mj-column>
+        <mj-table padding="20px 0">
+          <tr>
+            <td style="background-color: #f0fdf4; padding: 25px; border-radius: 8px; border-left: 4px solid #10B981;">
+              <h3 style="color: #374151; margin: 0 0 20px 0; font-size: 16px; font-weight: 600;">Reference Summary</h3>
+              
+              <div style="margin-bottom: 12px;">
+                <strong>For:</strong> {{tenantName}}
+              </div>
+              
+              <div style="margin-bottom: 12px;">
+                <strong>Property:</strong> {{propertyName}}
+              </div>
+              
+              <div style="margin-bottom: 12px;">
+                <strong>Reference Type:</strong> {{referenceType}}
+              </div>
+
+              {{#if rating}}
+              <div style="margin-bottom: 12px;">
+                <strong>Your Rating:</strong> 
+                <span class="rating-stars">
+                  {{#repeat rating}}★{{/repeat}}{{#repeat (subtract 5 rating)}}☆{{/repeat}}
+                </span>
+                ({{rating}}/5)
+              </div>
+              {{/if}}
+
+              {{#if recommendation}}
+              <div style="margin-bottom: 12px;">
+                <strong>Recommendation:</strong> {{recommendation}}
+              </div>
+              {{/if}}
+
+              <div>
+                <strong>Submitted:</strong> {{completedAt}}
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Verification Details -->
+    {{#if verificationDetails}}
+    <mj-section background-color="#ffffff" padding="0 20px 30px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          Verification Details Provided:
+        </mj-text>
+
+        <mj-table>
+          <tr>
+            <td style="background-color: #f9fafb; padding: 20px; border-radius: 8px;">
+              {{#each verificationDetails}}
+              <div style="margin-bottom: 8px;">
+                <strong>{{@key}}:</strong> 
+                {{#if (isObject this)}}
+                  <div style="margin-left: 15px; margin-top: 5px;">
+                    {{#each this}}
+                    <div style="margin-bottom: 3px;">• {{@key}}: {{this}}</div>
+                    {{/each}}
+                  </div>
+                {{else}}
+                  {{this}}
+                {{/if}}
+              </div>
+              {{/each}}
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+    {{/if}}
+
+    <!-- Impact Message -->
+    <mj-section background-color="#f0fdf4" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#166534" align="center" padding-bottom="15px">
+          Your contribution makes a difference! 🌟
+        </mj-text>
+
+        <mj-text color="#166534" align="center">
+          By providing this reference, you've helped create a more transparent and trustworthy rental market in Kenya. 
+          Your honest feedback assists landlords in making informed decisions while supporting genuine tenants like {{tenantName}} 
+          in securing quality housing.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- What Happens Next -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          What happens next?
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          • Your reference is now part of {{tenantName}}'s application package
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          • The landlord will review all references as part of their decision process
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          • {{tenantName}} will be notified of the application outcome
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          • Your reference information remains confidential and is only shared with authorized parties
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Optional: Feedback Section -->
+    <mj-section background-color="#f9fafb" padding="30px 20px">
+      <mj-column>
+        <mj-text align="center" color="#6b7280" font-size="14px" padding-bottom="15px">
+          <strong>How was your experience?</strong>
+        </mj-text>
+
+        <mj-text align="center" color="#6b7280" font-size="14px">
+          We're constantly working to improve our reference system. If you have any feedback or suggestions, 
+          we'd love to hear from you at <a href="mailto:{{supportEmail}}" style="color: #2563EB;">{{supportEmail}}</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-divider border-color="#e5e7eb" border-width="1px" padding="0 0 20px 0"></mj-divider>
+        
+        <mj-text font-size="12px" color="#9ca3af" align="center">
+          This confirmation was sent to acknowledge your completed reference for {{tenantName}}. 
+          If you have any questions or concerns, please contact our support team at 
+          <a href="mailto:{{supportEmail}}" style="color: #2563EB;">{{supportEmail}}</a>
+        </mj-text>
+
+        <mj-text font-size="12px" color="#9ca3af" align="center" padding="15px 0 0 0">
+          Thank you for being part of the Kaa Properties community.<br>
+          © {{year}} Kaa Properties. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

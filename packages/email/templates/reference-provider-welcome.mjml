@@ -1,0 +1,250 @@
+<mjml>
+  <mj-head>
+    <mj-title>Welcome to Kaa Properties Reference System - {{providerName}}</mj-title>
+    <mj-preview>Welcome {{providerName}}! Learn about providing references on the Kaa Properties platform</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Helvetica Neue', Arial, sans-serif"></mj-all>
+      <mj-text padding="0px 25px" font-size="16px" line-height="22px" color="#525252"></mj-text>
+      <mj-button background-color="#2563EB" border-radius="6px" font-size="16px" font-weight="600" padding="12px 24px"></mj-button>
+    </mj-attributes>
+    <mj-style inline="inline">
+      .welcome-badge { background-color: #DBEAFE; color: #1E40AF; padding: 8px 16px; border-radius: 20px; font-weight: 600; }
+      .feature-item { background-color: #f9fafb; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #2563EB; }
+      .step-number { background-color: #2563EB; color: white; width: 30px; height: 30px; border-radius: 50%; display: inline-block; text-align: center; line-height: 30px; font-weight: 600; margin-right: 10px; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f8fafc">
+    <!-- Header -->
+    <mj-section background-color="#2563EB" padding="0">
+      <mj-column>
+        <mj-text align="center" color="#ffffff" font-size="24px" font-weight="bold" padding="30px 20px">
+          🏠 Welcome to Kaa Properties
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Welcome Message -->
+    <mj-section background-color="#ffffff" padding="40px 20px">
+      <mj-column>
+        <!-- Welcome Icon -->
+        <mj-text align="center" font-size="48px" padding-bottom="20px">
+          👋
+        </mj-text>
+
+        <!-- Greeting -->
+        <mj-text font-size="18px" font-weight="600" color="#1f2937" align="center" padding-bottom="15px">
+          Welcome, {{providerName}}!
+        </mj-text>
+
+        <mj-text align="center" padding-bottom="20px">
+          You've been invited to provide a reference through Kenya's leading transparent rental platform. 
+          This message will help you understand our reference system and how you can contribute to building trust in Kenya's rental market.
+        </mj-text>
+
+        <!-- Welcome Badge -->
+        <mj-text align="center" padding="20px 0">
+          <span class="welcome-badge">🎉 New Reference Provider</span>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- About Kaa Properties -->
+    <mj-section background-color="#f0f9ff" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#1e40af" align="center" padding-bottom="15px">
+          About Kaa Properties Reference System
+        </mj-text>
+
+        <mj-text color="#1e40af" align="center">
+          We're revolutionizing Kenya's rental market by creating a transparent, trustworthy system where tenants can showcase their credibility 
+          through verified references from people who know them best - like you.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- How It Works -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="20px">
+          How our reference system works:
+        </mj-text>
+
+        <!-- Step 1 -->
+        <mj-table class="feature-item">
+          <tr>
+            <td style="vertical-align: top; width: 40px;">
+              <span class="step-number">1</span>
+            </td>
+            <td>
+              <strong>You receive a request:</strong> A tenant lists you as a reference and you receive an email invitation.
+            </td>
+          </tr>
+        </mj-table>
+
+        <!-- Step 2 -->
+        <mj-table class="feature-item">
+          <tr>
+            <td style="vertical-align: top; width: 40px;">
+              <span class="step-number">2</span>
+            </td>
+            <td>
+              <strong>Secure response:</strong> You respond using a secure, one-time link - no account creation required.
+            </td>
+          </tr>
+        </mj-table>
+
+        <!-- Step 3 -->
+        <mj-table class="feature-item">
+          <tr>
+            <td style="vertical-align: top; width: 40px;">
+              <span class="step-number">3</span>
+            </td>
+            <td>
+              <strong>Your input matters:</strong> Your honest feedback helps landlords make informed decisions.
+            </td>
+          </tr>
+        </mj-table>
+
+        <!-- Step 4 -->
+        <mj-table class="feature-item">
+          <tr>
+            <td style="vertical-align: top; width: 40px;">
+              <span class="step-number">4</span>
+            </td>
+            <td>
+              <strong>Privacy protected:</strong> Your information is kept secure and only shared with authorized parties.
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Types of References -->
+    <mj-section background-color="#f9fafb" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          Types of references we support:
+        </mj-text>
+
+        <mj-text padding-bottom="10px">• <strong>Previous Landlords:</strong> Rental history and tenancy behavior</mj-text>
+        <mj-text padding-bottom="10px">• <strong>Employers:</strong> Employment status and income verification</mj-text>
+        <mj-text padding-bottom="10px">• <strong>Business Partners:</strong> Professional relationships and reliability</mj-text>
+        <mj-text padding-bottom="10px">• <strong>Family Guarantors:</strong> Family support and commitment</mj-text>
+        <mj-text padding-bottom="10px">• <strong>SACCOS Members:</strong> Financial discipline and community standing</mj-text>
+        <mj-text padding-bottom="10px">• <strong>Chama Members:</strong> Community involvement and trustworthiness</mj-text>
+        <mj-text padding-bottom="10px">• <strong>Religious Leaders:</strong> Character and moral standing</mj-text>
+        <mj-text padding-bottom="10px">• <strong>Community Elders:</strong> Community reputation and respect</mj-text>
+        <mj-text padding-bottom="10px">• <strong>Personal References:</strong> Character and personal qualities</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- What to Expect -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          What to expect when providing a reference:
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          <strong>⏱️ Time required:</strong> Most references take 3-5 minutes to complete
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          <strong>📝 Information requested:</strong> Basic details about your relationship with the tenant and your assessment of their suitability
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          <strong>⭐ Rating system:</strong> Simple 1-5 star ratings for key criteria
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          <strong>🔒 Privacy:</strong> Your response is encrypted and only accessible to authorized parties
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          <strong>✅ Flexibility:</strong> You can provide a positive reference or decline with a reason - both are valuable responses
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Why Your Input Matters -->
+    <mj-section background-color="#f0fdf4" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#166534" align="center" padding-bottom="15px">
+          Why your input matters 🌟
+        </mj-text>
+
+        <mj-text color="#166534" align="center">
+          By providing honest references, you're helping to:
+          <br><br>
+          • <strong>Build trust</strong> in Kenya's rental market
+          <br>• <strong>Support good tenants</strong> in finding quality housing
+          <br>• <strong>Help landlords</strong> make informed decisions
+          <br>• <strong>Create transparency</strong> that benefits everyone
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Support and Contact -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          Need help or have questions?
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          Our support team is here to help you navigate the reference process:
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          📧 <strong>Email:</strong> <a href="mailto:{{supportEmail}}" style="color: #2563EB;">{{supportEmail}}</a>
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          🕐 <strong>Response time:</strong> Within 24 hours
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          🌍 <strong>Languages:</strong> English and Swahili support available
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Ready to Start -->
+    {{#if hasCurrentRequest}}
+    <mj-section background-color="#ffffff" padding="0 20px 40px">
+      <mj-column>
+        <mj-text align="center" font-weight="600" color="#374151" padding-bottom="20px">
+          You have a reference request waiting!
+        </mj-text>
+
+        <mj-text align="center" padding-bottom="20px" color="#6b7280" font-size="14px">
+          {{tenantName}} is waiting for your response for their application at {{propertyName}}
+        </mj-text>
+
+        <mj-button href="{{respondUrl}}" background-color="#10B981" width="60%">
+          Provide Reference Now
+        </mj-button>
+      </mj-column>
+    </mj-section>
+    {{/if}}
+
+    <!-- Footer -->
+    <mj-section background-color="#f9fafb" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="12px" color="#6b7280" align="center">
+          <strong>Thank you for joining the Kaa Properties community!</strong>
+          <br><br>
+          Together, we're making Kenya's rental market more transparent, fair, and trustworthy for everyone.
+        </mj-text>
+
+        <mj-divider border-color="#e5e7eb" border-width="1px" padding="20px 0 20px 0"></mj-divider>
+        
+        <mj-text font-size="12px" color="#9ca3af" align="center">
+          Kaa Properties - Transparent rental processes for modern Kenya<br>
+          © {{year}} Kaa Properties. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

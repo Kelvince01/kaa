@@ -1,0 +1,20 @@
+{
+  "name": "@kaa/services",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./managers": "./src/managers/index.ts"
+  },
+  "dependencies": {
+    "@kaa/models": "workspace:*",
+    "cron": "^4.3.3",
+    "elysia": "latest",
+    "mongoose": "^8.18.1"
+  },
+  "devDependencies": {
+    "@kaa/tsconfig": "workspace:*",
+    "typescript": "^5.9.2"
+  }
+}

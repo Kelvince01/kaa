@@ -1,0 +1,752 @@
+{
+  "metadata": {
+    "default_title": "Kaa - Jukwaa la Mali ya Kukodisha",
+    "default_description": "Pata nyumba yako nzuri na Kaa - Jukwaa bora zaidi la kukodisha mali nchini Kenya",
+    "accounts_title": "Usimamizi wa Akaunti",
+    "accounts_description": "Ingia, jiandikishe, au simamia akaunti yako ya Kaa",
+    "dashboard_description": "Dhibiti mali zako na shughuli za kukodisha",
+    "dashboard_title": "Dashibodi",
+    "profile_description": "Angalia na hariri maelezo ya akaunti yako",
+    "profile_title": "Wasifu wangu",
+    "properties_description": "Vinjari, tafuta na ugundue mali za kukodisha",
+    "properties_title": "Mali",
+    "settings_title": "Mipangilio ya Akaunti"
+  },
+  "common": {
+    "navigation": {
+      "home": "Nyumbani",
+      "dashboard": "Dashibodi",
+      "properties": "Mali",
+      "favorites": "Vipendwa",
+      "messages": "Ujumbe",
+      "notifications": "Arifa",
+      "profile": "Wasifu",
+      "settings": "Mipangilio",
+      "help": "Usaidizi",
+      "logout": "Toka"
+    },
+    "buttons": {
+      "save": "Hifadhi",
+      "cancel": "Ghairi",
+      "edit": "Hariri",
+      "delete": "Futa",
+      "confirm": "Thibitisha",
+      "apply": "Wasilisha",
+      "reset": "Weka upya",
+      "back": "Rudi nyuma",
+      "next": "Endelea",
+      "previous": "Rudi",
+      "loading": "Inapakia...",
+      "search": "Tafuta",
+      "filter": "Chuja",
+      "sort": "Panga",
+      "view": "Angalia Maelezo",
+      "add": "Ongeza Mpya"
+    },
+    "action": {
+      "offline": {
+        "text": "Kitendo kilicholemazwa wakati wa hali ya nje ya mkondo."
+      }
+    },
+    "add_email": "Ongeza barua pepe",
+    "address": {
+      "line1": "Anwani ya 1",
+      "line2": "Anwani ya anwani 2",
+      "postal_code": "Nambari ya Posta",
+      "town": "Mji"
+    },
+    "admins": "Admins",
+    "agent": "Wakala",
+    "all": "Zote",
+    "auth_unavailable": {
+      "text": "Tovuti iko chini ya matengenezo. \nTafadhali angalia tena baadaye.",
+      "title": "Uthibitishaji haupatikani"
+    },
+    "booking_status": "Hali ya uhifadhi",
+    "bookings": "Uhifadhi",
+    "cancel": "Ghairi",
+    "clear": "Wazi",
+    "clear_all": "Futa zote",
+    "columns_view": "Mtazamo wa safu",
+    "confirm": {
+      "delete_resources": "Je! Una uhakika unataka kufuta {rasilimali}?",
+      "remove_members": "Je! Una uhakika unataka kuondoa {barua pepe} kutoka {chombo}?",
+      "remove_members_description": "Kitendo hiki hakiwezi kufutwa."
+    },
+    "constituency": "Jimbo",
+    "continue": "Endelea",
+    "country": "Nchi",
+    "county": "Kata",
+    "cover": "Funika",
+    "create": "Unda",
+    "create_resource": "Unda {rasilimali}",
+    "created_at": "Iliyoundwa kwa",
+    "default_language": "Lugha chaguo -msingi",
+    "default_language_text": "Lugha ambayo itapewa washiriki wapya.",
+    "delete": "Futa",
+    "description": "Maelezo",
+    "edit": "Hariri",
+    "edit_resource": "Hariri {rasilimali}",
+    "email": "Barua pepe",
+    "email_domains": "Vikoa vya barua pepe",
+    "email_domains_text": "Watekeleze wanachama kuwa na kikoa cha barua pepe cha shirika, yaani {{kikoa}}.",
+    "emails": "Barua pepe",
+    "errors": {
+      "forbidden": "Huna ruhusa ya kufikia ukurasa huu.",
+      "network": "Kosa la mtandao. \nTafadhali angalia muunganisho wako.",
+      "not_found": "Ukurasa unaotafuta haipo.",
+      "unauthorized": "Lazima uwe umeingia ili kufikia ukurasa huu.",
+      "validation": "Tafadhali sahihisha makosa katika fomu.",
+      "general": "Kitu kilienda vibaya. \nTafadhali jaribu tena."
+    },
+    "experiment_notice": {
+      "text": "Hii ni toleo la kabla ya kutolewa kwa programu. \nTafadhali ripoti maswala yoyote unayokutana nayo."
+    },
+    "expires_at": "Inaisha",
+    "explain": {
+      "invite_email": {
+        "text": "Alika wanachama kwa kuingiza anwani zao za barua pepe"
+      },
+      "invite_search": {
+        "text": "Alika wanachama kwa kutafuta watumiaji ambao tayari wako kwenye mfumo"
+      }
+    },
+    "export": "Kuuza nje",
+    "export_pdf_csv": "Export PDF/CSV",
+    "file_upload_warning": "Faili zinahifadhiwa kwa sasa katika IndexEdDB kwa madhumuni ya hakiki. \nTafadhali wezesha 'imado' katika usanidi wa utendaji sahihi na utunzaji wa faili.",
+    "filter": "Kichujio",
+    "first_name": "Jina la kwanza",
+    "focus_view": "Mtazamo wa kuzingatia",
+    "found": "kupatikana",
+    "invite_by_name": "Alika kwa jina",
+    "invite_members_search": {
+      "text": "Alika wanachama kwa kutafuta watumiaji ambao tayari wako kwenye mfumo"
+    },
+    "invite_users": {
+      "text": "Alika watumiaji"
+    },
+    "invited_at": "Kualikwa kwa",
+    "invited_by": "Kualikwa na",
+    "invites": "Inaalika",
+    "landlord": "Mwenye nyumba",
+    "language": "Lugha",
+    "languages": "Lugha",
+    "last_name": "Jina la mwisho",
+    "last_seen_at": "Mara ya mwisho kuonekana saa",
+    "leave_focus_view": "Acha mtazamo wa kuzingatia",
+    "left_focus": {
+      "text": "Mtazamo wa kushoto wa kuzingatia"
+    },
+    "login": "Ingia",
+    "maintenance_mode": {
+      "text": "Tovuti iko chini ya matengenezo. \nTafadhali angalia tena baadaye.",
+      "title": "Hali ya matengenezo"
+    },
+    "max_1k_rows": "Max 1k safu",
+    "member": "Mwanachama",
+    "message": "Ujumbe",
+    "name": "Jina",
+    "newsletter": "Jarida",
+    "newsletter_text": "Unda jarida na utumie kwa watumiaji maalum katika mashirika yaliyochaguliwa.",
+    "next_page": "Ukurasa unaofuata",
+    "no_resource_found": "Hakuna {rasilimali} kupatikana",
+    "no_resource_yet": "Hakuna {rasilimali} bado",
+    "no_selection": "Hakuna aliyechaguliwa",
+    "notes": "Vidokezo",
+    "notification_email": "Barua pepe ya arifu",
+    "notification_email_text": "Pokea matangazo na sasisho za bidhaa kupitia anwani hii ya barua pepe.",
+    "notifications": "Arifa",
+    "offline": {
+      "load_more": "Haiwezi kupakia zaidi wakati nje ya mtandao",
+      "text": "Uunganisho uliopotea. \nUtendaji mdogo unapatikana.",
+      "text_with_info": "Uunganisho uliopotea. \nUtendaji mdogo unapatikana. \nTakwimu zilizoingizwa katika fomu zitahifadhiwa.",
+      "title": "Nje ya mtandao"
+    },
+    "offline_access": {
+      "off_text": "{{AppName}} Kashe iliyosafishwa nje ya mkondo na kusimamishwa kusawazisha.",
+      "offline": "Uunganisho uliopotea. \n<Site_ANCHOR> Endelea",
+      "on_text": "{{AppName}} Inaweka yaliyomo yako kusawazishwa ili uweze kufanya kazi nje ya mkondo.",
+      "text": "Wezesha ufikiaji wa nje ya mkondo ili uweze kufanya kazi salama kwenye yaliyomo yako wakati mtandao uko chini. \nMabadiliko yatasawazishwa unaporudi mkondoni!",
+      "title": "Ufikiaji wa nje ya mtandao"
+    },
+    "organization": "Shirika",
+    "organizations": "Mashirika",
+    "page": "Ukurasa {ukurasa}",
+    "page_of_pages": "Ukurasa {ukurasa} wa {kurasa} ({hesabu})",
+    "passkey": "Passkey",
+    "pending": "Inasubiri",
+    "pending_invitations": "Inasubiri mialiko",
+    "pending_invitations_text": "Angalia na usimamie mialiko inayosubiri kwa {chombo}",
+    "placeholder": {
+      "email_domains": "Ingiza vikoa vya barua pepe (k.m. @gmail.com, @yahoo.com)",
+      "search": "Tafuta",
+      "search_constituency": "Tafuta Jimbo",
+      "search_country": "Nchi ya utaftaji",
+      "search_county": "Kata ya utaftaji",
+      "search_sub_county": "Tafuta kaunti ndogo",
+      "search_timezone": "Tafuta saa ya saa",
+      "select_county": "Chagua Kata",
+      "select_role": "Chagua jukumu",
+      "select_sub_county": "Chagua kaunti ndogo",
+      "select_timezone": "Chagua Timezone",
+      "subject": "Aina ya mada",
+      "type_name": "Aina ya jina",
+      "your_email": "Barua pepe yako",
+      "select_constituency": "Chagua Jimbo",
+      "select_country": "Chagua nchi",
+      "select_language": "Chagua lugha",
+      "select_languages": "Chagua lugha",
+      "no_constituencies": "Hakuna maeneo yaliyopatikana",
+      "select_county_first": "Tafadhali chagua kaunti kwanza"
+    },
+    "previous": "Zamani",
+    "previous_page": "Ukurasa uliopita",
+    "profile_picture": "Picha ya wasifu",
+    "register": "Jisajili",
+    "remove": "Ondoa",
+    "remove_members": "Je! Una uhakika unataka kuondoa {barua pepe} kutoka {chombo}?",
+    "remove_members_description": "Kitendo hiki hakiwezi kufutwa.",
+    "remove_resource": "Ondoa {rasilimali}",
+    "request_type": "Aina ya ombi",
+    "resource_handle": "{rasilimali} kushughulikia",
+    "resource_handle_text": "Kushughulikia kipekee kwa {rasilimali} URL",
+    "resource_logo": "{rasilimali} nembo",
+    "results": "Matokeo",
+    "revert": "Rejea",
+    "revert_handle": "Rejea kwa Slug ya asili",
+    "role": "Jukumu",
+    "roles": "Majukumu",
+    "rows_per_page": "Safu kwa kila ukurasa",
+    "save_changes": "Hifadhi mabadiliko",
+    "search": "Tafuta",
+    "search_users": "Watumiaji wa tafuta",
+    "select": "Chagua",
+    "select_resource": "Chagua {rasilimali}",
+    "selected": "Kuchaguliwa",
+    "send": "Tuma",
+    "send_test_email": "Tuma barua pepe ya mtihani",
+    "settings": "Mipangilio",
+    "skip": "Ruka",
+    "skip_org_creation": {
+      "text": "Bado hauna mashirika yoyote. \nUnaweza kuunda moja baadaye."
+    },
+    "status": {
+      "active": "Kazi",
+      "approved": "Kupitishwa",
+      "cancelled": "Kufutwa",
+      "completed": "Imekamilika",
+      "expired": "Kumalizika muda wake",
+      "inactive": "Haifanyi kazi",
+      "pending": "Inasubiri",
+      "rejected": "Kukataliwa"
+    },
+    "status_page": "Ukurasa wa Hali",
+    "subject": "Somo",
+    "subscription": "Usajili",
+    "success": {
+      "create_newsletter": "Jarida limetumwa",
+      "create_resource": "Iliyoundwa {rasilimali} kwa mafanikio",
+      "delete_resources": "Kufutwa {rasilimali} kwa mafanikio",
+      "passkey_added": "Passkey imeundwa na kuongeza kwa mafanikio.",
+      "passkey_removed": "Passkey imeondolewa.",
+      "role_updated": "Jukumu lako limesasishwa.",
+      "signed_out": "Imesainiwa kwa mafanikio",
+      "test_email": "Barua pepe ya jaribio imetumwa kwako",
+      "update_item": "Imesasishwa {bidhaa} kwa mafanikio",
+      "update_resource": "Imesasishwa {rasilimali} kwa mafanikio",
+      "upload_cover": "Funika kupakiwa kwa mafanikio",
+      "user_invited": "Mtumiaji aliyealikwa kwa mafanikio",
+      "delete_members": "Futa wanachama"
+    },
+    "tenant": "Mpangaji",
+    "test_email": "Jaribu barua pepe tu",
+    "test_email_text": "Tuma barua pepe ya jaribio kwako mwenyewe",
+    "timezone": "ZOEZO",
+    "title": "Kichwa",
+    "unsaved_changes": "Mabadiliko yasiyokuwa na kuokoa",
+    "upload": "Pakia",
+    "upload_img_max_10mb": {
+      "text": "Max 10mb"
+    },
+    "upload_item": "Pakia {bidhaa}",
+    "user": "Mtumiaji",
+    "users": "Watumiaji",
+    "view": "Mtazamo",
+    "viewing": "Kuangalia",
+    "website_url": "URL ya wavuti",
+    "with": "Na",
+    "your_role": "Jukumu lako",
+    "entered_focus": {
+      "text": "Iliingia mtazamo wa kuzingatia"
+    },
+    "error": {
+      "signed_out_failed": "Imeshindwa kusaini"
+    },
+    "general": "Mkuu",
+    "invalid": {
+      "email": "Anwani batili ya barua pepe",
+      "min_items": "Angalau {vitu_count} {bidhaa} inahitajika"
+    },
+    "invite": "Alika",
+    "invite_by_email": "Alika kwa barua pepe",
+    "members": "Wanachama",
+    "short_name": "Jina fupi",
+    "account": "Akaunti",
+    "account_management": "Usimamizi wa Akaunti",
+    "account_management_text": "Ingia, jiandikishe, au usimamie akaunti yako ya KAA",
+    "back_to_profile": "Rudi kwenye wasifu",
+    "back_to_properties": "Rudi kwa mali",
+    "back_to_settings": "Rudi kwenye Mipangilio",
+    "bathrooms": "bafu",
+    "bedrooms": "Vyumba vya kulala",
+    "dashboard": "Dashibodi",
+    "dashboard_text": "Dhibiti mali zako na shughuli za kukodisha",
+    "logout": "Kuingia",
+    "profile": "Wasifu",
+    "profile_text": "Angalia na hariri maelezo ya akaunti yako",
+    "properties": "Mali",
+    "properties_text": "Vinjari, tafuta na ugundue mali za kukodisha",
+    "rent": "kodi",
+    "settings_text": "Dhibiti mipangilio ya akaunti yako na upendeleo",
+    "account_settings": "Mipangilio ya Akaunti",
+    "account_settings_text": "Dhibiti mipangilio ya akaunti yako na upendeleo",
+    "back_to_account": "Rudi kwa akaunti",
+    "back_to_account_management": "Rudi kwenye Usimamizi wa Akaunti",
+    "back_to_account_settings": "Rudi kwenye Mipangilio ya Akaunti",
+    "back_to_accounts": "Rudi kwenye akaunti",
+    "back_to_accounts_text": "Ingia, jiandikishe, au usimamie akaunti yako ya KAA",
+    "back_to_dashboard": "Rudi kwenye dashibodi",
+    "status_text": "Hali",
+    "unit": "Sehemu",
+    "unit_number": "unit_number",
+    "units": "Vitengo"
+  },
+  "auth": {
+    "common": {
+      "back_to_login": "Rudi kwa ukurasa wa kuingia",
+      "error": "Hitilafu imetokea",
+      "loading": "Inapakia...",
+      "verifying": "Inathibitisha..."
+    },
+    "login": {
+      "title": "Ingia",
+      "create_account": "Au unda akaunti mpya",
+      "email_label": "Barua pepe",
+      "password_label": "Nenosiri",
+      "remember_me": "Nikumbuke",
+      "forgot_password": "Umesahau nenosiri?",
+      "submit": "Ingia",
+      "signing_in": "Inaingia...",
+      "continue_with": "Au endelea na",
+      "create_account_link": "Unda akaunti",
+      "email_description": "Anwani yako ya barua pepe iliyosajiliwa",
+      "failed": "Ingia imeshindwa",
+      "google": "Ingia na Google",
+      "microsoft": "Ingia na Microsoft",
+      "success": "Ingia umefanikiwa!",
+      "unverified_email": "Tafadhali thibitisha barua pepe yako kabla ya kuingia",
+      "login_failed": "Ingia imeshindwa",
+      "rate_limit_exceeded": "Kiwango cha kiwango kilizidi",
+      "unauthorized": "Isiyoidhinishwa"
+    },
+    "email": {
+      "required": "Barua pepe inahitajika"
+    },
+    "forgot_password": {
+      "back_to_login": "Rudi kuingia",
+      "description": "Ingiza anwani yako ya barua pepe na tutakutumia kiunga cha kuweka upya nywila yako.",
+      "email_label": "Barua pepe",
+      "email_placeholder": "Ingiza barua pepe yako",
+      "title": "Umesahau nywila",
+      "failed": "Imeshindwa kuomba kuweka upya nywila. \nTafadhali jaribu tena.",
+      "send_reset_link": "Tuma kiunga cha Rudisha",
+      "sending": "Kutuma ...",
+      "submit": "Tuma kiunga cha Rudisha",
+      "success": "Ikiwa akaunti iliyo na barua pepe hiyo ipo, tumetuma maagizo ya kuweka upya nywila kwa barua pepe yako."
+    },
+    "metadata": {
+      "accounts_description": "Ingia, jiandikishe, au usimamie akaunti yako ya KAA",
+      "accounts_title": "Usimamizi wa Akaunti",
+      "forgot_password_description": "Rudisha nywila yako ili kupata ufikiaji wa akaunti yako",
+      "forgot_password_title": "Umesahau nywila",
+      "login_description": "Ingia kwenye akaunti yako ya KAA",
+      "login_title": "Ingia",
+      "recovery_description": "Tumia nambari ya uokoaji kupata akaunti yako",
+      "recovery_title": "Nambari ya uokoaji",
+      "register_description": "Jiunge na KAA na ugundue mali za kukodisha kote Kenya",
+      "register_title": "Unda akaunti",
+      "reset_password_description": "Unda nywila mpya kwa akaunti yako",
+      "reset_password_title": "Rudisha nywila",
+      "two_factor_description": "Thibitisha kitambulisho chako na uthibitisho wa sababu mbili",
+      "two_factor_title": "Uthibitishaji wa sababu mbili",
+      "verify_email_description": "Thibitisha anwani yako ya barua pepe kukamilisha usajili wako",
+      "verify_email_title": "Thibitisha barua pepe"
+    },
+    "oauth": {
+      "auth_failed": "Uthibitishaji umeshindwa. \nTafadhali jaribu tena.",
+      "completing_auth": "Kukamilisha uthibitishaji",
+      "error_title": "Kosa la uthibitishaji",
+      "no_token": "Hakuna ishara ya uthibitisho iliyopokelewa",
+      "please_wait": "Tafadhali subiri wakati tunakuingiza ...",
+      "return_to_login": "Kurudi kuingia",
+      "success": "Uthibitishaji umefanikiwa"
+    },
+    "recovery_code": {
+      "code_label": "Nambari ya uokoaji",
+      "description": "Ingiza nambari ya uokoaji ili kufikia akaunti yako.",
+      "submit": "Thibitisha",
+      "title": "Nambari ya uokoaji",
+      "use_authenticator": "Tumia programu ya uhakiki badala yake"
+    },
+    "register": {
+      "agent": "Wakala",
+      "already_have_account": "Tayari una akaunti?",
+      "and": "na",
+      "creating": "Kuunda akaunti yako ...",
+      "email_label": "Barua pepe",
+      "failed": "Imeshindwa kuunda akaunti",
+      "first_name_label": "Jina la kwanza",
+      "landlord": "Mwenye nyumba",
+      "landlord_description": "Kuwa na mali ya kukodisha",
+      "last_name_label": "Jina la mwisho",
+      "password_confirmation_label": "Thibitisha nywila",
+      "password_label": "Nenosiri",
+      "password_requirement_hasLowercase": "Angalau herufi ndogo (A-Z)",
+      "password_requirement_hasNumber": "Angalau nambari moja (0-9)",
+      "password_requirement_hasSpecial": "Angalau tabia moja maalum (!@",
+      "password_requirement_hasUppercase": "Angalau barua moja ya juu (A-Z)",
+      "password_requirement_minLength": "Angalau wahusika 8",
+      "password_requirements": "Nenosiri lako lazima liwe:",
+      "password_strength": "Nguvu ya nywila",
+      "password_strength_medium": "Kati",
+      "password_strength_strong": "Nguvu",
+      "password_strength_very_strong": "Nguvu sana",
+      "password_strength_weak": "Dhaifu",
+      "phone_label": "Nambari ya simu",
+      "privacy_policy": "Sera ya faragha",
+      "role_label": "Mimi ni",
+      "sign_in": "Ingia",
+      "submit": "Unda akaunti",
+      "success": "Akaunti yako imeundwa kwa mafanikio! \nTafadhali thibitisha barua pepe yako",
+      "tenant": "Mpangaji",
+      "tenant_description": "Kutafuta mahali pa kukodisha",
+      "terms": "Nakubali",
+      "terms_link": "Masharti ya Huduma",
+      "title": "Unda akaunti"
+    },
+    "reset_password": {
+      "confirm_password_label": "Thibitisha nywila mpya",
+      "description": "Ingiza nywila yako mpya hapa chini.",
+      "password_label": "Nywila mpya",
+      "resetting": "Kuweka upya ...",
+      "submit": "Rudisha nywila",
+      "success": "Nenosiri lako limewekwa upya kwa mafanikio. \nSasa unaweza kuingia na nywila yako mpya.",
+      "title": "Rudisha nywila"
+    },
+    "two_factor": {
+      "code_label": "Nambari ya uthibitisho",
+      "description": "Tafadhali ingiza nambari ya uthibitishaji kutoka kwa programu yako ya kithibitishaji.",
+      "submit": "Thibitisha",
+      "success": "Uthibitishaji umefanikiwa!",
+      "title": "Uthibitishaji wa sababu mbili",
+      "use_recovery": "Tumia nambari ya uokoaji badala yake"
+    },
+    "verify_email": {
+      "check_spam": "Ikiwa hauoni barua pepe, tafadhali angalia folda yako ya spam au uombe kiunga kipya cha uthibitisho.",
+      "description": "Tumetuma barua pepe ya uhakiki kwa <Bail> {Barua pepe} </emall>. \nTafadhali angalia kikasha chako na ubonyeze kiunga cha uthibitisho.",
+      "email_required": "Barua pepe inahitajika",
+      "resend_button": "Barua pepe ya uthibitisho",
+      "resend_success": "Barua pepe ya uthibitisho imekasirika. \nTafadhali angalia kikasha chako",
+      "sending": "Kutuma ...",
+      "title": "Thibitisha barua pepe yako",
+      "verification_progress": "Kuthibitisha anwani yako ya barua pepe ...",
+      "verification_success": "Barua pepe yako imethibitishwa kwa mafanikio! \nKuelekeza kuingia ..."
+    }
+  },
+  "about": {
+    "prerelease": "Kabla ya kutolewa"
+  },
+  "dashboard": {
+    "overview": {
+      "applications": {
+        "approved": "Kupitishwa",
+        "new": "Mpya",
+        "processing": "Usindikaji",
+        "rejected": "Kukataliwa",
+        "title": "Maombi"
+      },
+      "no_activity": "Hakuna shughuli za hivi karibuni",
+      "payments": {
+        "due": "Kwa sababu",
+        "overdue": "Kucheleweshwa",
+        "paid": "Kulipwa",
+        "pending": "Inasubiri",
+        "title": "Malipo"
+      },
+      "properties": {
+        "available": "Inapatikana",
+        "pending": "Idhini inayosubiri",
+        "title": "Mali",
+        "total": "Jumla ya mali",
+        "unavailable": "Haipatikani"
+      },
+      "recent_activity": "Shughuli za hivi karibuni",
+      "summary": "Hapa kuna muhtasari wa shughuli yako ya kukodisha",
+      "title": "Dashibodi",
+      "view_all": "Tazama Zote",
+      "welcome": "Karibu tena, {jina}"
+    },
+    "properties": {
+      "add_new": "Ongeza mali mpya",
+      "empty_state": "Huna mali yoyote bado.",
+      "filters": {
+        "active": "Orodha zinazotumika",
+        "all": "Mali zote",
+        "inactive": "Orodha zisizotumika",
+        "pending": "Idhini inayosubiri",
+        "rented": "Mali zilizokodishwa"
+      },
+      "property_card": {
+        "availability": "Inapatikana: {hali}",
+        "delete": "Futa mali",
+        "edit": "Hariri mali",
+        "inquiries": "{hesabu} maswali",
+        "price": "KES {kiasi} / mwezi",
+        "status": "Hali: {hali}",
+        "view": "Tazama maelezo",
+        "views": "{Hesabu} maoni"
+      },
+      "sort": {
+        "newest": "Kwanza kabisa",
+        "oldest": "Zamani zaidi",
+        "price_high": "Bei: juu hadi chini",
+        "price_low": "Bei: chini hadi juu"
+      },
+      "title": "Mali yangu"
+    }
+  },
+  "errors": {
+    "image_upload_failed": "Imeshindwa kupakia picha",
+    "load_more_failed": "Imeshindwa kupakia data zaidi. \nTafadhali jaribu tena.",
+    "network_error": "Kosa la mtandao. \nTafadhali angalia muunganisho wako.",
+    "no_selected_rows": "Usafirishaji hauwezi kuendelea kama hakuna safu zilizochaguliwa.",
+    "no_user_found": "Mtumiaji hajapatikana",
+    "not_found": "Haipatikani",
+    "passkey_add_failed": "Kusajili Passkey ilishindwa. \nJaribu tena baadaye.",
+    "passkey_failed": "Uthibitishaji wa Passkey ulishindwa",
+    "passkey_failed_text": "Uthibitishaji wa Passkey ulishindwa. \nTafadhali jaribu tena au tumia njia nyingine.",
+    "passkey_remove_failed": "Kuondoa Passkey ilishindwa. \nJaribu tena baadaye.",
+    "passkey_sign_in": "Uthibitishaji wa Passkey ulishindwa.",
+    "request_failed": "Ombi limeshindwa",
+    "slug_exists": "Slug tayari ipo",
+    "too_many_requests": "Maombi mengi sana",
+    "unauthorized_action": "Isiyoidhinishwa",
+    "bad_request_action": "Ombi mbaya",
+    "error": "Kosa",
+    "forbidden_action": "Marufuku",
+    "general": "Kitu kilienda vibaya. \nTafadhali jaribu tena."
+  },
+  "profile": {
+    "account": {
+      "change_password": "Badilisha nywila",
+      "title": "Mipangilio ya Akaunti",
+      "two_factor": "Uthibitishaji wa sababu mbili",
+      "delete_account": "Futa akaunti",
+      "download_data": "Pakua data yangu"
+    },
+    "address": {
+      "city": "Mji",
+      "country": "Nchi",
+      "state": "Kata/jimbo",
+      "street": "Anwani ya barabara",
+      "title": "Anwani",
+      "zip": "Nambari ya Posta"
+    },
+    "messages": {
+      "error": "Imeshindwa kusasisha wasifu",
+      "saved": "Profaili imesasishwa kwa mafanikio"
+    },
+    "personal_info": {
+      "bio": "Kuhusu mimi",
+      "date_of_birth": "Tarehe ya kuzaliwa",
+      "email": "Barua pepe",
+      "first_name": "Jina la kwanza",
+      "id_number": "Nambari ya kitambulisho",
+      "last_name": "Jina la mwisho",
+      "phone": "Simu",
+      "title": "Habari ya kibinafsi"
+    },
+    "preferences": {
+      "currency": "Sarafu",
+      "email_notifications": "Arifa za barua pepe",
+      "language": "Lugha",
+      "push_notifications": "Arifa za kushinikiza",
+      "sms_notifications": "Arifa za SMS",
+      "title": "Upendeleo"
+    },
+    "title": "Wasifu wangu"
+  },
+  "properties": {
+    "detail": {
+      "apply": "Omba sasa",
+      "contact": "Wasiliana na mwenye nyumba",
+      "features": "Vipengee",
+      "floor_plan": "Mpango wa sakafu",
+      "gallery": "Matunzio",
+      "location": "Mahali",
+      "overview": "Muhtasari",
+      "report": "Orodha ya Ripoti",
+      "save": "Kuokoa mali",
+      "share": "Shiriki"
+    },
+    "filters": {
+      "amenities": "Huduma",
+      "apply_filters": "Omba vichungi",
+      "available_date": "Inapatikana kutoka",
+      "bathrooms": "Bafu",
+      "bedrooms": "Vyumba vya kulala",
+      "clear_all": "Futa vichungi vyote",
+      "furnishing": "Samani",
+      "pet_policy": "Sera ya pet",
+      "price_range": "Anuwai ya bei",
+      "property_type": "Aina ya mali"
+    },
+    "listing": {
+      "filter_title": "Mali ya chujio",
+      "no_results": "Hakuna mali inayopatikana inayofanana na vigezo vyako",
+      "results_count": "{Hesabu} mali zilizopatikana",
+      "search_placeholder": "Tafuta kwa eneo au jina la mali",
+      "title": "Mali"
+    },
+    "new": {
+      "amenities": "Huduma",
+      "completed": {
+        "description": "Mali yako imeundwa kwa mafanikio. \nSasa unaweza kuanza kuorodhesha kwenye jukwaa.",
+        "title": "Mali imeundwa"
+      },
+      "contact": "Maelezo ya mawasiliano",
+      "description": "Maelezo",
+      "details": "Maelezo ya mali",
+      "features": "Vipengee",
+      "general": "Habari ya jumla",
+      "location": "Mahali",
+      "media": "Media",
+      "pricing": "Bei",
+      "publish": "Chapisha mali",
+      "rentAmount": "Kiasi cha kodi",
+      "rules": "Sheria",
+      "securityDeposit": "Amana ya usalama",
+      "start": {
+        "button_text": "Anza",
+        "description": "Wacha tuanze na orodha yako ya mali",
+        "title": "Karibu kwenye {AppName}"
+      }
+    },
+    "units": {
+      "add_new": "Ongeza kitengo kipya",
+      "bathrooms": "Bafu",
+      "bedrooms": "Vyumba vya kulala",
+      "create": "Unda",
+      "error": "Imeshindwa kuunda kitengo",
+      "features": "Vipengee",
+      "features_description": "Vipengele vya kitengo",
+      "floor": "Sakafu",
+      "is_active": "Inafanya kazi",
+      "is_active_description": "Ikiwa kitengo kinafanya kazi au la",
+      "notes": "Vidokezo",
+      "rent_amount": "Kiasi cha kodi",
+      "rent_due_day": "Kodi ya siku",
+      "saving": "Kuokoa ...",
+      "saving_error": "Imeshindwa kuokoa kitengo",
+      "saving_success": "Kitengo kimeokolewa kwa mafanikio",
+      "security_deposit": "Amana ya usalama",
+      "size": "Saizi",
+      "size_description": "Saizi ya kitengo katika mita za mraba",
+      "status": {
+        "available": "Inapatikana",
+        "maintenance": "Matengenezo",
+        "occupied": "Ilichukua",
+        "reserved": "Imehifadhiwa",
+        "unavailable": "Haipatikani"
+      },
+      "status_text": "Hali",
+      "title": "Vitengo",
+      "types": {
+        "1br": "Chumba 1 cha kulala",
+        "2br": "2 Chumba cha kulala",
+        "3br": "Chumba cha kulala 3",
+        "commercial": "Biashara",
+        "other": "Nyingine",
+        "studio": "Studio"
+      },
+      "update_success": "Kitengo kilisasishwa kwa mafanikio",
+      "create_success": "Kitengo kiliundwa kwa mafanikio",
+      "empty_state": "Bado hauna vitengo vyovyote.",
+      "error_update": "Imeshindwa kusasisha kitengo",
+      "unit_number": "Nambari ya kitengo",
+      "unit_type": "Aina ya kitengo",
+      "update": "Sasisha"
+    }
+  },
+  "2fa": {
+    "backup_codes_regenerated": "Nambari za chelezo zimefanywa upya kwa mafanikio!",
+    "disabled_success": "Uthibitishaji wa sababu mbili umezimwa kwa mafanikio!",
+    "failed_to_disable_2fa": "Imeshindwa kulemaza uthibitisho wa sababu mbili",
+    "failed_to_load_2fa_status": "Imeshindwa kupakia hali ya uthibitisho wa sababu mbili",
+    "failed_to_regenerate_backup_codes": "Imeshindwa kuunda tena nambari za chelezo",
+    "failed_to_setup_2fa": "Imeshindwa kuwezesha uthibitisho wa sababu mbili",
+    "failed_to_verify_2fa": "Imeshindwa kuthibitisha uthibitisho wa sababu mbili",
+    "invalid_2fa_token": "Ishara batili ya uthibitisho wa sababu mbili",
+    "invalid_backup_code": "Nambari ya chelezo batili",
+    "setup_success": "Uthibitishaji wa sababu mbili umewezeshwa kwa mafanikio!",
+    "verification_success": "Uthibitishaji wa sababu mbili umethibitishwa kwa mafanikio!"
+  },
+  "admin": {
+    "settings": {
+      "general": "Mkuu",
+      "mpesa": {
+        "consumerKey": "Ufunguo wa watumiaji",
+        "consumerSecret": "Siri ya watumiaji",
+        "passkey": "Passkey",
+        "shortcode": "Njia ya mkato",
+        "title": "Mipangilio ya M-Pesa"
+      },
+      "notifications": "Arifa",
+      "payments": "Malipo",
+      "title": "Mipangilio"
+    }
+  },
+  "danger_zone": {
+    "dialog": {
+      "confirm": "Futa kitengo",
+      "description": "Kitendo hiki hakiwezi kubadilika na kitafuta kitengo hicho kabisa.",
+      "placeholder": "Aina Futa ili kudhibitisha",
+      "title": "Eneo la hatari"
+    }
+  },
+  "payments": {
+    "amount": "Kiasi",
+    "amountDescription": "Ingiza kiasi unachotaka kulipa",
+    "failureMessage": "Malipo yalishindwa",
+    "makePayment": "Fanya malipo",
+    "mpesaDescription": "Lipa kwa kutumia akaunti yako ya M-Pesa",
+    "mpesaSupport": "Kwa msaada, wasiliana na support@kaa.co.ke",
+    "payNow": "Lipa sasa",
+    "paymentError": "Malipo yalishindwa. \nTafadhali jaribu tena.",
+    "paymentFailed": "Malipo yalishindwa.",
+    "paymentMethod": "Njia ya malipo",
+    "paymentMethodDescription": "Chagua njia ya malipo unayotaka kutumia",
+    "pendingMessage": "Malipo yanasubiri ...",
+    "phoneNumber": "Nambari ya simu",
+    "phoneNumberDescription": "Ingiza nambari yako ya simu kupokea maagizo ya malipo",
+    "processing": "Usindikaji ...",
+    "stripeDescription": "Lipa kwa kutumia kadi yako",
+    "successMessage": "Malipo yamefanikiwa!",
+    "title": "Malipo",
+    "paymentPending": "Malipo yanasubiri ...",
+    "paymentSuccess": "Malipo yamefanikiwa!",
+    "paymentTimeout": "Malipo ya muda. \nTafadhali jaribu tena.",
+    "paymentMethodMpesa": "M-pesa",
+    "paymentMethodStripe": "Kadi"
+  }
+}

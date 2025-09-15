@@ -1,0 +1,291 @@
+<mjml>
+  <mj-head>
+    <mj-title>Reference Update - Your Profile is {{verificationPercentage}}% Complete</mj-title>
+    <mj-preview>{{tenantName}}, your verification progress has been updated - you're making great progress!</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Helvetica Neue', Arial, sans-serif"></mj-all>
+      <mj-text padding="0px 25px" font-size="16px" line-height="22px" color="#525252"></mj-text>
+      <mj-button background-color="#2563EB" border-radius="6px" font-size="16px" font-weight="600" padding="12px 24px"></mj-button>
+    </mj-attributes>
+    <mj-style inline="inline">
+      .progress-badge { padding: 8px 16px; border-radius: 20px; font-weight: 600; }
+      .progress-excellent { background-color: #DCFCE7; color: #166534; }
+      .progress-good { background-color: #DBEAFE; color: #1E40AF; }
+      .progress-moderate { background-color: #FEF3C7; color: #92400E; }
+      .progress-bar { background-color: #e5e7eb; height: 10px; border-radius: 5px; overflow: hidden; }
+      .progress-fill { background-color: #10B981; height: 100%; transition: width 0.3s ease; }
+      .next-step { background-color: #f0f9ff; padding: 15px; margin: 8px 0; border-radius: 8px; border-left: 4px solid #2563EB; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f8fafc">
+    <!-- Header -->
+    <mj-section background-color="#2563EB" padding="0">
+      <mj-column>
+        <mj-text align="center" color="#ffffff" font-size="24px" font-weight="bold" padding="30px 20px">
+          📈 Profile Progress Update
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Progress Overview -->
+    <mj-section background-color="#ffffff" padding="40px 20px">
+      <mj-column>
+        <!-- Greeting -->
+        <mj-text font-size="18px" font-weight="600" color="#1f2937" padding-bottom="15px">
+          Hello {{tenantName}},
+        </mj-text>
+
+        <!-- Progress Update Message -->
+        <mj-text padding-bottom="20px">
+          Great news! Your profile verification has been updated. You're making excellent progress toward building a complete, trustworthy rental profile.
+        </mj-text>
+
+        <!-- Progress Badge -->
+        <mj-text align="center" padding="20px 0">
+          <span class="progress-badge {{#ifGte verificationPercentage 90}}progress-excellent{{else}}{{#ifGte verificationPercentage 70}}progress-good{{else}}progress-moderate{{/ifGte}}{{/ifGte}}">
+            {{verificationPercentage}}% Complete
+            {{#ifGte verificationPercentage 70}}
+            ✓ Verified!
+            {{/ifGte}}
+          </span>
+        </mj-text>
+
+        <!-- Progress Bar -->
+        <mj-text align="center" color="#6b7280" font-size="14px" padding-bottom="10px">
+          Profile Completion Progress
+        </mj-text>
+        <div style="background-color: #e5e7eb; height: 10px; border-radius: 5px; overflow: hidden; margin: 0 25px 20px 25px;">
+          <div class="progress-fill" style="width: {{verificationPercentage}}%;"></div>
+        </div>
+      </mj-column>
+    </mj-section>
+
+    <!-- Milestone Message -->
+    <mj-section background-color="#ffffff" padding="0 20px 30px">
+      <mj-column>
+        {{#ifGte verificationPercentage 90}}
+        <mj-text align="center" background-color="#f0fdf4" padding="20px" border-radius="8px">
+          🎉 <strong>Outstanding!</strong> You're almost at 100% verification. Your profile looks amazing to landlords!
+        </mj-text>
+        {{else}}
+        {{#ifGte verificationPercentage 70}}
+        <mj-text align="center" background-color="#f0f9ff" padding="20px" border-radius="8px">
+          🌟 <strong>Congratulations!</strong> You've reached verified status! Your profile now displays the verified badge.
+        </mj-text>
+        {{else}}
+        {{#ifGte verificationPercentage 50}}
+        <mj-text align="center" background-color="#fef3c7" padding="20px" border-radius="8px">
+          📈 <strong>Great progress!</strong> You're over halfway there. Keep adding references to reach verified status.
+        </mj-text>
+        {{else}}
+        <mj-text align="center" background-color="#fef2f2" padding="20px" border-radius="8px">
+          🚀 <strong>Good start!</strong> You're building a solid foundation. More references will significantly boost your profile.
+        </mj-text>
+        {{/ifGte}}
+        {{/ifGte}}
+        {{/ifGte}}
+      </mj-column>
+    </mj-section>
+
+    <!-- Profile Strength Breakdown -->
+    {{#if profileStrength}}
+    <mj-section background-color="#f9fafb" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          💪 Profile Strength Breakdown:
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          🏠 <strong>Rental History:</strong> {{profileStrength.rentalHistory}}
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          💼 <strong>Employment Verification:</strong> {{profileStrength.employment}}
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          👥 <strong>Character References:</strong> {{profileStrength.character}}
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          🛡️ <strong>Community Standing:</strong> {{profileStrength.community}}
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    {{/if}}
+
+    <!-- Next Steps Section -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          🎯 Recommended next steps:
+        </mj-text>
+
+        {{#ifLt verificationPercentage 70}}
+        <mj-table class="next-step">
+          <tr>
+            <td style="width: 40px; vertical-align: top;">
+              <span style="color: #2563EB; font-size: 20px;">1️⃣</span>
+            </td>
+            <td>
+              <strong>Add More References</strong>
+              <div style="color: #6b7280; font-size: 14px; margin-top: 5px;">
+                {{#ifLt verificationPercentage 30}}
+                Add at least 2-3 more references to show your credibility
+                {{else}}
+                Add 1-2 more references to reach verified status (70%+)
+                {{/ifLt}}
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+        {{/ifLt}}
+
+        {{#ifLt verificationPercentage 90}}
+        <mj-table class="next-step">
+          <tr>
+            <td style="width: 40px; vertical-align: top;">
+              <span style="color: #2563EB; font-size: 20px;">{{#ifLt verificationPercentage 70}}2️⃣{{else}}1️⃣{{/ifLt}}</span>
+            </td>
+            <td>
+              <strong>Diversify Reference Types</strong>
+              <div style="color: #6b7280; font-size: 14px; margin-top: 5px;">
+                Include different types like employers, previous landlords, SACCOS members, or community leaders
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+        {{/ifLt}}
+
+        <mj-table class="next-step">
+          <tr>
+            <td style="width: 40px; vertical-align: top;">
+              <span style="color: #2563EB; font-size: 20px;">{{#ifLt verificationPercentage 70}}3️⃣{{else}}{{#ifLt verificationPercentage 90}}2️⃣{{else}}1️⃣{{/ifLt}}{{/ifLt}}</span>
+            </td>
+            <td>
+              <strong>Follow Up with Pending References</strong>
+              <div style="color: #6b7280; font-size: 14px; margin-top: 5px;">
+                Gently remind your references to complete their submissions if they haven't responded yet
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Benefits Preview -->
+    {{#ifGte verificationPercentage 70}}
+    <mj-section background-color="#f0fdf4" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#166534" padding-bottom="15px">
+          🎉 You're now enjoying verified tenant benefits:
+        </mj-text>
+
+        <mj-text color="#166534" padding-bottom="8px">
+          ✓ Priority consideration from landlords
+        </mj-text>
+
+        <mj-text color="#166534" padding-bottom="8px">
+          ✓ Verified badge displayed on your applications
+        </mj-text>
+
+        <mj-text color="#166534" padding-bottom="8px">
+          ✓ Access to premium properties
+        </mj-text>
+
+        <mj-text color="#166534" padding-bottom="8px">
+          ✓ Better negotiating power for terms
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    {{else}}
+    <mj-section background-color="#fef3c7" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#92400E" padding-bottom="15px">
+          🎯 Reach 70% to unlock verified benefits:
+        </mj-text>
+
+        <mj-text color="#92400E" padding-bottom="8px">
+          • Priority application processing
+        </mj-text>
+
+        <mj-text color="#92400E" padding-bottom="8px">
+          • Verified tenant badge
+        </mj-text>
+
+        <mj-text color="#92400E" padding-bottom="8px">
+          • Access to exclusive properties
+        </mj-text>
+
+        <mj-text color="#92400E" padding-bottom="8px">
+          • Better rental terms and conditions
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    {{/ifGte}}
+
+    <!-- Action Button -->
+    <mj-section background-color="#ffffff" padding="0 20px 40px">
+      <mj-column>
+        <mj-text align="center" font-weight="600" color="#374151" padding-bottom="20px">
+          {{#ifLt verificationPercentage 70}}
+          Ready to boost your verification score?
+          {{else}}
+          View your verified profile:
+          {{/ifLt}}
+        </mj-text>
+
+        <mj-button href="{{dashboardUrl}}" background-color="#2563EB" width="60%">
+          {{#ifLt verificationPercentage 70}}
+          Add More References
+          {{else}}
+          View Dashboard
+          {{/ifLt}}
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- Pro Tips -->
+    <mj-section background-color="#f9fafb" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          💡 Pro Tips for Stronger References:
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          • <strong>Mix professional and personal:</strong> Include both work colleagues and community members
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          • <strong>Choose reliable contacts:</strong> Pick people who respond to emails and calls promptly
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          • <strong>Give context:</strong> Let your references know you're applying for rentals
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          • <strong>Keep it fresh:</strong> Recent references carry more weight than older ones
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-divider border-color="#e5e7eb" border-width="1px" padding="0 0 20px 0"></mj-divider>
+        
+        <mj-text font-size="12px" color="#9ca3af" align="center">
+          This update was sent because your reference verification status changed significantly. 
+          You can manage your references anytime from your dashboard. Questions? Contact us at 
+          <a href="mailto:{{supportEmail}}" style="color: #2563EB;">{{supportEmail}}</a>
+        </mj-text>
+
+        <mj-text font-size="12px" color="#9ca3af" align="center" padding="15px 0 0 0">
+          Kaa Properties - Building trust in Kenya's rental market<br>
+          © {{year}} Kaa Properties. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

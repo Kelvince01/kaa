@@ -1,0 +1,60 @@
+/* @import "../components/common/blocknote/styles.css" layer(base); */
+
+@import "@kaa/ui/globals.css";
+
+/* Custom Mapbox Popup Styling */
+.mapboxgl-custom-popup .mapboxgl-popup-content {
+	@apply bg-card text-card-foreground p-5 rounded-lg;
+}
+
+.mapboxgl-custom-popup .mapboxgl-popup-close-button {
+	font-size: 22px;
+	padding: 0 6px;
+	right: 0;
+	top: 0;
+}
+
+.mapboxgl-custom-popup .mapboxgl-popup-close-button:hover {
+	background-color: transparent;
+}
+
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip {
+	border-bottom-color: var(--card);
+	border-top-color: transparent;
+	border-left-color: transparent;
+	border-right-color: transparent;
+}
+
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+	border-top-color: var(--card);
+	border-bottom-color: transparent;
+	border-left-color: transparent;
+	border-right-color: transparent;
+}
+
+.mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+	border-right-color: var(--card);
+	border-top-color: transparent;
+	border-bottom-color: transparent;
+	border-left-color: transparent;
+}
+
+.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+	border-left-color: var(--card);
+	border-top-color: transparent;
+	border-bottom-color: transparent;
+	border-right-color: transparent;
+}
+
+.dark .mapboxgl-popup-anchor-top .mapboxgl-popup-tip {
+	border-bottom-color: var(--card);
+}
+.dark .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+	border-top-color: var(--card);
+}
+.dark .mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+	border-right-color: var(--card);
+}
+.dark .mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+	border-left-color: var(--card);
+}

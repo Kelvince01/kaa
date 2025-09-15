@@ -1,0 +1,1 @@
+Hi {{tenantName}}, we've received your payment of {{formatCurrency amount}} for unit {{unitNumber}}. Receipt number: {{receiptNumber}}. Thank you!

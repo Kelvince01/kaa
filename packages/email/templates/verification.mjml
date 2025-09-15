@@ -1,0 +1,76 @@
+<mjml>
+  <mj-head>
+    <mj-title>Verify Your Email Address</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Dm Sans" />
+      <mj-text font-size="16px" color="#333333" line-height="24px" />
+      <mj-section padding="20px" />
+    </mj-attributes>
+    <mj-style>
+      a {
+        color: #0066cc;
+        text-decoration: none;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f5f5f5">
+    <mj-section padding-top="30px" padding-bottom="30px">
+      <mj-column>
+        <mj-image width="200px" src="{{logoUrl}}" alt="Kaa Logo" />
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#ffffff" border-radius="5px">
+      <mj-column>
+        <mj-text font-size="24px" font-weight="bold" align="center" color="#333333">
+          Verify Your Email Address
+        </mj-text>
+
+        <mj-text padding-top="20px">
+          Hello {{firstName}},
+        </mj-text>
+
+        <mj-text>
+          Thank you for creating an account with Kaa. Please verify your email address by clicking the button below:
+        </mj-text>
+
+        <mj-button background-color="#4CAF50" color="white" border-radius="4px" font-size="16px" font-weight="bold" href="{{verificationUrl}}" width="300px">
+          Verify Email Address
+        </mj-button>
+
+        <mj-text>
+          If the button doesn't work, please copy and paste the following link into your browser:
+        </mj-text>
+
+        <mj-text font-size="14px" color="#0066cc">
+          {{verificationUrl}}
+        </mj-text>
+
+        <mj-text>
+          This link will expire in 24 hours.
+        </mj-text>
+
+        <mj-text>
+          If you did not create an account, please ignore this email.
+        </mj-text>
+
+        <mj-text padding-top="20px">
+          Best regards,<br />
+          The Kaa Team
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column>
+        <mj-text font-size="12px" color="#999999" align="center">
+          If you have any questions, please contact us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>
+        </mj-text>
+
+        <mj-text font-size="12px" color="#999999" align="center">
+          &copy; {{year}} Kaa. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

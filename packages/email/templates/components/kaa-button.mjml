@@ -1,0 +1,13 @@
+<mj-button 
+  background-color="{{theme.colors.primary}}" 
+  color="white" 
+  border-radius="{{theme.borderRadius}}" 
+  font-size="16px" 
+  font-weight="bold" 
+  href="{{buttonUrl}}" 
+  width="300px"
+  padding="{{theme.spacing.small}}"
+  inner-padding="12px 24px"
+>
+  {{buttonText}}
+</mj-button>

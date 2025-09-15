@@ -1,0 +1,265 @@
+<mjml>
+  <mj-head>
+    <mj-title>Monthly Report - {{reportPeriod}}</mj-title>
+    <mj-preview>Your monthly property management report for {{reportPeriod}}</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'DM Sans', sans-serif"></mj-all>
+      <mj-text font-weight="400" font-size="16px" color="#000000" line-height="24px" font-family="'DM Sans', sans-serif"></mj-text>
+    </mj-attributes>
+    <mj-style inline="inline">
+      .blue-links a {
+        color: #0066cc;
+        text-decoration: none;
+      }
+
+      .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #0066cc;
+      }
+
+      .stat-label {
+        font-size: 14px;
+        color: #666666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f4f4f4">
+    <!-- Header -->
+    <mj-section background-color="#ffffff" padding-bottom="0px">
+      <mj-column>
+        <mj-image width="200px" src="{{logoUrl}}" alt="Kaa SaaS Logo"></mj-image>
+        <mj-divider border-color="#e0e0e0"></mj-divider>
+      </mj-column>
+    </mj-section>
+
+    <!-- Title -->
+    <mj-section background-color="#ffffff" padding-top="20px">
+      <mj-column>
+        <mj-text align="center" font-size="28px" font-weight="bold" color="#333333">
+          Monthly Report
+        </mj-text>
+        <mj-text align="center" font-size="18px" color="#666666">
+          {{reportPeriod}}
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Payment Statistics -->
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="20px" font-weight="bold" color="#0066cc" padding-bottom="10px">
+          💰 Payment Statistics
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#f9f9f9" padding="20px">
+      <mj-column width="33.33%">
+        <mj-text align="center" css-class="stat-number">
+          {{paymentStats.count}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          Total Payments
+        </mj-text>
+      </mj-column>
+      <mj-column width="33.33%">
+        <mj-text align="center" css-class="stat-number">
+          KES {{paymentStats.totalAmount}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          Total Amount
+        </mj-text>
+      </mj-column>
+      <mj-column width="33.33%">
+        <mj-text align="center" css-class="stat-number">
+          KES {{paymentStats.averageAmount}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          Average Payment
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Property Statistics -->
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="20px" font-weight="bold" color="#0066cc" padding-bottom="10px">
+          🏠 Property Statistics
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#f9f9f9" padding="20px">
+      <mj-column width="25%">
+        <mj-text align="center" css-class="stat-number">
+          {{propertyStats.totalProperties}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          Total Properties
+        </mj-text>
+      </mj-column>
+      <mj-column width="25%">
+        <mj-text align="center" css-class="stat-number">
+          {{propertyStats.newProperties}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          New Properties
+        </mj-text>
+      </mj-column>
+      <mj-column width="25%">
+        <mj-text align="center" css-class="stat-number">
+          {{propertyStats.availableProperties}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          Available
+        </mj-text>
+      </mj-column>
+      <mj-column width="25%">
+        <mj-text align="center" css-class="stat-number">
+          {{propertyStats.unavailableProperties}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          Unavailable
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Property Types -->
+    <mj-section background-color="#f9f9f9" padding="0px 20px 20px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="bold" color="#333333" padding-bottom="10px">
+          Property Types Breakdown
+        </mj-text>
+        {{#each propertyStats.propertyTypes}}
+          <mj-text font-size="14px" color="#666666" padding="2px 0px">
+            <strong>{{this._id}}:</strong> {{this.count}} properties
+          </mj-text>
+        {{/each}}
+      </mj-column>
+    </mj-section>
+
+    <!-- User Statistics -->
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="20px" font-weight="bold" color="#0066cc" padding-bottom="10px">
+          👥 User Statistics
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#f9f9f9" padding="20px">
+      <mj-column width="25%">
+        <mj-text align="center" css-class="stat-number">
+          {{userStats.totalUsers}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          Total Users
+        </mj-text>
+      </mj-column>
+      <mj-column width="25%">
+        <mj-text align="center" css-class="stat-number">
+          {{userStats.newUsers}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          New Users
+        </mj-text>
+      </mj-column>
+      <mj-column width="25%">
+        <mj-text align="center" css-class="stat-number">
+          {{userStats.activeUsers}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          Active Users
+        </mj-text>
+      </mj-column>
+      <mj-column width="25%">
+        <mj-text align="center" css-class="stat-number">
+          {{userStats.inactiveUsers}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          Inactive Users
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Lease Statistics -->
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="20px" font-weight="bold" color="#0066cc" padding-bottom="10px">
+          📋 Lease Statistics
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#f9f9f9" padding="20px">
+      <mj-column width="20%">
+        <mj-text align="center" css-class="stat-number">
+          {{leaseStats.totalLeases}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          Total Leases
+        </mj-text>
+      </mj-column>
+      <mj-column width="20%">
+        <mj-text align="center" css-class="stat-number">
+          {{leaseStats.newLeases}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          New Leases
+        </mj-text>
+      </mj-column>
+      <mj-column width="20%">
+        <mj-text align="center" css-class="stat-number">
+          {{leaseStats.activeLeases}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          Active Leases
+        </mj-text>
+      </mj-column>
+      <mj-column width="20%">
+        <mj-text align="center" css-class="stat-number">
+          {{leaseStats.terminatedLeases}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          Terminated
+        </mj-text>
+      </mj-column>
+      <mj-column width="20%">
+        <mj-text align="center" css-class="stat-number">
+          KES {{leaseStats.averageRent}}
+        </mj-text>
+        <mj-text align="center" css-class="stat-label">
+          Average Rent
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Call to Action -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-button background-color="#0066cc" color="white" font-size="16px" font-weight="bold" href="{{dashboardUrl}}" border-radius="5px">
+          View Full Dashboard
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section background-color="#333333" padding="20px">
+      <mj-column>
+        <mj-text align="center" color="#ffffff" font-size="12px">
+          This is an automated report generated by Kaa SaaS platform.
+        </mj-text>
+        <mj-text align="center" color="#ffffff" font-size="12px">
+          If you have any questions, please contact our support team.
+        </mj-text>
+        <mj-divider border-color="#666666" padding="10px 0px"></mj-divider>
+        <mj-text align="center" color="#999999" font-size="10px">
+          © {{currentYear}} Kaa SaaS. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

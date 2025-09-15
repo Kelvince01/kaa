@@ -1,0 +1,122 @@
+<mjml>
+  <mj-head>
+    <mj-title>Reference Request for {{tenantName}} - Property Application</mj-title>
+    <mj-preview>{{providerName}}, your reference is requested for {{tenantName}}'s rental application</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Helvetica Neue', Arial, sans-serif"></mj-all>
+      <mj-text padding="0px 25px" font-size="16px" line-height="22px" color="#525252"></mj-text>
+      <mj-button background-color="#2563EB" border-radius="6px" font-size="16px" font-weight="600" padding="12px 24px"></mj-button>
+    </mj-attributes>
+    <mj-style inline="inline">
+      .reference-type { background-color: #EFF6FF; color: #1D4ED8; padding: 8px 12px; border-radius: 4px; font-weight: 600; }
+      .urgency-badge { background-color: #FEF3C7; color: #92400E; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+      .expires-soon { background-color: #FEE2E2; color: #991B1B; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f8fafc">
+    <!-- Header -->
+    <mj-section background-color="#2563EB" padding="0">
+      <mj-column>
+        <mj-text align="center" color="#ffffff" font-size="24px" font-weight="bold" padding="30px 20px">
+          🏠 Reference Request
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Main Content -->
+    <mj-section background-color="#ffffff" padding="40px 20px">
+      <mj-column>
+        <!-- Greeting -->
+        <mj-text font-size="18px" font-weight="600" color="#1f2937" padding-bottom="15px">
+          Hello {{providerName}},
+        </mj-text>
+
+        <!-- Request Details -->
+        <mj-text padding-bottom="20px">
+          You have been listed as a <strong>{{referenceType}}</strong> reference for <strong>{{tenantName}}</strong> who is applying to rent {{propertyName}}.
+        </mj-text>
+
+        <mj-text padding-bottom="20px">
+          {{customMessage}}
+        </mj-text>
+
+        <!-- Reference Details Card -->
+        <mj-table padding="20px 0">
+          <tr>
+            <td style="background-color: #f9fafb; padding: 20px; border-radius: 8px;">
+              <h3 style="color: #374151; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">Reference Details</h3>
+              <div style="margin-bottom: 8px;"><strong>Applicant:</strong> {{tenantName}}</div>
+              <div style="margin-bottom: 8px;"><strong>Property:</strong> {{propertyName}}</div>
+              <div style="margin-bottom: 8px;"><strong>Reference Type:</strong> <span class="reference-type">{{referenceType}}</span></div>
+              <div style="margin-bottom: 8px;"><strong>Request Expires:</strong> {{expiresAt}}</div>
+              {{#if tenantEmail}}
+              <div><strong>Applicant Contact:</strong> {{tenantEmail}}</div>
+              {{/if}}
+            </td>
+          </tr>
+        </mj-table>
+
+        <!-- Urgency Notice -->
+        {{#if isUrgent}}
+        <mj-text align="center" padding="15px" background-color="#fef2f2" border-radius="6px">
+          <span class="urgency-badge expires-soon">⚠️ URGENT - Expires in {{daysUntilExpiry}} {{#ifEquals daysUntilExpiry 1}}day{{else}}days{{/ifEquals}}!</span>
+        </mj-text>
+        {{else}}
+        <mj-text align="center" padding="10px" color="#6b7280" font-size="14px">
+          This request expires in {{daysUntilExpiry}} {{#ifEquals daysUntilExpiry 1}}day{{else}}days{{/ifEquals}} ({{expiresAtShort}})
+        </mj-text>
+        {{/if}}
+      </mj-column>
+    </mj-section>
+
+    <!-- Action Buttons -->
+    <mj-section background-color="#ffffff" padding="0 20px 40px">
+      <mj-column>
+        <mj-text align="center" font-weight="600" color="#374151" padding-bottom="20px">
+          Please choose one of the following options:
+        </mj-text>
+      </mj-column>
+      
+      <mj-group>
+        <mj-column>
+          <mj-button href="{{respondUrl}}" background-color="#10B981" width="100%">
+            ✅ Provide Reference
+          </mj-button>
+        </mj-column>
+        <mj-column>
+          <mj-button href="{{respondUrl}}" background-color="#6B7280" width="100%">
+            ❌ Decline Request
+          </mj-button>
+        </mj-column>
+      </mj-group>
+    </mj-section>
+
+    <!-- Information Section -->
+    <mj-section background-color="#f9fafb" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="14px" color="#6b7280" align="center">
+          <strong>What happens next?</strong><br>
+          Your response helps landlords make informed decisions and contributes to a transparent rental process. 
+          The entire process takes just a few minutes to complete.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-divider border-color="#e5e7eb" border-width="1px" padding="0 0 20px 0"></mj-divider>
+        
+        <mj-text font-size="12px" color="#9ca3af" align="center">
+          This reference request was sent on behalf of {{tenantName}}. If you have any questions or concerns, 
+          please contact our support team at <a href="mailto:{{supportEmail}}" style="color: #2563EB;">{{supportEmail}}</a>
+        </mj-text>
+
+        <mj-text font-size="12px" color="#9ca3af" align="center" padding="10px 0 0 0">
+          Kaa Properties - Making rental processes transparent and trustworthy<br>
+          © {{year}} Kaa Properties. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

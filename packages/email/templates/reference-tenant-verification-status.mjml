@@ -1,0 +1,281 @@
+<mjml>
+  <mj-head>
+    <mj-title>Reference Update - {{tenantName}} Application Status</mj-title>
+    <mj-preview>Your reference verification status has been updated - {{statusSummary}}</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Helvetica Neue', Arial, sans-serif"></mj-all>
+      <mj-text padding="0px 25px" font-size="16px" line-height="22px" color="#525252"></mj-text>
+      <mj-button background-color="#2563EB" border-radius="6px" font-size="16px" font-weight="600" padding="12px 24px"></mj-button>
+    </mj-attributes>
+    <mj-style inline="inline">
+      .status-badge { padding: 8px 16px; border-radius: 20px; font-weight: 600; }
+      .status-completed { background-color: #DCFCE7; color: #166534; }
+      .status-pending { background-color: #FEF3C7; color: #92400E; }
+      .status-declined { background-color: #FEE2E2; color: #991B1B; }
+      .reference-item { background-color: #f9fafb; padding: 15px; margin: 8px 0; border-radius: 8px; border-left: 4px solid #e5e7eb; }
+      .reference-completed { border-left-color: #10B981; }
+      .reference-pending { border-left-color: #F59E0B; }
+      .reference-declined { border-left-color: #EF4444; }
+      .progress-bar { background-color: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden; }
+      .progress-fill { background-color: #10B981; height: 100%; transition: width 0.3s ease; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f8fafc">
+    <!-- Header -->
+    <mj-section background-color="#2563EB" padding="0">
+      <mj-column>
+        <mj-text align="center" color="#ffffff" font-size="24px" font-weight="bold" padding="30px 20px">
+          📊 Reference Update
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Status Overview -->
+    <mj-section background-color="#ffffff" padding="40px 20px">
+      <mj-column>
+        <!-- Greeting -->
+        <mj-text font-size="18px" font-weight="600" color="#1f2937" padding-bottom="15px">
+          Hello {{tenantName}},
+        </mj-text>
+
+        <!-- Status Update Message -->
+        <mj-text padding-bottom="20px">
+          Your reference verification status has been updated for your rental application at <strong>{{propertyName}}</strong>.
+        </mj-text>
+
+        <!-- Overall Status -->
+        <mj-text align="center" padding="20px 0">
+          <span class="status-badge {{#ifEquals overallStatus 'completed'}}status-completed{{/ifEquals}}{{#ifEquals overallStatus 'pending'}}status-pending{{/ifEquals}}{{#ifEquals overallStatus 'declined'}}status-declined{{/ifEquals}}">
+            {{#ifEquals overallStatus 'completed'}}✅ All References Complete{{/ifEquals}}
+            {{#ifEquals overallStatus 'pending'}}⏳ References In Progress{{/ifEquals}}
+            {{#ifEquals overallStatus 'partial'}}⚠️ Some References Complete{{/ifEquals}}
+          </span>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Progress Summary -->
+    <mj-section background-color="#ffffff" padding="0 20px 30px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          Progress Summary:
+        </mj-text>
+
+        <mj-table padding="20px 0">
+          <tr>
+            <td style="background-color: #f0f9ff; padding: 25px; border-radius: 8px;">
+              <div style="margin-bottom: 15px;">
+                <strong>{{completedCount}} of {{totalCount}} references completed</strong>
+              </div>
+              
+              <!-- Progress Bar -->
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: {{progressPercentage}}%;"></div>
+              </div>
+              
+              <div style="margin-top: 10px; font-size: 14px; color: #6b7280;">
+                {{progressPercentage}}% complete
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Reference Breakdown -->
+    <mj-section background-color="#ffffff" padding="0 20px 30px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          Reference Status Breakdown:
+        </mj-text>
+
+        {{#each references}}
+        <mj-table class="reference-item reference-{{status}}">
+          <tr>
+            <td style="width: 60px; vertical-align: top;">
+              {{#ifEquals status 'completed'}}
+              <span style="color: #10B981; font-size: 20px;">✅</span>
+              {{/ifEquals}}
+              {{#ifEquals status 'pending'}}
+              <span style="color: #F59E0B; font-size: 20px;">⏳</span>
+              {{/ifEquals}}
+              {{#ifEquals status 'declined'}}
+              <span style="color: #EF4444; font-size: 20px;">❌</span>
+              {{/ifEquals}}
+            </td>
+            <td>
+              <div style="margin-bottom: 8px;">
+                <strong>{{type}}</strong>
+                {{#if providerName}}
+                <br><span style="color: #6b7280;">{{providerName}}</span>
+                {{/if}}
+              </div>
+              
+              <div style="font-size: 14px; color: #6b7280;">
+                {{#ifEquals status 'completed'}}
+                ✓ Completed on {{completedDate}}
+                {{#if rating}}
+                <br>Rating: {{rating}}/5 stars
+                {{/if}}
+                {{/ifEquals}}
+                
+                {{#ifEquals status 'pending'}}
+                Waiting for response ({{daysPending}} days pending)
+                {{#if lastReminderSent}}
+                <br>Last reminder: {{lastReminderSent}}
+                {{/if}}
+                {{/ifEquals}}
+                
+                {{#ifEquals status 'declined'}}
+                Declined on {{declinedDate}}
+                {{#if declineReason}}
+                <br>Reason: {{declineReason}}
+                {{/if}}
+                {{/ifEquals}}
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+        {{/each}}
+      </mj-column>
+    </mj-section>
+
+    <!-- Recent Changes -->
+    {{#if recentChanges}}
+    <mj-section background-color="#f0f9ff" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#1e40af" padding-bottom="15px">
+          📢 Recent Changes:
+        </mj-text>
+
+        {{#each recentChanges}}
+        <mj-text color="#1e40af" padding-bottom="8px">
+          • {{this}}
+        </mj-text>
+        {{/each}}
+      </mj-column>
+    </mj-section>
+    {{/if}}
+
+    <!-- Next Steps -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          What's next?
+        </mj-text>
+
+        {{#ifEquals overallStatus 'completed'}}
+        <mj-text padding-bottom="15px">
+          🎉 <strong>Congratulations!</strong> All your references have been completed. Your application package is now complete and ready for landlord review.
+        </mj-text>
+        
+        <mj-text padding-bottom="15px">
+          • Landlords can now access your full reference profile
+        </mj-text>
+        
+        <mj-text padding-bottom="15px">
+          • You'll be notified of any application decisions
+        </mj-text>
+        
+        <mj-text padding-bottom="15px">
+          • Keep monitoring your dashboard for updates
+        </mj-text>
+        {{/ifEquals}}
+
+        {{#ifEquals overallStatus 'pending'}}
+        <mj-text padding-bottom="15px">
+          ⏳ Some references are still pending. Here's what you can do:
+        </mj-text>
+        
+        <mj-text padding-bottom="15px">
+          • Wait for providers to respond (we'll send reminders automatically)
+        </mj-text>
+        
+        <mj-text padding-bottom="15px">
+          • Consider adding alternative references if some don't respond
+        </mj-text>
+        
+        <mj-text padding-bottom="15px">
+          • Follow up personally with providers if appropriate
+        </mj-text>
+        {{/ifEquals}}
+
+        {{#ifEquals overallStatus 'partial'}}
+        <mj-text padding-bottom="15px">
+          ⚠️ You have a mix of completed and pending/declined references:
+        </mj-text>
+        
+        <mj-text padding-bottom="15px">
+          • Consider adding replacement references for any declined ones
+        </mj-text>
+        
+        <mj-text padding-bottom="15px">
+          • Your completed references are already helping your application
+        </mj-text>
+        
+        <mj-text padding-bottom="15px">
+          • More references generally strengthen your profile
+        </mj-text>
+        {{/ifEquals}}
+      </mj-column>
+    </mj-section>
+
+    <!-- Dashboard CTA -->
+    <mj-section background-color="#ffffff" padding="0 20px 40px">
+      <mj-column>
+        <mj-text align="center" font-weight="600" color="#374151" padding-bottom="20px">
+          View full details and manage your references:
+        </mj-text>
+
+        <mj-button href="{{dashboardUrl}}" background-color="#2563EB" width="60%">
+          Go to Dashboard
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- Tips Section -->
+    {{#if showTips}}
+    <mj-section background-color="#f9fafb" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          💡 Pro Tips:
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          • <strong>Quality over quantity:</strong> 3-4 strong references are better than many weak ones
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          • <strong>Diverse perspectives:</strong> Mix professional, personal, and community references
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          • <strong>Stay in touch:</strong> Let your references know you appreciate their help
+        </mj-text>
+
+        <mj-text padding-bottom="10px">
+          • <strong>Be patient:</strong> Good references take time to provide thoughtful responses
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    {{/if}}
+
+    <!-- Footer -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-divider border-color="#e5e7eb" border-width="1px" padding="0 0 20px 0"></mj-divider>
+        
+        <mj-text font-size="12px" color="#9ca3af" align="center">
+          This update was sent to keep you informed about your reference verification progress. 
+          You can manage your references anytime from your dashboard. Questions? Contact us at 
+          <a href="mailto:{{supportEmail}}" style="color: #2563EB;">{{supportEmail}}</a>
+        </mj-text>
+
+        <mj-text font-size="12px" color="#9ca3af" align="center" padding="15px 0 0 0">
+          Kaa Properties - Transparent rental processes<br>
+          © {{year}} Kaa Properties. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

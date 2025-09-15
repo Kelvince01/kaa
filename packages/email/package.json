@@ -1,0 +1,35 @@
+{
+  "name": "@kaa/email",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "bun biome check .",
+    "check-types": "tsc --noEmit",
+    "mjml:build": "mjml src/templates/*.mjml -o dist/templates",
+    "mjml:watch": "mjml src/templates/*.mjml -o dist/templates --watch",
+    "mjml:validate": "mjml src/templates/*.mjml --validate",
+    "templates:dev": "nodemon --watch src/templates --ext mjml --exec \"bun run mjml:build && bun run dev\"",
+    "templates:preview": "bun src/scripts/email-preview.ts"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^1.4.0",
+    "@elysiajs/html": "^1.4.0",
+    "elysia": "latest",
+    "handlebars": "^4.7.8",
+    "luxon": "^3.7.2",
+    "mjml": "^4.15.3",
+    "resend": "^6.0.3"
+  },
+  "devDependencies": {
+    "@kaa/config": "workspace:*",
+    "@kaa/utils": "workspace:*",
+    "@types/mjml": "^4.7.4",
+    "mjml-cli": "^4.15.3",
+    "nodemon": "^3.1.10",
+    "typescript": "^5.9.2"
+  }
+}

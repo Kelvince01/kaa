@@ -1,0 +1,203 @@
+<mjml>
+  <mj-head>
+    <mj-title>Reference Declined - {{providerName}} Response</mj-title>
+    <mj-preview>{{providerName}} has declined to provide a reference for {{tenantName}}'s rental application</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Helvetica Neue', Arial, sans-serif"></mj-all>
+      <mj-text padding="0px 25px" font-size="16px" line-height="22px" color="#525252"></mj-text>
+      <mj-button background-color="#2563EB" border-radius="6px" font-size="16px" font-weight="600" padding="12px 24px"></mj-button>
+    </mj-attributes>
+    <mj-style inline="inline">
+      .decline-badge { background-color: #FEE2E2; color: #991B1B; padding: 8px 16px; border-radius: 20px; font-weight: 600; }
+      .reference-type { background-color: #EFF6FF; color: #1D4ED8; padding: 8px 12px; border-radius: 4px; font-weight: 600; }
+      .decline-reason { background-color: #fef3c7; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f8fafc">
+    <!-- Header -->
+    <mj-section background-color="#EF4444" padding="0">
+      <mj-column>
+        <mj-text align="center" color="#ffffff" font-size="24px" font-weight="bold" padding="30px 20px">
+          ⚠️ Reference Declined
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Main Content -->
+    <mj-section background-color="#ffffff" padding="40px 20px">
+      <mj-column>
+        <!-- Notification Message -->
+        <mj-text font-size="18px" font-weight="600" color="#1f2937" padding-bottom="15px">
+          Reference Response Received
+        </mj-text>
+
+        <mj-text padding-bottom="20px">
+          <strong>{{providerName}}</strong> has declined to provide a reference as a <strong>{{referenceType}}</strong> 
+          for <strong>{{tenantName}}</strong>'s rental application at {{propertyName}}.
+        </mj-text>
+
+        <!-- Decline Badge -->
+        <mj-text align="center" padding="20px 0">
+          <span class="decline-badge">✗ Declined on {{declinedAt}}</span>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Decline Details -->
+    <mj-section background-color="#ffffff" padding="0 20px 30px">
+      <mj-column>
+        <mj-table padding="20px 0">
+          <tr>
+            <td style="background-color: #fef2f2; padding: 25px; border-radius: 8px; border-left: 4px solid #EF4444;">
+              <h3 style="color: #374151; margin: 0 0 20px 0; font-size: 16px; font-weight: 600;">Decline Details</h3>
+              
+              <div style="margin-bottom: 12px;">
+                <strong>For:</strong> {{tenantName}}
+              </div>
+              
+              <div style="margin-bottom: 12px;">
+                <strong>Property:</strong> {{propertyName}}
+              </div>
+              
+              <div style="margin-bottom: 12px;">
+                <strong>Reference Type:</strong> <span class="reference-type">{{referenceType}}</span>
+              </div>
+
+              <div style="margin-bottom: 12px;">
+                <strong>Declined By:</strong> {{providerName}} ({{providerEmail}})
+              </div>
+
+              <div>
+                <strong>Date Declined:</strong> {{declinedAt}}
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Decline Reason -->
+    {{#if declineReason}}
+    <mj-section background-color="#ffffff" padding="0 20px 30px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          Reason for Declining:
+        </mj-text>
+
+        <mj-table>
+          <tr>
+            <td class="decline-reason">
+              <strong>{{declineReason}}</strong>
+              {{#if customDeclineMessage}}
+              <div style="margin-top: 10px; font-weight: normal;">
+                "{{customDeclineMessage}}"
+              </div>
+              {{/if}}
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+    {{/if}}
+
+    <!-- What This Means -->
+    <mj-section background-color="#f9fafb" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          What this means for your application:
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          • This reference will not be included in your application package
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          • You may want to consider adding an alternative reference of the same type
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          • Your other references (if any) remain valid and will still be processed
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          • Landlords understand that not all reference requests can be fulfilled
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Action Items -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600" color="#374151" padding-bottom="15px">
+          Recommended next steps:
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          <strong>1. Review your reference list:</strong> Consider if you have another {{referenceType}} who might be able to provide a reference.
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          <strong>2. Add alternative references:</strong> You can add different types of references to strengthen your application.
+        </mj-text>
+
+        <mj-text padding-bottom="15px">
+          <strong>3. Contact the provider:</strong> If appropriate, you may wish to reach out to understand their concerns or clarify any misunderstandings.
+        </mj-text>
+
+        <mj-text padding-bottom="20px">
+          <strong>4. Continue with your application:</strong> A declined reference doesn't automatically disqualify you from consideration.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Add New Reference CTA -->
+    <mj-section background-color="#ffffff" padding="0 20px 40px">
+      <mj-column>
+        <mj-text align="center" font-weight="600" color="#374151" padding-bottom="20px">
+          Want to add a replacement reference?
+        </mj-text>
+
+        <mj-button href="{{dashboardUrl}}" background-color="#2563EB" width="60%">
+          Go to Dashboard
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- Support Section -->
+    <mj-section background-color="#f9fafb" padding="30px 20px">
+      <mj-column>
+        <mj-text align="center" color="#6b7280" font-size="14px" padding-bottom="15px">
+          <strong>Need help with your references?</strong>
+        </mj-text>
+
+        <mj-text align="center" color="#6b7280" font-size="14px">
+          Our support team can help you understand reference requirements and suggest alternatives. 
+          Contact us at <a href="mailto:{{supportEmail}}" style="color: #2563EB;">{{supportEmail}}</a>
+        </mj-text>
+
+        <mj-text align="center" color="#6b7280" font-size="12px" padding-top="15px">
+          <strong>Remember:</strong> Most landlords understand that references can sometimes be declined, 
+          and it doesn't necessarily reflect poorly on your application.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section background-color="#ffffff" padding="30px 20px">
+      <mj-column>
+        <mj-divider border-color="#e5e7eb" border-width="1px" padding="0 0 20px 0"></mj-divider>
+        
+        <mj-text font-size="12px" color="#9ca3af" align="center">
+          This notification was sent to inform you of a reference decline for your rental application. 
+          The declined reference will not be shared with landlords. If you have questions, 
+          contact our support team at <a href="mailto:{{supportEmail}}" style="color: #2563EB;">{{supportEmail}}</a>
+        </mj-text>
+
+        <mj-text font-size="12px" color="#9ca3af" align="center" padding="15px 0 0 0">
+          Kaa Properties - Transparent rental processes<br>
+          © {{year}} Kaa Properties. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
