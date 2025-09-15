@@ -6,18 +6,10 @@ import {
   logger,
   NotFoundError,
 } from "@kaa/utils";
-import { CronJob } from "cron";
 import type mongoose from "mongoose";
 import type { FilterQuery } from "mongoose";
 
 export const backupService = {
-  initialize: () => {
-    // Start backup cleanup job
-    new CronJob("0 1 * * *", async () => {
-      await backupService.cleanupExpiredBackups();
-    }); // Run daily
-  },
-
   /**
    * Create backup
    */

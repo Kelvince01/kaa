@@ -22,6 +22,7 @@
     "@elysiajs/bearer": "^1.4.1",
     "@elysiajs/cookie": "^0.8.0",
     "@elysiajs/cors": "^1.4.0",
+    "@elysiajs/cron": "^1.4.0",
     "@elysiajs/jwt": "^1.4.0",
     "@elysiajs/openapi": "^1.4.0",
     "@elysiajs/opentelemetry": "^1.4.0",

@@ -23,6 +23,7 @@ import {
   optimizations,
 } from "./plugins/compression.plugin";
 import { correlationPlugin } from "./plugins/correlation.plugin";
+import { cronPlugin } from "./plugins/cron.plugin";
 import { csrfPlugin } from "./plugins/csrf.plugin";
 import { errorHandlerPlugin } from "./plugins/error-handler.plugin";
 import {
@@ -116,6 +117,7 @@ app
   .use(healthCheckPlugin)
   .use(setupBullBoard)
   .use(openapiDocs)
+  .use(cronPlugin)
   .use(monitoringPlugin("api"));
 
 export default app;
