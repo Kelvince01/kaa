@@ -263,6 +263,7 @@
       "name": "@kaa/services",
       "version": "0.0.0",
       "dependencies": {
+        "@kaa/email": "workspace:*",
         "@kaa/models": "workspace:*",
         "cron": "^4.3.3",
         "elysia": "latest",

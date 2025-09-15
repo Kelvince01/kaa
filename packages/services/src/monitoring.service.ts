@@ -1,4 +1,5 @@
 import config from "@kaa/config/api";
+import { sendIncidentNotificationEmail } from "@kaa/email";
 import {
   Alert,
   Event,
@@ -14,7 +15,6 @@ import type {
 } from "@kaa/models/types";
 import { AppError, logger, NotFoundError } from "@kaa/utils";
 import mongoose, { type FilterQuery } from "mongoose";
-// import { sendIncidentNotificationEmail } from "~/email/monitoring.emails";
 
 export type CreateAlertData = {
   memberId?: string;
@@ -270,7 +270,7 @@ export class MonitoringService {
   /**
    * Get system health
    */
-  async getSystemHealthV2(): Promise<any> {
+  async getSystemHealth_v2(): Promise<any> {
     const services = ["database", "api", "cache", "storage"];
     const healthChecks = await Promise.all(
       services.map(async (service) => {
@@ -312,7 +312,7 @@ export class MonitoringService {
         timestamp: { $gte: startDate, $lte: endDate },
       };
 
-      if (memberId) {
+      if (memberId && memberId !== "all") {
         metricQuery.memberId = memberId;
       }
 
@@ -535,7 +535,7 @@ export class MonitoringService {
       "conditions.metric": metricName,
     };
 
-    if (memberId) {
+    if (memberId && memberId !== "all") {
       query.$or = [{ memberId }, { memberId: { $exists: false } }];
     }
 
@@ -657,15 +657,14 @@ export class MonitoringService {
       // Send notifications to all stakeholders
       const notificationPromises = stakeholders.map(async (stakeholder) => {
         try {
-          const dashboardUrl = `${config.clientUrl}/monitoring/incidents/${incidentId}`;
+          const dashboardUrl = `${config.clientUrl}/admin/monitoring/incidents/${incidentId}`;
 
-          //   await sendIncidentNotificationEmail({
-          //     recipientEmail: stakeholder.email,
-          //     recipientName: stakeholder.name,
-          //     incident: incidentForEmail,
-          //     dashboardUrl,
-          //   });
-          await Promise.resolve();
+          await sendIncidentNotificationEmail({
+            recipientEmail: stakeholder.email,
+            recipientName: stakeholder.name,
+            incident: incidentForEmail,
+            dashboardUrl,
+          });
 
           logger.info("Incident notification sent", {
             incidentId,

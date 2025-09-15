@@ -8,6 +8,7 @@
     "./managers": "./src/managers/index.ts"
   },
   "dependencies": {
+    "@kaa/email": "workspace:*",
     "@kaa/models": "workspace:*",
     "cron": "^4.3.3",
     "elysia": "latest",

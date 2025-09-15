@@ -8,7 +8,20 @@ import mongoose from "mongoose";
 export const metricsEndpointPlugin = new Elysia().get(
   "/metrics",
   async ({ query }) => {
-    const metrics = await monitoringService.getMetricHistory(query);
+    const metricName = query.metricName || "api";
+    const startDate = query.startDate
+      ? new Date(query.startDate)
+      : new Date(Date.now() - 1000 * 60 * 60 * 24); // 24 hours ago
+    const endDate = query.endDate ? new Date(query.endDate) : new Date();
+    const memberId = query.memberId || "all";
+
+    const metrics = await monitoringService.getMetricHistory({
+      metricName,
+      startDate,
+      endDate,
+      memberId,
+    });
+
     return {
       metrics,
       timestamp: new Date().toISOString(),
@@ -16,9 +29,9 @@ export const metricsEndpointPlugin = new Elysia().get(
   },
   {
     query: t.Object({
-      metricName: t.String(),
-      startDate: t.Date(),
-      endDate: t.Date(),
+      metricName: t.Optional(t.String()),
+      startDate: t.Optional(t.Date()),
+      endDate: t.Optional(t.Date()),
       memberId: t.Optional(t.String()),
     }),
     detail: {
@@ -33,21 +46,37 @@ export const metricsEndpointPlugin = new Elysia().get(
 export const healthCheckPlugin = new Elysia()
   .get(
     "/health",
+    ({ set, headers }) => {
+      const correlationId = headers["x-correlation-id"] || crypto.randomUUID();
+
+      set.status = 200;
+      set.headers["x-correlation-id"] = correlationId;
+
+      return {
+        name: config.app.name,
+        version: config.app.version,
+        status: "OK",
+        timestamp: new Date().toISOString(),
+        correlationId,
+      };
+    },
+    {
+      detail: {
+        summary: "System Health Check",
+        description: "Get overall system health status",
+        tags: ["system"],
+      },
+    }
+  )
+  .get(
+    "/health/detailed",
     async ({ set, headers }) => {
       const correlationId = headers["x-correlation-id"] || crypto.randomUUID();
-      const health = await monitoringService.getSystemHealth();
+      const [systemHealth, backupStats] = await Promise.all([
+        monitoringService.getSystemHealth(),
+        backupService.getBackupStats(),
+      ]);
 
-      // Check database connection
-      let dbStatus = "UP";
-      try {
-        if (mongoose.connection.readyState !== 1) {
-          dbStatus = "DOWN";
-        }
-      } catch (error) {
-        dbStatus = "DOWN";
-      }
-
-      // Calculate system metrics
       const memoryUsage = process.memoryUsage();
       const cpuUsage = process.cpuUsage();
 
@@ -56,8 +85,18 @@ export const healthCheckPlugin = new Elysia()
       const errorRate = getErrorRate(5);
       const requestCounts = getRequestCountByStatus(5);
 
+      // Check database connection
+      let dbStatus = "DOWN";
+      try {
+        if (mongoose.connection.readyState === 1) {
+          dbStatus = "UP";
+        }
+      } catch (error) {
+        console.error("Database health check failed:", error);
+      }
+
       const systemStatus =
-        dbStatus === "UP" && health.status === "healthy"
+        dbStatus === "UP" && systemHealth.status === "healthy"
           ? "healthy"
           : "unhealthy";
 
@@ -67,14 +106,15 @@ export const healthCheckPlugin = new Elysia()
       return {
         name: config.app.name,
         version: config.app.version,
-        status: systemStatus,
-        timestamp: new Date().toISOString(),
+        system: {
+          ...systemHealth,
+          nodeVersion: process.version,
+          platform: process.platform,
+          arch: process.arch,
+          hostname: os.hostname(),
+        },
         correlationId,
         checks: {
-          database: {
-            status: dbStatus,
-            responseTime: mongoose.connection.readyState === 1 ? 1 : 0,
-          },
           memory: {
             status:
               memoryUsage.heapUsed / memoryUsage.heapTotal < 0.9
@@ -90,6 +130,7 @@ export const healthCheckPlugin = new Elysia()
             status: "UP",
             user: cpuUsage.user,
             system: cpuUsage.system,
+            count: os.cpus().length,
           },
         },
         metrics: {
@@ -99,57 +140,6 @@ export const healthCheckPlugin = new Elysia()
           totalMemory: os.totalmem(),
           freeMemory: os.freemem(),
           uptime: process.uptime(),
-        },
-        services: {
-          ...health.services,
-          database: dbStatus,
-        },
-        features: {
-          //   reviews: health.status,
-        },
-      };
-    },
-    {
-      detail: {
-        summary: "System Health Check",
-        description: "Get overall system health status",
-        tags: ["system"],
-      },
-    }
-  )
-  .get(
-    "/health/detailed",
-    async ({ set }) => {
-      const [systemHealth, backupStats] = await Promise.all([
-        monitoringService.getSystemHealth(),
-        backupService.getBackupStats(),
-      ]);
-
-      // Check database connection
-      let dbStatus = "DOWN";
-      try {
-        if (mongoose.connection.readyState === 1) {
-          dbStatus = "UP";
-        }
-      } catch (error) {
-        console.error("Database health check failed:", error);
-      }
-
-      set.status = 200;
-      return {
-        name: config.app.name,
-        version: config.app.version,
-        system: {
-          ...systemHealth,
-          memoryUsage: process.memoryUsage(),
-          cpuUsage: process.cpuUsage(),
-          nodeVersion: process.version,
-          platform: process.platform,
-          arch: process.arch,
-          hostname: os.hostname(),
-          totalMemory: os.totalmem(),
-          freeMemory: os.freemem(),
-          cpus: os.cpus().length,
         },
         backups: backupStats,
         services: {
