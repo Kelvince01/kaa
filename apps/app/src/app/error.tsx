@@ -14,7 +14,6 @@ export default function ErrorPage({
 }) {
   useEffect(() => {
     // Log the error to an error reporting service
-    // biome-ignore lint/suspicious/noConsole: <explanation>
     console.error("Application error:", error);
   }, [error]);
 
