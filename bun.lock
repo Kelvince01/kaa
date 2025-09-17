@@ -264,7 +264,6 @@
       "version": "0.1.0",
       "dependencies": {
         "@kaa/ui": "*",
-        "nativewind": "^4.2.1",
         "next": "^15.5.3",
         "react": "^19.1.1",
         "react-dom": "^19.1.1",
@@ -455,7 +454,6 @@
       "dependencies": {
         "@kaa/config": "workspace:*",
         "@kaa/constants": "workspace:*",
-        "@kaa/models": "workspace:*",
         "@vercel/blob": "^1.1.1",
         "base32-decode": "^1.0.0",
         "base32-encode": "^2.0.0",

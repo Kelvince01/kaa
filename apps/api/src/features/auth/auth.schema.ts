@@ -46,6 +46,32 @@ export const LoginTwoFactorSchema = t.Object({
   userId: t.String(),
 });
 
+export const RegisterUserRequestSchema = t.Object({
+  username: t.String(),
+  email: t.String(),
+  password: t.String(),
+  firstName: t.String(),
+  lastName: t.String(),
+  role: t.String(),
+  phone: t.String(),
+  avatar: t.Optional(t.String()),
+  isVerified: t.Optional(t.Boolean()),
+  isActive: t.Optional(t.Boolean()),
+  status: t.Optional(
+    t.Enum({
+      active: "active",
+      inactive: "inactive",
+      suspended: "suspended",
+      pending: "pending",
+    })
+  ),
+});
+
+export const RegisterUserResponseSchema = t.Object({
+  id: t.String(),
+  username: t.String(),
+});
+
 export const ApiKeyRequestSchema = t.Object({
   name: t.String(),
   permissions: t.Array(t.String()),

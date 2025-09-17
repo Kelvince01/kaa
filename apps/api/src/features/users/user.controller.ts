@@ -1,23 +1,25 @@
+import { User } from "@kaa/models";
 import {
   AuditActionType,
   AuditEntityType,
   AuditStatus,
 } from "@kaa/models/types";
-import {
-  RegisterUserRequestSchema,
-  RegisterUserResponseSchema,
-  type UserResponse,
-  UserResponseSchema,
-  type UsersResponse,
-  UserUpdateSchema,
-} from "@kaa/schemas";
 import { auditService, userService } from "@kaa/services";
 import { BadRequestError } from "@kaa/utils";
 import Elysia, { t } from "elysia";
 import { ip } from "elysia-ip";
 import type mongoose from "mongoose";
-import { z } from "zod";
+import {
+  RegisterUserRequestSchema,
+  RegisterUserResponseSchema,
+} from "../auth/auth.schema";
 import { accessPlugin } from "../rbac/rbac.plugin";
+import {
+  type UserResponse,
+  UserResponseSchema,
+  type UsersResponse,
+  UserUpdateSchema,
+} from "./user.schema";
 
 export const usersController = new Elysia({
   detail: {
@@ -86,8 +88,8 @@ export const usersController = new Elysia({
       {
         body: RegisterUserRequestSchema,
         response: {
-          201: z.object({
-            status: z.literal("success"),
+          201: t.Object({
+            status: t.Literal("success"),
             user: RegisterUserResponseSchema,
           }),
           422: t.Object({
@@ -168,14 +170,14 @@ export const usersController = new Elysia({
           limit: t.Optional(t.Number()),
         }),
         response: {
-          200: z.object({
-            status: z.literal("success"),
-            users: z.array(UserResponseSchema),
-            pagination: z.object({
-              page: z.number(),
-              limit: z.number(),
-              total: z.number(),
-              pages: z.number(),
+          200: t.Object({
+            status: t.Literal("success"),
+            users: t.Array(UserResponseSchema),
+            pagination: t.Object({
+              page: t.Number(),
+              limit: t.Number(),
+              total: t.Number(),
+              pages: t.Number(),
             }),
           }),
           500: t.Object({
@@ -239,8 +241,8 @@ export const usersController = new Elysia({
       },
       {
         response: {
-          200: z.object({
-            status: z.literal("success"),
+          200: t.Object({
+            status: t.Literal("success"),
             user: UserResponseSchema,
           }),
           500: t.Object({
@@ -315,8 +317,8 @@ export const usersController = new Elysia({
         }),
         body: UserUpdateSchema,
         response: {
-          200: z.object({
-            status: z.literal("success"),
+          200: t.Object({
+            status: t.Literal("success"),
             user: UserResponseSchema,
           }),
           500: t.Object({
@@ -369,13 +371,9 @@ export const usersController = new Elysia({
           id: t.String(),
         }),
         response: {
-          200: z.object({
-            status: z.literal("success"),
-            user: z.object({
-              id: z.string(),
-              username: z.string(),
-              email: z.string(),
-            }),
+          200: t.Object({
+            status: t.Literal("success"),
+            user: t.Pick(UserResponseSchema, ["_id", "username", "email"]),
           }),
           500: t.Object({
             status: t.Literal("error"),
@@ -397,7 +395,7 @@ export const usersController = new Elysia({
           const { currentPassword, newPassword } = body;
 
           // Find the user
-          const userObj = await userService.getUserById(user.id);
+          const userObj = await User.findById(user.id);
 
           if (!userObj) {
             set.status = 404;
