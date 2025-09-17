@@ -79,7 +79,7 @@ function AdminLayoutContainer({ children }: AdminLayoutProps) {
   // useEffect(() => {
   // 	// Only run this on the client side and after authentication status is determined
   // 	if (isClient && !isLoading && !isAuthenticated) {
-  // 		router.push(`/accounts/login?redirectTo=${encodeURIComponent(window.location.pathname)}`);
+  // 		router.push(`/auth/login?redirectTo=${encodeURIComponent(window.location.pathname)}`);
   // 	}
   // }, [isClient, isAuthenticated, isLoading, router]);
 

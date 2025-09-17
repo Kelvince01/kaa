@@ -48,7 +48,7 @@ const SecurityClient = () => {
 
   if (!user) {
     // Redirect if user not logged in
-    router.push("/accounts/login");
+    router.push("/auth/login");
     return null;
   }
 

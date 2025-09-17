@@ -202,14 +202,14 @@ const MainNavigation: React.FC = () => {
               <div className="flex space-x-4">
                 <Link
                   className="inline-flex items-center rounded-md border border-transparent bg-white px-4 py-2 font-medium text-primary-600 text-sm hover:bg-gray-50"
-                  href="/accounts/login"
+                  href="/auth/login"
                 >
                   <LogIn className="-ml-1 mr-2 h-4 w-4" />
                   Log In
                 </Link>
                 <Link
                   className="inline-flex items-center rounded-md border border-transparent bg-primary-600 px-4 py-2 font-medium text-sm text-white hover:bg-primary-700"
-                  href="/accounts/register"
+                  href="/auth/register"
                 >
                   Sign Up
                 </Link>
@@ -310,7 +310,7 @@ const MainNavigation: React.FC = () => {
               <>
                 <Link
                   className="block px-4 py-2 font-medium text-base text-gray-700 hover:bg-gray-50 hover:text-primary-600"
-                  href="/accounts/login"
+                  href="/auth/login"
                 >
                   <div className="flex items-center">
                     <LogIn className="mr-3 h-5 w-5" />
@@ -319,7 +319,7 @@ const MainNavigation: React.FC = () => {
                 </Link>
                 <Link
                   className="block bg-primary-600 px-4 py-2 font-medium text-white hover:bg-primary-700"
-                  href="/accounts/register"
+                  href="/auth/register"
                 >
                   <div className="flex items-center justify-center">
                     <User className="mr-3 h-5 w-5" />

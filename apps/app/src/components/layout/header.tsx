@@ -223,13 +223,13 @@ const Header: React.FC = () => {
               <div className="flex space-x-4">
                 <Link
                   className="inline-flex items-center rounded-md border border-transparent bg-white px-4 py-2 font-medium text-primary/60 text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
-                  href="/accounts/login"
+                  href="/auth/login"
                 >
                   Log in
                 </Link>
                 <Link
                   className="inline-flex items-center rounded-md border border-transparent bg-primary/60 px-4 py-2 font-medium text-sm text-white hover:bg-primary/70 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
-                  href="/accounts/register"
+                  href="/auth/register"
                 >
                   Sign up
                 </Link>
@@ -318,7 +318,7 @@ const Header: React.FC = () => {
                 <div className="flex-shrink-0">
                   <Link
                     className="inline-flex items-center rounded-md border border-transparent bg-white px-4 py-2 font-medium text-primary/60 text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
-                    href="/accounts/login"
+                    href="/auth/login"
                   >
                     Log in
                   </Link>
@@ -326,7 +326,7 @@ const Header: React.FC = () => {
                 <div className="ml-3">
                   <Link
                     className="inline-flex items-center rounded-md border border-transparent bg-primary/60 px-4 py-2 font-medium text-sm text-white hover:bg-primary/70 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
-                    href="/accounts/register"
+                    href="/auth/register"
                   >
                     Sign up
                   </Link>

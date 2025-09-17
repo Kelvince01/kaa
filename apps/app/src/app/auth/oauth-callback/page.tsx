@@ -58,7 +58,7 @@ export default function OAuthCallbackPage() {
           <p className="mt-2 text-gray-600">{error}</p>
           <button
             className="mt-4 rounded-md bg-primary-600 px-4 py-2 text-white hover:bg-primary-700"
-            onClick={() => router.push("/accounts/login")}
+            onClick={() => router.push("/auth/login")}
             type="button"
           >
             {t("return_to_login")}

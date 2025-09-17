@@ -93,7 +93,7 @@ export function HeroSectionV2() {
                 </Link>
                 <Link
                   className="inline-flex items-center text-white hover:underline"
-                  href="/accounts/register?role=landlord"
+                  href="/auth/register?role=landlord"
                 >
                   <Users className="mr-2 h-5 w-5" />
                   List Your Property
