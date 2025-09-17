@@ -3,6 +3,7 @@
 import { Button } from "@kaa/ui/components/button";
 import { Loader2 } from "lucide-react";
 import type React from "react";
+import { Google, Microsoft } from "@/components/ui/icons";
 import { useInitiateOAuth } from "../oauth.queries";
 import type { SupportedOAuthProvider } from "../oauth.type";
 
@@ -41,12 +42,12 @@ export function OAuthConnectButton({
     const configs = {
       google: {
         name: "Google",
-        icon: "🔍",
+        icon: <Google />,
         color: "#4285f4",
       },
       microsoft: {
         name: "Microsoft",
-        icon: "🪟",
+        icon: <Microsoft />,
         color: "#00a1f1",
       },
     };

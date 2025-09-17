@@ -9,7 +9,7 @@ const HomeContent = dynamic(() => import("@/routes/main"), {
 export const metadata: Metadata = {
   title: "Find Rental Properties | Kaa",
   description:
-    "Search thousands of rental properties across the UK. Connect directly with landlords, no middlemen.",
+    "Search thousands of rental properties across County. Connect directly with landlords, no middlemen.",
 };
 
 export default function HomePage() {

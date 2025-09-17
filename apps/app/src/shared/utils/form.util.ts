@@ -5,7 +5,7 @@ const AT_LEAST_ONE_NUMBER = /[0-9]/;
 const AT_LEAST_ONE_SPECIAL_CHARACTER = /[^\w\s]/;
 const COMMON_PASSWORDS = ["password", "123456", "qwerty", "admin", "letmein"];
 const KE_PHONE_REGEX = /^((\+254)|0)[0-9]{9}$/;
-const UK_POSTCODE_REGEX = /^[0-9]{5}$/;
+const KE_POSTCODE_REGEX = /^[0-9]{5}$/;
 
 // Password strength validation
 export function getPasswordStrength(password: string) {
@@ -124,8 +124,8 @@ export const isValidUrl = (url: string): boolean => {
   }
 };
 
-// Postcode validation (UK)
+// Postcode validation (KE)
 export const isValidPostcodeKE = (postcode: string): boolean => {
-  const postcodeRegex = UK_POSTCODE_REGEX;
+  const postcodeRegex = KE_POSTCODE_REGEX;
   return postcodeRegex.test(postcode);
 };

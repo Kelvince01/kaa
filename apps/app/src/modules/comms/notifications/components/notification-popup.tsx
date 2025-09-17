@@ -1,3 +1,4 @@
+import { Icon } from "@iconify/react";
 import { Badge } from "@kaa/ui/components/badge";
 import { Button } from "@kaa/ui/components/button";
 import {
@@ -265,11 +266,11 @@ const NotificationPopover = () => {
       <PopoverTrigger asChild>
         <Button
           aria-label="View notifications"
-          className="relative h-8 w-8 rounded-full"
+          className="relative h-8 w-8 rounded-full border-emerald-200 text-emerald-700 hover:bg-emerald-50"
           size="sm"
-          variant="ghost"
+          variant="outline"
         >
-          <Bell className="h-4 w-4" />
+          <Icon className="h-4 w-4" icon="material-symbols:notifications" />
           {unreadCount > 0 && (
             <Badge
               className="-top-1 -right-1 absolute h-5 w-5 rounded-full p-0 font-bold text-xs"

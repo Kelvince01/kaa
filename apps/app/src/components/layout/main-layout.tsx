@@ -2,7 +2,7 @@
 
 import type React from "react";
 import type { ReactNode } from "react";
-// import Alerter from "../common/alerter";
+import Alerter from "../common/alerter";
 import Footer from "../layout/footer";
 import MainNavigation from "../layout/main-navigation";
 
@@ -22,7 +22,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   return (
     <div className="flex min-h-screen flex-col">
       <MainNavigation />
-      {/* <Alerter mode="app" /> */}
+      <Alerter mode="app" />
 
       <main className={`flex-grow ${disablePadding ? "" : "pt-16"}`}>
         {children}

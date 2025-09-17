@@ -141,7 +141,9 @@ const Header: React.FC = () => {
                       <Image
                         alt={`${user.firstName} ${user.lastName}`}
                         className="h-9 w-9 rounded-full"
+                        height={40}
                         src={process.env.NEXT_PUBLIC_API_URL + user.avatar}
+                        width={40}
                       />
                     ) : (
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/60 text-white">

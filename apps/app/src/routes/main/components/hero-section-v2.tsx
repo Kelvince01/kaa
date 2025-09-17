@@ -40,20 +40,22 @@ export function HeroSectionV2() {
           priority
           src="/images/hero-home.jpg"
         />
-        <div className="absolute inset-0 flex items-center">
+
+        <div className="absolute inset-0 flex items-center justify-center">
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl">
+            {/* max-w-3xl */}
+            <div className="flex flex-col items-center justify-center">
               <h1 className="mb-6 font-bold text-4xl text-white md:text-5xl lg:text-6xl">
                 Find Your Perfect Home
               </h1>
               <p className="mb-8 text-white text-xl opacity-90 md:text-2xl">
                 Browse thousands of properties from trusted landlords across the
-                UK
+                County
               </p>
 
               {/* Search form */}
               <form
-                className="search-container flex flex-col rounded-lg bg-white p-2 shadow-lg sm:flex-row"
+                className="search-container flex w-5/12 flex-col rounded-lg bg-white p-2 shadow-lg sm:flex-row"
                 onSubmit={handleSearch}
               >
                 <div className="relative flex-1">
@@ -100,6 +102,37 @@ export function HeroSectionV2() {
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Decorative Elements */}
+        <div className="absolute right-0 bottom-0 hidden h-full w-full lg:block">
+          <div className="absolute inset-0 z-10 bg-gradient-to-l from-transparent to-emerald-600/20" />
+          <div className="absolute inset-0 opacity-20 mix-blend-overlay">
+            <svg
+              height="100%"
+              viewBox="0 0 400 400"
+              width="100%"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <title>Decorative grid pattern overlay</title>
+              <defs>
+                <pattern
+                  height="40"
+                  id="grid"
+                  patternUnits="userSpaceOnUse"
+                  width="40"
+                >
+                  <path
+                    d="M 40 0 L 0 0 0 40"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="1"
+                  />
+                </pattern>
+              </defs>
+              <rect fill="url(#grid)" height="100%" width="100%" />
+            </svg>
           </div>
         </div>
       </div>

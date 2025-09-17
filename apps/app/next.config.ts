@@ -120,6 +120,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "wqnmyfkavrotpmupbtou.supabase.co",
+      },
+      {
+        protocol: "https",
         hostname: "kaa-images.s3.amazonaws.com",
       },
       {

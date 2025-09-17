@@ -6,6 +6,8 @@ import React from "react";
 import { useAuth } from "../../use-auth";
 import LoginForm from "./login-form";
 
+// import { LoginFormV2 } from "./login-form-v2";
+
 /**
  * Login page component
  */
@@ -47,6 +49,7 @@ const LoginContainer = () => {
   if (!user) {
     return (
       <div className="flex min-h-screen flex-col justify-center py-4 sm:px-6 lg:px-8">
+        {/* <LoginFormV2 /> */}
         <LoginForm redirectTo={redirectTo} />
       </div>
     );
