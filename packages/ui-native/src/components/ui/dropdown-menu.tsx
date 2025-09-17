@@ -8,11 +8,10 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
-
-import { Check } from "../../lib/icons/Check";
-import { ChevronDown } from "../../lib/icons/ChevronDown";
-import { ChevronRight } from "../../lib/icons/ChevronRight";
-import { ChevronUp } from "../../lib/icons/ChevronUp";
+import { Check } from "../../lib/icons/check";
+import { ChevronDown } from "../../lib/icons/chevron-down";
+import { ChevronRight } from "../../lib/icons/chevron-right";
+import { ChevronUp } from "../../lib/icons/chevron-up";
 import { cn } from "../../lib/utils";
 import { TextClassContext } from "./text";
 

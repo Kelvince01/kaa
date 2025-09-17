@@ -6,8 +6,8 @@ export const rolesQuerySchema = z.object({
   memberId: z.optional(z.string()),
   sort: z.optional(z.string()),
   order: z.optional(z.union([z.literal("asc"), z.literal("desc")])),
-  offset: z.optional(z.number()),
-  limit: z.optional(z.number()),
+  offset: z.optional(z.coerce.number()),
+  limit: z.optional(z.coerce.number()),
 });
 
 export const permissionsQuerySchema = z.object({
@@ -17,8 +17,8 @@ export const permissionsQuerySchema = z.object({
   action: z.optional(z.string()),
   sort: z.optional(z.string()),
   order: z.optional(z.union([z.literal("asc"), z.literal("desc")])),
-  offset: z.optional(z.number()),
-  limit: z.optional(z.number()),
+  offset: z.optional(z.coerce.number()),
+  limit: z.optional(z.coerce.number()),
 });
 
 // Custom schemas with additional validation

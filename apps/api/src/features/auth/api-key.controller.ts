@@ -1,14 +1,13 @@
+import { apiKeyService } from "@kaa/services";
+import Elysia, { t } from "elysia";
+import { authPlugin } from "~/features/auth/auth.plugin";
+import { accessPlugin } from "~/features/rbac/rbac.plugin";
 import {
   ApiKeyBaseResponseSchema,
   ApiKeyRequestSchema,
   ApiKeyResponseSchema,
   ApiKeyUpdateRequestSchema,
-} from "@kaa/schemas";
-import { apiKeyService } from "@kaa/services";
-import Elysia, { t } from "elysia";
-import z from "zod";
-import { authPlugin } from "~/features/auth/auth.plugin";
-import { accessPlugin } from "~/features/rbac/rbac.plugin";
+} from "./auth.schema";
 
 export const apiKeyController = new Elysia().group("api-keys", (app) =>
   app
@@ -17,7 +16,10 @@ export const apiKeyController = new Elysia().group("api-keys", (app) =>
       "/",
       async ({ set, user }) => {
         try {
-          const result = await apiKeyService.getApiKeys(user.id);
+          const result = await apiKeyService.getApiKeys(
+            user.memberId || "",
+            user.id
+          );
           set.status = 200;
           return {
             status: "success",
@@ -38,9 +40,9 @@ export const apiKeyController = new Elysia().group("api-keys", (app) =>
       },
       {
         response: {
-          200: z.object({
-            status: z.literal("success"),
-            data: z.array(ApiKeyBaseResponseSchema),
+          200: t.Object({
+            status: t.Literal("success"),
+            data: t.Array(ApiKeyBaseResponseSchema),
           }),
           500: t.Object({
             status: t.Literal("error"),
@@ -70,7 +72,10 @@ export const apiKeyController = new Elysia().group("api-keys", (app) =>
           set.status = 201;
           return {
             status: "success",
-            data: result,
+            data: {
+              apiKey: result.id,
+              key: result.key,
+            },
             message: "API key created successfully",
           };
         } catch (error) {
@@ -84,10 +89,10 @@ export const apiKeyController = new Elysia().group("api-keys", (app) =>
       {
         body: ApiKeyRequestSchema,
         response: {
-          201: z.object({
-            status: z.literal("success"),
+          201: t.Object({
+            status: t.Literal("success"),
             data: ApiKeyResponseSchema,
-            message: z.string(),
+            message: t.String(),
           }),
           500: t.Object({
             status: t.Literal("error"),

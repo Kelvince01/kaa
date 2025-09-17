@@ -4,7 +4,7 @@ import { cn } from "@kaa/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
-// biome-ignore lint/performance/noNamespaceImport: false positive
+
 import * as React from "react";
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {

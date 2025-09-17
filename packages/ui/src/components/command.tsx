@@ -11,7 +11,7 @@ import { SpinnerV2 } from "@kaa/ui/components/spinner";
 import { cn } from "@kaa/ui/lib/utils";
 import { Command as CommandPrimitive } from "cmdk";
 import { Search, XCircle } from "lucide-react";
-// biome-ignore lint/performance/noNamespaceImport: false positive
+
 import * as React from "react";
 
 function Command({

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  type Address,
-  type AddressSuggestion,
-  type AddressValidationResult,
-  type Coordinates,
-  locationService,
-} from "@/lib/location";
+import { locationService } from "@/modules/location/location.service";
+import type {
+  Address,
+  AddressSuggestion,
+  AddressValidationResult,
+  Coordinates,
+} from "@/modules/location/location.type";
 
 export type UseSmartAddressOptions = {
   initialValue?: Address;
@@ -49,7 +49,6 @@ export function useSmartAddress(
     initialValue,
     initialCoordinates,
     validateOnChange = true,
-    // biome-ignore lint/correctness/noUnusedVariables: false positive
     countryCode = "ke",
   } = options;
 

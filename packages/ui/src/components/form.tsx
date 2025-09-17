@@ -5,7 +5,7 @@ import { Label } from "@kaa/ui/components/label";
 import { cn } from "@kaa/ui/lib/utils";
 import { ChevronUp, HelpCircle } from "lucide-react";
 import { type Label as LabelPrimitive, Slot as SlotPrimitive } from "radix-ui";
-// biome-ignore lint/performance/noNamespaceImport: false positive
+
 import * as React from "react";
 import {
   Controller,

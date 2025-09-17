@@ -27,6 +27,20 @@ export {
   ResetPasswordRequestSchema,
   VerifyUserRequestSchema,
 } from "./auth.schema";
+// RBAC types
+export type {
+  NotificationPreference,
+  Permission,
+  Role,
+} from "./rbac.schema";
+// RBAC schemas
+export {
+  notificationPreferenceSchema,
+  permissionSchema,
+  permissionsQuerySchema,
+  roleSchema,
+  rolesQuerySchema,
+} from "./rbac.schema";
 // Tenant schemas
 export {
   addressSchema,

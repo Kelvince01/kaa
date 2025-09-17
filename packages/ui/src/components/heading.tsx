@@ -1,6 +1,6 @@
 import { cn } from "@kaa/ui/lib/utils";
 import { Slot as SlotPrimitive } from "radix-ui";
-// biome-ignore lint/performance/noNamespaceImport: false positive
+
 import * as React from "react";
 
 interface HeadingProps extends React.HTMLAttributes<HTMLDivElement> {

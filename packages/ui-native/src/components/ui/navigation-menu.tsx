@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { ChevronDown } from "../../lib/icons/ChevronDown";
+import { ChevronDown } from "../../lib/icons/chevron-down";
 import { cn } from "../../lib/utils";
 
 const NavigationMenu = React.forwardRef<

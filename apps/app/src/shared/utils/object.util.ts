@@ -5,7 +5,7 @@
  * @returns An array of the object's keys.
  */
 export const objectKeys = <T extends object>(obj: T) => {
-	return Object.keys(obj) as Array<keyof T>;
+  return Object.keys(obj) as Array<keyof T>;
 };
 
 /**
@@ -15,5 +15,5 @@ export const objectKeys = <T extends object>(obj: T) => {
  * @returns An array of the object's key-value pairs.
  */
 export const objectEntries = <T extends object>(obj: T) => {
-	return Object.entries(obj) as [keyof T, T[keyof T]][];
+  return Object.entries(obj) as [keyof T, T[keyof T]][];
 };

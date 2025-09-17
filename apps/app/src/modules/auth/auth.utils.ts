@@ -152,7 +152,6 @@ export const securityUtils = {
     }
 
     // Fallback for server-side
-    // biome-ignore lint/style/useNodejsImportProtocol: false positive
     const crypto = require("crypto");
     return crypto.randomBytes(length).toString("hex");
   },

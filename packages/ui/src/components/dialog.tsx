@@ -3,7 +3,7 @@
 import { cn } from "@kaa/ui/lib/utils";
 import { X } from "lucide-react";
 import { Dialog as DialogPrimitive, VisuallyHidden } from "radix-ui";
-// biome-ignore lint/performance/noNamespaceImport: false positive
+
 import * as React from "react";
 
 function Dialog({

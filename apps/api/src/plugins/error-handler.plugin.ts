@@ -1,4 +1,3 @@
-// biome-ignore lint/performance/noNamespaceImport: false positive
 import * as Sentry from "@sentry/bun";
 import Elysia from "elysia";
 import { logSecurityEvent } from "~/shared/utils/security-logger.util";

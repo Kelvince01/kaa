@@ -23,11 +23,11 @@ export * from "./components/ui/toggle-group";
 export * from "./components/ui/typography";
 
 export * from "./lib/constants";
-// icons
-export * from "./lib/icons/Check";
-export * from "./lib/icons/ChevronDown";
-export * from "./lib/icons/ChevronRight";
-export * from "./lib/icons/ChevronUp";
-export * from "./lib/icons/X";
+// icons./lib/icons/x
+export * from "./lib/icons/check";
+export * from "./lib/icons/chevron-down";
+export * from "./lib/icons/chevron-right";
+export * from "./lib/icons/chevron-up";
+export * from "./lib/icons/x";
 export * from "./lib/use-color-scheme";
 export * from "./lib/utils";

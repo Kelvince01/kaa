@@ -1,5 +1,5 @@
 import config from "@kaa/config/api";
-// biome-ignore lint/performance/noNamespaceImport: false positive
+
 import * as Sentry from "@sentry/bun";
 
 // Ensure to call this before importing any other modules!

@@ -22,10 +22,12 @@ type UIStoreState = {
 };
 
 // Detects system preference
-// const browserMode = window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-const browserMode = window?.matchMedia?.("(prefers-color-scheme: dark)").matches
-  ? "dark"
-  : "light";
+const browserMode =
+  // biome-ignore lint/complexity/useOptionalChain: false positive
+  typeof window !== "undefined" &&
+  window.matchMedia?.("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
 
 // Default state values
 const initStore: Pick<

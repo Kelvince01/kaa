@@ -10,7 +10,10 @@
   "dependencies": {
     "@kaa/email": "workspace:*",
     "@kaa/models": "workspace:*",
+    "@kaa/schemas": "workspace:*",
+    "axios": "^1.12.2",
     "elysia": "latest",
+    "firebase-admin": "^13.5.0",
     "mongoose": "^8.18.1"
   },
   "devDependencies": {

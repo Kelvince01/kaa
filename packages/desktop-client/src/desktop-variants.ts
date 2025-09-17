@@ -1,21 +1,21 @@
 const plugin = require("tailwindcss/plugin");
 
-interface ModifySelectorsArgs {
+type ModifySelectorsArgs = {
   className: string;
-}
+};
 
-interface VariantOptions {
+type VariantOptions = {
   modifySelectors: (callback: (args: ModifySelectorsArgs) => string) => void;
   separator: string;
-}
+};
 
-interface PluginApi {
+type PluginApi = {
   addVariant: (
     name: string,
-    callback: (options: VariantOptions) => void,
+    callback: (options: VariantOptions) => void
   ) => void;
   e: (className: string) => string;
-}
+};
 
 const desktopPlugin = plugin(({ addVariant, e }: PluginApi) => {
   // Add support for `desktop` modifier
@@ -41,7 +41,7 @@ const desktopPlugin = plugin(({ addVariant, e }: PluginApi) => {
     addVariant(variant, ({ modifySelectors, separator }: VariantOptions) => {
       modifySelectors(({ className }: ModifySelectorsArgs) => {
         return `html.desktop-platform-${platform} .${e(
-          `${variant}${separator}${className}`,
+          `${variant}${separator}${className}`
         )}`;
       });
     });

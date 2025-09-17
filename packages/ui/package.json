@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "lint": "bun biome check .",
+    "format": "bun biome format --write .",
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {

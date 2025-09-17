@@ -1,4 +1,4 @@
-import type messages from "../../messages/en-KE.json" with { type: "json" };
+import messages from "../../messages/en-KE.json" with { type: "json" };
 
 const locales = ["en-KE", "sw-KE"] as const;
 

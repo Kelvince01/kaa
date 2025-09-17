@@ -3,6 +3,7 @@ import type { Server } from "elysia/universal";
 import { UAParser } from "ua-parser-js";
 
 export const hashPassword = async (password: string): Promise<string> => {
+  // biome-ignore lint/correctness/noUndeclaredVariables: false positive
   return await Bun.password.hash(password);
 };
 
@@ -10,16 +11,9 @@ export const verifyPassword = async (
   password: string,
   hashedPassword: string
 ): Promise<boolean> => {
+  // biome-ignore lint/correctness/noUndeclaredVariables: false positive
   return await Bun.password.verify(password, hashedPassword);
 };
-
-export function getExpTimestamp(seconds: number) {
-  const currentTimeMs = Date.now();
-  const secondsIntoMs = seconds * 1000;
-  const expirationTimeMs = currentTimeMs + secondsIntoMs;
-
-  return Math.floor(expirationTimeMs / 1000);
-}
 
 export function md5hash(text: string) {
   return createHash("md5").update(text).digest("hex");

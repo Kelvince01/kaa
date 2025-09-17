@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "root": true,
   "files": {
     "ignoreUnknown": false,
     "includes": [
@@ -30,7 +31,8 @@
         "useBlockStatements": "off",
         "noNestedTernary": "off",
         "noParameterProperties": "off",
-        "noEnum": "off"
+        "noEnum": "off",
+        "useFilenamingConvention": "off"
       },
       "suspicious": {
         "noConsole": "off",
@@ -43,7 +45,8 @@
         "noUnusedVariables": "off"
       },
       "nursery": {
-        "useMaxParams": "off"
+        "useMaxParams": "off",
+        "noShadow": "off"
       },
       "performance": {
         "noBarrelFile": "off",

@@ -3,7 +3,7 @@
 import { cn } from "@kaa/ui/lib/utils";
 import Image from "next/image";
 import { Avatar as AvatarPrimitive } from "radix-ui";
-// biome-ignore lint/performance/noNamespaceImport: false positive
+
 import * as React from "react";
 
 function Avatar({

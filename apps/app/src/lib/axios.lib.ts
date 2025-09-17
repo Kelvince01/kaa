@@ -2,7 +2,6 @@
 // This file is maintained for backward compatibility
 
 // Re-export the new HTTP client as the main API
-// biome-ignore lint/performance/noBarrelFile: false positive
 export { api, httpClient as enhancedApi } from "./axios";
 
 // Re-export legacy functions for backward compatibility

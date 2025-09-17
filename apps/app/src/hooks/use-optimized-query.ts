@@ -8,7 +8,7 @@ import {
 import { useCallback, useEffect, useRef } from "react";
 import {
   CACHE_TIME_CONFIG,
-  QueryPerformanceMonitor,
+  queryPerformanceMonitor,
   STALE_TIME_CONFIG,
 } from "@/lib/performance/query-optimization";
 
@@ -36,8 +36,7 @@ export function useOptimizedQuery<TData = unknown, TError = Error>(
 
     // Wrap queryFn to add performance monitoring
     queryFn: queryOptions.queryFn
-      ? // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: false positive
-        async (context) => {
+      ? async (context) => {
           if (enablePerformanceMonitoring) {
             startTimeRef.current = performance.now();
           }
@@ -48,7 +47,7 @@ export function useOptimizedQuery<TData = unknown, TError = Error>(
 
             if (enablePerformanceMonitoring && startTimeRef.current) {
               const executionTime = performance.now() - startTimeRef.current;
-              QueryPerformanceMonitor.recordQuery(
+              queryPerformanceMonitor.recordQuery(
                 Array.isArray(queryOptions.queryKey)
                   ? queryOptions.queryKey.join("-")
                   : String(queryOptions.queryKey),
@@ -61,7 +60,7 @@ export function useOptimizedQuery<TData = unknown, TError = Error>(
           } catch (error) {
             if (enablePerformanceMonitoring && startTimeRef.current) {
               const executionTime = performance.now() - startTimeRef.current;
-              QueryPerformanceMonitor.recordQuery(
+              queryPerformanceMonitor.recordQuery(
                 Array.isArray(queryOptions.queryKey)
                   ? queryOptions.queryKey.join("-")
                   : String(queryOptions.queryKey),
@@ -127,7 +126,7 @@ export function useOptimizedMutation<
 
             if (enablePerformanceMonitoring && startTimeRef.current) {
               const executionTime = performance.now() - startTimeRef.current;
-              QueryPerformanceMonitor.recordQuery(
+              queryPerformanceMonitor.recordQuery(
                 "mutation",
                 executionTime,
                 false
@@ -138,7 +137,7 @@ export function useOptimizedMutation<
           } catch (error) {
             if (enablePerformanceMonitoring && startTimeRef.current) {
               const executionTime = performance.now() - startTimeRef.current;
-              QueryPerformanceMonitor.recordQuery(
+              queryPerformanceMonitor.recordQuery(
                 "mutation",
                 executionTime,
                 true
@@ -350,8 +349,7 @@ export function useOptimizedInfiniteQuery<_TData = unknown, _TError = Error>(
 
     // Wrap queryFn to add performance monitoring
     queryFn: queryOptions.queryFn
-      ? // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: false positive
-        async (context: unknown) => {
+      ? async (context: unknown) => {
           if (enablePerformanceMonitoring) {
             startTimeRef.current = performance.now();
           }
@@ -362,7 +360,7 @@ export function useOptimizedInfiniteQuery<_TData = unknown, _TError = Error>(
 
             if (enablePerformanceMonitoring && startTimeRef.current) {
               const executionTime = performance.now() - startTimeRef.current;
-              QueryPerformanceMonitor.recordQuery(
+              queryPerformanceMonitor.recordQuery(
                 `infinite-${
                   Array.isArray(queryOptions.queryKey)
                     ? queryOptions.queryKey.join("-")
@@ -377,7 +375,7 @@ export function useOptimizedInfiniteQuery<_TData = unknown, _TError = Error>(
           } catch (error) {
             if (enablePerformanceMonitoring && startTimeRef.current) {
               const executionTime = performance.now() - startTimeRef.current;
-              QueryPerformanceMonitor.recordQuery(
+              queryPerformanceMonitor.recordQuery(
                 `infinite-${
                   Array.isArray(queryOptions.queryKey)
                     ? queryOptions.queryKey.join("-")

@@ -237,7 +237,9 @@ export function Header() {
                 <Image
                   alt={user.firstName}
                   className="h-8 w-8 rounded-full"
+                  height={32}
                   src={user.avatar || "/images/default-avatar.png"}
+                  width={32}
                 />
               </button>
 
@@ -394,7 +396,9 @@ export function Header() {
                     <Image
                       alt={user.firstName}
                       className="mr-3 h-10 w-10 rounded-full"
+                      height={10}
                       src={user.avatar || "/images/default-avatar.png"}
+                      width={10}
                     />
                     <div>
                       <p className="font-medium text-base text-gray-800">

@@ -218,7 +218,6 @@ class MJMLService {
     // URL generation helper
     Handlebars.registerHelper(
       "generateUrl",
-      // biome-ignore lint/nursery/noShadow: used in template
       (path: string, baseUrl?: string) => {
         const base = baseUrl || process.env.APP_URL || "https://app.kaapro.dev";
         return `${base}${path.startsWith("/") ? path : `/${path}`}`;

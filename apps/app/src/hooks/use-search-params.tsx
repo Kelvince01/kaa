@@ -62,7 +62,6 @@ const useSearchParams = <
   // State to hold the current search parameters
   const [currentSearch, setCurrentSearch] = useState<T>(mergedSearch);
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: false positive
   const setSearch = (newValues: Partial<T>) => {
     const updatedSearch = { ...currentSearch, ...newValues };
 
@@ -78,8 +77,7 @@ const useSearchParams = <
       if (Array.isArray(updatedSearch[key])) {
         updatedSearch[key] = (
           updatedSearch[key].length
-            ? // biome-ignore lint/style/noNestedTernary: false positive
-              updatedSearch[key].length === 1
+            ? updatedSearch[key].length === 1
               ? updatedSearch[key][0]
               : updatedSearch[key].join("_")
             : undefined

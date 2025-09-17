@@ -3,7 +3,6 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
 import { Slot as SlotPrimitive } from "radix-ui";
 
-// biome-ignore lint/performance/noNamespaceImport: false positive
 import * as React from "react";
 
 const buttonVariants = cva(

@@ -46,8 +46,6 @@ module.exports = config;
  * @param {import('expo/metro-config').MetroConfig} config
  * @returns {import('expo/metro-config').MetroConfig}
  */
-
-// biome-ignore lint/nursery/noShadow: no shadow
 function withTurborepoManagedCache(config) {
   config.cacheStores = [
     new FileStore({ root: path.join(__dirname, ".cache/metro") }),

@@ -145,7 +145,7 @@ sessionSchema.set("toJSON", {
   transform: (_, ret) => {
     // biome-ignore lint/performance/noDelete: false positive
     delete ret._id;
-    //// biome-ignore lint/performance/noDelete: <explanation>
+    //// biome-ignore lint/performance/noDelete: false positive
     //delete ret.__v;
     return ret;
   },
@@ -252,7 +252,7 @@ export const OAuthConnection = mongoose.model<IOAuthConnection>(
   oauthConnectionSchema
 );
 
-export default mongoose.model<ISession>("Session", sessionSchema);
+export const Session = mongoose.model<ISession>("Session", sessionSchema);
 
 // Token model for refresh tokens
 const resetTokenSchema = new Schema(
@@ -411,7 +411,7 @@ verificationTokenSchema.set("toJSON", {
   transform: (_, ret) => {
     // biome-ignore lint/performance/noDelete: false positive
     delete ret._id;
-    //// biome-ignore lint/performance/noDelete: <explanation>
+    //// biome-ignore lint/performance/noDelete: false positive
     //delete ret.__v;
     return ret;
   },
@@ -567,7 +567,7 @@ otpSchema.set("toJSON", {
   transform: (_, ret) => {
     // biome-ignore lint/performance/noDelete: false positive
     delete ret._id;
-    //// biome-ignore lint/performance/noDelete: <explanation>
+    //// biome-ignore lint/performance/noDelete: false positive
     // delete ret.__v;
     return ret;
   },
@@ -661,10 +661,10 @@ passkeySchema.set("toJSON", {
   transform: (_, ret) => {
     // biome-ignore lint/performance/noDelete: false positive
     delete ret._id;
-    //// biome-ignore lint/performance/noDelete: <explanation>
+    //// biome-ignore lint/performance/noDelete: false positive
     // delete ret.__v;
     // Don't expose the public key in JSON responses
-    //// biome-ignore lint/performance/noDelete: <explanation>
+    //// biome-ignore lint/performance/noDelete: false positive
     //delete ret?.publicKey;
     return ret;
   },

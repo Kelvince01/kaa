@@ -320,7 +320,7 @@ export class BackgroundSyncManager {
   }
 }
 
-const queryPerformanceMonitor = new QueryPerformanceMonitor();
+export const queryPerformanceMonitor = new QueryPerformanceMonitor();
 
 /**
  * React hook for performance monitoring

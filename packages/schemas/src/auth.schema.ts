@@ -28,9 +28,9 @@ export const LoginUserResponseSchema = z.object({
     status: z.enum(["active", "inactive", "suspended", "pending"]),
     isActive: z.boolean(),
     isVerified: z.boolean(),
-    lastLoginAt: z.date(),
-    createdAt: z.date(),
-    updatedAt: z.date(),
+    lastLoginAt: z.iso.date(),
+    createdAt: z.iso.date(),
+    updatedAt: z.iso.date(),
   }),
   tokens: z.object({
     access_token: z.string(),
@@ -81,21 +81,21 @@ export const ResetPasswordRequestSchema = z.object({
 export const ApiKeyRequestSchema = z.object({
   name: z.string(),
   permissions: z.array(z.string()),
-  expiresAt: z.date(),
+  expiresAt: z.iso.date(),
   rateLimit: z.object({
-    requests: z.number(),
-    window: z.number(),
+    requests: z.coerce.number(),
+    window: z.coerce.number(),
   }),
 });
 
 export const ApiKeyUpdateRequestSchema = z.object({
   name: z.optional(z.string()),
   permissions: z.optional(z.array(z.string())),
-  expiresAt: z.optional(z.date()),
+  expiresAt: z.optional(z.iso.date()),
   rateLimit: z.optional(
     z.object({
-      requests: z.number(),
-      window: z.number(),
+      requests: z.coerce.number(),
+      window: z.coerce.number(),
     })
   ),
 });
@@ -106,23 +106,23 @@ export const ApiKeyResponseSchema = z.object({
 });
 
 export const ApiKeyUsageSchema = z.object({
-  totalRequests: z.number(),
-  lastRequest: z.date(),
-  lastUsedAt: z.date(),
+  totalRequests: z.coerce.number(),
+  lastRequest: z.iso.date(),
+  lastUsedAt: z.iso.date(),
   rateLimit: z.object({
-    requests: z.number(),
-    window: z.number(),
+    requests: z.coerce.number(),
+    window: z.coerce.number(),
   }),
 });
 
 export const ApiKeyBaseResponseSchema = z.object({
   name: z.string(),
   permissions: z.array(z.string()),
-  expiresAt: z.optional(z.date()),
+  expiresAt: z.optional(z.iso.date()),
   rateLimit: z.optional(
     z.object({
-      requests: z.number(),
-      window: z.number(),
+      requests: z.coerce.number(),
+      window: z.coerce.number(),
     })
   ),
 });

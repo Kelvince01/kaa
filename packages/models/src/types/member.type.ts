@@ -1,0 +1,34 @@
+import type mongoose from "mongoose";
+import type { BaseDocument } from "./base.type";
+
+export interface IMember extends BaseDocument {
+  type: string;
+  organization: mongoose.Types.ObjectId;
+  name: string;
+  slug: string;
+  plan: string;
+  domain?: string;
+  logo?: string;
+  isActive: boolean;
+  settings: {
+    theme: string;
+    maxUsers: number;
+    features: string[];
+    customBranding: boolean;
+    allowInvites: boolean;
+    requireEmailVerification: boolean;
+    twoFactorRequired: boolean;
+  };
+  usage: {
+    users: number;
+    apiCalls: number;
+    storage: number; // in bytes
+    bandwidth: number; // in bytes
+  };
+  limits: {
+    users: number;
+    apiCalls: number;
+    storage: number;
+    bandwidth: number;
+  };
+}

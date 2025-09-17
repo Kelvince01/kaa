@@ -157,7 +157,6 @@ export function DesktopProvider() {
         // Handle full path navigation
         unlistenNavigation = await currentWindow.listen(
           "desktop-navigate",
-          // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: false positive
           (event) => {
             const { path, params } = event.payload as {
               path: string;

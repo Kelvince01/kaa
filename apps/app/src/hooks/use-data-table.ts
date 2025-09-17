@@ -220,8 +220,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
         if (value !== null) {
           const processedValue = Array.isArray(value)
             ? value
-            : // biome-ignore lint/style/noNestedTernary: false positive
-              // biome-ignore lint/performance/useTopLevelRegex: false positive
+            : // biome-ignore lint/performance/useTopLevelRegex: false positive
               typeof value === "string" && /[^a-zA-Z0-9]/.test(value)
               ? value
                   // biome-ignore lint/performance/useTopLevelRegex: false positive

@@ -118,7 +118,6 @@ export const startPerformanceMonitoring = (
  * @returns The result of the function
  */
 export const measureExecutionTime = async <T, A extends unknown[]>(
-  // biome-ignore lint/nursery/noShadow: false positive
   fn: (...args: A) => Promise<T> | T,
   ...args: A
 ): Promise<{ result: T; duration: number }> => {

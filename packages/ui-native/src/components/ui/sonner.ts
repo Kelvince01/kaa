@@ -1,1 +1,1 @@
-export * from 'sonner-native';
+export * from "sonner-native";

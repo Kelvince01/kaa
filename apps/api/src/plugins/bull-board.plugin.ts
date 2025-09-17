@@ -2,12 +2,16 @@ import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { ElysiaAdapter } from "@bull-board/elysia";
 import type Elysia from "elysia";
+import { authBackgroundQueue } from "~/features/auth/services/auth-background.service";
 // import { authPlugin } from "~/features/auth/auth.plugin";
 import { auditLogQueue } from "~/features/misc/audits/audit.queue";
 
 const serverAdapter = new ElysiaAdapter("/api/v1/queues");
 
-const queues = [new BullMQAdapter(auditLogQueue)];
+const queues = [
+  new BullMQAdapter(auditLogQueue),
+  new BullMQAdapter(authBackgroundQueue),
+];
 
 createBullBoard({
   queues,

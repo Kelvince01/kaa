@@ -1,25 +1,25 @@
-import React from 'react';
+import type React from "react";
 
-import { Path, Svg } from 'react-native-svg';
+import { Path, Svg } from "react-native-svg";
 
-import { cn } from '../../lib/utils';
+import { cn } from "../../lib/utils";
 
 export function Spinner(
   props: React.PropsWithChildren<{
     className?: string;
     width?: number;
     height?: number;
-  }>,
+  }>
 ) {
   return (
     <Svg
-      width={props.width ?? 24}
-      height={props.height ?? 24}
       className={cn(
-        `fill-primary-foreground text-primary dark:fill-primary dark:text-primary/30 animate-spin`,
-        props.className,
+        "animate-spin fill-primary-foreground text-primary dark:fill-primary dark:text-primary/30",
+        props.className
       )}
+      height={props.height ?? 24}
       viewBox="0 0 100 101"
+      width={props.width ?? 24}
     >
       <Path
         d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"

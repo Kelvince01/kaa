@@ -56,19 +56,12 @@ const openapiDocs = openapi({
     version: "latest",
     layout: "modern",
     spec: {
-      // url: "/docs/json",
+      url: "/docs/json",
     },
     theme: "bluePlanet",
   },
   exclude: {
-    paths: [
-      // "/",
-      "/metrics",
-      "/health",
-      "/ws",
-      "/stop",
-      // "/docs",
-    ] as string[],
+    paths: ["/", "/metrics", "/health", "/ws", "/stop", "/docs"] as string[],
   },
 });
 

@@ -1,25 +1,28 @@
-import { type AlertContextMode, AlertWrap } from "@/components/common/alert-wrap";
+import {
+  type AlertContextMode,
+  AlertWrap,
+} from "@/components/common/alert-wrap";
 import { alertsConfig } from "@/config/alert-config";
 import { useAlertStore } from "@/shared/stores/alert.store";
 
 const Alerter = ({ mode }: { mode: AlertContextMode }) => {
-	const { alertsSeen } = useAlertStore();
+  const { alertsSeen } = useAlertStore();
 
-	return (
-		<>
-			{alertsConfig.map(({ id, modes, children, ...alertProps }) => {
-				const showAlert = !alertsSeen.includes(id);
-				if (!showAlert || !modes) return null;
-				if (!modes.includes(mode)) return null;
+  return (
+    <>
+      {alertsConfig.map(({ id, modes, children, ...alertProps }) => {
+        const showAlert = !alertsSeen.includes(id);
+        if (!(showAlert && modes)) return null;
+        if (!modes.includes(mode)) return null;
 
-				return (
-					<AlertWrap key={id} id={id} modes={modes} {...alertProps}>
-						{children}
-					</AlertWrap>
-				);
-			})}
-		</>
-	);
+        return (
+          <AlertWrap id={id} key={id} modes={modes} {...alertProps}>
+            {children}
+          </AlertWrap>
+        );
+      })}
+    </>
+  );
 };
 
 export default Alerter;

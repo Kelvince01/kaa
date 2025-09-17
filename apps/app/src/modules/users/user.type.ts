@@ -1,5 +1,4 @@
 // User role types
-// biome-ignore lint/style/noEnum: false positive
 export enum UserRole {
   SUPER_ADMIN = "super_admin",
   ADMIN = "admin",
@@ -14,7 +13,6 @@ export enum UserRole {
 }
 
 // User status types
-// biome-ignore lint/style/noEnum: false positive
 export enum UserStatus {
   ACTIVE = "active",
   INACTIVE = "inactive",

@@ -2,12 +2,12 @@
   "name": "Kaa",
   "short_name": "Kaa",
   "description": "Property rentals made simple",
-	"start_url": "/",
+  "start_url": "/",
   "id": "/",
-	"display": "standalone",
-	"background_color": "#ffffff",
-	"theme_color": "#008b52",
-	"orientation": "portrait-primary",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#008b52",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/icons/icon-16x16.png",

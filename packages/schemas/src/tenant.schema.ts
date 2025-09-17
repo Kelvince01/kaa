@@ -10,10 +10,12 @@ export const addressSchema = z.object({
   postalCode: z.string().min(1),
   country: z.string().min(1),
   directions: z.string().optional(),
-  coordinates: z.object({
-    latitude: z.number(),
-    longitude: z.number(),
-  }).optional(),
+  coordinates: z
+    .object({
+      latitude: z.coerce.number(),
+      longitude: z.coerce.number(),
+    })
+    .optional(),
 });
 
 // Emergency contact schema
@@ -35,9 +37,9 @@ export const personalInfoSchema = z.object({
   dateOfBirth: z.string().date(),
   occupation: z.string().min(1),
   employer: z.string().optional(),
-  monthlyIncome: z.number().min(0),
+  monthlyIncome: z.coerce.number().min(0),
   maritalStatus: z.enum(["single", "married", "divorced", "widowed"]),
-  dependents: z.number().min(0),
+  dependents: z.coerce.number().min(0),
 });
 
 // Create tenant schema
@@ -46,11 +48,23 @@ export const createTenantSchema = z.object({
   property: z.string().min(1),
   unit: z.string().min(1),
   contract: z.string().min(1),
-  tenantType: z.enum([TenantType.INDIVIDUAL, TenantType.CORPORATE, TenantType.STUDENT]),
+  tenantType: z.enum([
+    TenantType.INDIVIDUAL,
+    TenantType.CORPORATE,
+    TenantType.STUDENT,
+  ]),
   personalInfo: personalInfoSchema,
   startDate: z.string().date(),
   endDate: z.string().date().optional(),
-  status: z.enum([TenantStatus.ACTIVE, TenantStatus.INACTIVE, TenantStatus.SUSPENDED, TenantStatus.PENDING_VERIFICATION, TenantStatus.REJECTED]).optional(),
+  status: z
+    .enum([
+      TenantStatus.ACTIVE,
+      TenantStatus.INACTIVE,
+      TenantStatus.SUSPENDED,
+      TenantStatus.PENDING_VERIFICATION,
+      TenantStatus.REJECTED,
+    ])
+    .optional(),
   address: addressSchema,
   emergencyContact: emergencyContactSchema.optional(),
   notes: z.string().optional(),
@@ -61,11 +75,28 @@ export const updateTenantSchema = z.object({
   property: z.string().optional(),
   unit: z.string().optional(),
   contract: z.string().optional(),
-  tenantType: z.enum([TenantType.INDIVIDUAL, TenantType.CORPORATE, TenantType.STUDENT]).optional(),
-  priority: z.enum([TenantPriority.LOW, TenantPriority.MEDIUM, TenantPriority.HIGH, TenantPriority.CRITICAL]).optional(),
+  tenantType: z
+    .enum([TenantType.INDIVIDUAL, TenantType.CORPORATE, TenantType.STUDENT])
+    .optional(),
+  priority: z
+    .enum([
+      TenantPriority.LOW,
+      TenantPriority.MEDIUM,
+      TenantPriority.HIGH,
+      TenantPriority.CRITICAL,
+    ])
+    .optional(),
   personalInfo: personalInfoSchema.partial().optional(),
   endDate: z.string().date().optional(),
-  status: z.enum([TenantStatus.ACTIVE, TenantStatus.INACTIVE, TenantStatus.SUSPENDED, TenantStatus.PENDING_VERIFICATION, TenantStatus.REJECTED]).optional(),
+  status: z
+    .enum([
+      TenantStatus.ACTIVE,
+      TenantStatus.INACTIVE,
+      TenantStatus.SUSPENDED,
+      TenantStatus.PENDING_VERIFICATION,
+      TenantStatus.REJECTED,
+    ])
+    .optional(),
   address: addressSchema.optional(),
   emergencyContact: emergencyContactSchema.optional(),
   notes: z.string().optional(),
@@ -74,7 +105,7 @@ export const updateTenantSchema = z.object({
 // Background check schema
 export const backgroundCheckSchema = z.object({
   conducted: z.boolean(),
-  conductedDate: z.date(),
+  conductedDate: z.iso.date(),
   creditCheck: z.object({
     cleared: z.boolean(),
   }),
@@ -103,7 +134,7 @@ export const backgroundCheckSchema = z.object({
   previousAddresses: z.array(
     z.object({
       address: z.string(),
-      duration: z.number(),
+      duration: z.coerce.number(),
       landlordContact: z.string(),
       reason_for_leaving: z.string(),
     })
@@ -112,7 +143,7 @@ export const backgroundCheckSchema = z.object({
 
 // Update verification schema
 export const updateVerificationSchema = z.object({
-  verificationProgress: z.number().min(0).max(100),
+  verificationProgress: z.coerce.number().min(0).max(100),
   verificationData: backgroundCheckSchema.partial().optional(),
 });
 

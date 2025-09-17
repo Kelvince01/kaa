@@ -1,0 +1,13 @@
+{
+  "name": "@kaa/constants",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@kaa/tsconfig": "workspace:*",
+    "typescript": "^5.9.2"
+  }
+}

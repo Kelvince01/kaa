@@ -9,14 +9,19 @@
   "scripts": {
     "check": "oxlint",
     "ruler:apply": "bunx @intellectronica/ruler@latest apply --local-only",
+    "prepare~": "husky",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "format": "bun biome format",
     "check-types": "turbo run check-types",
-    "dev:native": "turbo -F native dev",
-    "dev:web": "turbo -F web dev",
-    "dev:server": "turbo -F server dev"
+    "dev:web": "turbo -F @kaa/web dev",
+    "dev:native": "turbo -F @kaa/native dev",
+    "dev:app": "turbo -F @kaa/app dev",
+    "dev:api": "turbo -F @kaa/api dev",
+    "dev:docs": "turbo -F @kaa/docs dev",
+    "release": "semantic-release",
+    "commit~": "cz"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",
@@ -89,6 +94,7 @@
   },
   "trustedDependencies": [
     "@evilmartians/lefthook",
+    "@firebase/util",
     "@kaa/docs",
     "@sentry/cli",
     "@tailwindcss/oxide",
@@ -100,7 +106,6 @@
     "sharp"
   ],
   "dependencies": {
-    "elysia-ip": "^1.0.10",
     "nativewind": "^4.2.1"
   }
 }

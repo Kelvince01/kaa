@@ -1,6 +1,5 @@
 "use client";
 
-// biome-ignore lint/performance/noNamespaceImport: false positive
 import * as Sentry from "@sentry/nextjs";
 import NextError from "next/error";
 import { useEffect } from "react";

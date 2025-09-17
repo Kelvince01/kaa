@@ -64,10 +64,9 @@ export const authService = {
   },
 
   // Get current user
-  getCurrentUser: async (): Promise<ApiResponse> => {
-    const response: AxiosResponse<ApiResponse> = await httpClient.api.get<
-      MeResponse | any
-    >("/auth/me");
+  getCurrentUser: async (): Promise<MeResponse> => {
+    const response: AxiosResponse<MeResponse> =
+      await httpClient.api.get<MeResponse>("/auth/me");
     return response.data;
   },
 

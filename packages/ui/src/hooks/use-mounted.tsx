@@ -11,27 +11,27 @@ import { useEffect, useState } from "react";
  * - `hasWaited`: component after 800ms
  */
 export const useMounted = () => {
-	const [hasMounted, setMounted] = useState(false);
-	const [hasStarted, setStarted] = useState(false);
-	const [hasWaited, setWaited] = useState(false);
+  const [hasMounted, setMounted] = useState(false);
+  const [hasStarted, setStarted] = useState(false);
+  const [hasWaited, setWaited] = useState(false);
 
-	useEffect(() => {
-		setMounted(true);
+  useEffect(() => {
+    setMounted(true);
 
-		const startTimeout = setTimeout(() => setStarted(true), 200);
-		const readyTimeout = setTimeout(() => setWaited(true), 800);
+    const startTimeout = setTimeout(() => setStarted(true), 200);
+    const readyTimeout = setTimeout(() => setWaited(true), 800);
 
-		return () => {
-			clearTimeout(startTimeout);
-			clearTimeout(readyTimeout);
-		};
-	}, []);
+    return () => {
+      clearTimeout(startTimeout);
+      clearTimeout(readyTimeout);
+    };
+  }, []);
 
-	return {
-		hasMounted,
-		hasStarted,
-		hasWaited,
-	};
+  return {
+    hasMounted,
+    hasStarted,
+    hasWaited,
+  };
 };
 
 export default useMounted;

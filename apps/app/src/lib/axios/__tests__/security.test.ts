@@ -143,6 +143,7 @@ describe("Security Components", () => {
         writable: true,
       });
       // Mock fetch
+      // @ts-expect-error - Mock fetch
       global.fetch = vi.fn();
     });
 

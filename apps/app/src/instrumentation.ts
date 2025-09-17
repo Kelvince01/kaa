@@ -1,4 +1,3 @@
-// biome-ignore lint/performance/noNamespaceImport: false positive
 import * as Sentry from "@sentry/nextjs";
 
 export async function register() {
