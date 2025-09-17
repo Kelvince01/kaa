@@ -1,7 +1,12 @@
 const validPattern = /^[a-zA-Z0-9\-_]+$/;
 
 export function generateCorrelationId(): string {
-  if (window?.crypto?.getRandomValues) {
+  if (
+    // biome-ignore lint/complexity/useOptionalChain: false positive
+    typeof window !== "undefined" &&
+    window.crypto &&
+    window.crypto.getRandomValues
+  ) {
     // Browser environment with crypto support
     const array = new Uint8Array(16);
     window.crypto.getRandomValues(array);

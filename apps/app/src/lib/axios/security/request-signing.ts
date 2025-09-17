@@ -81,11 +81,18 @@ export class RequestSigner {
       .replace("HMAC-", "")
       .replace("-", "");
 
-    if (window?.crypto?.subtle) {
+    if (
+      // biome-ignore lint/complexity/useOptionalChain: false positive
+      typeof window !== "undefined" &&
+      window.crypto &&
+      window.crypto.subtle
+    ) {
       return await this.createSignatureWebCrypto(payload, algorithm);
+      // biome-ignore lint/style/noUselessElse: false positive
+    } else {
+      // Fallback for Node.js or environments without Web Crypto API
+      return this.createSignatureFallback(payload);
     }
-    // Fallback for Node.js or environments without Web Crypto API
-    return this.createSignatureFallback(payload);
   }
 
   private async createSignatureWebCrypto(
@@ -135,13 +142,16 @@ export class RequestSigner {
   }
 
   private generateNonce(): string {
-    if (window?.crypto) {
+    // biome-ignore lint/complexity/useOptionalChain: false positive
+    if (typeof window !== "undefined" && window.crypto) {
       const array = new Uint8Array(16);
       window.crypto.getRandomValues(array);
       return btoa(String.fromCharCode(...array));
+      // biome-ignore lint/style/noUselessElse: false positive
+    } else {
+      // Fallback for environments without crypto.getRandomValues
+      return btoa(Date.now().toString() + Math.random().toString());
     }
-    // Fallback for environments without crypto.getRandomValues
-    return btoa(Date.now().toString() + Math.random().toString());
   }
 
   private constantTimeCompare(a: string, b: string): boolean {

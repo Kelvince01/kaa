@@ -143,7 +143,12 @@ export const securityUtils = {
 
   // Generate secure random string
   generateSecureRandom: (length = 32): string => {
-    if (window?.crypto?.getRandomValues) {
+    if (
+      // biome-ignore lint/complexity/useOptionalChain: false positive
+      typeof window !== "undefined" &&
+      window.crypto &&
+      window.crypto.getRandomValues
+    ) {
       const array = new Uint8Array(length);
       window.crypto.getRandomValues(array);
       return Array.from(array, (byte) =>
@@ -158,7 +163,12 @@ export const securityUtils = {
 
   // Hash sensitive data (for client-side fingerprinting)
   hashData: async (data: string): Promise<string> => {
-    if (window?.crypto?.subtle) {
+    if (
+      // biome-ignore lint/complexity/useOptionalChain: false positive
+      typeof window !== "undefined" &&
+      window.crypto &&
+      window.crypto.subtle
+    ) {
       const encoder = new TextEncoder();
       const dataBuffer = encoder.encode(data);
       const hashBuffer = await window.crypto.subtle.digest(
