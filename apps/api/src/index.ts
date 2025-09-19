@@ -5,6 +5,22 @@ import mongoose from "mongoose";
 import ascii from "~/shared/utils/ascii.util";
 import app from "./app";
 
+// Function to find available port
+// const findAvailablePort = (startPort: number): Promise<number> => {
+//   return new Promise((resolve) => {
+//     const server = app
+//       .listen(startPort, () => {
+//         const port = (server.address() as any)?.port || startPort;
+//         server.close(() => resolve(port));
+//       })
+//       .on("error", () => {
+//         resolve(findAvailablePort(startPort + 1));
+//       });
+//   });
+// };
+
+// const port = await findAvailablePort(config.port);
+
 const server = app.listen(config.port, () => {
   ascii();
   console.log("🔥 App Initialized...");
@@ -12,7 +28,7 @@ const server = app.listen(config.port, () => {
   console.info(
     `🚀 ${chalk.greenBright.bold("Kaa")}
 		(Client) runs on: ${chalk.cyanBright.bold(config.clientUrl)}
-		(API): ${chalk.cyanBright.bold(config.app.url)}
+		(API): ${chalk.cyanBright.bold(`${config.app.url}:${config.port}`)}
 		(Docs): ${chalk.cyanBright(`${config.app.url}/api/docs`)}`
   );
   console.info(" ");

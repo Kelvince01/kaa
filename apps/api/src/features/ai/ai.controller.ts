@@ -7,6 +7,8 @@ export const aiController = new Elysia().group("/ai", (app) =>
     "/chat",
     async ({ body }) => {
       const uiMessages = body.messages || [];
+      console.log(uiMessages);
+
       const result = await streamText({
         model: google("gemini-2.0-flash"),
         messages: convertToModelMessages(uiMessages as any),

@@ -16,7 +16,6 @@
     "format": "bun biome format",
     "check-types": "turbo run check-types",
     "dev:web": "turbo -F @kaa/web dev",
-    "dev:native": "turbo -F @kaa/native dev",
     "dev:app": "turbo -F @kaa/app dev",
     "dev:api": "turbo -F @kaa/api dev",
     "dev:docs": "turbo -F @kaa/docs dev",
@@ -104,8 +103,5 @@
     "msgpackr-extract",
     "protobufjs",
     "sharp"
-  ],
-  "dependencies": {
-    "nativewind": "^4.2.1"
-  }
+  ]
 }

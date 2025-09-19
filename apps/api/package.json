@@ -46,6 +46,7 @@
     "elysia-helmet": "^3.0.0",
     "elysia-i18next": "^4.0.3",
     "elysia-ip": "^1.0.10",
+    "elysia-prometheus": "^1.0.0",
     "i18next": "^25.5.2",
     "logestic": "^1.2.4",
     "mongoose": "^8.18.1",

@@ -551,7 +551,9 @@ export const authController = new Elysia()
 
             // 6. Parallel operations for successful login
             const [userRole, refreshTokenExpiry] = await Promise.all([
-              authCacheService.getRole(user.role?.toString() || ""),
+              authCacheService.getRole(
+                (user.role as any)._id?.toString() || ""
+              ),
               Promise.resolve(
                 Math.floor(Date.now() / 1000) + config.jwt.refreshTokenExpiresIn
               ),
