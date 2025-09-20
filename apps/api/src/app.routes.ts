@@ -4,6 +4,8 @@ import { aiController } from "./features/ai/ai.controller";
 import { authController } from "./features/auth/auth.controller";
 import { csrfController } from "./features/auth/csrf.controller";
 import { securityMonitoringController } from "./features/auth/security-monitoring.controller";
+import { notificationController } from "./features/comms/notifications/notification.controller";
+import { fileController } from "./features/files/file.controller";
 import { monitoringController } from "./features/misc/monitoring/monitoring.controller";
 import { rbacController } from "./features/rbac/rbac.controller";
 import { usersController } from "./features/users/user.controller";
@@ -15,6 +17,8 @@ const routes = new Elysia({ prefix: "api/v1" })
   .use(rbacController)
   .use(usersController)
   .use(aiController)
-  .use(monitoringController);
+  .use(fileController)
+  .use(monitoringController)
+  .use(notificationController);
 
 export { routes as AppRoutes };

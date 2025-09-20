@@ -6,7 +6,6 @@ import type {
   LoginRequest,
   LoginResponse,
   LoginTwoFactorResponse,
-  MeResponse,
   RegisterRequest,
   RegisterResponse,
   ResendVerificationRequest,
@@ -60,13 +59,6 @@ export const authService = {
       "/auth/phone/verify",
       data
     );
-    return response.data;
-  },
-
-  // Get current user
-  getCurrentUser: async (): Promise<MeResponse> => {
-    const response: AxiosResponse<MeResponse> =
-      await httpClient.api.get<MeResponse>("/auth/me");
     return response.data;
   },
 

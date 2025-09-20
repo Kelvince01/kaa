@@ -9,7 +9,7 @@ import {
   ResetPasswordRequestSchema,
   VerifyUserRequestSchema,
 } from "@kaa/schemas";
-import { fileService, roleService, userService } from "@kaa/services";
+import { fileService, userService } from "@kaa/services";
 import {
   AppError,
   generateResetPasswordToken,
@@ -35,8 +35,10 @@ import {
   //   enhancedAuthRateLimitPlugin,
   adaptiveRateLimiter,
 } from "./auth-rate-limit.plugin";
+import { meController } from "./me.controller";
 import { oauthController } from "./oauth.controller";
 import { passkeyController } from "./passkey.controller";
+import { passkeyV2Controller } from "./passkey-v2.controller";
 import { authBackgroundJobs } from "./services/auth-background.service";
 import { authCacheService } from "./services/auth-cache.service";
 import { authMetrics } from "./services/auth-metrics.service";
@@ -803,107 +805,6 @@ export const authController = new Elysia()
       .group("", (app) =>
         app
           .use(authPlugin)
-          .get(
-            "/me",
-            async ({ user, set }) => {
-              try {
-                // Get full user document
-                const currentUser = await User.findById(user.id);
-                if (!currentUser) {
-                  set.status = 404;
-                  return {
-                    status: "error",
-                    message: "User not found",
-                  };
-                }
-                // User is attached to req by the auth middleware
-                const userProfile = currentUser.getPublicProfile();
-
-                // Get user role
-                const userRole = await roleService.getRoleById(
-                  userProfile.role?.toString() ?? ""
-                );
-
-                set.status = 200;
-                return {
-                  status: "success",
-                  user: {
-                    id: (userProfile._id as mongoose.Types.ObjectId).toString(),
-                    memberId: userProfile.memberId?.toString(),
-                    avatar: userProfile.avatar,
-                    username: userProfile.username as string,
-                    firstName: userProfile.firstName as string,
-                    lastName: userProfile.lastName as string,
-                    email: userProfile.email as string,
-                    status: userProfile.status as string,
-                    role: userRole?.name ?? "",
-                    phone: userProfile.phone,
-                    address: userProfile.address,
-                    isActive: userProfile.isActive as boolean,
-                    isVerified: userProfile.isVerified as boolean,
-                    createdAt: (userProfile.createdAt as Date).toISOString(),
-                    updatedAt: (userProfile.updatedAt as Date).toISOString(),
-                  },
-                };
-              } catch (error) {
-                const errorMessage =
-                  error instanceof Error ? error.message : String(error);
-
-                set.status = 500;
-                return {
-                  status: "error",
-                  message: "Failed to fetch user",
-                  error: errorMessage,
-                };
-              }
-            },
-            {
-              response: {
-                200: t.Object({
-                  status: t.Literal("success"),
-                  user: t.Object({
-                    id: t.String(),
-                    memberId: t.Optional(t.String()),
-                    avatar: t.Optional(t.String()),
-                    username: t.String(),
-                    firstName: t.String(),
-                    lastName: t.String(),
-                    email: t.String(),
-                    role: t.String(),
-                    phone: t.Optional(t.String()),
-                    address: t.Optional(
-                      t.Object({
-                        line1: t.String(),
-                        town: t.String(),
-                        postalCode: t.String(),
-                        county: t.String(),
-                        country: t.String(),
-                      })
-                    ),
-                    status: t.String(),
-                    isActive: t.Boolean(),
-                    isVerified: t.Boolean(),
-                    createdAt: t.String(),
-                    updatedAt: t.String(),
-                  }),
-                }),
-                404: t.Object({
-                  status: t.Literal("error"),
-                  message: t.String(),
-                }),
-                500: t.Object({
-                  status: t.Literal("error"),
-                  message: t.String(),
-                  error: t.String(),
-                }),
-              },
-              detail: {
-                tags: ["auth"],
-                summary: "Fetch current user",
-                description: "Fetch the current user",
-              },
-            }
-          )
           .post(
             "/logout",
             async ({ cookie: { access_token, refresh_token }, user, set }) => {
@@ -1367,7 +1268,9 @@ export const authController = new Elysia()
           }
         )
       )
+      .use(meController)
       .use(sessionController)
       .use(twoFactorController)
       .use(passkeyController)
+      .use(passkeyV2Controller)
   );

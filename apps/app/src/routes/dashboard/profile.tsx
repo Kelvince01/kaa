@@ -34,6 +34,7 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+// import AvatarFormField from "@/components/common/form-fields/avatar";
 import SelectCountry from "@/components/common/form-fields/select-country";
 import SelectCounty from "@/components/common/form-fields/select-county";
 import { useAuthStore } from "@/modules/auth";
@@ -42,6 +43,7 @@ import { useChangePassword, useUpdateUser } from "@/modules/users/user.queries";
 
 // Validation schemas
 const profileFormSchema = z.object({
+  avatar: z.string().optional(),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   phone: z.string().min(1, "Phone number is required"),
@@ -275,6 +277,16 @@ const ProfileContainer = () => {
                 onSubmit={profileForm.handleSubmit(onProfileSubmit)}
               >
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {/* <AvatarFormField
+                    control={profileForm.control}
+                    entity={user ? { id: user.id, name: user.firstName } : {}}
+                    label={"Profile Picture"}
+                    name="avatar"
+                    setUrl={(url) => profileForm.setValue("avatar", url || "")}
+                    type="user"
+                    url={profileForm.getValues("avatar") || ""}
+                  /> */}
+
                   {/* First Name */}
                   <FormField
                     control={profileForm.control}

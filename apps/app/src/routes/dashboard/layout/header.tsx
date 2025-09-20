@@ -12,7 +12,9 @@ import { Separator } from "@kaa/ui/components/separator";
 import { SidebarTrigger } from "@kaa/ui/components/sidebar";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
+import { dialog } from "@/components/common/dialoger/state";
 import { ModeToggle } from "@/components/mode-toggle";
+import { AIChatAssistant } from "@/modules/ai/components/ai-assistant";
 import { useAuthStore } from "@/modules/auth/auth.store";
 import NotificationPopover from "@/modules/comms/notifications/components/notification-popup";
 import type { User } from "@/modules/users/user.type";
@@ -32,6 +34,14 @@ export function DashboardHeader() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const openAIAssistantDialog = () => {
+    dialog(<AIChatAssistant />, {
+      className: "max-w-xl",
+      // title: "AI Assistant",
+      // description: "AI Assistant",
+    });
+  };
 
   // Helper: flatten nav items for easy lookup
   const navItems = useMemo(() => {
@@ -107,6 +117,7 @@ export function DashboardHeader() {
         >
           <Button
             className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
+            onClick={openAIAssistantDialog}
             size="sm"
           >
             <Icon className="mr-2 h-4 w-4" icon="material-symbols:smart-toy" />

@@ -55,7 +55,7 @@ export function HeroSectionV2() {
 
               {/* Search form */}
               <form
-                className="search-container flex w-5/12 flex-col rounded-lg bg-white p-2 shadow-lg sm:flex-row"
+                className="search-container flex w-5/12 flex-col rounded-lg bg-white p-2 shadow-lg sm:w-10/12 sm:flex-row"
                 onSubmit={handleSearch}
               >
                 <div className="relative flex-1">

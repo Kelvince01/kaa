@@ -34,7 +34,7 @@ export function AuthGuard({
         const roleRedirects: Record<string, string> = {
           admin: "/admin",
           landlord: "/dashboard",
-          tenant: "/dashboard",
+          tenant: "/account",
           property_manager: "/dashboard",
           maintenance: "/dashboard",
         };

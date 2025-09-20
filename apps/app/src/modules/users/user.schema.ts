@@ -102,6 +102,10 @@ export const userFormSchema = z.object({
   lastName: z.string().min(1, { message: "Last name is required" }),
   username: z.string().min(1, { message: "Name is required" }),
   email: z.string().email({ message: "Please enter a valid email" }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters" })
+    .optional(),
   role: z.enum(["admin", "user", "manager"] as const, "Please select a role"),
   status: z.enum(["active", "inactive", "suspended"] as const).optional(),
 });

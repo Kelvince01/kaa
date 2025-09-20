@@ -36,7 +36,7 @@ const initStore: Pick<
 > = {
   mode: browserMode,
   theme: "none",
-  offlineAccess: false,
+  offlineAccess: true,
   impersonating: false,
 };
 

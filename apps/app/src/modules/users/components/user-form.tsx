@@ -19,6 +19,8 @@ import {
   SelectValue,
 } from "@kaa/ui/components/select";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { lazy, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useCreateUser, useUpdateUser } from "@/modules/users/user.queries";
@@ -28,6 +30,8 @@ import {
 } from "@/modules/users/user.schema";
 import type { User } from "@/modules/users/user.type";
 import { UserRole } from "@/modules/users/user.type";
+
+const PasswordStrength = lazy(() => import("@/components/password-strength"));
 
 // Define the user role options for the select dropdown
 const userRoleOptions = [
@@ -100,6 +104,8 @@ export function UserForm({
   onCancel,
 }: UserFormProps) {
   const isEdit = mode === "edit";
+  const isMobile = window.innerWidth < 640;
+  const t = useTranslations("common");
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
@@ -193,6 +199,35 @@ export function UserForm({
               </FormItem>
             )}
           />
+
+          {!isEdit && (
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        autoComplete="new-password"
+                        autoFocus={!isMobile}
+                        placeholder={t("new_password")}
+                        type="password"
+                        {...field}
+                      />
+                      <Suspense>
+                        <PasswordStrength
+                          minLength={8}
+                          password={form.getValues("password") || ""}
+                        />
+                      </Suspense>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <FormField
             control={form.control}

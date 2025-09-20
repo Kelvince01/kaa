@@ -1,3 +1,4 @@
+export * from "./ai.model";
 export * from "./audit.model";
 export * from "./auth.model";
 export * from "./backup.model";
@@ -5,6 +6,7 @@ export * from "./base.model";
 // export * from "./common.model";
 export * from "./device-token.model";
 export * from "./file.model";
+export * from "./market.model";
 export * from "./member.model";
 export * from "./monitoring.model";
 export * from "./notification.model";

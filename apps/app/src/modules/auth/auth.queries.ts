@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { queryClient } from "@/query/query-client";
+import { meService } from "../me/me.service";
 import type { User, UserRole, UserStatus } from "../users/user.type";
 import { authService } from "./auth.service";
 import { useAuthStore } from "./auth.store";
@@ -190,29 +191,6 @@ export const useVerifyPhone = () => {
   });
 };
 
-// Get current user hook
-export const useCurrentUser = () => {
-  const { user, setUser, setLoading } = useAuthStore();
-
-  const { data, error, isLoading } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: authService.getCurrentUser,
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000, // cache for 5 minutes
-    refetchOnWindowFocus: false,
-  });
-
-  if (isLoading) setLoading(true);
-
-  if (data?.user) {
-    setUser(data.user as User);
-  }
-
-  if ((error as any).response?.status === 401) {
-    useAuthStore.getState().logout();
-  }
-};
-
 // Logout hook
 export const useLogout = () => {
   const router = useRouter();
@@ -306,7 +284,7 @@ export const useRefreshToken = () => {
 
       // Fetch and update user data with new tokens
       try {
-        const userData = await authService.getCurrentUser();
+        const userData = await meService.getCurrentUser();
         if (userData?.user) {
           setUser(userData.user as User);
         }

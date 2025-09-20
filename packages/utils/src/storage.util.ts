@@ -53,7 +53,8 @@ export const uploadFile = async (
     // Upload to Vercel Blob
     const blob = await put(path, file.buffer, {
       contentType,
-      access: options.public ? "public" : "public", // private
+      access: options.public ? "public" : "public", // private,
+      addRandomSuffix: true,
     });
 
     // Generate CDN URL if available

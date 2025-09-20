@@ -1,3 +1,4 @@
+export * from "./ai.type";
 export * from "./audit.type";
 export * from "./auth.type";
 export * from "./backup.type";
@@ -9,6 +10,7 @@ export * from "./file.type";
 export * from "./member.type";
 export * from "./monitoring.type";
 export * from "./notification.type";
+export * from "./openai.type";
 export * from "./org.type";
 export * from "./rbac.type";
 export * from "./tenant.type";

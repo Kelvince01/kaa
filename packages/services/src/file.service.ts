@@ -4,6 +4,7 @@ import type {
   IFile,
   IFileAnalytics,
   IFileFilter,
+  IFileListResponse,
   IFileProcessingOptions,
   IFileStats,
   IFileUploadOptions,
@@ -11,10 +12,97 @@ import type {
 import { FileCategory, FileType } from "@kaa/models/types";
 import mongoose, { type FilterQuery } from "mongoose";
 
-// Get files by user ID
+/**
+ * Get files
+ */
+export const getFiles = async ({
+  userId,
+  filters,
+}: {
+  userId?: string;
+  filters?: IFileFilter;
+}): Promise<IFileListResponse> => {
+  try {
+    const query: FilterQuery<IFile> = {};
+    if (userId) {
+      query.user = userId;
+    }
+    if (filters?.search) {
+      query.name = { $regex: filters.search, $options: "i" };
+    }
+    if (filters?.mimeType) {
+      query.mimeType = { $regex: filters.mimeType, $options: "i" };
+    }
+    if (filters?.tags) {
+      query.tags = { $in: filters.tags };
+    }
+    if (filters?.isPublic) {
+      query.isPublic = filters.isPublic;
+    }
+    if (filters?.sizeFrom) {
+      query.size = { $gte: filters.sizeFrom };
+    }
+    if (filters?.sizeTo) {
+      query.size = { $lte: filters.sizeTo };
+    }
+    if (filters?.uploadedFrom) {
+      query.createdAt = { $gte: filters.uploadedFrom };
+    }
+    if (filters?.uploadedTo) {
+      query.createdAt = { $lte: filters.uploadedTo };
+    }
+    if (filters?.sortBy) {
+      query.createdAt = { $sort: filters.sortBy };
+    }
+    if (filters?.sortOrder) {
+      query.createdAt = { $sort: filters.sortOrder };
+    }
+
+    const files = await File.find(query)
+      .sort({
+        [filters?.sortBy || "createdAt"]: filters?.sortOrder === "asc" ? 1 : -1,
+      })
+      .skip((filters?.page || 1) - 1)
+      .limit(filters?.limit || 10);
+    const total = await File.countDocuments(query);
+    const pages = Math.ceil(total / (filters?.limit || 10));
+
+    return {
+      files: files.map((file) => ({
+        ...file.toObject(),
+        _id: (file._id as mongoose.Types.ObjectId)?.toString(),
+      })) as any,
+      pagination: {
+        page: filters?.page || 1,
+        limit: filters?.limit || 10,
+        total,
+        pages,
+      },
+      status: "success",
+      message: "Files fetched successfully",
+    };
+  } catch (error) {
+    console.error(`Error getting files: ${error}`);
+    return {
+      files: [] as any,
+      pagination: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        pages: 0,
+      },
+      status: "error",
+      message: "Failed to fetch files",
+    };
+  }
+};
+
+/**
+ * Get files by user ID
+ */
 export const getFilesByUserId = async (userId: string): Promise<IFile[]> => {
   try {
-    return await File.find({ userId });
+    return await File.find({ user: userId });
   } catch (error) {
     console.error(`Error getting files by user ID: ${error}`);
     return [];

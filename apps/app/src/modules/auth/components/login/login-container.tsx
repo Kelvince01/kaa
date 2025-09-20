@@ -19,7 +19,7 @@ const LoginContainer = () => {
 
   // Get redirect URL from storage or query parameters, fallback to home
   const redirectTo =
-    sessionStorage.getItem("returnUrl") ||
+    (typeof window !== "undefined" && sessionStorage.getItem("returnUrl")) ||
     searchParams.get("redirectTo") ||
     "/";
 

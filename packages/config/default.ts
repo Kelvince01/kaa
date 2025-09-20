@@ -139,7 +139,7 @@ export const config = {
     units: 50,
     organizations: 40,
     requests: 40,
-    attachments: 40,
+    files: 40,
     memberInvitations: 20,
     permissions: 40,
     bookings: 40,
@@ -152,6 +152,28 @@ export const config = {
     systemRoles: ["user", "admin"] as const,
     entityRoles: ["member", "admin"] as const,
     allRoles: ["user", "member", "admin"] as const,
+  },
+
+  /**
+   * Company details.
+   */
+  company: {
+    name: "Kaa",
+    shortName: "Kaa",
+    email: "info@kaapro.dev",
+    postcode: "90210 JS",
+    tel: "+254 700 12345678",
+    streetAddress: "Nairobi Road 42",
+    city: "Nairobi",
+    country: "Kenya",
+    googleMapsUrl: "https://goo.gl/maps/SQlrh",
+    scheduleCallUrl: "https://cal.com/kaapro",
+    githubUrl: "https://github.com/Kelvince01/kaa",
+    mapZoom: 4,
+    coordinates: {
+      lat: -1.2925,
+      lng: 36.8219,
+    },
   },
 
   /**

@@ -1,0 +1,51 @@
+import { useTranslations } from "next-intl";
+import { lazy, Suspense } from "react";
+import Spinner from "@/components/common/spinner";
+import { whyDarkSlides, whyItems, whyLightSlides } from "../marketing-config";
+
+const DeviceMockup = lazy(() => import("../device-mockup"));
+
+const Why = () => {
+  const t = useTranslations();
+
+  return (
+    <div className="relative mx-auto mt-20 mb-12 flex max-w-7xl flex-wrap items-center lg:mb-16">
+      <div className="w-full lg:w-5/12">
+        <div className="flex flex-wrap">
+          {whyItems.map((item, index) => {
+            const title = `about.why.title_${index + 1}`;
+            const text = `about.why.text_${index + 1}`;
+
+            return (
+              <div className="w-full" key={item.id}>
+                <div className="group mb-12 flex">
+                  <div className="md:-mt-2 mr-6 flex h-8 w-full max-w-8 items-center justify-center rounded-full border-2 border-primary font-semibold text-l group-hover:bg-transparent md:h-12 md:max-w-12 md:text-1xl">
+                    {index + 1}
+                  </div>
+                  <div className="w-full">
+                    <h3 className="mb-2 font-medium text-xl 2xl:text-[1.38rem]">
+                      {t(title)}
+                    </h3>
+                    <p className="leading-relaxed">{t(text)}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="w-full lg:w-7/12">
+        <Suspense fallback={<Spinner className="mt-[40vh] h-10 w-10" />}>
+          <DeviceMockup
+            className="-top-2 lg:absolute lg:ml-8 lg:w-[54vw]"
+            darkSlides={whyDarkSlides}
+            lightSlides={whyLightSlides}
+            type="pc"
+          />
+        </Suspense>
+      </div>
+    </div>
+  );
+};
+
+export default Why;

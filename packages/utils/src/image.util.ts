@@ -1,7 +1,19 @@
 import { $ } from "bun";
+import imagemin from "imagemin";
+import imageminPngquant from "imagemin-pngquant";
 import Jimp from "jimp";
+import sharp from "sharp";
+
+// import path from "node:path";
 
 const MAX_DIMENSION = 1000;
+
+export const processImage = async (input: Buffer) => {
+  return await sharp(input)
+    .resize(1024, 1024, { fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 85 })
+    .toBuffer();
+};
 
 export async function cleanImage(input: Jimp) {
   console.log("Cleaning image...");
@@ -49,4 +61,18 @@ export async function processFromBuffer(input: Buffer) {
 
 export async function processFromUrl(url: string) {
   return processJimp(await Jimp.read(url));
+}
+
+export async function tinyPng_v2(input: Buffer) {
+  console.log("Compressing image...");
+
+  const compressed = await imagemin.buffer(input, {
+    plugins: [
+      imageminPngquant({
+        quality: [0.6, 0.8], // adjust compression quality here
+      }),
+    ],
+  });
+
+  return compressed;
 }

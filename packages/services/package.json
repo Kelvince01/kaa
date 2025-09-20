@@ -8,13 +8,20 @@
     "./managers": "./src/managers/index.ts"
   },
   "dependencies": {
+    "@ai-sdk/google": "^2.0.14",
+    "@ai-sdk/openai": "^2.0.32",
     "@kaa/email": "workspace:*",
     "@kaa/models": "workspace:*",
     "@kaa/schemas": "workspace:*",
+    "@oslojs/crypto": "^1.0.1",
+    "@oslojs/encoding": "^1.1.0",
+    "@oslojs/webauthn": "^1.0.0",
+    "ai": "^5.0.47",
     "axios": "^1.12.2",
     "elysia": "latest",
     "firebase-admin": "^13.5.0",
-    "mongoose": "^8.18.1"
+    "mongoose": "^8.18.1",
+    "openai": "^5.22.0"
   },
   "devDependencies": {
     "@kaa/tsconfig": "workspace:*",

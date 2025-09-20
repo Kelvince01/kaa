@@ -6,7 +6,9 @@ import staticPlugin from "@elysiajs/static";
 import { Elysia } from "elysia";
 import { helmet } from "elysia-helmet";
 import { i18next } from "elysia-i18next";
+import prometheusPlugin from "elysia-prometheus";
 import { Logestic } from "logestic";
+
 import { AppRoutes } from "./app.routes";
 import {
   DEFAULT_LOCALE,
@@ -117,6 +119,15 @@ app
   .use(setupBullBoard)
   .use(openapiDocs)
   .use(cronPlugin)
+  .use(
+    prometheusPlugin({
+      metricsPath: "/metrics/prometheus",
+      staticLabels: { service: "api" },
+      dynamicLabels: {
+        userAgent: (ctx) => ctx.request.headers.get("user-agent") ?? "unknown",
+      },
+    })
+  )
   .use(monitoringPlugin("api"));
 
 export default app;

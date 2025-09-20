@@ -121,7 +121,7 @@ export type IFileFilter = {
 
 // File list response
 export type IFileListResponse = {
-  items: IFile[];
+  files: Omit<IFile, "_id"> & { _id: string }[];
   pagination: {
     pages: number;
     total: number;

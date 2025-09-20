@@ -6,6 +6,18 @@ import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 import { logger } from "./logger.util";
 
+export function removeFileExtension(filename: string) {
+  const lastDotIndex = filename.lastIndexOf(".");
+  if (lastDotIndex === -1) return filename; // No extension found
+  return filename.substring(0, lastDotIndex);
+}
+
+export function removeAllExtensions(filename: string) {
+  const firstDotIndex = filename.indexOf(".");
+  if (firstDotIndex === -1) return filename;
+  return filename.substring(0, firstDotIndex);
+}
+
 export const isMetaDataImg = async (values: ArrayBuffer) => {
   // Read file content as array buffer
   const buffer = new Uint8Array(values);

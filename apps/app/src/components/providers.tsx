@@ -15,6 +15,10 @@ import { useBreakpoints } from "@/hooks/use-breakpoints";
 // import { useOnlineManager } from "@/hooks/use-online-manager";
 import { QueryClientProvider } from "@/query/provider";
 import { addBadgeToFavicon } from "@/shared/utils/add-badge-to-favicon";
+import { Dialoger } from "./common/dialoger";
+import { DownAlert } from "./common/down-alert";
+import { Dropdowner } from "./common/dropdowner";
+import { Sheeter } from "./common/sheeter";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // const { isOnline } = useOnlineManager();
@@ -42,13 +46,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
         <Analytics />
 
-        <TooltipProvider delayDuration={120}>{children}</TooltipProvider>
+        <TooltipProvider
+          delayDuration={300}
+          disableHoverableContent
+          skipDelayDuration={0}
+        >
+          {children}
+        </TooltipProvider>
 
         <Toaster
           position={toastPosition}
           richColors
           toastOptions={{ className: "max-sm:mb-16" }}
         />
+        <Dialoger />
+        <Sheeter />
+        <Dropdowner />
+        <DownAlert />
         <ReactQueryDevtools initialIsOpen={false} />
         {/* </AuthLoader> */}
       </QueryClientProvider>
