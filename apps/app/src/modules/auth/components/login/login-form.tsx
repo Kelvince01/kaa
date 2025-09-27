@@ -15,6 +15,7 @@ import { Separator } from "@kaa/ui/components/separator";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import type React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -22,7 +23,8 @@ import z from "zod";
 import { useLogin } from "../../auth.queries";
 import { type LoginFormValues, loginSchema } from "../../auth.schema";
 import { OAuthConnectButton } from "../../oauth";
-import { PasskeyLoginButton } from "../../passkey";
+
+// import { PasskeyLoginButton } from "../../passkey";
 
 type LoginFormProps = {
   redirectTo?: string;
@@ -135,16 +137,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ redirectTo = "/" }) => {
             {/* Passkey Button - Shows when email is valid */}
             {watchedEmail && z.email().safeParse(watchedEmail).success && (
               <>
-                <PasskeyLoginButton
-                  email={watchedEmail}
-                  fullWidth
-                  onSuccess={() => {
-                    const returnUrl = sessionStorage.getItem("returnUrl");
-                    sessionStorage.removeItem("returnUrl");
-                    window.location.href = returnUrl || redirectTo;
-                  }}
-                  variant="secondary"
-                />
+                {/*<PasskeyLoginButton*/}
+                {/*  email={watchedEmail}*/}
+                {/*  fullWidth*/}
+                {/*  onSuccess={() => {*/}
+                {/*    console.log("here");*/}
+                {/*    const returnUrl = sessionStorage.getItem("returnUrl");*/}
+                {/*    sessionStorage.removeItem("returnUrl");*/}
+                {/*    window.location.href = returnUrl || redirectTo;*/}
+                {/*  }}*/}
+                {/*  variant="secondary"*/}
+                {/*/>*/}
 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">

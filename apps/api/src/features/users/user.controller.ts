@@ -39,7 +39,7 @@ export const usersController = new Elysia({
       async ({ body, set }) => {
         try {
           const existingUser = await userService.getUserBy({
-            email: body.email,
+            "contact.email": body.email,
           });
 
           if (existingUser) {
@@ -51,7 +51,7 @@ export const usersController = new Elysia({
           }
 
           const existingByUsername = await userService.getUserBy({
-            username: body.username,
+            "profile.displayName": body.username,
           });
           if (existingByUsername) {
             set.status = 422;
@@ -62,7 +62,7 @@ export const usersController = new Elysia({
           }
 
           const existingByPhone = await userService.getUserBy({
-            phone: body.phone,
+            "contact.phone.formatted": body.phone,
           });
           if (existingByPhone) {
             set.status = 422;
@@ -125,17 +125,17 @@ export const usersController = new Elysia({
 
           const usersRes: UsersResponse = users.map((user) => ({
             id: (user._id as mongoose.Types.ObjectId).toString(),
-            username: user.username,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
+            username: user.profile?.displayName,
+            firstName: user.profile?.firstName,
+            lastName: user.profile?.lastName,
+            email: user.contact?.email,
             role: {
               _id: (
                 (user.role as any)._id as mongoose.Types.ObjectId
               ).toString(),
               name: (user.role as any).name,
             },
-            phone: user.phone,
+            phone: user.contact?.phone.formatted,
             status: user.status,
             memberId: user.memberId
               ? {
@@ -147,7 +147,7 @@ export const usersController = new Elysia({
               : undefined,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
-            lastLoginAt: user.lastLoginAt,
+            lastLoginAt: user.activity.lastLogin,
           }));
 
           return { status: "success", users: usersRes, pagination };
@@ -202,17 +202,17 @@ export const usersController = new Elysia({
 
           const userRes: UserResponse = {
             id: (user._id as mongoose.Types.ObjectId).toString(),
-            username: user.username,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
+            username: user.profile?.displayName,
+            firstName: user.profile?.firstName,
+            lastName: user.profile?.lastName,
+            email: user.contact?.email,
             role: {
               _id: (
                 (user.role as any)._id as mongoose.Types.ObjectId
               ).toString(),
               name: (user.role as any).name,
             },
-            phone: user.phone,
+            phone: user.contact?.phone.formatted,
             status: user.status,
             memberId: user.memberId
               ? {
@@ -224,7 +224,7 @@ export const usersController = new Elysia({
               : undefined,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
-            lastLoginAt: user.lastLoginAt,
+            lastLoginAt: user.activity.lastLogin,
           };
 
           return { status: "success", user: userRes };
@@ -274,17 +274,17 @@ export const usersController = new Elysia({
 
           const userRes: UserResponse = {
             id: (updatedUser._id as mongoose.Types.ObjectId).toString(),
-            username: updatedUser.username,
-            firstName: updatedUser.firstName,
-            lastName: updatedUser.lastName,
-            email: updatedUser.email,
+            username: updatedUser.profile?.displayName,
+            firstName: updatedUser.profile?.firstName,
+            lastName: updatedUser.profile?.lastName,
+            email: updatedUser.contact?.email,
             role: {
               _id: (
                 (updatedUser.role as any)._id as mongoose.Types.ObjectId
               ).toString(),
               name: (updatedUser.role as any).name,
             },
-            phone: updatedUser.phone,
+            phone: updatedUser.contact?.phone.formatted,
             status: updatedUser.status,
             memberId: updatedUser?.memberId
               ? {
@@ -297,7 +297,7 @@ export const usersController = new Elysia({
               : undefined,
             createdAt: updatedUser.createdAt,
             updatedAt: updatedUser.updatedAt,
-            lastLoginAt: updatedUser.lastLoginAt,
+            lastLoginAt: updatedUser.activity.lastLogin,
           };
 
           set.status = 200;
@@ -417,7 +417,7 @@ export const usersController = new Elysia({
 
           // Update password
           userObj.password = newPassword;
-          userObj.passwordChangedAt = new Date();
+          userObj.activity.passwordChangedAt = new Date();
           await userObj.save();
 
           return {

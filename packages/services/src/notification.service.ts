@@ -1,7 +1,7 @@
 import {
-  EmailTemplate,
   Notification,
   NotificationPreference,
+  Template,
   User,
 } from "@kaa/models";
 import type { INotification, IUser } from "@kaa/models/types";
@@ -201,21 +201,6 @@ export const notificationService = {
   },
 
   /**
-   * Create email template
-   */
-  createEmailTemplate: async (data: {
-    name: string;
-    subject: string;
-    htmlContent: string;
-    textContent: string;
-    variables?: string[];
-    memberId?: string;
-  }) => {
-    const template = await EmailTemplate.create(data);
-    return template;
-  },
-
-  /**
    * Send email using template
    */
   sendTemplatedEmail: async (
@@ -224,7 +209,7 @@ export const notificationService = {
     variables: Record<string, any> = {},
     memberId?: string
   ) => {
-    const template = await EmailTemplate.findOne({
+    const template = await Template.findOne({
       name: templateName,
       isActive: true,
       $or: [{ memberId }, { memberId: { $exists: false } }],
@@ -236,8 +221,8 @@ export const notificationService = {
 
     // Replace variables in template
     let subject = template.subject;
-    let htmlContent = template.htmlContent;
-    let textContent = template.textContent;
+    let htmlContent = template.content;
+    // let textContent = template.textContent;
 
     for (const [key, value] of Object.entries(variables)) {
       const placeholder = `{{${key}}}`;
@@ -246,10 +231,10 @@ export const notificationService = {
         new RegExp(placeholder, "g"),
         String(value)
       );
-      textContent = textContent.replace(
-        new RegExp(placeholder, "g"),
-        String(value)
-      );
+      // textContent = textContent.replace(
+      //   new RegExp(placeholder, "g"),
+      //   String(value)
+      // );
     }
 
     // In production, integrate with email service (SendGrid, Mailgun, etc.)
@@ -376,11 +361,11 @@ function deliverEmail(notification: INotification, user: IUser) {
 
     logger.info("Email notification sent", {
       notificationId: notification._id,
-      email: user.email,
+      email: user.contact.email,
     });
 
     // In production, integrate with email service
-    logger.info(`Sending email notification to ${user.email}`, {
+    logger.info(`Sending email notification to ${user.contact.email}`, {
       title: notification.title,
       message: notification.message,
     });

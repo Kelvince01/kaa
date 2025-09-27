@@ -113,25 +113,13 @@ export interface INotificationPreference extends BaseDocument {
   };
 }
 
-export interface INotificationTemplate extends BaseDocument {
-  memberId: mongoose.Types.ObjectId;
-  name: string;
-  type: string;
-  subject: string;
-  emailTemplate?: string;
-  pushTemplate?: string;
-  inAppTemplate?: string;
-  whatsappTemplate?: string;
-  variables: string[];
+export interface IDeviceToken extends BaseDocument {
+  userId: mongoose.Types.ObjectId;
+  token: string;
+  platform: "ios" | "android" | "web";
+  deviceId: string;
+  appVersion?: string;
+  osVersion?: string;
   isActive: boolean;
-}
-
-export interface IEmailTemplate extends BaseDocument {
-  name: string;
-  subject: string;
-  htmlContent: string;
-  textContent: string;
-  variables: string[];
-  isActive: boolean;
-  memberId?: mongoose.Types.ObjectId;
+  lastUsed: Date;
 }

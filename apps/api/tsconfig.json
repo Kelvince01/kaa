@@ -22,6 +22,6 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "instrument.ts"],
+  "include": ["src/**/*", "instrument.ts", "scripts/**/*"],
   "exclude": ["node_modules", "dist", "build", "**/*.test.ts", "**/*.spec.ts"]
 }

@@ -1,4 +1,4 @@
-/* @import "../components/common/blocknote/styles.css" layer(base); */
+@import "../components/common/blocknote/styles.css" layer(base);
 
 @import "@kaa/ui/globals.css";
 

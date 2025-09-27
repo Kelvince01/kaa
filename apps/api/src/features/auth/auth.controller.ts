@@ -1,7 +1,9 @@
 import crypto from "node:crypto";
+// import type { Logger } from "@bogeychan/elysia-logger/types";
 // import { authRateLimit } from "~/plugins/rate-limit.plugin";
 import config from "@kaa/config/api";
 import { RefreshToken, ResetToken, User, VerificationToken } from "@kaa/models";
+import { type IUser, UserStatus } from "@kaa/models/types";
 import {
   ForgotPasswordRequestSchema,
   LoginUserRequestSchema,
@@ -9,7 +11,7 @@ import {
   ResetPasswordRequestSchema,
   VerifyUserRequestSchema,
 } from "@kaa/schemas";
-import { fileService, userService } from "@kaa/services";
+import { authService, fileService, userService } from "@kaa/services";
 import {
   AppError,
   generateResetPasswordToken,
@@ -22,20 +24,32 @@ import {
   uploadFile,
   verifyPassword,
 } from "@kaa/utils";
+import { randomUUIDv7 } from "bun";
 import { type Context, Elysia, t } from "elysia";
+import { ip } from "elysia-ip";
+// import type { TFunction } from "i18next";
 import mongoose from "mongoose";
 import ShortUniqueId from "short-unique-id";
+import { SECURITY_CONFIG } from "~/config/security.config";
 import { jwtPlugin } from "~/plugins/security.plugin";
+// import { SessionStore } from "~/services/session-store";
+import { ERROR_CODES, getErrorMessage } from "~/shared/utils/error.util";
 // import { auditService } from "@kaa/services";
 import { accessPlugin } from "../rbac/rbac.plugin";
 import { apiKeyController } from "./api-key.controller";
 import { authPlugin } from "./auth.plugin";
-import { LoginTwoFactorSchema, LoginUserResponseSchema } from "./auth.schema";
+import {
+  LoginTwoFactorSchema,
+  LoginUserResponseSchema,
+  userParamsSchema,
+  verificationStatusSchema,
+} from "./auth.schema";
 import {
   //   enhancedAuthRateLimitPlugin,
   adaptiveRateLimiter,
 } from "./auth-rate-limit.plugin";
 import { meController } from "./me.controller";
+import { accountRecoveryController, mfaController } from "./mfa.controller";
 import { oauthController } from "./oauth.controller";
 import { passkeyController } from "./passkey.controller";
 import { passkeyV2Controller } from "./passkey-v2.controller";
@@ -43,10 +57,19 @@ import { authBackgroundJobs } from "./services/auth-background.service";
 import { authCacheService } from "./services/auth-cache.service";
 import { authMetrics } from "./services/auth-metrics.service";
 import { createOrUpdateSession, sessionController } from "./session.controller";
+import { sessionPlugin } from "./session.plugin";
 import { twoFactorController } from "./two-factor.controller";
 
 export const authController = new Elysia()
+  .use(ip())
   .use(jwtPlugin)
+  .decorate({
+    // log: Logger,
+    // sessionStore: new SessionStore(process.env.SESSION_STORAGE as any),
+    // t: TFunction,
+    // session: SessionData,
+  })
+  .use(sessionPlugin)
   //   .use(authRateLimit)
   .use(oauthController)
   .use(apiKeyController)
@@ -54,38 +77,49 @@ export const authController = new Elysia()
     app
       .post(
         "/register",
-        async ({ body, set }) => {
+        async ({ body, set, request, server }) => {
           try {
+            // if (!validateCsrf()) {
+            //   // log.warn("Registration failed: invalid CSRF token");
+            //   logger.warn("Registration failed: invalid CSRF token");
+            //   set.status = 403;
+            //   // return { error: t("auth:invalid_csrf") };
+            //   return { status: "error", message: "Invalid CSRF token" };
+            // }
+
             const existingUser = await userService.getUserBy({
-              email: body.email,
+              "contact.email": body.email,
             });
             if (existingUser) {
               set.status = 422;
               return {
                 status: "error",
-                message: "User with this email already exists",
+                error: ERROR_CODES.EMAIL_ALREADY_EXISTS,
+                message: getErrorMessage(ERROR_CODES.EMAIL_ALREADY_EXISTS),
               };
             }
 
             const existingByUsername = await userService.getUserBy({
-              username: body.username,
+              "profile.displayName": body.username,
             });
             if (existingByUsername) {
               set.status = 422;
               return {
                 status: "error",
-                message: "Username already in use",
+                error: ERROR_CODES.USERNAME_ALREADY_EXISTS,
+                message: getErrorMessage(ERROR_CODES.USERNAME_ALREADY_EXISTS),
               };
             }
 
             const existingByPhone = await userService.getUserBy({
-              phone: body.phone,
+              "contact.phone.formatted": body.phone,
             });
             if (existingByPhone) {
               set.status = 422;
               return {
                 status: "error",
-                message: "Phone number already in use",
+                error: ERROR_CODES.PHONE_ALREADY_EXISTS,
+                message: getErrorMessage(ERROR_CODES.PHONE_ALREADY_EXISTS),
               };
             }
 
@@ -94,22 +128,44 @@ export const authController = new Elysia()
             });
 
             // Send verification email (background job)
+            const { ip, userAgent } = getDeviceInfo(request, server);
             authBackgroundJobs
-              .sendVerificationEmail(user.email, verificationToken)
+              .sendVerificationEmail(
+                {
+                  email: user.email,
+                  id: user.id,
+                  firstName: user.firstName,
+                },
+                verificationToken,
+                {
+                  requestId: randomUUIDv7(),
+                  ipAddress: ip || "",
+                  userAgent,
+                }
+              )
               .catch((err) =>
                 logger.error("Failed to queue verification email", err)
               );
 
             // Track registration event (background job)
             authBackgroundJobs
-              .trackRegistrationEvent(
-                (user._id as mongoose.Types.ObjectId).toString(),
-                user.memberId?.toString() || "",
-                { email: user.email, role: body.role }
-              )
+              .trackRegistrationEvent(user.id, user.memberId || "", {
+                email: user.email,
+                role: body.role,
+              })
               .catch((err) =>
                 logger.error("Failed to queue registration audit event", err)
               );
+
+            // Log security event
+            await authService.logSecurityEvent(
+              user.id,
+              "login",
+              "User registered and logged in",
+              ip,
+              userAgent,
+              { registrationMethod: "email" }
+            );
 
             set.status = 201;
             return {
@@ -117,7 +173,7 @@ export const authController = new Elysia()
               data: {
                 message:
                   "User registered successfully. Please check your email to verify your account.",
-                userId: (user._id as mongoose.Types.ObjectId).toString(),
+                userId: user.id,
                 email: user.email,
               },
             };
@@ -145,6 +201,11 @@ export const authController = new Elysia()
               status: t.Literal("error"),
               message: t.String(),
             }),
+            422: t.Object({
+              status: t.Literal("error"),
+              message: t.String(),
+              error: t.String(),
+            }),
           },
           detail: {
             tags: ["auth"],
@@ -155,7 +216,7 @@ export const authController = new Elysia()
       )
       .post(
         "/email/verify",
-        async ({ body, set }) => {
+        async ({ body, set, request, server }) => {
           try {
             const { token } = body;
 
@@ -181,6 +242,7 @@ export const authController = new Elysia()
             const user = await User.findById(
               verificationTokenDoc.user.toString()
             );
+
             if (!user) {
               set.status = 400;
               return {
@@ -190,12 +252,27 @@ export const authController = new Elysia()
             }
 
             // Update user
-            user.isVerified = true;
+            user.verification.emailVerified = true;
             await user.save();
 
+            verificationTokenDoc.used = true;
+            verificationTokenDoc.save();
+
             // Send welcome email (background job)
+            const { ip, userAgent } = getDeviceInfo(request, server);
             authBackgroundJobs
-              .sendWelcomeEmail(user.email)
+              .sendWelcomeEmail(
+                {
+                  email: user.contact.email,
+                  id: (user._id as mongoose.Types.ObjectId).toString(),
+                  firstName: user.profile.firstName,
+                },
+                {
+                  requestId: randomUUIDv7(),
+                  ipAddress: ip || "",
+                  userAgent,
+                }
+              )
               .catch((err) =>
                 logger.error("Failed to queue welcome email", err)
               );
@@ -241,7 +318,7 @@ export const authController = new Elysia()
       )
       .post(
         "/resend/email/verify",
-        async ({ set, body }) => {
+        async ({ set, body, request, server }) => {
           try {
             const { email } = body;
             // Find user by email
@@ -258,7 +335,7 @@ export const authController = new Elysia()
             }
 
             // Check if already verified
-            if (user.isVerified) {
+            if (user.verification.emailVerified) {
               set.status = 200;
               return {
                 status: "success",
@@ -270,8 +347,21 @@ export const authController = new Elysia()
             const { verificationToken } = generateVerificationToken();
 
             // Send verification email (background job)
+            const { ip, userAgent } = getDeviceInfo(request, server);
             authBackgroundJobs
-              .sendVerificationEmail(user.email, verificationToken)
+              .sendVerificationEmail(
+                {
+                  email: user.contact.email,
+                  id: (user._id as mongoose.Types.ObjectId).toString(),
+                  firstName: user.profile.firstName,
+                },
+                verificationToken,
+                {
+                  requestId: randomUUIDv7(),
+                  ipAddress: ip || "",
+                  userAgent,
+                }
+              )
               .catch((err) =>
                 logger.error("Failed to queue verification email", err)
               );
@@ -306,7 +396,7 @@ export const authController = new Elysia()
       )
       .post(
         "/phone/verify",
-        async ({ body, set }) => {
+        async ({ body, set, request, server }) => {
           try {
             const { token } = body;
 
@@ -349,12 +439,24 @@ export const authController = new Elysia()
             }
 
             // Update user
-            user.phoneVerified = true;
+            user.verification.phoneVerified = true;
             await user.save();
 
             // Send welcome email (background job)
+            const { ip, userAgent } = getDeviceInfo(request, server);
             authBackgroundJobs
-              .sendWelcomeEmail(user.email)
+              .sendWelcomeEmail(
+                {
+                  email: user.contact.email,
+                  id: (user._id as mongoose.Types.ObjectId).toString(),
+                  firstName: user.profile.firstName,
+                },
+                {
+                  requestId: randomUUIDv7(),
+                  ipAddress: ip || "",
+                  userAgent,
+                }
+              )
               .catch((err) =>
                 logger.error("Failed to queue welcome email", err)
               );
@@ -398,6 +500,34 @@ export const authController = new Elysia()
           },
         }
       )
+      // Update verification status
+      .patch(
+        "/:id/verification",
+        async ({ params, body, user, set }) => {
+          const result = await userService.updateVerificationStatus(
+            params.id,
+            body,
+            user?.id || ""
+          );
+          set.status = result.success
+            ? 200
+            : result.error === "USER_NOT_FOUND"
+              ? 404
+              : 500;
+          return result;
+        },
+        {
+          params: userParamsSchema,
+          body: verificationStatusSchema,
+          detail: {
+            tags: ["Users", "Admin"],
+            summary: "Update user verification status",
+            description:
+              "Update user's verification status including KYC (admin only)",
+            security: [{ bearerAuth: [] }],
+          },
+        }
+      )
       .post(
         "/login",
         async (ctx) => {
@@ -410,12 +540,19 @@ export const authController = new Elysia()
             server,
           } = ctx;
 
+          // if (!ctx.validateCsrf()) {
+          //   // ctx.log.warn("Login failed: invalid CSRF token");
+          //   set.status = 403;
+          //   // return { error: ctx.t("auth:invalid_csrf") };
+          //   return { status: "error", message: "Invalid CSRF token" };
+          // }
+
           const startTime = Date.now();
           const { email, password } = body;
 
           try {
             // 1. Progressive rate limiting (fastest check first)
-            const { ip } = getDeviceInfo(request, server);
+            const { ip, userAgent } = getDeviceInfo(request, server);
             const adaptiveLimits = adaptiveRateLimiter.getAdaptiveLimits(
               email,
               ip || ""
@@ -449,17 +586,31 @@ export const authController = new Elysia()
                 ip,
               });
 
+              if (user) {
+                await authService.logSecurityEvent(
+                  ((user as IUser)._id as mongoose.Types.ObjectId).toString(),
+                  "failed_login",
+                  "Invalid credentials",
+                  ip,
+                  userAgent
+                );
+              }
+
               set.status = 401;
               return {
                 status: "error",
-                message: "Invalid credentials",
+                message: getErrorMessage(ERROR_CODES.INVALID_CREDENTIALS),
+                error: ERROR_CODES.INVALID_CREDENTIALS,
               };
             }
 
             // 3. Account validation checks
-            const isLocked = !!(
-              user.lockUntil && user.lockUntil.getTime() > Date.now()
-            );
+            const isLocked = user.activity
+              ? !!(
+                  user.activity?.lockUntil &&
+                  user.activity?.lockUntil?.getTime() > Date.now()
+                )
+              : false;
             if (isLocked) {
               authMetrics.recordLogin(false, Date.now() - startTime, {
                 email,
@@ -473,7 +624,7 @@ export const authController = new Elysia()
               };
             }
 
-            if (!user.isActive) {
+            if (user.status !== UserStatus.ACTIVE) {
               authMetrics.recordLogin(false, Date.now() - startTime, {
                 email,
                 ip,
@@ -486,7 +637,7 @@ export const authController = new Elysia()
               };
             }
 
-            if (!user.isVerified) {
+            if (!user.verification.emailVerified) {
               authMetrics.recordLogin(false, Date.now() - startTime, {
                 email,
                 ip,
@@ -500,16 +651,27 @@ export const authController = new Elysia()
               };
             }
 
+            // if (user.status === UserStatus.BANNED) {
+            //   return {
+            //     status: "error",
+            //     message: getErrorMessage(ERROR_CODES.ACCOUNT_BANNED),
+            //     error: ERROR_CODES.ACCOUNT_BANNED,
+            //   };
+            // }
+
             // 4. Password verification (optimized)
             // const isPasswordValid = await user.comparePassword(password);
-            const isPasswordValid = verifyPassword(password, user.password);
+            const isPasswordValid = await verifyPassword(
+              password,
+              user.password
+            );
 
             if (!isPasswordValid) {
               // Increment login attempts (non-blocking)
               User.findByIdAndUpdate(user._id, {
-                $inc: { loginAttempts: 1 },
-                ...(user.loginAttempts + 1 >= 5 && {
-                  lockUntil: new Date(Date.now() + 30 * 60 * 1000),
+                $inc: { "activity.loginAttempts": 1 },
+                ...(user.activity.loginAttempts + 1 >= 5 && {
+                  "activity.lockUntil": new Date(Date.now() + 30 * 60 * 1000),
                 }),
               })
                 .exec()
@@ -527,7 +689,8 @@ export const authController = new Elysia()
               set.status = 401;
               return {
                 status: "error",
-                message: "Invalid credentials",
+                message: getErrorMessage(ERROR_CODES.INVALID_CREDENTIALS),
+                error: ERROR_CODES.INVALID_CREDENTIALS,
               };
             }
 
@@ -577,10 +740,10 @@ export const authController = new Elysia()
 
             // 8. Update user data (non-blocking)
             User.findByIdAndUpdate(user._id, {
-              loginAttempts: 0,
-              $unset: { lockUntil: 1 },
-              lastLoginAt: new Date(),
-              lastActiveAt: new Date(),
+              "activity.loginAttempts": 0,
+              $unset: { "activity.lockUntil": 1 },
+              "activity.lastLogin": new Date(),
+              "activity.lastActivity": new Date(),
             })
               .exec()
               .catch((err) =>
@@ -595,7 +758,6 @@ export const authController = new Elysia()
               );
 
             // 9. Store refresh token (non-blocking)
-            const { userAgent } = getDeviceInfo(request, server);
             RefreshToken.create({
               user: user._id as mongoose.Types.ObjectId,
               token: refreshToken,
@@ -627,6 +789,39 @@ export const authController = new Elysia()
               })
               .catch((err) => logger.error("Failed to create session", err));
 
+            // // ❌ delete current (guest) session, if needed
+            // await ctx.sessionStore?.delete?.(ctx.sessionId); // only if you have a method to delete
+
+            // // ✅ create new authorized session
+            // const sessionId = randomUUIDv7();
+            // const now = Date.now();
+            // const expiresAt = new Date(
+            //   now + SECURITY_CONFIG.sessionMaxAge * 1000
+            // );
+            // const csrfToken = randomUUIDv7();
+
+            // await ctx.sessionStore.set({
+            //   id: sessionId,
+            //   userId: (user._id as mongoose.Types.ObjectId).toString(),
+            //   csrfToken,
+            //   createdAt: new Date(now),
+            //   expiresAt,
+            // });
+
+            // // ✅ update reactive cookies
+            // ctx.cookie[SECURITY_CONFIG.sessionCookieName].set({
+            //   value: sessionId,
+            //   path: "/",
+            //   httpOnly: true,
+            //   maxAge: SECURITY_CONFIG.sessionMaxAge,
+            // });
+
+            // ctx.cookie[SECURITY_CONFIG.csrfCookieName].set({
+            //   value: csrfToken,
+            //   path: "/",
+            //   sameSite: "strict",
+            // });
+
             // 11. Set cookies
             access_token.set({
               value: accessToken,
@@ -652,8 +847,22 @@ export const authController = new Elysia()
             set.headers.authorization = `Bearer ${accessToken}`;
 
             // 12. Background jobs (non-blocking)
+            const requestId = randomUUIDv7();
+            // const requestId = req.headers["x-request-id"] as string;
             authBackgroundJobs
-              .sendLoginAlert(user.email, ip || "", userAgent)
+              .sendLoginAlert(
+                {
+                  id: (user._id as mongoose.Types.ObjectId).toString(),
+                  email: user.contact.email,
+                },
+                ip || "",
+                userAgent,
+                {
+                  requestId,
+                  ipAddress: ip || "",
+                  userAgent,
+                }
+              )
               .catch((err) =>
                 logger.error("Failed to queue login alert email", err)
               );
@@ -677,6 +886,14 @@ export const authController = new Elysia()
             const responseTime = Date.now() - startTime;
             authMetrics.recordLogin(true, responseTime, { email, ip });
 
+            await authService.logSecurityEvent(
+              (user._id as mongoose.Types.ObjectId).toString(),
+              "login",
+              "User logged in successfully",
+              ip,
+              userAgent
+            );
+
             logger.info("User logged in", {
               userId: user._id as mongoose.Types.ObjectId,
               memberId: user.memberId,
@@ -688,25 +905,25 @@ export const authController = new Elysia()
               status: "success",
               user: {
                 id: (user._id as mongoose.Types.ObjectId).toString(),
-                username: user.username,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                avatar: user.avatar,
+                username: user.profile.displayName || "",
+                firstName: user.profile.firstName,
+                lastName: user.profile.lastName,
+                email: user.contact.email,
+                avatar: user.profile.avatar,
                 memberId: user.memberId?.toString(),
                 role: userRole?.name || "",
-                phone: user.phone,
-                address: user.address,
+                phone: user.contact.phone.formatted,
+                address: user.addresses[0],
                 status: user.status as
                   | "active"
                   | "inactive"
                   | "suspended"
                   | "pending",
-                isActive: user.isActive,
-                isVerified: user.isVerified,
+                isActive: user.status === UserStatus.ACTIVE,
+                isVerified: user.verification.emailVerified,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
-                lastLoginAt: user.lastLoginAt as Date,
+                lastLoginAt: user?.activity?.lastLogin,
               },
               tokens: {
                 access_token: accessToken,
@@ -785,14 +1002,17 @@ export const authController = new Elysia()
               verified: t.Optional(t.Boolean()),
               status: t.Literal("error"),
               message: t.String(),
+              error: t.Optional(t.String()),
             }),
             422: t.Object({
               status: t.Literal("error"),
               message: t.String(),
+              error: t.Optional(t.String()),
             }),
             429: t.Object({
               status: t.Literal("error"),
               message: t.String(),
+              error: t.Optional(t.String()),
             }),
           },
           detail: {
@@ -807,10 +1027,23 @@ export const authController = new Elysia()
           .use(authPlugin)
           .post(
             "/logout",
-            async ({ cookie: { access_token, refresh_token }, user, set }) => {
+            async ({
+              cookie: { access_token, refresh_token },
+              user,
+              set,
+              cookie,
+              sessionStore,
+              sessionId,
+            }) => {
               // remove refresh token and access token from cookies
               access_token.remove();
               refresh_token.remove();
+
+              await sessionStore?.delete?.(sessionId); // only if you have a method to delete
+
+              // Remove reactive cookies
+              cookie[SECURITY_CONFIG.sessionCookieName].remove();
+              cookie[SECURITY_CONFIG.csrfCookieName]?.remove(); // optional, if you have it
 
               // remove refresh token from db & set user online status to offline
               await User.findByIdAndUpdate(user.id, {
@@ -949,10 +1182,10 @@ export const authController = new Elysia()
       )
       .post(
         "/password/forgot",
-        async ({ body, set }) => {
+        async ({ body, set, request, server }) => {
           try {
             const user = await userService.getUserBy({
-              email: body.email.toLowerCase(),
+              "contact.email": body.email.toLowerCase(),
             });
             if (!user) {
               // For security reasons, don't reveal that the user doesn't exist
@@ -975,8 +1208,23 @@ export const authController = new Elysia()
             });
 
             // Send reset password email (background job)
+            const { userAgent, ip } = getDeviceInfo(request, server);
+            const requestId = randomUUIDv7();
+
             authBackgroundJobs
-              .sendPasswordResetEmail(user.email, resetToken)
+              .sendPasswordResetEmail(
+                {
+                  email: user.contact.email,
+                  id: (user._id as mongoose.Types.ObjectId).toString(),
+                  firstName: user.profile.firstName,
+                },
+                resetToken,
+                {
+                  requestId,
+                  ipAddress: ip || "",
+                  userAgent,
+                }
+              )
               .catch((err) =>
                 logger.error("Failed to queue password reset email", err)
               );
@@ -1049,7 +1297,7 @@ export const authController = new Elysia()
               };
             }
             user.password = password;
-            user.passwordChangedAt = new Date();
+            user.activity.passwordChangedAt = new Date();
 
             await user.save();
             // Delete all user's refresh tokens
@@ -1170,8 +1418,8 @@ export const authController = new Elysia()
 
           const accessTokenPayload = {
             id: user.id,
-            email: user.email,
-            username: user.username,
+            email: user.contact.email,
+            username: user.profile.displayName,
             role: (user.role as mongoose.Types.ObjectId).toString(),
           };
           // create new refresh token
@@ -1271,6 +1519,8 @@ export const authController = new Elysia()
       .use(meController)
       .use(sessionController)
       .use(twoFactorController)
+      .use(mfaController)
+      .use(accountRecoveryController)
       .use(passkeyController)
       .use(passkeyV2Controller)
   );

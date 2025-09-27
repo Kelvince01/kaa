@@ -27,6 +27,8 @@ export {
   ResetPasswordRequestSchema,
   VerifyUserRequestSchema,
 } from "./auth.schema";
+// Common schemas
+export { commonSchemas, paginationSchema } from "./common.schema";
 // RBAC types
 export type {
   NotificationPreference,
@@ -66,3 +68,10 @@ export {
   UserSchema,
   UserUpdateSchema,
 } from "./user.schema";
+// Webhook schemas
+export {
+  createWebhookSchema,
+  queryUserWebhooksSchema,
+  updateWebhookSchema,
+  webhookEventSchema,
+} from "./webhook.schema";

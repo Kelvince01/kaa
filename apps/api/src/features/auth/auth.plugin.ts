@@ -51,10 +51,10 @@ export const authPlugin = (app: Elysia) =>
             id: (user._id as mongoose.Types.ObjectId).toString(),
             role: user.role,
             memberId: user.memberId?.toString(),
-            isVerified: user.isVerified === true, // Ensure this is always a boolean
-            username: user.username,
-            email: user.email,
-            phone: user.phone,
+            isVerified: user.verification.emailVerified === true, // Ensure this is always a boolean
+            username: user.profile.displayName || "",
+            email: user.contact.email,
+            phone: user.contact.phone.formatted,
             status: user.status,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,

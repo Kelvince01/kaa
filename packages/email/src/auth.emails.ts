@@ -13,7 +13,7 @@ export const sendVerificationEmail = async (
 
   // Find user to get their name
   const user = await User.findOne({ email });
-  const firstName = user?.firstName || "there";
+  const firstName = user?.profile.firstName || "there";
 
   return emailService.sendEmail({
     to: email,
@@ -39,7 +39,7 @@ export const sendPasswordResetEmail = async (
 
   // Find user to get their name
   const user = await User.findOne({ email });
-  const firstName = user?.firstName || "there";
+  const firstName = user?.profile.firstName || "there";
 
   return emailService.sendEmail({
     to: email,
@@ -61,7 +61,7 @@ export const sendPasswordResetEmail = async (
 export const sendWelcomeEmail = async (email: string): Promise<boolean> => {
   // Find user to get their name
   const user = await User.findOne({ email });
-  const firstName = user?.firstName || "there";
+  const firstName = user?.profile.firstName || "there";
 
   return emailService.sendEmail({
     to: email,

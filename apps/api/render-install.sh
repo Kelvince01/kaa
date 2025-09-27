@@ -8,7 +8,7 @@ apt-get update && apt-get install -y python3 make g++ build-essential libssl-dev
 bun install
 
 # Compile the project
-bun compile
+# bun compile
 
 # Start the server
 # bun run server

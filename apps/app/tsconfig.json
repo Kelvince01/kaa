@@ -24,7 +24,9 @@
     "./.next/types/**/*.ts",
     "./src/types/next-int.d.ts",
     "next-env.d.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "../../packages/services/src/engines/template.engine.ts",
+    "../../packages/services/src/template.service.ts"
   ],
   "exclude": ["node_modules", "./.next"]
 }

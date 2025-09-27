@@ -1,0 +1,13 @@
+Hi {{tenantName}}, 
+
+Your rent payment of {{formatCurrency amount}} for unit {{unitNumber}} is due on {{formatDate dueDate "dd/MM/yyyy"}}.
+
+{{#if paymentLink}}
+Pay now: {{shortUrl paymentLink 30}}
+{{/if}}
+
+{{#if phoneNumber}}
+Contact: {{formatPhone phoneNumber "local"}}
+{{/if}}
+
+This message is {{smsSegment this 160}} segment(s) long.

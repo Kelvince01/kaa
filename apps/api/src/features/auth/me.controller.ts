@@ -1,6 +1,7 @@
 import jwt from "@elysiajs/jwt";
 import Stream from "@elysiajs/stream";
 import { Passkey, User } from "@kaa/models";
+import { UserStatus } from "@kaa/models/types";
 import { passkeyV2Service, roleService, userService } from "@kaa/services";
 import { Elysia, t } from "elysia";
 import type mongoose from "mongoose";
@@ -44,20 +45,20 @@ export const meController = new Elysia()
           user: {
             id: (userProfile._id as mongoose.Types.ObjectId).toString(),
             memberId: userProfile.memberId?.toString(),
-            avatar: userProfile.avatar,
-            username: userProfile.username as string,
-            firstName: userProfile.firstName as string,
-            lastName: userProfile.lastName as string,
-            email: userProfile.email as string,
+            avatar: userProfile.profile?.avatar,
+            username: userProfile.profile?.displayName || "",
+            firstName: userProfile.profile?.firstName,
+            lastName: userProfile.profile?.lastName,
+            email: userProfile.contact?.email,
             status: userProfile.status as string,
             role: userRole?.name ?? "",
-            phone: userProfile.phone,
-            address: userProfile.address,
-            isActive: userProfile.isActive as boolean,
-            isVerified: userProfile.isVerified as boolean,
+            phone: userProfile.contact?.phone.formatted,
+            address: userProfile.addresses?.[0],
+            isActive: userProfile.status === UserStatus.ACTIVE,
+            isVerified: userProfile.verification?.emailVerified,
             createdAt: (userProfile.createdAt as Date).toISOString(),
             updatedAt: (userProfile.updatedAt as Date).toISOString(),
-          },
+          } as any,
         };
       } catch (error) {
         const errorMessage =
@@ -175,7 +176,9 @@ export const meController = new Elysia()
       try {
         const { userEmail, attestationObject, clientDataJSON } = body;
 
-        const userData = await userService.getUserBy({ email: userEmail });
+        const userData = await userService.getUserBy({
+          "contact.email": userEmail,
+        });
 
         const challengeFromCookie = passkey_challenge.value as string;
         if (!challengeFromCookie) {

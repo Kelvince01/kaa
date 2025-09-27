@@ -9,6 +9,7 @@ type Config = {
     url: string;
     prefix: string;
     version: string;
+    logoUrl: string;
   };
   env: RunEnv;
   port: number;
@@ -110,6 +111,7 @@ const config: Config = {
     url: env.get("API_URL").default("http://localhost:5000").asString(),
     prefix: env.get("API_PREFIX").default("/api/v1").asString(),
     version: env.get("API_VERSION").default("1.0.0").asString(),
+    logoUrl: env.get("LOGO_URL").default("/images/logo.png").asString(),
   },
   env: env
     .get("NODE_ENV")
@@ -118,7 +120,7 @@ const config: Config = {
   port: env.get("PORT").default("5000").asPortNumber(),
   mongoUri: env
     .get("MONGO_URI")
-    .default("mongodb://localhost:27017/kaa-db")
+    .default("mongodb://localhost:27017/kaadb")
     .asString(),
   timeout: env.get("TIMEOUT").default("30000").asIntPositive(),
   jwt: {

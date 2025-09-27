@@ -1,5 +1,10 @@
 import { Member, Organization, User, VerificationToken } from "@kaa/models";
-import type { IUser } from "@kaa/models/types";
+import {
+  type IUser,
+  type UserResponse as UserResponseType,
+  UserRole,
+  UserStatus,
+} from "@kaa/models/types";
 import type {
   RegisterUserRequest,
   UserResponse,
@@ -8,6 +13,7 @@ import type {
 import {
   BadRequestError,
   ConflictError,
+  formatKenyanPhone,
   generateVerificationToken,
   logger,
   md5hash,
@@ -39,7 +45,10 @@ type UserProjection = {
 
 const findOne = async (id: string) => {
   try {
-    return await User.findById(id);
+    return await User.findById(id)
+      .select("-password")
+      .populate("role", "name")
+      .populate("memberId", "name");
   } catch (error) {
     console.error("Error finding user:", error);
     return null;
@@ -60,9 +69,9 @@ export const getUserById = async (id: string) => {
 };
 
 export const getUserBy = async (query: {
-  email?: string;
-  username?: string;
-  phone?: string;
+  "contact.email"?: string;
+  "profile.displayName"?: string;
+  "contact.phone.formatted"?: string;
 }) => {
   try {
     return await User.findOne(query);
@@ -72,13 +81,104 @@ export const getUserBy = async (query: {
   }
 };
 
+/**
+ * Check if user exists
+ */
+export async function userExists(
+  email: string,
+  phone?: string
+): Promise<boolean> {
+  const query: any = { "contact.email": email.toLowerCase() };
+  if (phone) {
+    query.$or = [
+      { "contact.email": email.toLowerCase() },
+      { "contact.phone.formatted": phone },
+    ];
+  }
+
+  const user = await User.findOne(query);
+  return !!user;
+}
+
+/**
+ * Verify user credentials
+ */
+export async function verifyCredentials(
+  email: string,
+  password: string
+): Promise<IUser | null> {
+  const user = await User.findOne({
+    "contact.email": email.toLowerCase(),
+  }).select("+password");
+  if (!(user && (await user.comparePassword(password)))) {
+    return null;
+  }
+  return user;
+}
+
+/**
+ * Update user activity
+ */
+export async function updateActivity(
+  userId: string,
+  ip?: string
+): Promise<void> {
+  const user = await User.findById(userId);
+  if (user) {
+    user.activity.lastLogin = new Date();
+    user.activity.lastActivity = new Date();
+    user.activity.lastLoginIP = ip;
+    user.activity.loginAttempts += 1;
+    await user.save();
+  }
+}
+
+/**
+ * Update user verification status
+ */
+export async function updateVerification(
+  userId: string,
+  type: "email" | "phone" | "identity",
+  verified = true
+): Promise<boolean> {
+  const user = await User.findById(userId);
+  if (!user) return false;
+
+  // biome-ignore lint/nursery/noUnnecessaryConditions: ignore
+  switch (type) {
+    case "email":
+      user.verification.emailVerified = verified;
+      break;
+    case "phone":
+      user.verification.phoneVerified = verified;
+      break;
+    case "identity":
+      user.verification.identityVerified = verified;
+      break;
+    default:
+      return false;
+  }
+
+  // Check if user should be activated
+  if (
+    user.verification.emailVerified &&
+    user.verification.phoneVerified &&
+    user.status === UserStatus.PENDING
+  ) {
+    user.status = UserStatus.ACTIVE;
+  }
+
+  await user.save();
+  return true;
+}
+
 export const getUsers = async (
   filter: UserFilter = {},
   options: PaginationOptions = {},
   _projection: UserProjection = { password: 0 }
 ) => {
   try {
-    const { q, role, isActive, memberId, status } = filter;
+    const { q, role, memberId, status } = filter;
     const {
       page = 1,
       limit = 10,
@@ -87,27 +187,27 @@ export const getUsers = async (
     } = options;
 
     // Build query
-    const query: FilterQuery<IUser> = {};
+    const query: FilterQuery<IUser> = {
+      status: UserStatus.ACTIVE,
+      "verification.emailVerified": true,
+      // "verification.phoneVerified": true,
+    };
 
     // Apply filters
     if (q) {
       query.$or = [
         {
-          firstName: { $regex: q, $options: "i" },
+          "profile.firstName": { $regex: q, $options: "i" },
         },
         {
-          lastName: { $regex: q, $options: "i" },
+          "profile.lastName": { $regex: q, $options: "i" },
         },
-        { email: { $regex: q, $options: "i" } },
+        { "contact.email": { $regex: q, $options: "i" } },
       ];
     }
 
     if (role) {
       query.role = new mongoose.Types.ObjectId(role);
-    }
-
-    if (isActive !== undefined) {
-      query.isActive = isActive;
     }
 
     if (memberId) {
@@ -156,7 +256,7 @@ export const getUsers = async (
 export const createUser = async (
   { body }: { body: RegisterUserRequest },
   isOAuth = false
-) => {
+): Promise<{ user: UserResponseType; verificationToken: string }> => {
   try {
     const {
       email,
@@ -169,6 +269,9 @@ export const createUser = async (
       isVerified,
       isActive,
       status,
+      county,
+      estate,
+      acceptTerms,
     } = body;
 
     // Create member
@@ -214,25 +317,45 @@ export const createUser = async (
       throw new Error("Role not found");
     }
 
+    // Format phone number
+    const formattedPhone = formatKenyanPhone(phone);
+    if (!formattedPhone) {
+      throw new Error("Invalid phone number");
+    }
+
     const newUser = new User({
       slug,
-      email,
+      "contact.email": email,
+      "contact.phone": formattedPhone,
       password,
-      firstName,
-      lastName,
-      username,
+      "profile.firstName": firstName,
+      "profile.lastName": lastName,
+      "profile.displayName": username,
+      "profile.avatar": avatar || profileImage,
       role: role ? userRole.id : defaultRoleId,
-      phone,
-      avatar: avatar || profileImage,
-      isVerified,
-      isActive,
+      "verification.emailVerified": isVerified,
       status: status || "pending",
+      addresses:
+        county && estate
+          ? [
+              {
+                type: "residential",
+                // line1: estate,
+                // postalCode: "00100"
+                // town: county,
+                county,
+                estate,
+                address: `${estate}, ${county}`,
+                isPrimary: true,
+              },
+            ]
+          : [],
     });
 
     if (role === "landlord") newUser.memberId = memberId;
 
     // Create verification token
-    const { verificationToken, verificationExpires } =
+    const { verificationTokenHex, verificationToken, verificationExpires } =
       generateVerificationToken();
 
     if (!isOAuth) {
@@ -286,9 +409,35 @@ export const createUser = async (
 
     logger.info("New user signed up", { userId: newUser._id, memberId });
 
+    // Convert to response format
+    const userResponse: UserResponseType = {
+      id: (newUser._id as mongoose.Types.ObjectId).toString(),
+      email: newUser.contact.email,
+      phone: newUser.contact.phone.formatted,
+      firstName: newUser.profile.firstName,
+      lastName: newUser.profile.lastName,
+      fullName: newUser.fullName,
+      username: newUser.profile.displayName,
+      memberId: memberId ? memberId.toString() : undefined,
+      bio: newUser.profile.bio,
+      avatar: newUser.profile.avatar,
+      role: userRole.name as UserRole,
+      status: newUser.status,
+      emailVerified: newUser.verification.emailVerified,
+      phoneVerified: newUser.verification.phoneVerified,
+      identityVerified: newUser.verification.identityVerified,
+      kycStatus: newUser.verification.kycStatus,
+      county: newUser.addresses.find((addr) => addr.isPrimary)?.county,
+      estate: newUser.addresses.find((addr) => addr.isPrimary)?.estate,
+      preferences: newUser.preferences,
+      stats: newUser.stats,
+      createdAt: newUser.createdAt,
+      updatedAt: newUser.updatedAt,
+    };
+
     return {
-      user: { ...newUser.toObject(), role: newUser.role.toString() },
-      verificationToken,
+      user: userResponse,
+      verificationToken: verificationTokenHex,
     };
   } catch (error) {
     console.error("Error creating user:", error);
@@ -377,8 +526,8 @@ export const deleteUser = async ({
 
       const userRes: Pick<UserResponse, "id" | "username" | "email"> = {
         id: (user._id as mongoose.Types.ObjectId).toString(),
-        username: user.username,
-        email: user.email,
+        username: user.profile.displayName || "",
+        email: user.contact.email,
       };
 
       return userRes;
@@ -413,7 +562,7 @@ export const changePassword = async (
 
     // Update password
     user.password = newPassword;
-    user.passwordChangedAt = new Date();
+    user.activity.passwordChangedAt = new Date();
     await user.save();
 
     return { success: true };
@@ -430,7 +579,7 @@ export const changePassword = async (
  */
 export const updateLastLogin = async (userId: string) => {
   try {
-    await User.findByIdAndUpdate(userId, { lastLoginAt: new Date() });
+    await User.findByIdAndUpdate(userId, { "activity.lastLogin": new Date() });
   } catch (error) {
     logger.error(`Failed to update last login for user with ID: ${userId}`, {
       error,
@@ -438,3 +587,320 @@ export const updateLastLogin = async (userId: string) => {
     // Don't throw error as this is a non-critical operation
   }
 };
+
+/**
+ * Get landlords in a specific county
+ */
+export async function getLandlordsByCounty(
+  county: string,
+  limit = 10
+): Promise<IUser[]> {
+  return await User.find({
+    "role.name": UserRole.LANDLORD,
+    status: UserStatus.ACTIVE,
+    "addresses.county": county,
+    "addresses.isPrimary": true,
+  })
+    .limit(limit)
+    .sort({ "stats.averageRating": -1 });
+}
+
+/**
+ * Get user stats summary
+ */
+export async function getUserStats(userId: string): Promise<any> {
+  const user = await User.findById(userId);
+  if (!user) return null;
+
+  return {
+    profile: {
+      verified:
+        user.verification.emailVerified && user.verification.phoneVerified,
+      kycStatus: user.verification.kycStatus,
+      joinDate: user.createdAt,
+      lastActive: user.activity.lastActivity,
+    },
+    stats: user.stats || {},
+    social: {
+      followers: user.connections?.followers.length || 0,
+      following: user.connections?.following.length || 0,
+    },
+  };
+}
+
+/**
+ * Get recently active users
+ */
+export async function getRecentlyActiveUsers(limit = 10): Promise<IUser[]> {
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - 30); // Last 30 days
+
+  return await User.find({
+    status: UserStatus.ACTIVE,
+    "activity.lastActivity": { $gte: cutoffDate },
+  })
+    .limit(limit)
+    .sort({ "activity.lastActivity": -1 });
+}
+
+/**
+ * Update user statistics
+ */
+export async function updateUserStats(
+  userId: string,
+  statsUpdate: Partial<any>
+): Promise<boolean> {
+  const user = await User.findById(userId);
+  if (!user) return false;
+
+  if (!user.stats) {
+    user.stats = {
+      totalProperties: 0,
+      activeListings: 0,
+      totalApplications: 0,
+      totalTenants: 0,
+      totalEarnings: 0,
+      averageRating: 0,
+      totalReviews: 0,
+    };
+  }
+
+  Object.assign(user.stats, statsUpdate);
+  await user.save();
+  return true;
+}
+
+/**
+ * Follow/Unfollow user
+ */
+export async function followUser(
+  followerId: string,
+  followeeId: string
+): Promise<boolean> {
+  if (followerId === followeeId) return false;
+
+  const [follower, followee] = await Promise.all([
+    User.findById(followerId),
+    User.findById(followeeId),
+  ]);
+
+  if (!(follower && followee)) return false;
+
+  // Initialize connections if not exist
+  if (!follower.connections)
+    follower.connections = { followers: [], following: [] };
+  if (!followee.connections)
+    followee.connections = { followers: [], following: [] };
+
+  // Check if already following
+  const isAlreadyFollowing = follower.connections.following.includes(
+    followeeId as any
+  );
+
+  if (isAlreadyFollowing) {
+    // Unfollow
+    follower.connections.following = follower.connections.following.filter(
+      (id) => id.toString() !== followeeId
+    );
+    followee.connections.followers = followee.connections.followers.filter(
+      (id) => id.toString() !== followerId
+    );
+  } else {
+    // Follow
+    follower.connections.following.push(followeeId as any);
+    followee.connections.followers.push(followerId as any);
+  }
+
+  await Promise.all([follower.save(), followee.save()]);
+  return !isAlreadyFollowing; // Return true if followed, false if unfollowed
+}
+
+/**
+ * Get user followers
+ */
+export async function getUserFollowers(
+  userId: string,
+  limit = 10
+): Promise<IUser[]> {
+  const user = await User.findById(userId);
+  if (!user?.connections?.followers) return [];
+
+  return await User.find({
+    _id: { $in: user.connections.followers },
+    status: UserStatus.ACTIVE,
+  })
+    .limit(limit)
+    .select(
+      "profile contact role verification.emailVerified verification.phoneVerified"
+    );
+}
+
+/**
+ * Get user following
+ */
+export async function getUserFollowing(
+  userId: string,
+  limit = 10
+): Promise<IUser[]> {
+  const user = await User.findById(userId);
+  if (!user?.connections?.following) return [];
+
+  return await User.find({
+    _id: { $in: user.connections.following },
+    status: UserStatus.ACTIVE,
+  })
+    .limit(limit)
+    .select(
+      "profile contact role verification.emailVerified verification.phoneVerified"
+    );
+}
+
+/**
+ * Get user dashboard data
+ */
+export async function getUserDashboardData(userId: string): Promise<any> {
+  const user = await User.findById(userId)
+    .populate("role", "name")
+    .populate("memberId", "name");
+
+  if (!user) return null;
+
+  const baseData = {
+    profile: {
+      id: user._id,
+      name: user.fullName,
+      email: user.contact.email,
+      phone: user.contact.phone.formatted,
+      avatar: user.profile.avatar,
+      role: user.role,
+      verified:
+        user.verification.emailVerified && user.verification.phoneVerified,
+      kycStatus: user.verification.kycStatus,
+    },
+    activity: {
+      lastLogin: user.activity.lastLogin,
+      loginAttempts: user.activity.loginAttempts,
+      joinDate: user.createdAt,
+    },
+  };
+
+  // Role-specific data
+  if (
+    (user.role as any).name === UserRole.LANDLORD ||
+    (user.role as any).name === UserRole.AGENT
+  ) {
+    return {
+      ...baseData,
+      stats: user.stats,
+      // Could add more landlord-specific data here
+    };
+  }
+
+  return baseData;
+}
+
+/**
+ * Update user verification status (admin only)
+ */
+export async function updateVerificationStatus(
+  userId: string,
+  verificationData: {
+    emailVerified?: boolean;
+    phoneVerified?: boolean;
+    identityVerified?: boolean;
+    kycStatus?: string;
+    rejectionReason?: string;
+  },
+  adminId: string
+): Promise<{
+  success: boolean;
+  data?: UserResponseType;
+  error?: string;
+  message: string;
+}> {
+  try {
+    const user = await User.findById(userId).populate("role", "name");
+    if (!user) {
+      return {
+        success: false,
+        error: "USER_NOT_FOUND",
+        message: "User not found",
+      };
+    }
+
+    // Update verification fields
+    if (verificationData.emailVerified !== undefined) {
+      user.verification.emailVerified = verificationData.emailVerified;
+    }
+    if (verificationData.phoneVerified !== undefined) {
+      user.verification.phoneVerified = verificationData.phoneVerified;
+    }
+    if (verificationData.identityVerified !== undefined) {
+      user.verification.identityVerified = verificationData.identityVerified;
+    }
+    if (verificationData.kycStatus) {
+      user.verification.kycStatus = verificationData.kycStatus as any;
+      if (verificationData.kycStatus === "verified") {
+        user.verification.kycData = user.verification.kycData || ({} as any);
+        (user.verification.kycData as any).verificationDate = new Date();
+        (user.verification.kycData as any).verifiedBy = adminId;
+      }
+    }
+    if (verificationData.rejectionReason) {
+      user.verification.kycData = user.verification.kycData || ({} as any);
+      (user.verification.kycData as any).rejectionReason =
+        verificationData.rejectionReason;
+    }
+
+    // Update user status if fully verified
+    if (
+      user.verification.emailVerified &&
+      user.verification.phoneVerified &&
+      user.verification.kycStatus === "verified" &&
+      user.status === UserStatus.PENDING
+    ) {
+      user.status = UserStatus.ACTIVE;
+    }
+
+    await user.save();
+
+    const userResponse: UserResponseType = {
+      id: (user._id as mongoose.Types.ObjectId).toString(),
+      email: user.contact.email,
+      phone: user.contact.phone.formatted,
+      firstName: user.profile.firstName,
+      lastName: user.profile.lastName,
+      fullName: user.fullName,
+      username: user.profile.displayName,
+      memberId: user.memberId ? user.memberId.toString() : undefined,
+      bio: user.profile.bio,
+      avatar: user.profile.avatar,
+      role: (user.role as any).name,
+      status: user.status,
+      emailVerified: user.verification.emailVerified,
+      phoneVerified: user.verification.phoneVerified,
+      identityVerified: user.verification.identityVerified,
+      kycStatus: user.verification.kycStatus,
+      county: user.addresses.find((addr) => addr.isPrimary)?.county,
+      estate: user.addresses.find((addr) => addr.isPrimary)?.estate,
+      preferences: user.preferences,
+      stats: user.stats,
+      lastLogin: user.activity.lastLogin,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+
+    return {
+      success: true,
+      data: userResponse,
+      message: "Verification status updated successfully",
+    };
+  } catch (error: any) {
+    console.error("Error updating verification status:", error);
+    return {
+      success: false,
+      error: "DATABASE_ERROR",
+      message: error.message || "Failed to update verification status",
+    };
+  }
+}

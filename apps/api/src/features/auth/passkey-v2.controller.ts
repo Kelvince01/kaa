@@ -19,7 +19,7 @@ export const passkeyV2Controller = new Elysia().group("passkey-v2", (app) =>
 
         // Retrieve user and challenge record
         const user = await userService.getUserBy({
-          email: userEmail.toLowerCase(),
+          "contact.email": userEmail.toLowerCase(),
         });
         if (!user) {
           return {

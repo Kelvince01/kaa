@@ -1,0 +1,121 @@
+import type {
+  DefaultReactSuggestionItem,
+  SuggestionMenuProps,
+} from "@blocknote/react";
+import { useEffect, useRef } from "react";
+import type { CustomBlockNoteSchema } from "@/components/common/blocknote/types";
+import { useBreakpoints } from "@/hooks/use-breakpoints";
+
+export const slashMenu = (
+  props: SuggestionMenuProps<DefaultReactSuggestionItem>,
+  editor: CustomBlockNoteSchema,
+  indexedItemCount: number,
+  originalItemCount: number
+) => {
+  const { items, loadingState, selectedIndex, onItemClick } = props;
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const isMobile = useBreakpoints("max", "sm");
+
+  const handleKeyPress = async (e: KeyboardEvent) => {
+    const { key: pressedKey } = e;
+    const itemIndex = Number.parseInt(pressedKey, 10) - 1; // Convert pressed key to an index
+
+    if (
+      isMobile ||
+      items.length !== originalItemCount ||
+      Number.isNaN(itemIndex) ||
+      itemIndex < 0 ||
+      itemIndex >= indexedItemCount
+    )
+      return;
+
+    const item = items[itemIndex];
+    if (!item) return;
+
+    // media block opens only if document has next block
+    if (item.group === "Media") {
+      const { nextBlock } = editor.getTextCursorPosition();
+
+      // if exist next block trigger item
+      if (nextBlock) return triggerItemClick(item, e);
+
+      // if no next block create one and trigger item
+      const block = await editor.tryParseMarkdownToBlocks("");
+      editor.replaceBlocks(editor.document, [...editor.document, ...block]);
+      return setTimeout(() => triggerItemClick(item, e), 0);
+    }
+    return triggerItemClick(item, e);
+  };
+
+  const triggerItemClick = (
+    item: DefaultReactSuggestionItem,
+    event: KeyboardEvent | React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    event.preventDefault();
+    onItemClick?.(item);
+  };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: required by author
+  useEffect(() => {
+    //ensure that all items loaded
+    if (loadingState !== "loaded") return;
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [loadingState]);
+
+  // to be able to use in sheet
+  useEffect(() => {
+    const bodyStyle = document.body.style;
+    const pointerEventsOnOpen = bodyStyle.pointerEvents;
+    bodyStyle.pointerEvents = "auto";
+
+    return () => {
+      bodyStyle.pointerEvents = pointerEventsOnOpen;
+    };
+  }, []);
+
+  // Scroll to the selected item when it changes
+  useEffect(() => {
+    const selectedItem = itemRefs.current[selectedIndex || 0];
+    selectedItem?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedIndex]);
+
+  return (
+    <div className="slash-menu">
+      {items.map((item, index) => (
+        <div key={item.title}>
+          {!isMobile &&
+            index === indexedItemCount &&
+            items.length === originalItemCount && (
+              <hr className="slash-menu-separator" />
+            )}
+          {/** biome-ignore lint/a11y/useSemanticElements: required by author */}
+          {/** biome-ignore lint/a11y/useAriaPropsSupportedByRole: required by author */}
+          <div
+            aria-selected={selectedIndex === index}
+            className="slash-menu-item"
+            // biome-ignore lint/suspicious/noEmptyBlockStatements: required by author
+            onKeyDown={() => {}}
+            onMouseDown={(e) => triggerItemClick(item, e)}
+            ref={(el) => {
+              itemRefs.current[index] = el;
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="mr-2 flex items-center gap-3 text-sm">
+              {item.icon}
+              {item.title}
+            </div>
+            {!isMobile &&
+              items.length === originalItemCount &&
+              index < indexedItemCount && (
+                <span className="slash-menu-item-badge">{index + 1}</span>
+              )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};

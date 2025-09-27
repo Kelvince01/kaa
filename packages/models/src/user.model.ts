@@ -1,99 +1,131 @@
 import { hashPassword, verifyPassword } from "@kaa/utils";
 import mongoose, { type Document, type Model, Schema } from "mongoose";
-import { addressSchema } from "./base.model";
 import {
-  type IBaseUserSubscription,
   type IUser,
-  type IUserPreference,
+  KYCStatus,
+  type UserActivity,
+  type UserAddress,
+  type UserContact,
+  type UserPreferences,
+  type UserProfile,
+  type UserSettings,
+  type UserStats,
   UserStatus,
+  type UserVerification,
 } from "./types/user.type";
 
-const userPreferencesSchema = new Schema<IUserPreference>({
-  theme: { type: String, enum: ["light", "dark", "system"], default: "system" },
-  language: { type: String, default: "en" },
-  timezone: { type: String, default: "UTC" },
-  accessibility: {
-    prefersReducedMotion: Boolean,
-    prefersContrast: {
-      type: String,
-      enum: ["no-preference", "high", "low", "custom"],
-    },
-    prefersDarkMode: Boolean,
-    fontSize: { type: String, enum: ["small", "medium", "large"] },
-  },
-  notifications: {
-    email: { type: Boolean, default: true },
-    push: { type: Boolean, default: true },
-    sms: { type: Boolean, default: false },
-  },
-});
-
-const baseUserSubscriptionSchema = new Schema<IBaseUserSubscription>({
-  plan: {
-    type: String,
-    enum: ["free", "basic", "premium", "enterprise"],
-    default: "free",
-  },
-  status: {
-    type: String,
-    enum: ["active", "inactive", "suspended", "canceled", "trial"],
-    default: "trial",
-  },
-  startDate: {
-    type: Date,
-    default: Date.now,
-  },
-  endDate: {
-    type: Date,
-    default: () => {
-      const date = new Date();
-      date.setDate(date.getDate() + 30); // 30-day trial
-      return date;
-    },
-  },
-  autoRenew: {
-    type: Boolean,
-    default: true,
-  },
-  usageQuota: {
-    requests: {
-      type: Number,
-      default: 1000,
-    },
-    storage: {
-      type: Number,
-      default: 1024, // MB
-    },
-    users: {
-      type: Number,
-      default: 1,
-    },
-  },
-  usageCurrent: {
-    requests: {
-      type: Number,
-      default: 0,
-    },
-    storage: {
-      type: Number,
-      default: 0,
-    },
-    users: {
-      type: Number,
-      default: 0,
-    },
-  },
-});
-
-/**
- * User schema definition
- */
-const userSchema = new Schema<IUser>(
+const userPreferencesSchema = new Schema<UserPreferences>(
   {
-    slug: { type: String, required: true, trim: true, unique: true },
+    theme: {
+      type: String,
+      enum: ["light", "dark", "system"],
+      default: "system",
+    },
+    language: { type: String, enum: ["en", "sw"], default: "en" },
+    timezone: {
+      type: String,
+      enum: ["Africa/Nairobi", "UTC"],
+      default: "Africa/Nairobi",
+    },
+    currency: {
+      type: String,
+      default: "KES",
+    },
+    accessibility: {
+      prefersReducedMotion: Boolean,
+      prefersContrast: {
+        type: String,
+        enum: ["no-preference", "high", "low", "custom"],
+      },
+      prefersDarkMode: Boolean,
+      fontSize: { type: String, enum: ["small", "medium", "large"] },
+    },
+    notifications: {
+      email: { type: Boolean, default: true },
+      push: { type: Boolean, default: true },
+      sms: { type: Boolean, default: false },
+      whatsapp: {
+        type: Boolean,
+        default: false,
+      },
+      marketing: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    privacy: {
+      profileVisible: {
+        type: Boolean,
+        default: true,
+      },
+      showPhone: {
+        type: Boolean,
+        default: false,
+      },
+      showEmail: {
+        type: Boolean,
+        default: false,
+      },
+    },
+  },
+  { _id: false }
+);
+
+const userProfileSchema = new Schema<UserProfile>(
+  {
+    firstName: {
+      type: String,
+      required: [true, "First name is required"],
+      trim: true,
+      maxlength: [50, "First name cannot exceed 50 characters"],
+    },
+    lastName: {
+      type: String,
+      required: [true, "Last name is required"],
+      trim: true,
+      maxlength: [50, "Last name cannot exceed 50 characters"],
+    },
+    bio: {
+      type: String,
+      maxlength: [500, "Bio cannot exceed 500 characters"],
+      trim: true,
+    },
+    fullName: {
+      type: String,
+      required: [true, "Please add a full name"],
+      trim: true,
+    },
+    displayName: {
+      type: String,
+      required: [true, "Please add a display name"],
+      trim: true,
+    },
+    avatar: {
+      type: String,
+      validate: {
+        validator(v: string) {
+          // biome-ignore lint/performance/useTopLevelRegex: ignore
+          return !v || /^https?:\/\/.+/.test(v);
+        },
+        message: "Avatar must be a valid URL",
+      },
+      default: () =>
+        `https://imgz.app/400x300?bg=3b82f6&text=${(this as any)?.firstName}`,
+    },
+    dateOfBirth: Date,
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+    },
+  },
+  { _id: false }
+);
+
+const userContactSchema = new Schema<UserContact>(
+  {
     email: {
       type: String,
-      required: [true, "Please add an email"],
+      required: [true, "Email is required"],
       unique: true,
       match: [
         /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
@@ -102,152 +134,338 @@ const userSchema = new Schema<IUser>(
       trim: true,
       lowercase: true,
     },
-    password: {
-      type: String,
-      required: [true, "Please add a password"],
-      minlength: 8,
-    },
-    passwordChangedAt: Date,
-    firstName: {
-      type: String,
-      required: [true, "Please add a first name"],
-      trim: true,
-    },
-    lastName: {
-      type: String,
-      required: [true, "Please add a last name"],
-      trim: true,
-    },
-    username: {
-      type: String,
-      required: [true, "Please add a username"],
-      trim: true,
-      unique: true,
-    },
     phone: {
+      countryCode: {
+        type: String,
+        required: true,
+        default: "+254",
+      },
+      number: {
+        type: String,
+        trim: true,
+        required: [true, "Please add a phone number"],
+        match: [/^[17]\d{8}$/, "Please add a valid Kenyan phone number"],
+      },
+      formatted: {
+        type: String,
+        required: true,
+        unique: true,
+        validate: {
+          validator(phone: string) {
+            // biome-ignore lint/performance/useTopLevelRegex: ignore
+            return /^\+254[17][0-9]{8}$/.test(phone);
+          },
+          message: "Please provide a valid Kenyan phone number",
+        },
+      },
+    },
+    alternativePhone: {
+      countryCode: String,
+      number: {
+        type: String,
+        trim: true,
+        match: /^(?:\+254|0)[17]\d{8}$/,
+      },
+      formatted: String,
+    },
+    whatsappNumber: {
+      type: String,
+      validate: {
+        validator(phone: string) {
+          // biome-ignore lint/performance/useTopLevelRegex: ignore
+          return !phone || /^\+254[17][0-9]{8}$/.test(phone);
+        },
+        message: "Please provide a valid WhatsApp number",
+      },
+    },
+    preferredContact: {
+      type: String,
+      enum: ["email", "phone", "whatsapp"],
+      default: "email",
+    },
+  },
+  { _id: false }
+);
+
+const userAddressSchema = new Schema<UserAddress>(
+  {
+    type: {
+      type: String,
+      enum: ["residential", "work", "postal"],
+      default: "residential",
+    },
+    line1: {
+      type: String,
+      required: [true, "Please add an address"],
+      trim: true,
+    },
+    line2: {
       type: String,
       trim: true,
-      required: [true, "Please add a phone number"],
-      match: [
-        /^(?:\+254|0)[17]\d{8}$/,
-        "Please add a valid Kenyan phone number",
-      ],
     },
-    role: {
-      type: Schema.Types.ObjectId,
-      ref: "Role",
-      required: true,
-    },
-    memberId: {
-      type: Schema.Types.ObjectId,
-      ref: "Member",
-    },
-    avatar: {
+    town: {
       type: String,
-      default: () =>
-        `https://imgz.app/400x300?bg=3b82f6&text=${(this as any)?.firstName}`,
+      required: [true, "Please add a town"],
+      trim: true,
     },
-    idNumber: {
+    county: {
       type: String,
-      match: [/^\d{8}$/, "Please add a valid Kenyan ID number"],
+      required: [true, "Please add a county"],
+      trim: true,
     },
-    idVerified: {
+    estate: {
+      type: String,
+      trim: true,
+    },
+    postalCode: {
+      type: String,
+      trim: true,
+      required: [true, "Please add a postal code"],
+      match: [/[0-9]{5}/, "Please add a valid postal code"],
+    },
+    country: {
+      type: String,
+      default: "Kenya",
+    },
+    directions: {
+      type: String,
+      trim: true,
+    },
+    coordinates: {
+      latitude: Number,
+      longitude: Number,
+    },
+    isPrimary: {
       type: Boolean,
       default: false,
     },
-    isVerified: {
+  },
+  { _id: false }
+);
+
+const userVerificationSchema = new Schema<UserVerification>(
+  {
+    emailVerified: {
       type: Boolean,
       default: false,
-    },
-    isActive: {
-      type: Boolean,
-      default: false,
-    },
-    status: {
-      type: String,
-      enum: Object.values(UserStatus),
-      default: UserStatus.PENDING,
     },
     phoneVerified: {
       type: Boolean,
       default: false,
     },
-    lastLoginAt: {
-      type: Date,
-    },
-    lastActiveAt: Date,
-    loginAttempts: { type: Number, default: 0 },
-    lockUntil: Date,
-    address: addressSchema,
-    dateOfBirth: Date,
     identityVerified: {
       type: Boolean,
       default: false,
     },
-    stripeCustomerId: String,
-    notifications: [
-      {
-        message: String,
-        type: String,
-        read: {
-          type: Boolean,
-          default: false,
-        },
-        createdAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-    permissionFlags: Number,
-    settings: {
-      type: {
-        disableEmailNotifications: {
-          type: Boolean,
-          default: false,
-        },
-        disablePushNotifications: {
-          type: Boolean,
-          default: false,
-        },
-        // Add more settings here as needed
-      },
-      default: {},
+    kycStatus: {
+      type: String,
+      enum: Object.values(KYCStatus),
+      default: KYCStatus.PENDING,
     },
-    deviceTokens: [
-      {
-        token: String,
-        platform: {
+    kycData: {
+      identification: {
+        type: {
           type: String,
-          enum: ["ios", "android", "web"],
+          enum: ["national_id", "passport", "alien_id"],
         },
-        deviceId: String,
-        appVersion: String,
-        osVersion: String,
-        isActive: {
+        /*
+      idNumber: {
+      type: String,
+      match: [/^\d{8}$/, "Please add a valid Kenyan ID number"],
+    },
+    */
+        number: String,
+        verified: {
           type: Boolean,
-          default: true,
-        },
-        lastUsed: {
-          type: Date,
-          default: Date.now,
+          default: false,
         },
       },
-    ],
-    locale: { type: String, enum: ["en", "sw"] },
+      documents: {
+        idDocument: String,
+        proofOfAddress: String,
+        bankStatement: String,
+        payslip: [String],
+      },
+      verificationDate: Date,
+      verifiedBy: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+      rejectionReason: String,
+    },
+  },
+  { _id: false }
+);
+
+const userSettingsSchema = new Schema<UserSettings>(
+  {
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    sessionTimeout: {
+      type: Number,
+      default: 60,
+    },
+    autoLogout: {
+      type: Boolean,
+      default: true,
+    },
+    darkMode: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { _id: false }
+);
+
+const userActivitySchema = new Schema<UserActivity>(
+  {
+    lastLogin: Date,
+    lastLoginIP: String,
+    lastActivity: Date,
+    loginAttempts: { type: Number, default: 0 },
+    lockUntil: Date,
+    passwordChangedAt: Date,
+    accountDeactivatedAt: Date,
+    accountSuspendedAt: Date,
+    suspensionReason: String,
+  },
+  { _id: false }
+);
+
+// Statistics (for landlords/agents)
+const userStatsSchema = new Schema<UserStats>(
+  {
+    totalProperties: {
+      type: Number,
+      default: 0,
+    },
+    activeListings: {
+      type: Number,
+      default: 0,
+    },
+    totalApplications: {
+      type: Number,
+      default: 0,
+    },
+    totalTenants: {
+      type: Number,
+      default: 0,
+    },
+    totalEarnings: {
+      type: Number,
+      default: 0,
+    },
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+    totalReviews: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { _id: false }
+);
+/**
+ * User schema definition
+ */
+const userSchema = new Schema<IUser>(
+  {
+    slug: { type: String, required: true, trim: true, unique: true },
+    memberId: {
+      type: Schema.Types.ObjectId,
+      ref: "Member",
+    },
+
+    profile: userProfileSchema,
+    contact: userContactSchema,
+    role: {
+      type: Schema.Types.ObjectId,
+      ref: "Role",
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: Object.values(UserStatus),
+      default: UserStatus.PENDING,
+      required: true,
+    },
+
+    verification: userVerificationSchema,
+    settings: userSettingsSchema,
+    activity: userActivitySchema,
+    stats: userStatsSchema,
+    addresses: [userAddressSchema],
     preferences: userPreferencesSchema,
-    subscription: baseUserSubscriptionSchema,
-    metadata: { type: Schema.Types.Mixed, default: {} },
+    password: {
+      type: String,
+      required: [true, "Please add a password"],
+      minlength: 8,
+    },
+
+    // Social connections
+    connections: {
+      followers: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+        },
+      ],
+      following: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+        },
+      ],
+    },
+
+    // Metadata
+    metadata: {
+      source: String, // Registration source
+      referredBy: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+      tags: [String],
+      notes: String, // Admin notes
+    },
+
+    permissionFlags: Number,
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
+    toJSON: {
+      virtuals: true,
+      transform(_doc, ret) {
+        ret.id = ret._id;
+        // biome-ignore lint/performance/noDelete: ignore
+        delete ret._id;
+        return ret;
+      },
+    },
     toObject: { virtuals: true },
   }
 );
 
 // Indexes
 userSchema.index({ memberId: 1 });
+userSchema.index({ role: 1, status: 1 });
+userSchema.index({ "verification.emailVerified": 1 });
+userSchema.index({ "verification.phoneVerified": 1 });
+userSchema.index({ "verification.kycStatus": 1 });
+userSchema.index({ createdAt: -1 });
+userSchema.index({ "activity.lastLogin": -1 });
+
+// Virtual fields
+userSchema.virtual("fullName").get(function (this: IUser) {
+  return `${this.profile.firstName} ${this.profile.lastName}`;
+});
+
+userSchema.virtual("displayName").get(function (this: IUser) {
+  return this.profile.firstName;
+});
 
 /**
  * Pre-save hook to hash password
@@ -267,7 +485,33 @@ userSchema.pre("save", async function (this: Document & IUser, next) {
 // Update passwordChangedAt when password is modified
 userSchema.pre<IUser>("save", function (next) {
   if (!this.isModified("password") || this.isNew) return next();
-  this.passwordChangedAt = new Date(Date.now() - 1000); // 1 second in past
+  this.activity.passwordChangedAt = new Date(Date.now() - 1000); // 1 second in past
+  next();
+});
+
+// Pre-save middleware
+userSchema.pre("save", function (next) {
+  // Set full name
+  if (
+    this.isModified("profile.firstName") ||
+    this.isModified("profile.lastName")
+  ) {
+    this.profile.fullName = `${this.profile.firstName} ${this.profile.lastName}`;
+  }
+
+  // Ensure only one primary address
+  if (this.addresses && this.addresses.length > 0) {
+    const primaryAddresses = this.addresses.filter((addr) => addr.isPrimary);
+    if (primaryAddresses.length > 1) {
+      // Keep the first one as primary, set others to false
+      this.addresses.forEach((addr, index) => {
+        if (index > 0 && addr.isPrimary) {
+          addr.isPrimary = false;
+        }
+      });
+    }
+  }
+
   next();
 });
 
@@ -284,9 +528,9 @@ userSchema.methods.comparePassword = async function (
 
 // Check if password was changed after token was issued
 userSchema.methods.changedPasswordAfter = function (JWTTimestamp: number) {
-  if (this.passwordChangedAt) {
+  if (this.activity.passwordChangedAt) {
     const changedTimestamp = Math.floor(
-      this.passwordChangedAt.getTime() / 1000
+      this.activity.passwordChangedAt.getTime() / 1000
     );
     return JWTTimestamp < changedTimestamp;
   }
@@ -295,7 +539,7 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp: number) {
 
 // Check if account is locked
 userSchema.methods.isLocked = function (): boolean {
-  return !!(this.lockUntil && this.lockUntil > Date.now());
+  return !!(this.activity.lockUntil && this.activity.lockUntil > Date.now());
 };
 
 /**
@@ -303,22 +547,29 @@ userSchema.methods.isLocked = function (): boolean {
  * @returns Full name as a string
  */
 userSchema.methods.getFullName = function (): string {
-  return `${this.firstName} ${this.lastName}`;
+  return `${this.profile.firstName} ${this.profile.lastName}`;
 };
 
 // Virtual for full name
 userSchema.virtual("fullName").get(function () {
-  return `${this.firstName} ${this.lastName}`;
+  return `${this.profile.firstName} ${this.profile.lastName}`;
 });
 
 // Static method to find by email
 userSchema.statics.findByEmail = function (email: string) {
-  return this.findOne({ email: email.toLowerCase() });
+  return this.findOne({ "contact.email": email.toLowerCase() });
 };
 
 // Static method to find active users
 userSchema.statics.findActive = function () {
   return this.find({ isActive: true });
+};
+
+userSchema.methods.updateLastActivity = function (ip?: string): void {
+  this.activity.lastActivity = new Date();
+  if (ip) {
+    this.activity.lastLoginIP = ip;
+  }
 };
 
 /**
@@ -331,10 +582,33 @@ userSchema.methods.getPublicProfile = function (): Partial<IUser> {
   // Remove sensitive information
   // biome-ignore lint/performance/noDelete: false positive
   delete userObject.password;
-  // biome-ignore lint/performance/noDelete: false positive
-  delete userObject.stripeCustomerId;
 
   return userObject;
+};
+
+userSchema.methods.toPublicProfile = function () {
+  return {
+    id: this._id,
+    firstName: this.profile.firstName,
+    lastName: this.profile.lastName,
+    fullName: this.fullName,
+    bio: this.profile.bio,
+    avatar: this.profile.avatar,
+    role: this.role,
+    verified:
+      this.verification.emailVerified && this.verification.phoneVerified,
+    county: this.addresses.find((addr: any) => addr.isPrimary)?.county,
+    estate: this.addresses.find((addr: any) => addr.isPrimary)?.estate,
+    // stats:
+    //   this.role === UserRole.LANDLORD || this.role === UserRole.AGENT
+    //     ? {
+    //         totalProperties: this.stats?.totalProperties,
+    //         averageRating: this.stats?.averageRating,
+    //         totalReviews: this.stats?.totalReviews,
+    //       }
+    //     : undefined,
+    joinedAt: this.createdAt,
+  };
 };
 
 // Create and export the User model

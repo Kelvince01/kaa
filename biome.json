@@ -32,7 +32,8 @@
         "noNestedTernary": "off",
         "noParameterProperties": "off",
         "noEnum": "off",
-        "useFilenamingConvention": "off"
+        "useFilenamingConvention": "off",
+        "noParameterAssign": "off"
       },
       "suspicious": {
         "noConsole": "off",
@@ -51,6 +52,9 @@
       "performance": {
         "noBarrelFile": "off",
         "noNamespaceImport": "off"
+      },
+      "a11y": {
+        "noSvgWithoutTitle": "off"
       }
     }
   }

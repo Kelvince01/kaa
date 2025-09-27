@@ -66,7 +66,7 @@ export const generateVerificationToken = () => {
   // Set expire
   const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-  return { verificationToken, verificationExpires };
+  return { verificationTokenHex, verificationToken, verificationExpires };
 };
 
 // Generate and hash password reset token

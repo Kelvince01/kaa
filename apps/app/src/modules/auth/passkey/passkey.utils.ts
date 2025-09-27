@@ -1,16 +1,12 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: top level regex */
 import {
+  type AuthenticationResponseJSON,
   browserSupportsWebAuthn,
   browserSupportsWebAuthnAutofill,
+  type RegistrationResponseJSON,
   startAuthentication,
   startRegistration,
 } from "@simplewebauthn/browser";
-import type {
-  AuthenticationResponseJSON,
-  PublicKeyCredentialCreationOptionsJSON,
-  PublicKeyCredentialRequestOptionsJSON,
-  RegistrationResponseJSON,
-} from "@simplewebauthn/types";
 
 export const passkeyUtils = {
   /**
@@ -41,7 +37,19 @@ export const passkeyUtils = {
       // Log the options being passed to startRegistration for debugging
       console.log("Starting registration with options:", options);
 
-      const response = await startRegistration({ optionsJSON: options });
+      const response = await startRegistration({
+        optionsJSON: {
+          ...options,
+          excludeCredentials: options.excludeCredentials?.map((cred) => ({
+            ...cred,
+            id: cred.id, // passkeyUtils.base64ToUint8Array(cred.id),
+            transports: cred.transports as any,
+            type: cred.type as any,
+          })),
+          hints: options.hints as any,
+          attestation: options.attestation as any,
+        },
+      });
 
       // Log the response for debugging
       console.log("Registration response:", response);
@@ -73,7 +81,19 @@ export const passkeyUtils = {
         throw new Error("WebAuthn is not supported in this browser");
       }
 
-      const response = await startAuthentication({ optionsJSON: options });
+      const response = await startAuthentication({
+        optionsJSON: {
+          ...(options as any),
+          // excludeCredentials: options.excludeCredentials?.map((cred) => ({
+          //   ...cred,
+          //   id: cred.id, // passkeyUtils.base64ToUint8Array(cred.id),
+          //   transports: cred.transports as any,
+          //   type: cred.type as any,
+          // })),
+          hints: options.hints as any,
+          // attestation: options.attestation as any,
+        },
+      });
       return response;
     } catch (error: any) {
       if (error.name === "NotAllowedError") {

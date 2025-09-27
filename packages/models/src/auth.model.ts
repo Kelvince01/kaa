@@ -16,12 +16,15 @@ import {
 import mongoose, { Schema } from "mongoose";
 import type {
   IApiKey,
+  IMFAChallenge,
   IMFASecret,
+  IMFASetup,
   IOAuthConnection,
   IOTP,
   IPasskey,
   IRefreshToken,
   IResetToken,
+  ISecurityEvent,
   ISession,
   IVerificationToken,
 } from "./types/auth.type";
@@ -103,14 +106,19 @@ const sessionSchema = new Schema<ISession>(
       type: Date,
       default: Date.now,
     },
+    expiresAt: {
+      type: Date,
+      required: true,
+    },
   },
   { timestamps: true }
 );
 
-// sessionSchema.index({ userId: 1 });
-// sessionSchema.index({ sessionId: 1, userId: 1 });
+sessionSchema.index({ sessionId: 1, userId: 1 });
 sessionSchema.index({ "deviceInfo.deviceHash": 1 });
+sessionSchema.index({ token: 1 });
 sessionSchema.index({ expiresAt: 1 });
+sessionSchema.index({ userId: 1, expiresAt: 1 });
 
 // Virtual property for the client-side expected id property
 sessionSchema.virtual("id").get(function (this: ISession) {
@@ -515,6 +523,88 @@ export const MFASecret = mongoose.model<IMFASecret>(
   mfaSecretSchema
 );
 
+const mfaSetupSchema = new Schema<IMFASetup>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: ["sms", "totp", "backup_code"],
+      required: true,
+    },
+    secret: {
+      type: String,
+    },
+    backupCodes: {
+      type: [String],
+      default: [],
+    },
+    phoneNumber: {
+      type: String,
+    },
+    isEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    lastUsed: {
+      type: Date,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export const MFASetup = mongoose.model<IMFASetup>("MFASetup", mfaSetupSchema);
+
+const mfaChallengeSchema = new Schema<IMFAChallenge>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: ["sms", "totp", "backup_code"],
+      required: true,
+    },
+    code: {
+      type: String,
+      required: true,
+    },
+    phoneNumber: {
+      type: String,
+    },
+    expiresAt: {
+      type: Date,
+    },
+    attempts: {
+      type: Number,
+      default: 0,
+    },
+    maxAttempts: {
+      type: Number,
+      default: 5,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "verified", "failed", "expired"],
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export const MFAChallenge = mongoose.model<IMFAChallenge>(
+  "MFAChallenge",
+  mfaChallengeSchema
+);
+
 const otpSchema = new Schema<IOTP>(
   {
     user: {
@@ -535,7 +625,6 @@ const otpSchema = new Schema<IOTP>(
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
     },
     used: {
       type: Boolean,
@@ -555,6 +644,11 @@ const otpSchema = new Schema<IOTP>(
   },
   { timestamps: true }
 );
+
+// Indexes for OTP codes
+otpSchema.index({ user: 1, purpose: 1 });
+otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+otpSchema.index({ createdAt: 1 }, { expireAfterSeconds: 3600 }); // Auto-delete after 1 hour
 
 // Virtual property for the client-side expected id property
 otpSchema.virtual("id").get(function (this: IOTP) {
@@ -713,3 +807,58 @@ apiKeySchema.index({ memberId: 1, isActive: 1 });
 apiKeySchema.index({ userId: 1, isActive: 1 });
 
 export const ApiKey = mongoose.model<IApiKey>("ApiKey", apiKeySchema);
+
+// Security Event Schema
+const securityEventSchema = new Schema<ISecurityEvent>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: [
+        "login",
+        "logout",
+        "password_change",
+        "email_change",
+        "phone_change",
+        "failed_login",
+        "account_locked",
+        "suspicious_activity",
+      ],
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    ipAddress: {
+      type: String,
+    },
+    userAgent: {
+      type: String,
+    },
+    metadata: {
+      type: Schema.Types.Mixed,
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Indexes for security events
+securityEventSchema.index({ userId: 1, timestamp: -1 });
+securityEventSchema.index({ type: 1, timestamp: -1 });
+securityEventSchema.index({ timestamp: -1 });
+
+export const SecurityEvent = mongoose.model<ISecurityEvent>(
+  "SecurityEvent",
+  securityEventSchema
+);

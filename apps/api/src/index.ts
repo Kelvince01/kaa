@@ -28,7 +28,7 @@ const server = app.listen(config.port, () => {
   console.info(
     `🚀 ${chalk.greenBright.bold("Kaa")}
 		(Client) runs on: ${chalk.cyanBright.bold(config.clientUrl)}
-		(API): ${chalk.cyanBright.bold(`${config.app.url}:${config.port}`)}
+		(API): ${chalk.cyanBright.bold(`${config.app.url}`)}
 		(Docs): ${chalk.cyanBright(`${config.app.url}/api/docs`)}`
   );
   console.info(" ");

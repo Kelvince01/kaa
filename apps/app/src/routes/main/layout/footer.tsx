@@ -1,8 +1,13 @@
 import { Icon } from "@iconify/react";
 import { Separator } from "@kaa/ui/components/separator";
+import { HelpButton } from "@/components/layout/help";
+import { useLayout } from "@/hooks/use-layout";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const { isFullScreen } = useLayout();
+
+  if (isFullScreen) return null;
 
   return (
     <footer className="bg-emerald-900 px-4 py-12 text-white">
@@ -13,7 +18,7 @@ export function Footer() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
                 <Icon className="h-5 w-5 text-white" icon="mdi:home-search" />
               </div>
-              <span className="font-bold font-heading text-xl">NyumbaAI</span>
+              <span className="font-bold font-heading text-xl">Kaa</span>
             </div>
             <p className="text-emerald-200 text-sm">
               Revolutionizing property rental in Kenya with AI-powered matching
@@ -72,12 +77,13 @@ export function Footer() {
               <a className="text-emerald-200 hover:text-white" href="/linkedin">
                 <Icon className="h-6 w-6" icon="mdi:linkedin" />
               </a>
+              <HelpButton />
             </div>
           </div>
         </div>
         <Separator className="my-8 bg-emerald-800" />
         <div className="flex flex-col items-center justify-between text-emerald-200 text-sm md:flex-row">
-          <p>© {currentYear} NyumbaAI. All rights reserved.</p>
+          <p>© {currentYear} Kaa. All rights reserved.</p>
           <div className="mt-4 flex space-x-6 md:mt-0">
             <a className="hover:text-white" href="/privacy-policy">
               Privacy Policy

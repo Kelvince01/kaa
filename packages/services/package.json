@@ -5,26 +5,35 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./managers": "./src/managers/index.ts"
+    "./managers": "./src/managers/index.ts",
+    "./queues": "./src/queues/index.ts",
+    "./engines": "./src/engines/index.ts",
+    "./repositories": "./src/repositories/index.ts"
   },
   "dependencies": {
-    "@ai-sdk/google": "^2.0.14",
-    "@ai-sdk/openai": "^2.0.32",
     "@kaa/email": "workspace:*",
     "@kaa/models": "workspace:*",
     "@kaa/schemas": "workspace:*",
     "@oslojs/crypto": "^1.0.1",
     "@oslojs/encoding": "^1.1.0",
     "@oslojs/webauthn": "^1.0.0",
-    "ai": "^5.0.47",
+    "africastalking": "^0.7.7",
     "axios": "^1.12.2",
     "elysia": "latest",
     "firebase-admin": "^13.5.0",
+    "handlebars": "^4.7.8",
+    "luxon": "^3.7.2",
+    "mjml": "^4.15.3",
     "mongoose": "^8.18.1",
-    "openai": "^5.22.0"
+    "resend": "^6.0.3",
+    "short-unique-id": "^5.3.2"
   },
   "devDependencies": {
     "@kaa/tsconfig": "workspace:*",
+    "@types/africastalking": "^0.6.2",
+    "@types/mjml": "^4.7.4",
+    "mjml-cli": "^4.15.3",
+    "mjml-core": "^4.16.1",
     "typescript": "^5.9.2"
   }
 }

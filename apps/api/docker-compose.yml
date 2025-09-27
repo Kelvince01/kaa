@@ -1,0 +1,170 @@
+version: "3.8"
+
+services:
+  kaa-api:
+    container_name: api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGODB_URI=mongodb://kaa-mongo:27017/kaa-rental
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-your-super-secret-refresh-key}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-32-character-encryption-key}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
+      - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-1000}
+      - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+      - /app/node_modules
+    depends_on:
+      - kaa-mongo
+      - kaa-redis
+    networks:
+      - kaa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    container_name: api-redis
+    image: redis:latest
+    command: [ "redis-server", "--maxmemory-policy", "noeviction" ]
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # MongoDB Database
+  kaa-mongo:
+    image: mongo:7.0.14-jammy
+    container_name: kaa-rental-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-password123}
+      - MONGO_INITDB_DATABASE=kaa-rental
+    volumes:
+      - kaa-mongo-data:/data/db
+      - kaa-mongo-config:/data/configdb
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - kaa-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis for Caching and Session Storage
+  kaa-redis:
+    image: redis:7.2.5-alpine
+    container_name: kaa-rental-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - kaa-redis-data:/data
+    networks:
+      - kaa-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Nginx Reverse Proxy (Optional for production-like setup)
+  kaa-nginx:
+    image: nginx:1.25.5-alpine
+    container_name: kaa-rental-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - kaa-api
+    networks:
+      - kaa-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # MongoDB Express (Optional - for database management)
+  kaa-mongo-express:
+    image: mongo-express:1.0.2-18
+    container_name: kaa-rental-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_ROOT_USER:-admin}
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_ROOT_PASSWORD:-password123}
+      - ME_CONFIG_MONGODB_SERVER=kaa-mongo
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH_USERNAME=${MONGO_EXPRESS_USER:-admin}
+      - ME_CONFIG_BASICAUTH_PASSWORD=${MONGO_EXPRESS_PASSWORD:-admin123}
+      - ME_CONFIG_SITE_BASEURL=/mongo-express/
+    depends_on:
+      - kaa-mongo
+    networks:
+      - kaa-network
+    profiles:
+      - debug
+
+  # Redis Commander (Optional - for Redis management)
+  kaa-redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: kaa-rental-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8082:8081"
+    environment:
+      - REDIS_HOSTS=local:kaa-redis:6379:0:${REDIS_PASSWORD:-redis123}
+      - HTTP_USER=${REDIS_COMMANDER_USER:-admin}
+      - HTTP_PASSWORD=${REDIS_COMMANDER_PASSWORD:-admin123}
+    depends_on:
+      - kaa-redis
+    networks:
+      - kaa-network
+    profiles:
+      - debug
+
+volumes:
+  # redis_data:
+  kaa-mongo-data:
+    driver: local
+  kaa-mongo-config:
+    driver: local
+  kaa-redis-data:
+    driver: local
+
+networks:
+  kaa-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -98,6 +98,11 @@ export const dashboardSidebarItems = (user: User) => {
         icon: MessageCircle,
       },
       {
+        title: "Templates",
+        url: "/dashboard/templates",
+        icon: FileText,
+      },
+      {
         title: "My Profile",
         url: "/dashboard/profile",
         icon: UserIcon,

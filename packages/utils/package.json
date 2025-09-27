@@ -12,7 +12,8 @@
   "dependencies": {
     "@kaa/config": "workspace:*",
     "@kaa/constants": "workspace:*",
-    "@vercel/blob": "^1.1.1",
+    "@vercel/blob": "^2.0.0",
+    "axios": "^1.12.2",
     "base32-decode": "^1.0.0",
     "base32-encode": "^2.0.0",
     "bullmq": "^5.58.5",

@@ -29,10 +29,16 @@ function ResizablePanel({
 
 function ResizableHandle({
   withHandle,
+  isAltPressed,
+  leftHint,
+  rightHint,
   className,
   ...props
 }: React.ComponentProps<typeof ResizablePrimitive.PanelResizeHandle> & {
   withHandle?: boolean;
+  isAltPressed?: boolean;
+  leftHint?: string;
+  rightHint?: string;
 }) {
   return (
     <ResizablePrimitive.PanelResizeHandle
@@ -47,6 +53,24 @@ function ResizableHandle({
         <div className="z-10 flex h-4 w-3 items-center justify-center rounded-xs border bg-border">
           <GripVerticalIcon className="size-2.5" />
         </div>
+      )}
+      {isAltPressed && (
+        <>
+          {leftHint && (
+            <div className="-translate-x-[24px] -translate-y-1/2 absolute top-1/2 left-0 z-50 pb-1">
+              <span className="rounded bg-muted/90 p-1 font-mono text-[10px] shadow-sm backdrop-blur-sm">
+                {leftHint}
+              </span>
+            </div>
+          )}
+          {rightHint && (
+            <div className="-translate-y-1/2 absolute top-1/2 right-0 z-50 translate-x-[24px] pb-1">
+              <span className="rounded bg-muted/90 p-1 font-mono text-[10px] shadow-sm backdrop-blur-sm">
+                {rightHint}
+              </span>
+            </div>
+          )}
+        </>
       )}
     </ResizablePrimitive.PanelResizeHandle>
   );

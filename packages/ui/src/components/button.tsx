@@ -29,6 +29,8 @@ const buttonVariants = cva(
           "border border-foreground/20 bg-background/20 hover:border-foreground/30 hover:bg-background/40 hover:text-accent-foreground",
         outlinePrimary:
           "border border-primary/30 bg-background/20 text-primary hover:border-primary/50 hover:bg-primary/5",
+        dashed:
+          "border border-gray-200 border-primary border-dashed hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600",
         link: "text-primary underline-offset-4 hover:underline",
         darkSuccess: "bg-green-700 text-white hover:bg-green-700/80",
         cell: "text-regular underline-offset-4 opacity-75 hover:underline hover:opacity-100 focus-visible:ring-transparent focus-visible:ring-offset-transparent",
@@ -45,6 +47,7 @@ const buttonVariants = cva(
         sm: "h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
         icon: "size-9",
+        iconSm: "size-6",
         xl: "h-14 rounded-lg px-6 text-lg",
         auto: "h-auto",
       },

@@ -200,6 +200,10 @@ export const createOrUpdateSession = async (
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
 
+    //  const sessionId = randomUUIDv7();
+    // const now = Date.now();
+    // const expiresAt = now + 1000 * 60 * 60 * 24;
+
     if (session) {
       // Update last active time
       session.lastActive = new Date();

@@ -1,0 +1,15 @@
+config:
+  target: "http://localhost:8888"
+  phases:
+    - duration: 30
+      arrivalRate: 50      # Начать с 50 RPS
+      rampTo: 500          # Увеличить до 500 RPS за 30 сек
+  defaults:
+    headers:
+      accept: "text/html"
+
+scenarios:
+  - name: load homepage
+    flow:
+      - get:
+          url: "/"

@@ -2,7 +2,7 @@ import type { Language } from "@kaa/config";
 import type mongoose from "mongoose";
 import type { Document } from "mongoose";
 import type { BaseDocument } from "./base.type";
-import type { IUserPreference, UserRole } from "./user.type";
+import type { UserPreferences, UserRole } from "./user.type";
 
 /**
  * Auth token response
@@ -35,7 +35,7 @@ export type AuthenticatedRequest = {
     phone?: string;
     isVerified?: boolean;
     locale?: Language;
-    preferences?: IUserPreference;
+    preferences?: UserPreferences;
   };
 };
 
@@ -99,6 +99,7 @@ export interface ISession extends Document {
   location: SessionLocation;
   lastActive: Date;
   createdAt: Date;
+  expiresAt: Date;
 }
 
 export interface IRefreshToken extends BaseDocument {
@@ -155,6 +156,44 @@ export interface IMFASecret extends BaseDocument {
   lastUsed: Date;
 }
 
+// MFA Types
+export enum MFAType {
+  SMS = "sms",
+  TOTP = "totp",
+  BACKUP_CODE = "backup_code",
+}
+
+export enum MFAStatus {
+  PENDING = "pending",
+  VERIFIED = "verified",
+  FAILED = "failed",
+  EXPIRED = "expired",
+}
+
+export type IMFASetup = {
+  userId: mongoose.Types.ObjectId;
+  type: MFAType;
+  secret?: string;
+  backupCodes?: string[];
+  phoneNumber?: string;
+  isEnabled: boolean;
+  createdAt: Date;
+  lastUsed?: Date;
+};
+
+export type IMFAChallenge = {
+  id: string;
+  userId: mongoose.Types.ObjectId;
+  type: MFAType;
+  code: string;
+  phoneNumber?: string;
+  expiresAt: Date;
+  attempts: number;
+  maxAttempts: number;
+  status: MFAStatus;
+  createdAt: Date;
+};
+
 // OTP Model for one-time passcodes
 export interface IOTP extends BaseDocument {
   id: string;
@@ -200,3 +239,22 @@ export interface IApiKey extends BaseDocument {
     lastRequest?: Date;
   };
 }
+
+// Security events
+export type ISecurityEvent = {
+  userId: mongoose.Types.ObjectId;
+  type:
+    | "login"
+    | "logout"
+    | "password_change"
+    | "email_change"
+    | "phone_change"
+    | "failed_login"
+    | "account_locked"
+    | "suspicious_activity";
+  description: string;
+  ipAddress?: string;
+  userAgent?: string;
+  metadata?: Record<string, any>;
+  timestamp: Date;
+};

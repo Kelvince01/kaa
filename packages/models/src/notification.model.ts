@@ -1,9 +1,8 @@
 import { model, Schema } from "mongoose";
 import type {
-  IEmailTemplate,
+  IDeviceToken,
   INotification,
   INotificationPreference,
-  INotificationTemplate,
 } from "./types/notification.type";
 
 /**
@@ -213,59 +212,37 @@ export const NotificationPreference = model<INotificationPreference>(
   notificationPreferenceSchema
 );
 
-const notificationTemplateSchema = new Schema<INotificationTemplate>(
+const deviceTokenSchema = new Schema<IDeviceToken>(
   {
-    memberId: { type: Schema.Types.ObjectId, ref: "Member", required: true },
-    name: { type: String, required: true },
-    type: { type: String, required: true },
-    subject: { type: String, required: true },
-    emailTemplate: String,
-    pushTemplate: String,
-    inAppTemplate: String,
-    whatsappTemplate: String,
-    variables: [String],
-    isActive: { type: Boolean, default: true },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-export const NotificationTemplate = model<INotificationTemplate>(
-  "NotificationTemplate",
-  notificationTemplateSchema
-);
-
-const emailTemplateSchema = new Schema<IEmailTemplate>(
-  {
-    name: {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    token: {
       type: String,
       required: true,
       unique: true,
     },
-    subject: {
+    platform: {
+      type: String,
+      enum: ["ios", "android", "web"],
+      required: true,
+    },
+    deviceId: {
       type: String,
       required: true,
     },
-    htmlContent: {
-      type: String,
-      required: true,
-    },
-    textContent: {
-      type: String,
-      required: true,
-    },
-    variables: {
-      type: [String],
-      default: [],
-    },
+    appVersion: String,
+    osVersion: String,
     isActive: {
       type: Boolean,
       default: true,
     },
-    memberId: {
-      type: Schema.Types.ObjectId,
-      ref: "Tenant",
+    lastUsed: {
+      type: Date,
+      default: Date.now,
     },
   },
   {
@@ -273,7 +250,10 @@ const emailTemplateSchema = new Schema<IEmailTemplate>(
   }
 );
 
-export const EmailTemplate = model<IEmailTemplate>(
-  "EmailTemplate",
-  emailTemplateSchema
+// Compound index for user and device
+deviceTokenSchema.index({ userId: 1, deviceId: 1 });
+
+export const DeviceToken = model<IDeviceToken>(
+  "DeviceToken",
+  deviceTokenSchema
 );

@@ -1,12 +1,12 @@
+import { auditService, notificationService } from "@kaa/services";
+import { createQueue, logger, redisOptions } from "@kaa/utils";
+import { Worker } from "bullmq";
 import {
   sendLoginAlertEmail,
   sendPasswordResetEmail,
   sendVerificationEmail,
   sendWelcomeEmail,
-} from "@kaa/email";
-import { auditService, notificationService } from "@kaa/services";
-import { createQueue, logger, redisOptions } from "@kaa/utils";
-import { Worker } from "bullmq";
+} from "./auth-email.service";
 
 // Create auth background jobs queue
 export const authBackgroundQueue = createQueue("auth-background", {
@@ -29,22 +29,31 @@ const worker = new Worker(
       switch (job.name) {
         case "sendLoginAlert":
           await sendLoginAlertEmail(
-            job.data.email,
+            job.data.user,
             job.data.ip,
-            job.data.userAgent
+            job.data.userAgent,
+            job.data.requestMetadata
           );
           break;
 
         case "sendWelcomeEmail":
-          await sendWelcomeEmail(job.data.email);
+          await sendWelcomeEmail(job.data.user, job.data.requestMetadata);
           break;
 
         case "sendVerificationEmail":
-          await sendVerificationEmail(job.data.email, job.data.token);
+          await sendVerificationEmail(
+            job.data.user,
+            job.data.token,
+            job.data.requestMetadata
+          );
           break;
 
         case "sendPasswordResetEmail":
-          await sendPasswordResetEmail(job.data.email, job.data.token);
+          await sendPasswordResetEmail(
+            job.data.user,
+            job.data.token,
+            job.data.requestMetadata
+          );
           break;
 
         case "trackLoginEvent":
@@ -211,29 +220,82 @@ export async function addAuthBackgroundJob(
 
 // Convenience functions for common auth operations
 export const authBackgroundJobs = {
-  async sendLoginAlert(email: string, ip: string, userAgent: string) {
+  async sendLoginAlert(
+    user: {
+      id: string;
+      email: string;
+    },
+    ip: string,
+    userAgent: string,
+    requestMetadata: {
+      requestId: string;
+      ipAddress: string;
+      userAgent: string;
+    }
+  ) {
     return await addAuthBackgroundJob("sendLoginAlert", {
-      email,
+      user,
       ip,
       userAgent,
+      requestMetadata,
     });
   },
 
-  async sendWelcomeEmail(email: string) {
-    return await addAuthBackgroundJob("sendWelcomeEmail", { email });
+  async sendWelcomeEmail(
+    user: {
+      email: string;
+      id: string;
+      firstName: string;
+    },
+    requestMetadata: {
+      requestId: string;
+      ipAddress: string;
+      userAgent: string;
+    }
+  ) {
+    return await addAuthBackgroundJob("sendWelcomeEmail", {
+      user,
+      requestMetadata,
+    });
   },
 
-  async sendVerificationEmail(email: string, token: string) {
+  async sendVerificationEmail(
+    user: {
+      email: string;
+      id: string;
+      firstName: string;
+    },
+    token: string,
+    requestMetadata: {
+      requestId: string;
+      ipAddress: string;
+      userAgent: string;
+    }
+  ) {
     return await addAuthBackgroundJob("sendVerificationEmail", {
-      email,
+      user,
       token,
+      requestMetadata,
     });
   },
 
-  async sendPasswordResetEmail(email: string, token: string) {
+  async sendPasswordResetEmail(
+    user: {
+      email: string;
+      id: string;
+      firstName: string;
+    },
+    token: string,
+    requestMetadata: {
+      requestId: string;
+      ipAddress: string;
+      userAgent: string;
+    }
+  ) {
     return await addAuthBackgroundJob("sendPasswordResetEmail", {
-      email,
+      user,
       token,
+      requestMetadata,
     });
   },
 

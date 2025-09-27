@@ -29,7 +29,7 @@ class AuthCacheService {
         return JSON.parse(cached);
       }
 
-      const user = await User.findOne({ email: email.toLowerCase() })
+      const user = await User.findOne({ "contact.email": email.toLowerCase() })
         .select("+password")
         .populate("role", "name")
         .lean();
@@ -60,7 +60,7 @@ class AuthCacheService {
       }
 
       const user = await User.findById(userId)
-        .select("-password -stripeCustomerId")
+        .select("-password")
         .populate("role", "name")
         .populate("memberId", "name")
         .lean();

@@ -628,13 +628,15 @@ async function processGoogleUser(
           },
         });
       } else {
-        const existingUser = await userService.getUserBy({ email });
+        const existingUser = await userService.getUserBy({
+          "contact.email": email,
+        });
         if (existingUser) {
           throw new Error("User already exists");
         }
 
         const existingByUsername = await userService.getUserBy({
-          username: profile.email,
+          "profile.displayName": profile.email,
         });
         if (existingByUsername) {
           throw new Error("Username already in use");

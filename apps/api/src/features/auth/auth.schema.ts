@@ -1,4 +1,22 @@
+import { commonSchemas } from "@kaa/schemas";
 import { t } from "elysia";
+import { z } from "zod";
+
+// User parameter validation
+export const userParamsSchema = z.object({
+  id: commonSchemas.objectId,
+});
+
+// Verification status update schema
+export const verificationStatusSchema = z.object({
+  emailVerified: z.boolean().optional(),
+  phoneVerified: z.boolean().optional(),
+  identityVerified: z.boolean().optional(),
+  kycStatus: z
+    .enum(["pending", "submitted", "verified", "rejected"])
+    .optional(),
+  rejectionReason: z.string().optional(),
+});
 
 export const LoginUserResponseSchema = t.Object({
   user: t.Object({
@@ -13,11 +31,25 @@ export const LoginUserResponseSchema = t.Object({
     phone: t.Optional(t.String()),
     address: t.Optional(
       t.Object({
-        line1: t.String(),
-        town: t.String(),
-        postalCode: t.String(),
+        type: t.Union([
+          t.Literal("residential"),
+          t.Literal("work"),
+          t.Literal("postal"),
+        ]),
+        estate: t.Optional(t.String()),
+        line1: t.Optional(t.String()),
+        town: t.Optional(t.String()),
+        postalCode: t.Optional(t.String()),
         county: t.String(),
         country: t.String(),
+        directions: t.Optional(t.String()),
+        coordinates: t.Optional(
+          t.Object({
+            latitude: t.Number(),
+            longitude: t.Number(),
+          })
+        ),
+        isPrimary: t.Boolean(),
       })
     ),
     status: t.Enum({
@@ -28,7 +60,7 @@ export const LoginUserResponseSchema = t.Object({
     }),
     isActive: t.Boolean(),
     isVerified: t.Boolean(),
-    lastLoginAt: t.Date(),
+    lastLoginAt: t.Optional(t.Date()),
     createdAt: t.Date(),
     updatedAt: t.Date(),
   }),
@@ -65,6 +97,7 @@ export const RegisterUserRequestSchema = t.Object({
       pending: "pending",
     })
   ),
+  acceptTerms: t.Boolean(),
 });
 
 export const RegisterUserResponseSchema = t.Object({
