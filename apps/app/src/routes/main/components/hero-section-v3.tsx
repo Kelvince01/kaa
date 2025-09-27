@@ -108,7 +108,6 @@ export function HeroSectionV3() {
       <div className="absolute right-0 bottom-0 hidden h-full w-1/3 md:block">
         <div className="absolute inset-0 z-10 bg-gradient-to-l from-transparent to-primary/80" />
         <div className="absolute inset-0 opacity-30 mix-blend-overlay">
-          {/* biome-ignore lint/a11y/noSvgWithoutTitle: false positive */}
           <svg
             height="100%"
             viewBox="0 0 400 400"

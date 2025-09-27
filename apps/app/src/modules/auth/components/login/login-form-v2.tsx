@@ -51,7 +51,6 @@ export function LoginFormV2({
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <Button className="w-full" type="button" variant="outline">
-              {/** biome-ignore lint/a11y/noSvgWithoutTitle: svg no title */}
               <svg
                 aria-label="Apple"
                 viewBox="0 0 24 24"
@@ -65,7 +64,6 @@ export function LoginFormV2({
               Continue with Apple
             </Button>
             <Button className="w-full" type="button" variant="outline">
-              {/** biome-ignore lint/a11y/noSvgWithoutTitle: svg no title */}
               <svg
                 aria-label="Google"
                 viewBox="0 0 24 24"
