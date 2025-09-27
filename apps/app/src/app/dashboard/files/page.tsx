@@ -259,7 +259,6 @@ export default function FilesPage(props: FilesPageProps) {
           </DialogContent>
         </Dialog>
       </div>
-
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div className="rounded-lg border bg-card p-4">
@@ -291,7 +290,6 @@ export default function FilesPage(props: FilesPageProps) {
           <div className="text-muted-foreground text-sm">Documents</div>
         </div>
       </div>
-
       {/* Toolbar */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-1 items-center space-x-2">
@@ -391,7 +389,6 @@ export default function FilesPage(props: FilesPageProps) {
           </div>
         </div>
       </div>
-
       {/* File Selection */}
       {filteredFiles.length > 0 && (
         <div className="flex items-center space-x-2">
@@ -407,7 +404,6 @@ export default function FilesPage(props: FilesPageProps) {
           </span>
         </div>
       )}
-
       {/* Files Grid/List */}
       {filteredFiles.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -445,7 +441,6 @@ export default function FilesPage(props: FilesPageProps) {
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
-
               <div className="mb-3 flex aspect-square items-center justify-center rounded-md bg-muted">
                 {file.mimeType?.startsWith("image/") ? (
                   // biome-ignore lint/performance/noImgElement: by author
@@ -459,7 +454,6 @@ export default function FilesPage(props: FilesPageProps) {
                   <div className="text-2xl">📄</div>
                 )}
               </div>
-
               <div className="space-y-1">
                 <p className="truncate font-medium text-sm" title={file.name}>
                   {file.name}
@@ -468,7 +462,6 @@ export default function FilesPage(props: FilesPageProps) {
                   {formatBytes(file.size)}
                 </p>
               </div>
-
               <div className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
                 <div className="flex space-x-1">
                   <Button
@@ -527,7 +520,6 @@ export default function FilesPage(props: FilesPageProps) {
           </ErrorBoundary>
         </FeatureFlagsProvider>
       )}
-
       {/* File Edit Modal */}
       <FileEditModal
         file={selectedFile}
@@ -538,14 +530,12 @@ export default function FilesPage(props: FilesPageProps) {
           toast.success("File updated successfully");
         }}
       />
-
       {/* File Viewer Modal */}
       <FileViewerModal
         file={selectedFile}
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
       />
-
       {/* File Viewer Modal */}
       {/* <Dialog onOpenChange={setIsViewModalOpen} open={isViewModalOpen}>
         <DialogContent className="max-h-[80vh] max-w-4xl">

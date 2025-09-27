@@ -177,7 +177,6 @@ export function FileGrid({
                 />
               </div>
             )}
-
             {/* Actions Menu */}
             <div className="absolute top-2 right-2 z-10 opacity-0 transition-opacity group-hover:opacity-100">
               <DropdownMenu>
@@ -219,7 +218,6 @@ export function FileGrid({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-
             {/* File Preview */}
             <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-t-lg bg-muted">
               {getFilePreview(file)}
@@ -246,7 +244,6 @@ export function FileGrid({
                 </Button>
               </div>
             </div>
-
             {/* File Info */}
             <div className="space-y-2 p-3">
               <div className="space-y-1">
@@ -289,7 +286,6 @@ export function FileGrid({
                 </p>
               )}
             </div>
-
             {/* Loading Overlay */}
             {isDeleting && (
               <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/50 backdrop-blur-sm">

@@ -59,6 +59,10 @@ export default function MDXContent({
               className="my-6 rounded-sm"
               height={600}
               src={props.src || ""}
+              style={{
+                maxWidth: "100%",
+                height: "auto",
+              }}
               width={1200}
             />
           ),

@@ -1,0 +1,31 @@
+{
+  "name": "@kaa/blockchain",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy": "hardhat deploy",
+    "test": "hardhat test",
+    "build": "hardhat compile",
+    "build:production": "hardhat compile --profile production",
+    "test:solidity": "hardhat test solidity",
+    "test:nodejs": "hardhat test nodejs",
+    "test:coverage": "hardhat coverage",
+    "test:light": "hardhat test --bail",
+    "clean": "hardhat clean"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.2.0",
+    "@nomicfoundation/hardhat-ignition": "^3.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
+    "@types/node": "^22.8.5",
+    "forge-std": "foundry-rs/forge-std#v1.9.4",
+    "hardhat": "^3.0.6",
+    "typescript": "~5.8.0",
+    "viem": "^2.30.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0"
+  }
+}

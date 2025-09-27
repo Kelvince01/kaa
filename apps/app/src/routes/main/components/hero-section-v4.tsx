@@ -40,10 +40,13 @@ export function HeroSectionV4() {
         <Image
           alt="Modern apartment living room showcasing AI-powered property management"
           className="mix-blend-color-burn"
-          layout="fill"
-          objectFit="cover"
+          fill
           priority
+          sizes="100vw"
           src="/images/hero-home.jpg"
+          style={{
+            objectFit: "cover",
+          }}
         />
 
         {/* Content Container */}

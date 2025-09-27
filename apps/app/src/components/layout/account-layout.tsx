@@ -32,7 +32,6 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
       {/* <div className="fixed top-0 left-0 h-full w-full transition-opacity delay-1000 duration-1000 group-data-[waited=false]:opacity-0 group-data-[waited=true]:opacity-100">
 				<BgAnimation />
 			</div> */}
-
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="mt-4 flex justify-center">
           <Link href="/">
@@ -42,6 +41,10 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
                 height={48}
                 priority
                 src="/logo.svg"
+                style={{
+                  maxWidth: "100%",
+                  height: "auto",
+                }}
                 width={48}
               />
             </div>

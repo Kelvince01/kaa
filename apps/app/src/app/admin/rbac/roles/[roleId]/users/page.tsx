@@ -100,7 +100,6 @@ export default function RoleUsersPage() {
           </div>
         </div>
       </div>
-
       {/* Role Information Card */}
       <Card>
         <CardHeader>
@@ -126,7 +125,6 @@ export default function RoleUsersPage() {
           </div>
         </CardHeader>
       </Card>
-
       {/* Users Data Table */}
       <Card>
         <CardHeader>
@@ -171,7 +169,6 @@ export default function RoleUsersPage() {
           )}
         </CardContent>
       </Card>
-
       {/* Status Summary */}
       {users.length > 0 && (
         <Card>

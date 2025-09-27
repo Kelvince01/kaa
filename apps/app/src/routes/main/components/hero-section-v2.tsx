@@ -35,10 +35,13 @@ export function HeroSectionV2() {
         <Image
           alt="Modern apartment living room"
           className="mix-blend-color-burn"
-          layout="fill"
-          objectFit="cover"
+          fill
           priority
+          sizes="100vw"
           src="/images/hero-home.jpg"
+          style={{
+            objectFit: "cover",
+          }}
         />
 
         <div className="absolute inset-0 flex items-center justify-center">

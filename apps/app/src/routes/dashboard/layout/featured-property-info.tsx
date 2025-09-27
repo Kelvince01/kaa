@@ -21,6 +21,10 @@ export function FeaturedPropertyInfo() {
             className="h-full w-full object-cover"
             height={40}
             src="https://wqnmyfkavrotpmupbtou.supabase.co/storage/v1/object/public/reweb/blocks/placeholder.png"
+            style={{
+              maxWidth: "100%",
+              height: "auto",
+            }}
             width={40}
           />
         </div>

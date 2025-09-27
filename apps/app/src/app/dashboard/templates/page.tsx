@@ -267,7 +267,6 @@ export default function TemplatesPage(props: TemplatesPageProps) {
           </DialogContent>
         </Dialog>
       </div>
-
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div className="rounded-lg border bg-card p-4">
@@ -296,7 +295,6 @@ export default function TemplatesPage(props: TemplatesPageProps) {
           <div className="text-muted-foreground text-sm">Active Templates</div>
         </div>
       </div>
-
       {/* Toolbar */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-1 items-center space-x-2">
@@ -388,7 +386,6 @@ export default function TemplatesPage(props: TemplatesPageProps) {
           </div>
         </div>
       </div>
-
       {/* Selection Controls */}
       {filteredTemplates.length > 0 && (
         <div className="flex items-center space-x-2">
@@ -404,7 +401,6 @@ export default function TemplatesPage(props: TemplatesPageProps) {
           </span>
         </div>
       )}
-
       {/* Templates Grid/List */}
       {filteredTemplates.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -505,7 +501,6 @@ export default function TemplatesPage(props: TemplatesPageProps) {
           ))}
         </div>
       )}
-
       {/* Edit Template Modal */}
       <Dialog onOpenChange={setIsEditModalOpen} open={isEditModalOpen}>
         <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
@@ -525,7 +520,6 @@ export default function TemplatesPage(props: TemplatesPageProps) {
           )}
         </DialogContent>
       </Dialog>
-
       {/* Preview Template Modal */}
       <Dialog onOpenChange={setIsPreviewModalOpen} open={isPreviewModalOpen}>
         <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto">
@@ -574,13 +568,11 @@ export default function TemplatesPage(props: TemplatesPageProps) {
           )}
         </DialogContent>
       </Dialog>
-
       {/* Import Templates Modal */}
       <TemplateImportModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
       />
-
       {/* Export Templates Modal */}
       <TemplateExportModal
         allTemplates={templates}

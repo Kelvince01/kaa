@@ -37,6 +37,10 @@ export const CountryFlag = ({
       height={height as number}
       loading="lazy"
       src={flagUrl}
+      style={{
+        maxWidth: "100%",
+        height: "auto",
+      }}
       width={width as number}
     />
   );

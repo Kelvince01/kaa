@@ -20,7 +20,7 @@ export const wsRoutes = new Elysia()
       if (session?.userId != null) {
         const user = await sessionStore.getUser(session.userId);
         if (user) {
-          email = user.email;
+          email = user.contact.email;
           userId = user.id;
         }
       }

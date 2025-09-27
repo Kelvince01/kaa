@@ -29,6 +29,10 @@ export function DesktopSignInVerifyCode({
           height={80}
           quality={100}
           src={appIcon}
+          style={{
+            maxWidth: "100%",
+            height: "auto",
+          }}
           width={80}
         />
         <p>Signing in...</p>

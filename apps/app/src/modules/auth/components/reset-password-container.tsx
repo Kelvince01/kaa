@@ -107,13 +107,11 @@ export function ResetPasswordContainer() {
           Enter your new password below
         </p>
       </div>
-
       {errorMessage && (
         <Alert variant="destructive">
           <AlertDescription>{errorMessage}</AlertDescription>
         </Alert>
       )}
-
       <Form {...form}>
         <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
           <FormField

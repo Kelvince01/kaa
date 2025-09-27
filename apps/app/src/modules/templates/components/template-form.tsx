@@ -139,20 +139,6 @@ function TemplateContentEditor({
 
   // For other engines, use Tiptap Editor
   return (
-    <TiptapEditor
-      contentMaxHeight={640}
-      contentMinHeight={256}
-      initialContent={field.value}
-      onContentChange={field.onChange}
-      output="html"
-      placeholder={{
-        paragraph: "Type your content here...",
-        imageCaption: "Type caption for image (optional)",
-      }}
-      ref={editorRef}
-      ssr={true}
-    />
-
     // <Textarea
     //   className="min-h-[200px]"
     //   onChange={field.onChange}
@@ -168,6 +154,19 @@ function TemplateContentEditor({
     //     </mjml>`}
     //   value={field.value || ""}
     // />
+    <TiptapEditor
+      contentMaxHeight={640}
+      contentMinHeight={256}
+      initialContent={field.value}
+      onContentChange={field.onChange}
+      output="html"
+      placeholder={{
+        paragraph: "Type your content here...",
+        imageCaption: "Type caption for image (optional)",
+      }}
+      ref={editorRef}
+      ssr={true}
+    />
   );
 }
 

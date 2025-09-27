@@ -506,7 +506,6 @@ const ProfileContainer = () => {
           </CardContent>
         </Card>
       </div>
-
       {/* Profile Image and Password Change */}
       <div className="space-y-6">
         {/* Profile Image */}
@@ -523,6 +522,10 @@ const ProfileContainer = () => {
                     className="object-cover"
                     fill
                     src={user.avatar}
+                    style={{
+                      maxWidth: "100%",
+                      height: "auto",
+                    }}
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gray-100">

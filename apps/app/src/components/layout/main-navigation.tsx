@@ -145,6 +145,10 @@ const MainNavigation: React.FC = () => {
                     alt={user.firstName}
                     className="h-8 w-8 rounded-full"
                     src={user.avatar || "/images/default-avatar.png"}
+                    style={{
+                      maxWidth: "100%",
+                      height: "auto",
+                    }}
                   />
                 </button>
 
@@ -229,6 +233,10 @@ const MainNavigation: React.FC = () => {
                   alt={user.firstName}
                   className="h-8 w-8 rounded-full"
                   src={user.avatar || "/images/default-avatar.png"}
+                  style={{
+                    maxWidth: "100%",
+                    height: "auto",
+                  }}
                 />
               </button>
             )}

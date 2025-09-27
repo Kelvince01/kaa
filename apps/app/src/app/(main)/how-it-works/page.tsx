@@ -311,6 +311,10 @@ export default function HowItWorksPage() {
                     alt="RentKenya Dashboard"
                     className="h-80 w-full rounded-t-lg object-cover"
                     src="https://wqnmyfkavrotpmupbtou.supabase.co/storage/v1/object/public/reweb/blocks/placeholder.png"
+                    style={{
+                      maxWidth: "100%",
+                      height: "auto",
+                    }}
                   />
                   <div className="p-6">
                     <div className="mb-4 flex items-center justify-between">

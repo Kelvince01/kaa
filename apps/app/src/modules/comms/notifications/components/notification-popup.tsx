@@ -140,7 +140,6 @@ const NotificationItem = ({
       {!notification.isRead && (
         <div className="absolute top-4 left-2 h-2 w-2 rounded-full bg-primary" />
       )}
-
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted">
           <NotificationIcon type={notification.type} />

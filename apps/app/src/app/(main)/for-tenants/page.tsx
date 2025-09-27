@@ -134,6 +134,10 @@ export default function ForTenantsPage() {
                   alt="Property"
                   className="h-48 w-full object-cover"
                   src="https://wqnmyfkavrotpmupbtou.supabase.co/storage/v1/object/public/reweb/blocks/placeholder.png"
+                  style={{
+                    maxWidth: "100%",
+                    height: "auto",
+                  }}
                 />
                 <Badge className="absolute top-3 left-3 bg-emerald-600 text-white">
                   <Icon className="mr-1 h-3 w-3" icon="mdi:star" />
@@ -177,6 +181,10 @@ export default function ForTenantsPage() {
                   alt="Property"
                   className="h-48 w-full object-cover"
                   src="https://wqnmyfkavrotpmupbtou.supabase.co/storage/v1/object/public/reweb/blocks/placeholder.png"
+                  style={{
+                    maxWidth: "100%",
+                    height: "auto",
+                  }}
                 />
                 <Badge className="absolute top-3 left-3 bg-teal-600 text-white">
                   <Icon className="mr-1 h-3 w-3" icon="mdi:home-variant" />
@@ -222,6 +230,10 @@ export default function ForTenantsPage() {
                   alt="Property"
                   className="h-48 w-full object-cover"
                   src="https://wqnmyfkavrotpmupbtou.supabase.co/storage/v1/object/public/reweb/blocks/placeholder.png"
+                  style={{
+                    maxWidth: "100%",
+                    height: "auto",
+                  }}
                 />
                 <Badge className="absolute top-3 left-3 bg-emerald-500 text-white">
                   <Icon className="mr-1 h-3 w-3" icon="mdi:leaf" />

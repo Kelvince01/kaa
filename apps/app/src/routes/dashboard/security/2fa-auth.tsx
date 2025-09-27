@@ -176,7 +176,6 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ onSuccess }) => {
           </p>
         </div>
       </div>
-
       {/* Info Alert */}
       <Alert>
         <Info className="h-4 w-4" />
@@ -186,7 +185,6 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ onSuccess }) => {
           password.
         </AlertDescription>
       </Alert>
-
       {/* 2FA Status Card */}
       <Card>
         <CardHeader>
@@ -275,6 +273,10 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ onSuccess }) => {
                       alt="QR Code for 2FA"
                       className="h-48 w-48"
                       src={setupData.qrCodeUrl}
+                      style={{
+                        maxWidth: "100%",
+                        height: "auto",
+                      }}
                     />
                   </div>
                 </div>
@@ -490,7 +492,6 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ onSuccess }) => {
           )}
         </CardContent>
       </Card>
-
       {/* Benefits Card */}
       <Card>
         <CardHeader>

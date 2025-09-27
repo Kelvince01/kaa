@@ -143,6 +143,10 @@ const Header: React.FC = () => {
                         className="h-9 w-9 rounded-full"
                         height={40}
                         src={process.env.NEXT_PUBLIC_API_URL + user.avatar}
+                        style={{
+                          maxWidth: "100%",
+                          height: "auto",
+                        }}
                         width={40}
                       />
                     ) : (

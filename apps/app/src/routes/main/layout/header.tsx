@@ -239,6 +239,10 @@ export function Header() {
                   className="h-8 w-8 rounded-full"
                   height={32}
                   src={user.avatar || "/images/default-avatar.png"}
+                  style={{
+                    maxWidth: "100%",
+                    height: "auto",
+                  }}
                   width={32}
                 />
               </button>
@@ -398,6 +402,10 @@ export function Header() {
                       className="mr-3 h-10 w-10 rounded-full"
                       height={10}
                       src={user.avatar || "/images/default-avatar.png"}
+                      style={{
+                        maxWidth: "100%",
+                        height: "auto",
+                      }}
                       width={10}
                     />
                     <div>
