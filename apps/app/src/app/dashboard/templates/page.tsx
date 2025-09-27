@@ -55,6 +55,8 @@ import {
   useUpdateTemplate,
 } from "@/modules/templates";
 
+import "./editor.scss";
+
 type TemplatesPageProps = {
   searchParams: Promise<{
     category?: string;
