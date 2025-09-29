@@ -1,6 +1,10 @@
 import { Member, Role, User } from "@kaa/models";
 import type { IMember } from "@kaa/models/types";
-// import { auditService } from "@kaa/services";
+import {
+  AuditActionType,
+  AuditEntityType,
+  AuditStatus,
+} from "@kaa/models/types";
 import {
   ConflictError,
   logger,
@@ -8,6 +12,7 @@ import {
   UnauthorizedError,
 } from "@kaa/utils";
 import type { FilterQuery } from "mongoose";
+import { auditService } from "../misc/audit.service";
 
 export type UpdateMemberData = {
   name?: string;
@@ -131,17 +136,18 @@ export async function updateMember(
     await member.save();
 
     // Create audit log
-    // await analyticsService.createAuditLog({
-    // 	memberId,
-    // 	userId,
-    // 	action: "update",
-    // 	resource: "member",
-    // 	resourceId: memberId,
-    // 	changes: {
-    // 		before: originalData,
-    // 		after: data,
-    // 	},
-    // });
+    await auditService.auditLog({
+      memberId,
+      userId,
+      action: AuditActionType.UPDATE,
+      resource: AuditEntityType.MEMBER,
+      resourceId: memberId,
+      status: AuditStatus.SUCCESS,
+      changes: {
+        before: originalData,
+        after: data,
+      },
+    });
 
     logger.info("Member updated", { memberId, updatedBy: userId });
     return member;

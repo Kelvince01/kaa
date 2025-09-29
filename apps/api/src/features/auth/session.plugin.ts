@@ -1,9 +1,9 @@
-import { ApiKey } from "@kaa/models";
+import { ApiKey, User } from "@kaa/models";
 import { randomUUIDv7 } from "bun";
 import { Elysia } from "elysia";
-import { SECURITY_CONFIG } from "../../config/security.config";
-import { SessionStore } from "../../services/session-store";
-import { parseCookies } from "../../shared/utils/parse-cookies";
+import { SECURITY_CONFIG } from "~/config/security.config";
+import { SessionStore } from "~/services/session-store";
+import { parseCookies } from "~/shared/utils/parse-cookies";
 
 function extractBearerToken(header: string | null | undefined): string | null {
   if (!header) return null;
@@ -30,7 +30,8 @@ export function sessionPlugin() {
         headers.get("x-api-key") ||
         extractBearerToken(headers.get("authorization"));
       if (apiKey) {
-        user = (await ApiKey.findOne({ key: apiKey })) ?? null;
+        const key = await ApiKey.findOne({ key: apiKey });
+        user = (await User.findById(key?.userId)) ?? null;
       }
 
       // If there is no valid session — create a new guest session

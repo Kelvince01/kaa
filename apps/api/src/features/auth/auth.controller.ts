@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-// import type { Logger } from "@bogeychan/elysia-logger/types";
 // import { authRateLimit } from "~/plugins/rate-limit.plugin";
 import config from "@kaa/config/api";
 import { RefreshToken, ResetToken, User, VerificationToken } from "@kaa/models";
@@ -32,7 +31,7 @@ import mongoose from "mongoose";
 import ShortUniqueId from "short-unique-id";
 import { SECURITY_CONFIG } from "~/config/security.config";
 import { jwtPlugin } from "~/plugins/security.plugin";
-// import { SessionStore } from "~/services/session-store";
+import { SessionStore } from "~/services/session-store";
 import { ERROR_CODES, getErrorMessage } from "~/shared/utils/error.util";
 // import { auditService } from "@kaa/services";
 import { accessPlugin } from "../rbac/rbac.plugin";
@@ -58,14 +57,12 @@ import { authCacheService } from "./services/auth-cache.service";
 import { authMetrics } from "./services/auth-metrics.service";
 import { createOrUpdateSession, sessionController } from "./session.controller";
 import { sessionPlugin } from "./session.plugin";
-import { twoFactorController } from "./two-factor.controller";
 
 export const authController = new Elysia()
   .use(ip())
   .use(jwtPlugin)
   .decorate({
-    // log: Logger,
-    // sessionStore: new SessionStore(process.env.SESSION_STORAGE as any),
+    sessionStore: new SessionStore(process.env.SESSION_STORAGE as any),
     // t: TFunction,
     // session: SessionData,
   })
@@ -77,15 +74,15 @@ export const authController = new Elysia()
     app
       .post(
         "/register",
-        async ({ body, set, request, server }) => {
+        async ({ body, set, request, server, validateCsrf }) => {
           try {
-            // if (!validateCsrf()) {
-            //   // log.warn("Registration failed: invalid CSRF token");
-            //   logger.warn("Registration failed: invalid CSRF token");
-            //   set.status = 403;
-            //   // return { error: t("auth:invalid_csrf") };
-            //   return { status: "error", message: "Invalid CSRF token" };
-            // }
+            if (!validateCsrf()) {
+              // log.warn("Registration failed: invalid CSRF token");
+              logger.warn("Registration failed: invalid CSRF token");
+              set.status = 403;
+              // return { error: t("auth:invalid_csrf") };
+              return { status: "error", message: "Invalid CSRF token" };
+            }
 
             const existingUser = await userService.getUserBy({
               "contact.email": body.email,
@@ -419,14 +416,6 @@ export const authController = new Elysia()
               };
             }
 
-            // Verify code (in a real app, this would check against a stored code)
-            // For simplicity, we're not implementing the actual verification here
-            // const isValid = true // Placeholder
-
-            // if (!isValid) {
-            //   throw ApiError.badRequest("Invalid or expired verification code")
-            // }
-
             const user = await User.findById(
               verificationTokenDoc.user.toString()
             );
@@ -520,7 +509,7 @@ export const authController = new Elysia()
           params: userParamsSchema,
           body: verificationStatusSchema,
           detail: {
-            tags: ["Users", "Admin"],
+            tags: ["auth"],
             summary: "Update user verification status",
             description:
               "Update user's verification status including KYC (admin only)",
@@ -540,12 +529,12 @@ export const authController = new Elysia()
             server,
           } = ctx;
 
-          // if (!ctx.validateCsrf()) {
-          //   // ctx.log.warn("Login failed: invalid CSRF token");
-          //   set.status = 403;
-          //   // return { error: ctx.t("auth:invalid_csrf") };
-          //   return { status: "error", message: "Invalid CSRF token" };
-          // }
+          if (!ctx.validateCsrf()) {
+            // ctx.log.warn("Login failed: invalid CSRF token");
+            set.status = 403;
+            // return { error: ctx.t("auth:invalid_csrf") };
+            return { status: "error", message: "Invalid CSRF token" };
+          }
 
           const startTime = Date.now();
           const { email, password } = body;
@@ -789,38 +778,38 @@ export const authController = new Elysia()
               })
               .catch((err) => logger.error("Failed to create session", err));
 
-            // // ❌ delete current (guest) session, if needed
-            // await ctx.sessionStore?.delete?.(ctx.sessionId); // only if you have a method to delete
+            // ❌ delete current (guest) session, if needed
+            await ctx.sessionStore?.delete?.(ctx.sessionId); // only if you have a method to delete
 
-            // // ✅ create new authorized session
-            // const sessionId = randomUUIDv7();
-            // const now = Date.now();
-            // const expiresAt = new Date(
-            //   now + SECURITY_CONFIG.sessionMaxAge * 1000
-            // );
-            // const csrfToken = randomUUIDv7();
+            // ✅ create new authorized session
+            const sessionId = randomUUIDv7();
+            const now = Date.now();
+            const expiresAt = new Date(
+              now + SECURITY_CONFIG.sessionMaxAge * 1000
+            );
+            const csrfToken = randomUUIDv7();
 
-            // await ctx.sessionStore.set({
-            //   id: sessionId,
-            //   userId: (user._id as mongoose.Types.ObjectId).toString(),
-            //   csrfToken,
-            //   createdAt: new Date(now),
-            //   expiresAt,
-            // });
+            await ctx.sessionStore.set({
+              id: sessionId,
+              userId: (user._id as mongoose.Types.ObjectId).toString(),
+              csrfToken,
+              createdAt: new Date(now),
+              expiresAt,
+            });
 
-            // // ✅ update reactive cookies
-            // ctx.cookie[SECURITY_CONFIG.sessionCookieName].set({
-            //   value: sessionId,
-            //   path: "/",
-            //   httpOnly: true,
-            //   maxAge: SECURITY_CONFIG.sessionMaxAge,
-            // });
+            // ✅ update reactive cookies
+            ctx.cookie[SECURITY_CONFIG.sessionCookieName].set({
+              value: sessionId,
+              path: "/",
+              httpOnly: true,
+              maxAge: SECURITY_CONFIG.sessionMaxAge,
+            });
 
-            // ctx.cookie[SECURITY_CONFIG.csrfCookieName].set({
-            //   value: csrfToken,
-            //   path: "/",
-            //   sameSite: "strict",
-            // });
+            ctx.cookie[SECURITY_CONFIG.csrfCookieName].set({
+              value: csrfToken,
+              path: "/",
+              sameSite: "strict",
+            });
 
             // 11. Set cookies
             access_token.set({
@@ -1518,7 +1507,6 @@ export const authController = new Elysia()
       )
       .use(meController)
       .use(sessionController)
-      .use(twoFactorController)
       .use(mfaController)
       .use(accountRecoveryController)
       .use(passkeyController)

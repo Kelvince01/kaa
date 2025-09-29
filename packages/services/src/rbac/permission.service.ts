@@ -5,7 +5,7 @@ import type {
   IUserRole,
 } from "@kaa/models/types";
 import { AppError, logger, NotFoundError, ValidationError } from "@kaa/utils";
-import mongoose from "mongoose";
+import mongoose, { type FilterQuery } from "mongoose";
 
 export type PermissionCheck = {
   userId: string;
@@ -60,7 +60,7 @@ export async function getPermissions({
   offset?: number;
   limit?: number;
 }) {
-  const query: Record<string, unknown> = {};
+  const query: FilterQuery<IPermission> = {};
 
   if (q) {
     query.$or = [

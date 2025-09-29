@@ -9,6 +9,11 @@ import { notificationController } from "./features/comms/notifications/notificat
 import { smsController } from "./features/comms/sms/sms.controller";
 import { fileController } from "./features/files/file.controller";
 import { monitoringController } from "./features/misc/monitoring/monitoring.controller";
+import { billingController } from "./features/org/billing.controller";
+import { memberController } from "./features/org/member.controller";
+import { organizationController } from "./features/org/org.controller";
+import { rentSubscriptionController } from "./features/org/rent-subscription.controller";
+import { subscriptionController } from "./features/org/subscription.controller";
 import { rbacController } from "./features/rbac/rbac.controller";
 import { templatesController } from "./features/templates/template.controller";
 import { usersController } from "./features/users/user.controller";
@@ -25,6 +30,11 @@ const routes = new Elysia({ prefix: "api/v1" })
   .use(fileController)
   .use(templatesController)
   .use(monitoringController)
-  .use(notificationController);
+  .use(notificationController)
+  .use(organizationController)
+  .use(memberController)
+  .use(subscriptionController)
+  .use(billingController)
+  .use(rentSubscriptionController);
 
 export { routes as AppRoutes };

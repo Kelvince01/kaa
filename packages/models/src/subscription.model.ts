@@ -4,6 +4,8 @@ import type {
   IInvoice,
   ISubscription,
   ISubscriptionPlan,
+  ITaxRate,
+  IUsageBilling,
   IUsageRecord,
 } from "./types/subscription.type";
 
@@ -268,8 +270,8 @@ subscriptionSchema.virtual("usagePercentage").get(function (
   };
 });
 
-export const UserSubscription = mongoose.model<ISubscription>(
-  "UserSubscription",
+export const Subscription = mongoose.model<ISubscription>(
+  "Subscription",
   subscriptionSchema
 );
 
@@ -457,3 +459,103 @@ invoiceSchema.index({ memberId: 1 });
 invoiceSchema.index({ subscriptionId: 1 });
 
 export const Invoice = mongoose.model<IInvoice>("Invoice", invoiceSchema);
+
+const usageBillingSchema = new Schema<IUsageBilling>(
+  {
+    subscriptionId: {
+      type: Schema.Types.ObjectId,
+      ref: "UserSubscription",
+      required: true,
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    memberId: {
+      type: Schema.Types.ObjectId,
+      ref: "Tenant",
+      required: true,
+    },
+    billingPeriod: {
+      start: {
+        type: Date,
+        required: true,
+      },
+      end: {
+        type: Date,
+        required: true,
+      },
+    },
+    usage: [
+      {
+        type: {
+          type: String,
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+        },
+        rate: {
+          type: Number,
+          required: true,
+        },
+        amount: {
+          type: Number,
+          required: true,
+        },
+      },
+    ],
+    totalAmount: {
+      type: Number,
+      required: true,
+    },
+    currency: {
+      type: String,
+      default: "usd",
+    },
+    status: {
+      type: String,
+      enum: ["pending", "processed", "paid", "failed"],
+      default: "pending",
+    },
+    invoiceId: {
+      type: Schema.Types.ObjectId,
+      ref: "Invoice",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export const UsageBilling = mongoose.model<IUsageBilling>(
+  "UsageBilling",
+  usageBillingSchema
+);
+
+const taxRateSchema = new Schema<ITaxRate>(
+  {
+    country: {
+      type: String,
+      required: true,
+    },
+    state: {
+      type: String,
+    },
+    rate: {
+      type: Number,
+      required: true,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export const TaxRate = mongoose.model<ITaxRate>("TaxRate", taxRateSchema);

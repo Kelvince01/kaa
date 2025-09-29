@@ -1,0 +1,16 @@
+{
+    "recommendations": [
+        "biomejs.biome",
+        "ms-azuretools.vscode-docker",
+        "bradlc.vscode-tailwindcss",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "github.vscode-github-actions",
+        "lokalise.i18n-ally",
+        "mjmlio.vscode-mjml",
+        "usernamehw.errorlens",
+        "YoavBls.pretty-ts-errors",
+        "meganrogge.template-string-converter",
+        "oven.bun-vscode",
+        "tomoki1207.pdf"
+    ]
+}

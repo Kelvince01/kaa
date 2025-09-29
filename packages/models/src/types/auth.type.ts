@@ -148,14 +148,6 @@ export interface IResetToken extends BaseDocument {
   blacklisted: boolean;
 }
 
-export interface IMFASecret extends BaseDocument {
-  userId: mongoose.Types.ObjectId;
-  secret: string;
-  backupCodes: string[];
-  isEnabled: boolean;
-  lastUsed: Date;
-}
-
 // MFA Types
 export enum MFAType {
   SMS = "sms",
@@ -170,16 +162,15 @@ export enum MFAStatus {
   EXPIRED = "expired",
 }
 
-export type IMFASetup = {
+export interface IMFASecret extends BaseDocument {
   userId: mongoose.Types.ObjectId;
   type: MFAType;
-  secret?: string;
-  backupCodes?: string[];
+  secret: string;
+  backupCodes: string[];
   phoneNumber?: string;
   isEnabled: boolean;
-  createdAt: Date;
-  lastUsed?: Date;
-};
+  lastUsed: Date;
+}
 
 export type IMFAChallenge = {
   id: string;

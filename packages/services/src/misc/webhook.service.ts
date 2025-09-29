@@ -51,6 +51,34 @@ type WebhookStats = {
   successRate: number;
 };
 
+type WebhookPayload = {
+  event: string;
+  data: any;
+  timestamp: number;
+};
+
+// Sign payload with webhook secret
+const signPayload = (payload: WebhookPayload, secret: string): string => {
+  const hmac = crypto.createHmac("sha256", secret);
+  const signature = hmac.update(JSON.stringify(payload)).digest("hex");
+  return signature;
+};
+
+/**
+ * Verify webhook signature
+ */
+const verifyWebhookSignature = (
+  payload: string,
+  signature: string,
+  secret: string
+): boolean => {
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(payload)
+    .digest("hex");
+  return signature === `sha256=${expectedSignature}`;
+};
+
 class WebhooksService {
   private readonly deliveryQueue: Map<string, QueuedWebhook> = new Map();
   private readonly rateLimitMap: Map<
@@ -109,6 +137,14 @@ class WebhooksService {
       if (!webhook) {
         throw new Error("Webhook not found");
       }
+
+      // // Validate URL if updating
+      // if (data.url) {
+      //   const isValidUrl = await validateWebhookUrl(data.url);
+      //   if (!isValidUrl) {
+      //     throw new Error("Invalid webhook URL");
+      //   }
+      // }
 
       Object.assign(webhook, data);
       webhook.updatedBy = new Types.ObjectId(updatedBy);
@@ -259,6 +295,79 @@ class WebhooksService {
     } catch (error) {
       throw new Error(
         `Failed to get supported events: ${(error as Error).message}`
+      );
+    }
+  }
+
+  async getWebhookDelivery(
+    deliveryId: string
+  ): Promise<IWebhookDelivery | null> {
+    try {
+      return await WebhookDelivery.findById(deliveryId).lean();
+    } catch (error) {
+      throw new Error(`Failed to get delivery: ${(error as Error).message}`);
+    }
+  }
+
+  async getDeliveryHistory(
+    webhookId: string,
+    filters: {
+      status?: WebhookStatus[];
+      dateRange?: { start: Date; end: Date };
+      page?: number;
+      limit?: number;
+    } = {}
+  ): Promise<{
+    deliveries: IWebhookDelivery[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+    };
+  }> {
+    try {
+      const query: FilterQuery<IWebhookDelivery> = {
+        webhookId: new Types.ObjectId(webhookId),
+      };
+
+      if (filters.status?.length) {
+        query.status = { $in: filters.status };
+      }
+
+      if (filters.dateRange) {
+        query.startedAt = {
+          $gte: filters.dateRange.start,
+          $lte: filters.dateRange.end,
+        };
+      }
+
+      const page = filters.page || 1;
+      const limit = filters.limit || 50;
+      const skip = (page - 1) * limit;
+
+      const [deliveries, total] = await Promise.all([
+        WebhookDelivery.find(query)
+          .populate("eventId")
+          .sort({ startedAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        WebhookDelivery.countDocuments(query),
+      ]);
+
+      return {
+        deliveries: deliveries as IWebhookDelivery[],
+        pagination: {
+          total,
+          page: Number(page),
+          limit: Number(limit),
+          pages: Math.ceil(total / limit),
+        },
+      };
+    } catch (error) {
+      throw new Error(
+        `Failed to get delivery history: ${(error as Error).message}`
       );
     }
   }
@@ -1032,63 +1141,6 @@ class WebhooksService {
     }
   }
 
-  async getWebhookDelivery(
-    deliveryId: string
-  ): Promise<IWebhookDelivery | null> {
-    try {
-      return await WebhookDelivery.findById(deliveryId).lean();
-    } catch (error) {
-      throw new Error(`Failed to get delivery: ${(error as Error).message}`);
-    }
-  }
-
-  async getDeliveryHistory(
-    webhookId: string,
-    filters: {
-      status?: WebhookStatus[];
-      dateRange?: { start: Date; end: Date };
-      page?: number;
-      limit?: number;
-    } = {}
-  ): Promise<{ deliveries: IWebhookDelivery[]; total: number }> {
-    try {
-      const query: FilterQuery<IWebhookDelivery> = {
-        webhookId: new Types.ObjectId(webhookId),
-      };
-
-      if (filters.status?.length) {
-        query.status = { $in: filters.status };
-      }
-
-      if (filters.dateRange) {
-        query.startedAt = {
-          $gte: filters.dateRange.start,
-          $lte: filters.dateRange.end,
-        };
-      }
-
-      const page = filters.page || 1;
-      const limit = filters.limit || 50;
-      const skip = (page - 1) * limit;
-
-      const [deliveries, total] = await Promise.all([
-        WebhookDelivery.find(query)
-          .populate("eventId")
-          .sort({ startedAt: -1 })
-          .skip(skip)
-          .limit(limit)
-          .lean(),
-        WebhookDelivery.countDocuments(query),
-      ]);
-
-      return { deliveries: deliveries as IWebhookDelivery[], total };
-    } catch (error) {
-      throw new Error(
-        `Failed to get delivery history: ${(error as Error).message}`
-      );
-    }
-  }
-
   // ===== UTILITY METHODS =====
 
   async testWebhook(webhookId: string): Promise<DeliveryResult> {
@@ -1223,5 +1275,23 @@ class WebhooksService {
   }
 }
 
+// Validate webhook URL (optional helper function)
+export const validateWebhookUrl = async (url: string): Promise<boolean> => {
+  try {
+    // Basic URL validation
+    new URL(url);
+
+    // Optional: Ping the URL to see if it responds
+    // This is not always reliable and may be skipped
+    // await axios.options(url, { timeout: 3000 });
+    await Promise.resolve();
+
+    return true;
+  } catch (error) {
+    console.error(`Invalid webhook URL: ${url}`, error);
+    return false;
+  }
+};
+
 // Export singleton instance
-export const webhooksV2Service = new WebhooksService();
+export const webhooksService = new WebhooksService();

@@ -1,6 +1,6 @@
 import { createQueue, logger, redisOptions } from "@kaa/utils";
 import { Worker } from "bullmq";
-import { smsService } from "../sms.service";
+import { smsService } from "../comms/sms.service";
 
 // Create queue
 export const smsQueue = createQueue("sms");

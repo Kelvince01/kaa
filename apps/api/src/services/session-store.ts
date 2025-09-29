@@ -142,6 +142,6 @@ export class SessionStore {
   }
 
   async getUser(userId: string): Promise<IUser | null> {
-    return (await User.findOne({ id: userId })) ?? null;
+    return (await User.findById(userId)) ?? null;
   }
 }

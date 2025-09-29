@@ -35,7 +35,6 @@ const uid = new ShortUniqueId({ length: 10 });
 
 export class TemplateService {
   private readonly templatesDir = path.join(__dirname, "../../templates");
-  // private readonly templateCache = new Map<string, ITemplate>();
 
   /**
    * Get templates with filtering and pagination

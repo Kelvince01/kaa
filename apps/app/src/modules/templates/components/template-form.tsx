@@ -39,6 +39,7 @@ import type {
   TemplateType,
   TemplateVariable,
 } from "../template.type";
+import HandlebarsEditor from "./handlebars-editor";
 import MJMLFormEditor from "./mjml-form-editor";
 
 type TemplateFormProps = {
@@ -137,23 +138,18 @@ function TemplateContentEditor({
     );
   }
 
+  if (engine === "handlebars") {
+    return (
+      <HandlebarsEditor
+        onChange={field.onChange}
+        placeholder={"Hello {{name}}!"}
+        value={field.value || ""}
+      />
+    );
+  }
+
   // For other engines, use Tiptap Editor
   return (
-    // <Textarea
-    //   className="min-h-[200px]"
-    //   onChange={field.onChange}
-    //   placeholder={`
-    //     <mjml>
-    //       <mj-body>
-    //         <mj-section>
-    //           <mj-column>
-    //             <mj-text>Hello {{name}}!</mj-text>
-    //           </mj-column>
-    //         </mj-section>
-    //       </mj-body>
-    //     </mjml>`}
-    //   value={field.value || ""}
-    // />
     <TiptapEditor
       contentMaxHeight={640}
       contentMinHeight={256}
@@ -302,25 +298,6 @@ export function TemplateForm({
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {/* <FormField
-                  control={form.control}
-                  name="slug"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Slug *</FormLabel>
-                      <FormControl>
-                        <Input
-                          id="slug"
-                          {...field}
-                          placeholder="Template slug"
-                          required
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                /> */}
-
               <SlugFormField
                 control={form.control}
                 description={"Template slug"}

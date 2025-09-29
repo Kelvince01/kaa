@@ -2,7 +2,7 @@ import { Role, RolePermission, UserRole } from "@kaa/models";
 import type { IRole } from "@kaa/models/types";
 import type mongoose from "mongoose";
 import { type FilterQuery, Types } from "mongoose";
-import { permissionManager } from "./managers/permission.manager";
+import { permissionManager } from "../managers/permission.manager";
 
 /**
  * Retrieves the ID of the default role (pending) from the database.

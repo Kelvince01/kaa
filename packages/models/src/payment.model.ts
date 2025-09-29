@@ -218,7 +218,7 @@ const PaymentMethodSchema: Schema<IPaymentMethod> = new Schema<IPaymentMethod>(
     type: {
       type: String,
       required: true,
-      enum: ["card", "bank_account", "mpesa", "cash", "cheque"],
+      enum: ["card", "bank_account", "mpesa", "cash", "cheque", "paypal"],
     },
     provider: {
       type: String,

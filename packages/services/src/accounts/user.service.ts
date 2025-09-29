@@ -20,9 +20,13 @@ import {
   NotFoundError,
 } from "@kaa/utils";
 import mongoose, { type FilterQuery } from "mongoose";
-import { auditService } from "./audit.service";
-import { notificationService } from "./notification.service";
-import { assignRole, getDefaultRoleId, getRoleByName } from "./role.service";
+import { notificationService } from "../comms/notification.service";
+import { auditService } from "../misc/audit.service";
+import {
+  assignRole,
+  getDefaultRoleId,
+  getRoleByName,
+} from "../rbac/role.service";
 
 type UserFilter = {
   q?: string;

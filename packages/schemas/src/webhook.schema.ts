@@ -23,7 +23,7 @@ export const webhookEventSchema = z.object({
 export const createWebhookSchema = z.object({
   name: z.string().min(1).max(255),
   description: z.string().max(1000).optional(),
-  url: z.string().url(),
+  url: z.url(),
   method: z.enum(WebhookMethod).default(WebhookMethod.POST),
   events: z.array(z.enum(WebhookEventType)).min(1),
   environment: z

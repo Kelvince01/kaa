@@ -1,383 +1,415 @@
 import crypto from "node:crypto";
-import { getAvailableEvents } from "@kaa/models";
+import { type WebhookEventType, WebhookSecurityType } from "@kaa/models/types";
+import {
+  createWebhookSchema,
+  queryUserWebhooksSchema,
+  updateWebhookSchema,
+} from "@kaa/schemas";
 import { webhooksService } from "@kaa/services";
 import { webhooksRepository } from "@kaa/services/repositories";
 import { AppError } from "@kaa/utils";
 import { Elysia, t } from "elysia";
 import mongoose from "mongoose";
+import { z } from "zod";
 import { authPlugin } from "~/features/auth/auth.plugin";
 import { rolePlugin } from "~/features/rbac/rbac.plugin";
+// import { rateLimitPlugin } from "~/plugins/rate-limit.plugin";
 
-export const webhookController = new Elysia().group("webhooks", (app) =>
-  app
-    .get(
-      "/events",
-      ({ set }) => {
-        try {
-          set.status = 200;
-          return {
-            status: "success",
-            events: getAvailableEvents(),
-          };
-        } catch (error) {
-          return error;
-        }
-      },
-      {
-        detail: {
-          tags: ["webhooks"],
-          summary: "Get available webhook events",
-        },
+export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
+  .get(
+    "/events",
+    ({ set }) => {
+      try {
+        set.status = 200;
+        return {
+          status: "success",
+          events: webhooksService.getSupportedEvents(),
+        };
+      } catch (error) {
+        return error;
       }
-    )
-    // .use(accessPlugin("webhooks", "read"))
-    .use(authPlugin)
-    .get(
-      "/",
-      async ({ set, user }) => {
-        try {
-          // Get webhooks from database
-          const webhooks = await webhooksRepository.getWebhooksByUserId(
-            user?.id
-          );
-
-          set.status = 200;
-          return {
-            status: "success",
-            webhooks,
-          };
-        } catch (error) {
-          return error;
-        }
-      },
-      {
-        detail: {
-          tags: ["webhooks"],
-          summary: "Get all webhooks for current user",
-        },
-      }
-    )
-    .use(rolePlugin)
-    .get(
-      "/:id",
-      async ({ set, user, role, params }) => {
-        try {
-          const webhookId = params.id;
-
-          // Get webhook from database
-          const webhook = await webhooksRepository.getWebhookById(webhookId);
-
-          if (!webhook) {
-            return new AppError("Webhook not found", 404);
-          }
-
-          // Check if user has access to this webhook
-          if (
-            webhook.userId !== new mongoose.Types.ObjectId(user?.id) &&
-            role.name !== "admin"
-          ) {
-            return new AppError(
-              "You do not have permission to access this webhook",
-              403
-            );
-          }
-
-          set.status = 200;
-          return {
-            status: "success",
-            webhook,
-          };
-        } catch (error) {
-          return error;
-        }
-      },
-      {
-        params: t.Object({ id: t.String() }),
-        detail: {
-          tags: ["webhooks"],
-          summary: "Get webhook by ID",
-        },
-      }
-    )
-    .post(
-      "/",
-      async ({ set, body, user }) => {
-        try {
-          const { name, url, events, headers } = body;
-
-          // Validate URL
-          // const isValidUrl = await validateWebhookUrl(url);
-          // if (!isValidUrl) {
-          // 	return new AppError("Invalid webhook URL", 400);
-          // }
-
-          // Validate events
-          const availableEvents = getAvailableEvents();
-          const invalidEvents = events.filter(
-            (event: string) => !availableEvents.includes(event)
-          );
-
-          if (invalidEvents.length > 0) {
-            return new AppError(
-              `Invalid events: ${invalidEvents.join(", ")}`,
-              400
-            );
-          }
-
-          // Generate webhook secret
-          const secret = crypto.randomBytes(32).toString("hex");
-
-          // Create webhook
-          const newWebhook = await webhooksRepository.createWebhook({
-            userId: new mongoose.Types.ObjectId(user?.id),
-            memberId: new mongoose.Types.ObjectId(user?.memberId),
-            name,
-            url,
-            secret,
-            events,
-            headers,
-            isActive: true,
-          });
-
-          set.status = 201;
-          return {
-            status: "success",
-            webhook: {
-              ...newWebhook,
-              secret, // Include secret in the response only once
-            },
-          };
-        } catch (error) {
-          return error;
-        }
-      },
-      {
-        body: t.Object({
-          name: t.String(),
-          url: t.String(),
-          events: t.Array(t.String()),
-          headers: t.Optional(t.Object(t.Any())),
-        }),
-        detail: {
-          tags: ["webhooks"],
-          summary: "Create a new webhook",
-        },
-      }
-    )
-    .patch(
-      "/:id",
-      async ({ set, params, body, user, role }) => {
-        try {
-          const webhookId = params.id;
-          const updateData = body;
-
-          // Get webhook from database
-          const webhook = await webhooksRepository.getWebhookById(webhookId);
-
-          if (!webhook) {
-            return new AppError("Webhook not found", 404);
-          }
-
-          // Check if user has access to this webhook
-          if (
-            webhook.userId !== new mongoose.Types.ObjectId(user?.id) &&
-            role.name !== "admin"
-          ) {
-            return new AppError(
-              "You do not have permission to update this webhook",
-              403
-            );
-          }
-
-          // Validate URL if updating
-          if (updateData.url) {
-            const isValidUrl = await webhooksService.validateWebhookUrl(
-              updateData.url
-            );
-            if (!isValidUrl) {
-              return new AppError("Invalid webhook URL", 400);
-            }
-          }
-
-          // Validate events if updating
-          if (updateData.events) {
-            const availableEvents = getAvailableEvents();
-            const invalidEvents = updateData.events.filter(
-              (event: string) => !availableEvents.includes(event)
-            );
-
-            if (invalidEvents.length > 0) {
-              return new AppError(
-                `Invalid events: ${invalidEvents.join(", ")}`,
-                400
-              );
-            }
-          }
-
-          // Update only allowed fields
-          const allowedFields = [
-            "name",
-            "url",
-            "events",
-            "headers",
-            "isActive",
-          ];
-          for (const key of Object.keys(updateData)) {
-            if (!allowedFields.includes(key)) {
-              // TODO: fix this
-              // @ts-expect-error
-              delete updateData[key];
-            }
-          }
-
-          // Update in database
-          const updatedWebhook = await webhooksRepository.updateWebhook(
-            webhookId,
-            updateData
-          );
-
-          set.status = 200;
-          return {
-            status: "success",
-            webhook: updatedWebhook,
-          };
-        } catch (error) {
-          return error;
-        }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        body: t.Object({
-          name: t.Optional(t.String()),
-          url: t.Optional(t.String()),
-          events: t.Optional(t.Array(t.String())),
-          isActive: t.Optional(t.Boolean()),
-        }),
-        detail: {
-          tags: ["webhooks"],
-          summary: "Update webhook",
-        },
-      }
-    )
-    .delete(
-      "/:id",
-      async ({ set, params, user, role }) => {
-        try {
-          const webhookId = params.id;
-
-          // Get webhook from database
-          const webhook = await webhooksRepository.getWebhookById(webhookId);
-
-          if (!webhook) {
-            return new AppError("Webhook not found", 404);
-          }
-
-          // Check if user has access to this webhook
-          if (
-            webhook.userId !== new mongoose.Types.ObjectId(user?.id) &&
-            role.name !== "admin"
-          ) {
-            return new AppError(
-              "You do not have permission to delete this webhook",
-              403
-            );
-          }
-
-          // Delete from database
-          await webhooksRepository.deleteWebhook(webhookId);
-
-          set.status = 204;
-          return {
-            status: "success",
-            message: "Webhook deleted successfully",
-          };
-        } catch (error) {
-          return error;
-        }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        detail: {
-          tags: ["webhooks"],
-          summary: "Delete webhook",
-        },
-      }
-    )
-    .post(
-      "/:id/regenerate-secret",
-      async ({ set, params, user, role }) => {
-        try {
-          const webhookId = params.id;
-
-          // Get webhook from database
-          const webhook = await webhooksRepository.getWebhookById(webhookId);
-
-          if (!webhook) {
-            return new AppError("Webhook not found", 404);
-          }
-
-          // Check if user has access to this webhook
-          if (
-            webhook.userId !== new mongoose.Types.ObjectId(user?.id) &&
-            role.name !== "admin"
-          ) {
-            return new AppError(
-              "You do not have permission to update this webhook",
-              403
-            );
-          }
-
-          // Generate new secret
-          const secret = crypto.randomBytes(32).toString("hex");
-
-          // Update webhook
-          await webhooksRepository.updateWebhook(webhookId, { secret });
-
-          set.status = 200;
-          return {
-            status: "success",
-            secret,
-          };
-        } catch (error) {
-          return error;
-        }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        detail: {
-          tags: ["webhooks"],
-          summary: "Regenerate webhook secret",
-        },
-      }
-    )
-);
-
-export const systemWebhookController = new Elysia().post(
-  "/webhooks/:event",
-  async ({ params, body, request }) => {
-    const signature = request.headers.get("x-webhook-signature");
-
-    // In production, verify webhook signature
-    if (!signature) {
-      return { error: "Missing webhook signature" };
-    }
-
-    // Process webhook event
-    await webhooksService.triggerWebhooks("system", params.event, body);
-
-    return { status: "success" };
-  },
-  {
-    detail: {
-      summary: "Webhook Endpoint",
-      description: "Receive webhook events",
-      tags: ["system"],
     },
-  }
-);
+    {
+      detail: {
+        tags: ["webhooks"],
+        summary: "Get available webhook events",
+      },
+    }
+  )
+  .use(authPlugin)
+  //   .use(rateLimitPlugin)
+
+  // Webhook configuration management
+  .post(
+    "/",
+    async ({ body, user, set }) => {
+      try {
+        // Validate URL
+        // const isValidUrl = await validateWebhookUrl(url);
+        // if (!isValidUrl) {
+        // 	return new AppError("Invalid webhook URL", 400);
+        // }
+
+        // Validate events
+        const availableEvents = await webhooksService.getSupportedEvents();
+        const invalidEvents = body.events.filter(
+          (event: WebhookEventType) => !availableEvents.includes(event)
+        );
+
+        if (invalidEvents.length > 0) {
+          set.status = 400;
+          return {
+            status: "error",
+            message: `Invalid events: ${invalidEvents.join(", ")}`,
+          };
+        }
+
+        // Generate webhook secret
+        const secret = crypto.randomBytes(32).toString("hex");
+
+        // Create webhook
+        const webhook = await webhooksService.createWebhook(body, user.id);
+
+        set.status = 201;
+        return { status: "success", data: webhook };
+      } catch (error: any) {
+        set.status = 500;
+        return { error: "Failed to create webhook", details: error.message };
+      }
+    },
+    {
+      // beforeHandle: ({ requireAuth }) => requireAuth(),
+      body: createWebhookSchema,
+      detail: {
+        tags: ["Webhooks"],
+        summary: "Create webhook",
+        description: "Create a new webhook configuration",
+      },
+    }
+  )
+
+  .get(
+    "/:webhookId",
+    async ({ params }) => {
+      const webhook = await webhooksService.getWebhook(params.webhookId);
+      return { status: "success", data: webhook };
+    },
+    {
+      params: z.object({
+        webhookId: z.string(),
+      }),
+      detail: {
+        tags: ["Webhooks"],
+        summary: "Get webhook",
+        description: "Get webhook configuration by ID",
+      },
+    }
+  )
+
+  .get(
+    "/user/webhooks",
+    async ({ user }) => {
+      const webhooks = await webhooksService.getUserWebhooks(user.id);
+      return { status: "success", data: webhooks };
+    },
+    {
+      query: queryUserWebhooksSchema,
+      detail: {
+        tags: ["Webhooks"],
+        summary: "Get user webhooks",
+        description: "Get all webhooks for the authenticated user",
+      },
+    }
+  )
+
+  .put(
+    "/:webhookId",
+    async ({ params, body, user }) => {
+      const webhook = await webhooksService.updateWebhook(
+        params.webhookId,
+        body,
+        user.id
+      );
+      return { status: "success", data: webhook };
+    },
+    {
+      body: updateWebhookSchema,
+      detail: {
+        tags: ["Webhooks"],
+        summary: "Update webhook",
+        description: "Update webhook configuration",
+      },
+    }
+  )
+
+  .delete(
+    "/:webhookId",
+    async ({ params }) => {
+      await webhooksService.deleteWebhook(params.webhookId);
+      return { status: "success", data: "Webhook deleted successfully" };
+    },
+    {
+      params: z.object({
+        webhookId: z.string(),
+      }),
+      detail: {
+        tags: ["Webhooks"],
+        summary: "Delete webhook",
+        description: "Delete a webhook configuration",
+      },
+    }
+  )
+
+  .use(rolePlugin)
+  .post(
+    "/:id/regenerate-secret",
+    async ({ set, params, user, role }) => {
+      try {
+        const webhookId = params.id;
+
+        // Get webhook from database
+        const webhook = await webhooksRepository.getWebhookById(webhookId);
+
+        if (!webhook) {
+          return new AppError("Webhook not found", 404);
+        }
+
+        // Check if user has access to this webhook
+        if (
+          webhook.userId !== new mongoose.Types.ObjectId(user?.id) &&
+          role.name !== "admin"
+        ) {
+          return new AppError(
+            "You do not have permission to update this webhook",
+            403
+          );
+        }
+
+        // Generate new secret
+        const secret = crypto.randomBytes(32).toString("hex");
+
+        // Update webhook
+        await webhooksRepository.updateWebhook(webhookId, {
+          security: {
+            hmacSecret: secret,
+            type: WebhookSecurityType.HMAC_SHA256,
+          },
+        });
+
+        set.status = 200;
+        return {
+          status: "success",
+          secret,
+        };
+      } catch (error) {
+        return error;
+      }
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      detail: {
+        tags: ["webhooks"],
+        summary: "Regenerate webhook secret",
+      },
+    }
+  )
+
+  // Webhook testing and management
+  .post(
+    "/:webhookId/test",
+    async ({ params }) => {
+      const result = await webhooksService.testWebhook(params.webhookId);
+      return { status: "success", data: result };
+    },
+    {
+      params: z.object({
+        webhookId: z.string(),
+      }),
+      detail: {
+        tags: ["Webhooks"],
+        summary: "Test webhook",
+        description: "Send a test payload to the webhook endpoint",
+      },
+    }
+  )
+
+  .post(
+    "/:webhookId/activate",
+    async ({ params, user }) => {
+      await webhooksService.updateWebhook(
+        params.webhookId,
+        { isActive: true },
+        user.id
+      );
+      return { status: "success", data: "Webhook activated successfully" };
+    },
+    {
+      params: z.object({
+        webhookId: z.string(),
+      }),
+      detail: {
+        tags: ["Webhooks"],
+        summary: "Activate webhook",
+        description: "Activate a webhook configuration",
+      },
+    }
+  )
+
+  .post(
+    "/:webhookId/deactivate",
+    async ({ params, user }) => {
+      await webhooksService.updateWebhook(
+        params.webhookId,
+        { isActive: false },
+        user.id
+      );
+      return { status: "success", data: "Webhook deactivated successfully" };
+    },
+    {
+      params: z.object({
+        webhookId: z.string(),
+      }),
+      detail: {
+        tags: ["Webhooks"],
+        summary: "Deactivate webhook",
+        description: "Deactivate a webhook configuration",
+      },
+    }
+  )
+
+  // Delivery tracking
+  .get(
+    "/:webhookId/deliveries",
+    async ({ params }) => {
+      const deliveries = await webhooksService.getDeliveryHistory(
+        params.webhookId
+      );
+      return {
+        status: "success",
+        data: deliveries,
+        pagination: deliveries.pagination,
+      };
+    },
+    {
+      params: z.object({
+        webhookId: z.string(),
+      }),
+      detail: {
+        tags: ["Webhooks", "Deliveries"],
+        summary: "Get webhook deliveries",
+        description: "Get delivery history for a webhook",
+      },
+    }
+  )
+
+  .get(
+    "/deliveries/:deliveryId",
+    async ({ params }) => {
+      const delivery = await webhooksService.getWebhookDelivery(
+        params.deliveryId
+      );
+      return { status: "success", data: delivery };
+    },
+    {
+      params: z.object({
+        deliveryId: z.string(),
+      }),
+      detail: {
+        tags: ["Webhooks", "Deliveries"],
+        summary: "Get webhook delivery",
+        description: "Get details of a specific webhook delivery",
+      },
+    }
+  )
+
+  .post(
+    "/deliveries/:deliveryId/redeliver",
+    async ({ params }) => {
+      await webhooksService.redeliverWebhook(params.deliveryId);
+      return { status: "success", data: "Webhook redelivered successfully" };
+    },
+    {
+      params: z.object({
+        deliveryId: z.string(),
+      }),
+      detail: {
+        tags: ["Webhooks", "Deliveries"],
+        summary: "Redeliver webhook",
+        description: "Retry delivery of a failed webhook",
+      },
+    }
+  )
+
+  // Events and analytics
+  .get(
+    "/:webhookId/events",
+    async ({ params }) => {
+      const events = await webhooksService.getWebhookEvents(params.webhookId);
+      return { status: "success", data: events };
+    },
+    {
+      params: z.object({
+        webhookId: z.string(),
+      }),
+      detail: {
+        tags: ["Webhooks", "Events"],
+        summary: "Get webhook events",
+        description: "Get events associated with a webhook",
+      },
+    }
+  )
+
+  .get(
+    "/:webhookId/analytics",
+    async ({ params }) => {
+      const analytics = await webhooksService.getWebhookStats(params.webhookId);
+      return { status: "success", data: analytics };
+    },
+    {
+      params: z.object({
+        webhookId: z.string(),
+      }),
+      detail: {
+        tags: ["Webhooks", "Analytics"],
+        summary: "Get webhook analytics",
+        description: "Get analytics and metrics for a webhook",
+      },
+    }
+  )
+
+  // Incoming webhooks (no auth required)
+  .post(
+    "/incoming/:service",
+    async ({ params }) => {
+      await webhooksService.handleIncomingWebhook(params.service);
+      return { status: "success", data: "Webhook handled successfully" };
+    },
+    {
+      params: z.object({
+        service: z.string(),
+      }),
+      detail: {
+        tags: ["Webhooks", "Incoming"],
+        summary: "Handle incoming webhook",
+        description: "Handle incoming webhook from external services",
+      },
+    }
+  )
+
+  // Utility endpoints
+  .get(
+    "/events/supported",
+    async () => {
+      const events = await webhooksService.getSupportedEvents();
+      return { status: "success", data: events };
+    },
+    {
+      detail: {
+        tags: ["Webhooks", "Events"],
+        summary: "Get supported events",
+        description: "Get list of all supported webhook events",
+      },
+    }
+  );

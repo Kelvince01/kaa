@@ -19,8 +19,8 @@ import type {
 import { genRandom6DigitString, logger } from "@kaa/utils";
 import AfricasTalking from "africastalking";
 import { DateTime } from "luxon";
-import { TemplateEngine } from "./engines/template.engine";
-import { smsQueue } from "./queues/sms.queue";
+import { TemplateEngine } from "../engines/template.engine";
+import { smsQueue } from "../queues/sms.queue";
 
 const africasTalking = (apiKey: string, username: string) =>
   AfricasTalking({

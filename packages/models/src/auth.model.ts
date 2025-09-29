@@ -18,7 +18,6 @@ import type {
   IApiKey,
   IMFAChallenge,
   IMFASecret,
-  IMFASetup,
   IOAuthConnection,
   IOTP,
   IPasskey,
@@ -455,6 +454,11 @@ const mfaSecretSchema = new Schema<IMFASecret>(
       required: true,
       unique: true,
     },
+    type: {
+      type: String,
+      enum: ["sms", "totp", "backup_code"],
+      required: true,
+    },
     secret: {
       type: String,
       required: true,
@@ -462,6 +466,9 @@ const mfaSecretSchema = new Schema<IMFASecret>(
     backupCodes: {
       type: [String],
       default: [],
+    },
+    phoneNumber: {
+      type: String,
     },
     isEnabled: {
       type: Boolean,
@@ -522,43 +529,6 @@ export const MFASecret = mongoose.model<IMFASecret>(
   "MFASecret",
   mfaSecretSchema
 );
-
-const mfaSetupSchema = new Schema<IMFASetup>(
-  {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    type: {
-      type: String,
-      enum: ["sms", "totp", "backup_code"],
-      required: true,
-    },
-    secret: {
-      type: String,
-    },
-    backupCodes: {
-      type: [String],
-      default: [],
-    },
-    phoneNumber: {
-      type: String,
-    },
-    isEnabled: {
-      type: Boolean,
-      default: false,
-    },
-    lastUsed: {
-      type: Date,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-export const MFASetup = mongoose.model<IMFASetup>("MFASetup", mfaSetupSchema);
 
 const mfaChallengeSchema = new Schema<IMFAChallenge>(
   {

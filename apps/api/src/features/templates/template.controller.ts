@@ -772,7 +772,7 @@ export const templatesController = new Elysia({ prefix: "/templates" })
       detail: {
         summary: "Get rendering details",
         description: "Get details of a specific template rendering",
-        tags: ["rendering"],
+        tags: ["templates"],
       },
     }
   )
@@ -814,7 +814,7 @@ export const templatesController = new Elysia({ prefix: "/templates" })
         summary: "Preview template",
         description:
           "Preview a template with sample data without saving the rendering",
-        tags: ["preview"],
+        tags: ["templates"],
       },
     }
   )
@@ -873,7 +873,7 @@ export const templatesController = new Elysia({ prefix: "/templates" })
         summary: "Preview template with sample data",
         description:
           "Preview a template using automatically generated sample data based on its variables",
-        tags: ["preview"],
+        tags: ["templates"],
       },
     }
   )
@@ -943,7 +943,7 @@ export const templatesController = new Elysia({ prefix: "/templates" })
         summary: "Send test email",
         description:
           "Send a test email using the template (currently returns preview)",
-        tags: ["testing"],
+        tags: ["templates"],
       },
     }
   )
@@ -993,7 +993,7 @@ export const templatesController = new Elysia({ prefix: "/templates" })
         summary: "Preview SMS template",
         description:
           "Preview SMS template with SMS-specific metadata (segments, cost, etc.)",
-        tags: ["sms", "preview"],
+        tags: ["templates"],
       },
     }
   )
@@ -1037,7 +1037,7 @@ export const templatesController = new Elysia({ prefix: "/templates" })
         summary: "Import templates from files",
         description:
           "Import templates from filesystem (supports .hbs, .ejs, .pug files)",
-        tags: ["import", "files"],
+        tags: ["templates"],
       },
     }
   )
@@ -1081,7 +1081,7 @@ export const templatesController = new Elysia({ prefix: "/templates" })
         summary: "Export templates to files",
         description:
           "Export templates to filesystem (supports JSON, .hbs, .ejs, .pug formats)",
-        tags: ["export", "files"],
+        tags: ["templates"],
       },
     }
   )
@@ -1100,7 +1100,7 @@ export const templatesController = new Elysia({ prefix: "/templates" })
     },
     {
       detail: {
-        tags: ["templates-v2"],
+        tags: ["templates"],
         summary: "Get template variable types",
         description: "Get all supported template variable types",
       },
@@ -1121,7 +1121,7 @@ export const templatesController = new Elysia({ prefix: "/templates" })
     },
     {
       detail: {
-        tags: ["templates-v2"],
+        tags: ["templates"],
         summary: "Get template engines",
         description: "Get all supported template engines",
       },
@@ -1165,7 +1165,7 @@ export const templatesController = new Elysia({ prefix: "/templates" })
       detail: {
         summary: "Get cache statistics",
         description: "Get template engine cache statistics",
-        tags: ["cache", "meta"],
+        tags: ["templates"],
       },
     }
   )
@@ -1205,7 +1205,7 @@ export const templatesController = new Elysia({ prefix: "/templates" })
       detail: {
         summary: "Clear template cache",
         description: "Clear all compiled template cache",
-        tags: ["cache", "meta"],
+        tags: ["templates"],
       },
     }
   )
@@ -1255,7 +1255,7 @@ export const templatesController = new Elysia({ prefix: "/templates" })
       detail: {
         summary: "Get template usage statistics",
         description: "Get usage statistics for a specific template",
-        tags: ["usage", "analytics"],
+        tags: ["templates"],
       },
     }
   )

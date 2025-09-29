@@ -1,24 +1,18 @@
 import "../instrument"; // Must be the first import
 
-// import { rateLimit } from "elysia-rate-limit";
-// import { geoIP } from './plugin/geo-ip'
 import { etag } from "@bogeychan/elysia-etag";
 import cookie from "@elysiajs/cookie";
 import { serverTiming } from "@elysiajs/server-timing";
 import staticPlugin from "@elysiajs/static";
+import config from "@kaa/config/api";
 import { Elysia } from "elysia";
 import { helmet } from "elysia-helmet";
 import { i18next } from "elysia-i18next";
 import prometheusPlugin from "elysia-prometheus";
+import { rateLimit } from "elysia-rate-limit";
 import { elysiaXSS } from "elysia-xss";
 import { Logestic } from "logestic";
-
 import { AppRoutes } from "./app.routes";
-// import {
-//   DEFAULT_LOCALE,
-//   SUPPORTED_LOCALES,
-//   TRANSLATIONS,
-// } from "./config/locale.config";
 import { MongooseSetup } from "./database/mongoose.setup";
 import { i18nRoutes } from "./features/i18n";
 import { performancePlugin as monitoringPlugin } from "./features/misc/monitoring/monitoring.plugin";
@@ -44,9 +38,9 @@ import { performancePlugin } from "./plugins/performance.plugin";
 import { requestSigningPlugin } from "./plugins/request-signing.plugin";
 import { corsPlugin } from "./plugins/security.plugin";
 import sitePlugin, { publicPath } from "./plugins/site.plugin";
+import { geoIP } from "./shared/utils/geo-ip.util";
 
-const idDev = process.env.NODE_ENV !== "production";
-
+const idDev = config.env !== "production";
 const app = new Elysia();
 
 app
@@ -54,21 +48,6 @@ app
   .use(correlationPlugin)
   // Add error handling middleware
   .use(errorHandlerPlugin)
-  // .use(
-  //   i18next({
-  //     initOptions: {
-  //       lng: DEFAULT_LOCALE,
-  //       resources: TRANSLATIONS,
-  //       fallbackLng: DEFAULT_LOCALE,
-  //       supportedLngs: SUPPORTED_LOCALES,
-  //       detection: {
-  //         order: ["header", "querystring"],
-  //         lookupHeader: "accept-language",
-  //         lookupQuerystring: "lang",
-  //       },
-  //     },
-  //   })
-  // )
   .use(i18next({ instance: i18n }))
   .use(
     optimizationPlugin(
@@ -124,13 +103,7 @@ app
   .use(csrfPlugin)
   .use(requestSigningPlugin)
   .use(performancePlugin)
-  // if (!idDev)
-  //   app.use(
-  //     rateLimit({
-  //       max: 100,
-  //     }),
-  //   );
-  // app.use(geoIP) // required geo id db in data/GeoLite2-Country.mmdb
+  .use(geoIP) // required geo id db in data/GeoLite2-Country.mmdb
   .use(i18nRoutes)
   .use(AppRoutes)
   .use(wsRoutes)
@@ -150,7 +123,14 @@ app
   )
   .use(monitoringPlugin("api"));
 
-if (!idDev) app.use(elysiaXSS({}));
+if (!idDev)
+  app.use(
+    rateLimit({
+      max: 100,
+    })
+  );
+
+app.use(elysiaXSS({}));
 if (!idDev) app.use(compression());
 if (!idDev) app.use(etag());
 

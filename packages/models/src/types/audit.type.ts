@@ -61,6 +61,7 @@ export enum AuditSeverity {
  */
 export enum AuditEntityType {
   USER = "user",
+  MEMBER = "member",
   PROPERTY = "property",
   UNIT = "unit",
   TENANT = "tenant",

@@ -72,6 +72,7 @@
     "elysia-i18next": "^4.0.3",
     "elysia-ip": "^1.0.10",
     "elysia-prometheus": "^1.0.0",
+    "elysia-rate-limit": "^4.4.0",
     "elysia-xss": "^1.0.3",
     "i18next": "^25.5.2",
     "i18next-fs-backend": "^2.6.0",

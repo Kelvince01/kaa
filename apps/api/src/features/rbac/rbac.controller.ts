@@ -665,7 +665,7 @@ export const rbacController = new Elysia({
             }),
           },
           detail: {
-            tags: ["role/permissions"],
+            tags: ["permissions"],
             description: "Get permissions by role ID",
             summary: "Get permissions by role ID",
           },
@@ -721,75 +721,7 @@ export const rbacController = new Elysia({
             }),
           },
           detail: {
-            tags: ["role/permissions"],
-            description: "Add permission to role",
-            summary: "Add permission to role",
-          },
-        }
-      )
-      .use(accessPlugin("roles", "update"))
-      .post(
-        "/:roleId/:permissionId",
-        async ({ set, params, user }) => {
-          try {
-            const { roleId, permissionId } = params;
-
-            const result = await rbacService.addPermissionToRole(
-              roleId,
-              permissionId,
-              user.id
-            );
-
-            if (!result) {
-              set.status = 404;
-              return {
-                status: "error",
-                message: "Permission not found",
-              };
-            }
-
-            set.status = 200;
-            return {
-              status: "success",
-              data: {
-                success: true,
-              },
-            };
-          } catch (error) {
-            set.status = 500;
-            return {
-              status: "error",
-              message: "Failed to add permission to role",
-            };
-          }
-        },
-        {
-          params: t.Object({
-            roleId: t.String(),
-            permissionId: t.String(),
-          }),
-          response: {
-            200: t.Object({
-              status: t.Literal("success"),
-              data: t.Object({
-                success: t.Boolean(),
-              }),
-            }),
-            403: t.Object({
-              status: t.Literal("error"),
-              message: t.String(),
-            }),
-            404: t.Object({
-              status: t.Literal("error"),
-              message: t.String(),
-            }),
-            500: t.Object({
-              status: t.Literal("error"),
-              message: t.String(),
-            }),
-          },
-          detail: {
-            tags: ["role/permissions"],
+            tags: ["permissions"],
             description: "Add permission to role",
             summary: "Add permission to role",
           },
@@ -862,7 +794,7 @@ export const rbacController = new Elysia({
             }),
           },
           detail: {
-            tags: ["role/permissions"],
+            tags: ["roles"],
             description: "Update role permissions",
             summary: "Update role permissions",
           },
@@ -942,31 +874,12 @@ export const rbacController = new Elysia({
             }),
           },
           detail: {
-            tags: ["role/permissions"],
+            tags: ["permissions"],
             description: "Remove permission from role",
             summary: "Remove permission from role",
           },
         }
       )
-  )
-  .group("user/preferences", (app) =>
-    app.get(
-      "/",
-      ({ set }) => {
-        set.status = 200;
-        return {
-          status: "success",
-          data: [],
-        };
-      },
-      {
-        detail: {
-          tags: ["user/preferences"],
-          summary: "Get user preferences",
-          description: "Get user preferences",
-        },
-      }
-    )
   )
   .group("rbac", (app) =>
     app
@@ -1776,7 +1689,7 @@ export const rbacController = new Elysia({
       },
       {
         detail: {
-          tags: ["user/preferences"],
+          tags: ["preferences"],
           summary: "Get user preferences",
           description: "Get user preferences",
         },
