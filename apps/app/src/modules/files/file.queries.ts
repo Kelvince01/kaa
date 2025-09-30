@@ -117,9 +117,8 @@ export const filesQueryOptions = ({
   });
 };
 
-export const useFiles = (params: GetFilesParams) => {
-  return useSuspenseInfiniteQuery(filesQueryOptions(params));
-};
+export const useFiles = (params: GetFilesParams) =>
+  useSuspenseInfiniteQuery(filesQueryOptions(params));
 
 // Get user files
 export const useUserFiles = () => {
@@ -131,27 +130,25 @@ export const useUserFiles = () => {
 };
 
 // Get file by ID
-export const useFile = (id: string) => {
-  return useQuery({
+export const useFile = (id: string) =>
+  useQuery({
     queryKey: filesKeys.detail(id),
     queryFn: () => getFileById(id),
     enabled: !!id,
   });
-};
 
 // Upload file
-export const useUploadFile = () => {
-  return useMutation({
+export const useUploadFile = () =>
+  useMutation({
     mutationFn: (data: FileUploadInput) => uploadFile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: filesKeys.lists() });
     },
   });
-};
 
 // Update file
-export const useUpdateFile = () => {
-  return useMutation({
+export const useUpdateFile = () =>
+  useMutation({
     mutationFn: ({ id, data }: { id: string; data: FileUpdateInput }) =>
       updateFile_v2(id, data),
     onSuccess: (_, { id }) => {
@@ -159,25 +156,22 @@ export const useUpdateFile = () => {
       queryClient.invalidateQueries({ queryKey: filesKeys.lists() });
     },
   });
-};
 
 // Delete file
-export const useDeleteFile = () => {
-  return useMutation({
+export const useDeleteFile = () =>
+  useMutation({
     mutationFn: deleteFile,
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: filesKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: filesKeys.lists() });
     },
   });
-};
 
 // Get presigned upload URL
-export const usePresignedUploadUrl = () => {
-  return useMutation({
+export const usePresignedUploadUrl = () =>
+  useMutation({
     mutationFn: (data: FileUploadInput) => getPresignedUploadUrl(data),
   });
-};
 
 // Get optimized asset URL
 export const useOptimizedAssetUrl = (
@@ -192,8 +186,8 @@ export const useOptimizedAssetUrl = (
 };
 
 // Direct upload to CDN
-export const useDirectUpload = () => {
-  return useMutation({
+export const useDirectUpload = () =>
+  useMutation({
     mutationFn: ({
       file,
       userId,
@@ -207,30 +201,27 @@ export const useDirectUpload = () => {
       queryClient.invalidateQueries({ queryKey: filesKeys.lists() });
     },
   });
-};
 
 // Get files with filters
-export const useFilesWithFilters = (filters: FileFilter) => {
-  return useQuery({
+export const useFilesWithFilters = (filters: FileFilter) =>
+  useQuery({
     queryKey: filesKeys.list(filters),
     queryFn: () => getFilesWithFilters(filters),
     staleTime: 30_000,
     enabled: Object.keys(filters).length > 0,
   });
-};
 
 // Search files
 export const useSearchFiles = (
   query: string,
   options?: { limit?: number; offset?: number }
-) => {
-  return useQuery({
+) =>
+  useQuery({
     queryKey: filesKeys.search(query),
     queryFn: () => searchFiles(query, options),
     enabled: query.length > 2,
     staleTime: 30_000,
   });
-};
 
 // Get file statistics
 export const useFileStats = () => {
@@ -242,19 +233,18 @@ export const useFileStats = () => {
 };
 
 // Bulk file operations
-export const useBulkFileOperation = () => {
-  return useMutation({
+export const useBulkFileOperation = () =>
+  useMutation({
     mutationFn: (operation: BulkFileOperation) => bulkFileOperation(operation),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: filesKeys.lists() });
       queryClient.invalidateQueries({ queryKey: filesKeys.stats() });
     },
   });
-};
 
 // Share file
-export const useShareFile = () => {
-  return useMutation({
+export const useShareFile = () =>
+  useMutation({
     mutationFn: ({
       id,
       settings,
@@ -270,42 +260,38 @@ export const useShareFile = () => {
       queryClient.invalidateQueries({ queryKey: filesKeys.detail(id) });
     },
   });
-};
 
 // Download file
-export const useDownloadFile = () => {
-  return useMutation({
+export const useDownloadFile = () =>
+  useMutation({
     mutationFn: downloadFile,
   });
-};
 
 // Get file preview URL
 export const useFilePreviewUrl = (
   id: string,
   options?: { width?: number; height?: number; quality?: number }
-) => {
-  return useQuery({
+) =>
+  useQuery({
     queryKey: [...filesKeys.detail(id), "preview", options],
     queryFn: () => getFilePreviewUrl(id, options),
     enabled: !!id,
     staleTime: Number.POSITIVE_INFINITY,
   });
-};
 
 // Copy file
-export const useCopyFile = () => {
-  return useMutation({
+export const useCopyFile = () =>
+  useMutation({
     mutationFn: ({ id, name }: { id: string; name?: string }) =>
       copyFile(id, name),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: filesKeys.lists() });
     },
   });
-};
 
 // Move file
-export const useMoveFile = () => {
-  return useMutation({
+export const useMoveFile = () =>
+  useMutation({
     mutationFn: ({ id, targetFolder }: { id: string; targetFolder: string }) =>
       moveFile(id, targetFolder),
     onSuccess: (_, { id }) => {
@@ -313,20 +299,18 @@ export const useMoveFile = () => {
       queryClient.invalidateQueries({ queryKey: filesKeys.lists() });
     },
   });
-};
 
 // Get file versions
-export const useFileVersions = (id: string) => {
-  return useQuery({
+export const useFileVersions = (id: string) =>
+  useQuery({
     queryKey: filesKeys.versions(id),
     queryFn: () => getFileVersions(id),
     enabled: !!id,
   });
-};
 
 // Restore file version
-export const useRestoreFileVersion = () => {
-  return useMutation({
+export const useRestoreFileVersion = () =>
+  useMutation({
     mutationFn: ({ id, versionId }: { id: string; versionId: string }) =>
       restoreFileVersion(id, versionId),
     onSuccess: (_, { id }) => {
@@ -334,11 +318,10 @@ export const useRestoreFileVersion = () => {
       queryClient.invalidateQueries({ queryKey: filesKeys.versions(id) });
     },
   });
-};
 
 // Generate thumbnail
-export const useGenerateThumbnail = () => {
-  return useMutation({
+export const useGenerateThumbnail = () =>
+  useMutation({
     mutationFn: ({
       id,
       options,
@@ -347,24 +330,21 @@ export const useGenerateThumbnail = () => {
       options?: { width?: number; height?: number };
     }) => generateThumbnail(id, options),
   });
-};
 
 // Extract metadata
-export const useExtractMetadata = () => {
-  return useMutation({
+export const useExtractMetadata = () =>
+  useMutation({
     mutationFn: extractMetadata,
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: filesKeys.detail(id) });
     },
   });
-};
 
 // Scan file
-export const useScanFile = () => {
-  return useMutation({
+export const useScanFile = () =>
+  useMutation({
     mutationFn: scanFile,
   });
-};
 
 // Get file analytics
 export const useFileAnalytics = (

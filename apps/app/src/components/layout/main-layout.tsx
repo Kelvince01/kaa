@@ -18,19 +18,17 @@ type MainLayoutProps = {
 const MainLayout: React.FC<MainLayoutProps> = ({
   children,
   disablePadding = false,
-}) => {
-  return (
-    <div className="flex min-h-screen flex-col">
-      <MainNavigation />
-      <Alerter mode="app" />
+}) => (
+  <div className="flex min-h-screen flex-col">
+    <MainNavigation />
+    <Alerter mode="app" />
 
-      <main className={`flex-grow ${disablePadding ? "" : "pt-16"}`}>
-        {children}
-      </main>
+    <main className={`flex-grow ${disablePadding ? "" : "pt-16"}`}>
+      {children}
+    </main>
 
-      <Footer />
-    </div>
-  );
-};
+    <Footer />
+  </div>
+);
 
 export default MainLayout;

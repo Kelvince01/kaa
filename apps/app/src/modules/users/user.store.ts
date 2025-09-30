@@ -37,11 +37,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
     set({ isUserModalOpen: isOpen });
   },
 
-  hasSelectedUsers: () => {
-    return get().selectedUsers.length > 0;
-  },
+  hasSelectedUsers: () => get().selectedUsers.length > 0,
 
-  selectedCount: () => {
-    return get().selectedUsers.length;
-  },
+  selectedCount: () => get().selectedUsers.length,
 }));

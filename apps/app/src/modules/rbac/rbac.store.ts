@@ -160,19 +160,11 @@ export const useRBACStore = create<RBACStore>((set, get) => ({
   },
 
   // Utility functions
-  hasSelectedRoles: () => {
-    return get().selectedRoles.length > 0;
-  },
+  hasSelectedRoles: () => get().selectedRoles.length > 0,
 
-  hasSelectedPermissions: () => {
-    return get().selectedPermissions.length > 0;
-  },
+  hasSelectedPermissions: () => get().selectedPermissions.length > 0,
 
-  selectedRoleCount: () => {
-    return get().selectedRoles.length;
-  },
+  selectedRoleCount: () => get().selectedRoles.length,
 
-  selectedPermissionCount: () => {
-    return get().selectedPermissions.length;
-  },
+  selectedPermissionCount: () => get().selectedPermissions.length,
 }));

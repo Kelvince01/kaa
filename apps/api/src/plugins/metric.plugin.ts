@@ -173,9 +173,8 @@ type RequestMetrics = {
 const metrics: RequestMetrics[] = [];
 
 // Get recent metrics
-export const getRecentMetrics = (limit = 100): RequestMetrics[] => {
-  return metrics.slice(-limit);
-};
+export const getRecentMetrics = (limit = 100): RequestMetrics[] =>
+  metrics.slice(-limit);
 
 // Get average response time for the last n minutes
 export const getAverageResponseTime = (minutes = 5): number => {

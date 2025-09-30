@@ -78,9 +78,6 @@ export const oauthService = {
   /**
    * Check if provider is supported
    */
-  isSupportedProvider: (
-    provider: string
-  ): provider is SupportedOAuthProvider => {
-    return ["google", "microsoft"].includes(provider);
-  },
+  isSupportedProvider: (provider: string): provider is SupportedOAuthProvider =>
+    ["google", "microsoft"].includes(provider),
 };

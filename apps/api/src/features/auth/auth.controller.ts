@@ -1099,7 +1099,7 @@ export const authController = new Elysia()
 
                 // Save file metadata to database
                 const fileData = {
-                  user: new mongoose.Types.ObjectId(user.id),
+                  user: mongoose.Types.ObjectId.createFromHexString(user?.id),
                   name: fileName, // body.avatar.name,
                   path: file.path,
                   url: file.url,

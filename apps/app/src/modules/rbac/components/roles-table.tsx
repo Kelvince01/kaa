@@ -37,6 +37,7 @@ export function RolesTable({
   const { selectedRoles, toggleRoleSelection } = useRBACStore();
 
   const handleDeleteRole = async (roleId: string) => {
+    // biome-ignore lint/suspicious/noAlert: ignore
     if (window.confirm("Are you sure you want to delete this role?")) {
       await deleteRole.mutateAsync(roleId);
     }

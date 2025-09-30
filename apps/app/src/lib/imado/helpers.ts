@@ -62,13 +62,12 @@ export const createBaseTusUppy = (
   uppyOptions: UppyOptions<UppyMeta, UppyBody>,
   imadoToken: string,
   isPublic: boolean
-) => {
-  return new Uppy({
+) =>
+  new Uppy({
     ...uppyOptions,
     meta: { public: isPublic },
     onBeforeFileAdded,
   }).use(Tus, getTusConfig(imadoToken));
-};
 
 const onBeforeFileAdded = (file: UppyFile<UppyMeta, UppyBody>) => {
   // Simplify file ID and add content type to meta

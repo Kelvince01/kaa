@@ -49,8 +49,8 @@ export const sendIncidentNotificationEmail = async ({
 /**
  * Format date to a readable string
  */
-const formatDate = (date: Date | string): string => {
-  return new Date(date).toLocaleString("en-US", {
+const formatDate = (date: Date | string): string =>
+  new Date(date).toLocaleString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -59,4 +59,3 @@ const formatDate = (date: Date | string): string => {
     timeZone: "UTC",
     hour12: true,
   });
-};

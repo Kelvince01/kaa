@@ -217,6 +217,8 @@ export interface IUser extends BaseDocument {
   displayName: string;
 
   permissionFlags?: number;
+  deletedAt?: Date;
+
   comparePassword(candidatePassword: string): Promise<boolean>;
   changedPasswordAfter(JWTTimestamp: number): boolean;
   getPublicProfile(): Partial<IUser>;
@@ -251,6 +253,7 @@ export type UpdateUserData = {
   addresses?: UserAddress[];
   preferences?: Partial<UserPreferences>;
   settings?: Partial<UserSettings>;
+  deletedAt?: Date;
 };
 
 // User login data

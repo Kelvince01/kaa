@@ -4,11 +4,9 @@ import { Elysia } from "elysia";
 
 export const cachePlugin = (duration = 3600) =>
   new Elysia({ name: "cache" })
-    .derive((ctx: Context) => {
-      return {
-        cacheKey: `api:${ctx.request.url}`,
-      };
-    })
+    .derive((ctx: Context) => ({
+      cacheKey: `api:${ctx.request.url}`,
+    }))
     .onBeforeHandle(async ({ request, cacheKey, set }) => {
       if (request.method !== "GET") return;
 

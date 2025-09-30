@@ -17,7 +17,6 @@ import { formatDate } from "@/shared/utils/format.util";
 type DateSelection = Date[] | DateRange;
 
 function getIsDateRange(value: DateSelection): value is DateRange {
-  // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
   return value && typeof value === "object" && !Array.isArray(value);
 }
 

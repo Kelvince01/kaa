@@ -104,7 +104,6 @@ export class Logger {
   }
 
   private getConsoleFn(level: LogLevel): (...args: unknown[]) => void {
-    // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
     switch (level) {
       case "debug":
         return console.debug;

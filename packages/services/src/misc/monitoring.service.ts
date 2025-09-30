@@ -568,7 +568,6 @@ export class MonitoringService {
           break;
       }
 
-      // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
       if (shouldTrigger) {
         await this.triggerAlert(alert);
       }

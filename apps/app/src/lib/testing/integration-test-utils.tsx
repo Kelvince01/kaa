@@ -312,49 +312,34 @@ export const integrationTestHelpers = {
 
   // Validate data consistency
   validateDataConsistency: {
-    propertyData: (property: any) => {
-      return (
-        property &&
-        typeof property.id === "string" &&
-        typeof property.name === "string" &&
-        typeof property.landlordId === "string"
-      );
-    },
+    propertyData: (property: any) =>
+      property &&
+      typeof property.id === "string" &&
+      typeof property.name === "string" &&
+      typeof property.landlordId === "string",
 
-    contractorData: (contractor: any) => {
-      return (
-        contractor &&
-        typeof contractor.id === "string" &&
-        typeof contractor.name === "string" &&
-        Array.isArray(contractor.specialties)
-      );
-    },
+    contractorData: (contractor: any) =>
+      contractor &&
+      typeof contractor.id === "string" &&
+      typeof contractor.name === "string" &&
+      Array.isArray(contractor.specialties),
 
-    insuranceData: (insurance: any) => {
-      return (
-        insurance &&
-        typeof insurance.id === "string" &&
-        typeof insurance.propertyId === "string" &&
-        typeof insurance.premium === "number"
-      );
-    },
+    insuranceData: (insurance: any) =>
+      insurance &&
+      typeof insurance.id === "string" &&
+      typeof insurance.propertyId === "string" &&
+      typeof insurance.premium === "number",
 
-    scheduleData: (schedule: any) => {
-      return (
-        schedule &&
-        typeof schedule.id === "string" &&
-        typeof schedule.propertyId === "string" &&
-        typeof schedule.startDate === "string"
-      );
-    },
+    scheduleData: (schedule: any) =>
+      schedule &&
+      typeof schedule.id === "string" &&
+      typeof schedule.propertyId === "string" &&
+      typeof schedule.startDate === "string",
 
-    valuationData: (valuation: any) => {
-      return (
-        valuation &&
-        typeof valuation.id === "string" &&
-        typeof valuation.propertyId === "string" &&
-        typeof valuation.estimatedValue === "number"
-      );
-    },
+    valuationData: (valuation: any) =>
+      valuation &&
+      typeof valuation.id === "string" &&
+      typeof valuation.propertyId === "string" &&
+      typeof valuation.estimatedValue === "number",
   },
 };

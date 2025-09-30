@@ -69,7 +69,6 @@ type NotificationIconProps = {
 const NotificationIcon: React.FC<NotificationIconProps> = ({ type }) => {
   const uiType = mapToUIType(type);
 
-  // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
   switch (uiType) {
     case "booking":
       return <Calendar className="h-5 w-5 text-purple-500" />;

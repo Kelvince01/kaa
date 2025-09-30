@@ -6,12 +6,10 @@ const CodeBlockButton = () => {
   const { editor } = useTiptapContext();
   const state = useEditorState({
     editor,
-    selector: (ctx) => {
-      return {
-        active: ctx.editor.isActive("codeBlock"),
-        disabled: !ctx.editor.can().toggleCodeBlock(),
-      };
-    },
+    selector: (ctx) => ({
+      active: ctx.editor.isActive("codeBlock"),
+      disabled: !ctx.editor.can().toggleCodeBlock(),
+    }),
   });
 
   return (

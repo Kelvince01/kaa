@@ -196,9 +196,8 @@ export const notificationService = {
   /**
    * Get notification preferences
    */
-  getPreferences: async (userId: string, memberId: string) => {
-    return await getNotificationPreferences(userId, memberId);
-  },
+  getPreferences: async (userId: string, memberId: string) =>
+    await getNotificationPreferences(userId, memberId),
 
   /**
    * Send email using template

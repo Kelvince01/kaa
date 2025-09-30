@@ -12,16 +12,13 @@ export const passkeyUtils = {
   /**
    * Check if the browser supports WebAuthn
    */
-  isSupported: (): boolean => {
-    return browserSupportsWebAuthn();
-  },
+  isSupported: (): boolean => browserSupportsWebAuthn(),
 
   /**
    * Check if the browser supports WebAuthn autofill
    */
-  supportsAutofill: async (): Promise<boolean> => {
-    return await browserSupportsWebAuthnAutofill();
-  },
+  supportsAutofill: async (): Promise<boolean> =>
+    await browserSupportsWebAuthnAutofill(),
 
   /**
    * Start the passkey registration process

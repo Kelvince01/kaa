@@ -7,12 +7,10 @@ const ItalicButton = () => {
 
   const state = useEditorState({
     editor,
-    selector: (ctx) => {
-      return {
-        active: ctx.editor.isActive("italic"),
-        disabled: !ctx.editor.can().toggleItalic(),
-      };
-    },
+    selector: (ctx) => ({
+      active: ctx.editor.isActive("italic"),
+      disabled: !ctx.editor.can().toggleItalic(),
+    }),
   });
 
   return (

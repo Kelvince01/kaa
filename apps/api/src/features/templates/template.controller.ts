@@ -45,19 +45,20 @@ export const templatesController = new Elysia({ prefix: "/templates" })
         const result = await TemplateService.getTemplates(query, user.id);
         return {
           status: "success",
-          templates: result.templates.map((template) => {
-            return {
-              ...template,
-              _id: (template._id as mongoose.Types.ObjectId).toString(),
-              usage: {
-                ...template.usage,
-                lastUsedAt: template?.usage?.lastUsedAt?.toISOString(),
-              },
-              createdAt: template.createdAt.toISOString(),
-              updatedAt: template.updatedAt.toISOString(),
-              metadata: template.metadata as any,
-            } as any;
-          }),
+          templates: result.templates.map(
+            (template) =>
+              ({
+                ...template,
+                _id: (template._id as mongoose.Types.ObjectId).toString(),
+                usage: {
+                  ...template.usage,
+                  lastUsedAt: template?.usage?.lastUsedAt?.toISOString(),
+                },
+                createdAt: template.createdAt.toISOString(),
+                updatedAt: template.updatedAt.toISOString(),
+                metadata: template.metadata as any,
+              }) as any
+          ),
           pagination: result.pagination,
         };
       } catch (error) {
@@ -1091,13 +1092,11 @@ export const templatesController = new Elysia({ prefix: "/templates" })
    */
   .get(
     "/meta/variable-types",
-    () => {
-      return {
-        success: true,
-        data: ["string", "number", "boolean", "date", "array", "object"],
-        message: "Template variable types retrieved successfully",
-      };
-    },
+    () => ({
+      success: true,
+      data: ["string", "number", "boolean", "date", "array", "object"],
+      message: "Template variable types retrieved successfully",
+    }),
     {
       detail: {
         tags: ["templates"],
@@ -1112,13 +1111,11 @@ export const templatesController = new Elysia({ prefix: "/templates" })
    */
   .get(
     "/meta/engines",
-    () => {
-      return {
-        success: true,
-        data: ["handlebars", "mjml", "ejs", "pug", "nunjucks", "raw"],
-        message: "Template engines retrieved successfully",
-      };
-    },
+    () => ({
+      success: true,
+      data: ["handlebars", "mjml", "ejs", "pug", "nunjucks", "raw"],
+      message: "Template engines retrieved successfully",
+    }),
     {
       detail: {
         tags: ["templates"],

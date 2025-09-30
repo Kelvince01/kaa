@@ -7,12 +7,10 @@ const UnderlineButton = () => {
 
   const state = useEditorState({
     editor,
-    selector: (ctx) => {
-      return {
-        active: ctx.editor.isActive("underline"),
-        disabled: !ctx.editor.can().toggleUnderline(),
-      };
-    },
+    selector: (ctx) => ({
+      active: ctx.editor.isActive("underline"),
+      disabled: !ctx.editor.can().toggleUnderline(),
+    }),
   });
 
   return (

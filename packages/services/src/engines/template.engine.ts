@@ -151,9 +151,9 @@ export class TemplateEngine {
     );
 
     // Array helpers
-    Handlebars.registerHelper("join", (array: any[], separator = ", ") => {
-      return Array.isArray(array) ? array.join(separator) : "";
-    });
+    Handlebars.registerHelper("join", (array: any[], separator = ", ") =>
+      Array.isArray(array) ? array.join(separator) : ""
+    );
 
     // Default value helper
     Handlebars.registerHelper(
@@ -731,7 +731,6 @@ export class TemplateEngine {
     const errors: string[] = [];
 
     try {
-      // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
       switch (engine) {
         case "handlebars":
           try {

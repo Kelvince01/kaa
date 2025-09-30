@@ -45,7 +45,7 @@ export async function assignRole(
   await userRole.save();
 
   // Clear permission cache for this user
-  // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
+
   if (permissionManager) {
     permissionManager.clearCacheForUser(userId);
   }

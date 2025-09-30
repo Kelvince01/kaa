@@ -26,9 +26,10 @@ const SelectConstituency = ({
     return constituencies.filter((c) => c.county_code === countyCode);
   }, [countyCode]);
 
-  const options = useMemo(() => {
-    return getConstituencies(filteredConstituencies);
-  }, [filteredConstituencies]);
+  const options = useMemo(
+    () => getConstituencies(filteredConstituencies),
+    [filteredConstituencies]
+  );
 
   const renderConstituencyOption = (option: {
     value: string;
@@ -73,9 +74,8 @@ export default SelectConstituency;
 
 const getConstituencies = (
   constituenciesArray: { county_code: string; name: string }[]
-) => {
-  return constituenciesArray.map((constituency) => ({
+) =>
+  constituenciesArray.map((constituency) => ({
     value: constituency.name,
     label: constituency.name,
   }));
-};

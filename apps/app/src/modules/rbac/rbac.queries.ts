@@ -29,20 +29,18 @@ export const rbacKeys = {
 // ============ ROLES HOOKS ============
 
 // Hooks for roles data fetching
-export const useRoles = (filters: RoleFilter = {}) => {
-  return useQuery({
+export const useRoles = (filters: RoleFilter = {}) =>
+  useQuery({
     queryKey: rbacKeys.rolesList(filters),
     queryFn: () => rbacService.getRoles(filters),
   });
-};
 
-export const useRole = (id: string) => {
-  return useQuery({
+export const useRole = (id: string) =>
+  useQuery({
     queryKey: rbacKeys.roleDetail(id),
     queryFn: () => rbacService.getRoleById(id),
     enabled: !!id,
   });
-};
 
 // Role mutation hooks
 export const useCreateRole = () => {
@@ -61,8 +59,8 @@ export const useCreateRole = () => {
   });
 };
 
-export const useUpdateRole = () => {
-  return useMutation({
+export const useUpdateRole = () =>
+  useMutation({
     mutationFn: ({ id, data }: { id: string; data: RoleUpdateInput }) =>
       rbacService.updateRole(id, data),
     onSuccess: (role) => {
@@ -74,10 +72,9 @@ export const useUpdateRole = () => {
       toast.error(`Error updating role: ${error.message}`);
     },
   });
-};
 
-export const useDeleteRole = () => {
-  return useMutation({
+export const useDeleteRole = () =>
+  useMutation({
     mutationFn: (id: string) => rbacService.deleteRole(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: rbacKeys.roles() });
@@ -88,25 +85,22 @@ export const useDeleteRole = () => {
       toast.error(`Error deleting role: ${error.message}`);
     },
   });
-};
 
 // ============ PERMISSIONS HOOKS ============
 
 // Hooks for permissions data fetching
-export const usePermissions = (filters: PermissionFilter = {}) => {
-  return useQuery({
+export const usePermissions = (filters: PermissionFilter = {}) =>
+  useQuery({
     queryKey: rbacKeys.permissionsList(filters),
     queryFn: () => rbacService.getPermissions(filters),
   });
-};
 
-export const usePermission = (id: string) => {
-  return useQuery({
+export const usePermission = (id: string) =>
+  useQuery({
     queryKey: rbacKeys.permissionDetail(id),
     queryFn: () => rbacService.getPermissionById(id),
     enabled: !!id,
   });
-};
 
 // Permission mutation hooks
 export const useCreatePermission = () => {
@@ -128,8 +122,8 @@ export const useCreatePermission = () => {
   });
 };
 
-export const useUpdatePermission = () => {
-  return useMutation({
+export const useUpdatePermission = () =>
+  useMutation({
     mutationFn: ({ id, data }: { id: string; data: PermissionUpdateInput }) =>
       rbacService.updatePermission(id, data),
     onSuccess: (permission) => {
@@ -145,10 +139,9 @@ export const useUpdatePermission = () => {
       toast.error(`Error updating permission: ${error.message}`);
     },
   });
-};
 
-export const useDeletePermission = () => {
-  return useMutation({
+export const useDeletePermission = () =>
+  useMutation({
     mutationFn: (id: string) => rbacService.deletePermission(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: rbacKeys.permissions() });
@@ -159,40 +152,36 @@ export const useDeletePermission = () => {
       toast.error(`Error deleting permission: ${error.message}`);
     },
   });
-};
 
 // Utility hooks for role and permission management
-export const useRolePermissions = (roleId: string) => {
-  return useQuery({
+export const useRolePermissions = (roleId: string) =>
+  useQuery({
     queryKey: [...rbacKeys.roleDetail(roleId), "permissions"],
     queryFn: () => rbacService.getPermissions({ roleId }),
     enabled: !!roleId,
   });
-};
 
-export const usePermissionsByResource = (resource: string) => {
-  return useQuery({
+export const usePermissionsByResource = (resource: string) =>
+  useQuery({
     queryKey: [...rbacKeys.permissions(), "resource", resource],
     queryFn: () => rbacService.getPermissions({ resource }),
     enabled: !!resource,
   });
-};
 
 // Hook to get users with a specific role
 export const useUsersWithRole = (
   roleId: string,
   options: { limit?: number; offset?: number } = {}
-) => {
-  return useQuery({
+) =>
+  useQuery({
     queryKey: [...rbacKeys.roleDetail(roleId), "users", options],
     queryFn: () => rbacService.getUsersWithRole(roleId, options),
     enabled: !!roleId,
   });
-};
 
 // Hook to update role permissions
-export const useUpdateRolePermissions = (roleId: string) => {
-  return useMutation({
+export const useUpdateRolePermissions = (roleId: string) =>
+  useMutation({
     mutationFn: (permissionIds: string[]) =>
       rbacService.updateRolePermissions(roleId, permissionIds),
     onSuccess: () => {
@@ -207,4 +196,3 @@ export const useUpdateRolePermissions = (roleId: string) => {
       toast.error(`Error updating role permissions: ${error.message}`);
     },
   });
-};

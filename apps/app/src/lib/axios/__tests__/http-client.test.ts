@@ -47,6 +47,7 @@ vi.mock("sonner", () => ({
 }));
 
 // Mock fetch globally
+// @ts-expect-error
 global.fetch = vi.fn();
 
 describe("HTTP Client", () => {

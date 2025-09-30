@@ -39,11 +39,8 @@ export type ExternalDialog = Omit<DialogT, "id" | "content"> & {
   id?: number | string;
 };
 
-export const isDialog = (
-  dialog: DialogT | DialogToRemove
-): dialog is DialogT => {
-  return !("remove" in dialog);
-};
+export const isDialog = (dialog: DialogT | DialogToRemove): dialog is DialogT =>
+  !("remove" in dialog);
 
 class Observer {
   subscribers: Array<

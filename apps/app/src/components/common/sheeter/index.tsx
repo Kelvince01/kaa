@@ -23,17 +23,19 @@ export function Sheeter() {
       setTimeout(() => prevFocusedElement.current?.focus(), 1);
   }, []);
 
-  useEffect(() => {
-    return SheetObserver.subscribe((action: SheetAction & SheetT) => {
-      if ("remove" in action) removeSheet(action);
-      prevFocusedElement.current = (document.activeElement ||
-        document.body) as HTMLElement;
-      setSheets((prevSheets) => [
-        ...prevSheets.filter((sheet) => sheet.id !== action.id),
-        action,
-      ]);
-    });
-  }, [removeSheet]);
+  useEffect(
+    () =>
+      SheetObserver.subscribe((action: SheetAction & SheetT) => {
+        if ("remove" in action) removeSheet(action);
+        prevFocusedElement.current = (document.activeElement ||
+          document.body) as HTMLElement;
+        setSheets((prevSheets) => [
+          ...prevSheets.filter((sheet) => sheet.id !== action.id),
+          action,
+        ]);
+      }),
+    [removeSheet]
+  );
 
   if (!sheets.length) return null;
 

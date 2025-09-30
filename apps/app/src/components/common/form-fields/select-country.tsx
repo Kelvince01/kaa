@@ -43,9 +43,8 @@ const SelectCountry = ({
 
 export default SelectCountry;
 
-const getCountries = (countriesArray: { code: string; name: string }[]) => {
-  return countriesArray.map((country) => ({
+const getCountries = (countriesArray: { code: string; name: string }[]) =>
+  countriesArray.map((country) => ({
     value: country.code,
     label: country.name,
   }));
-};

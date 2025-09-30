@@ -290,7 +290,6 @@ class MFAManager {
       verified = this.verifyBackupCode(mfaSetup, code);
     }
 
-    // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
     if (verified) {
       challenge.status = MFAStatus.VERIFIED;
       mfaSetup.lastUsed = new Date();

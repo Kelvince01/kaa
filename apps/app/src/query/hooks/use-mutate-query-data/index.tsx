@@ -74,7 +74,7 @@ export function useMutateQueryData(
     }
 
     // Invalidate queries if invalidateKeyGetter is provided and the action is included in useInvalidateOnActions
-    // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
+
     if (invalidateKeyGetter && useInvalidateOnActions?.includes(action)) {
       for (const item of items) {
         const queryKeyToInvalidate = invalidateKeyGetter(item);

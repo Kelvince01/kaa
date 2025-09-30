@@ -83,54 +83,52 @@ const CountrySelect = ({
   value: selectedCountry,
   options: countryList,
   onChange,
-}: CountrySelectProps) => {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          className="flex gap-1 rounded-s-lg rounded-e-none border-r-0 px-3 focus:z-10"
-          disabled={disabled}
-          type="button"
-          variant="outline"
-        >
-          <FlagComponent
-            country={selectedCountry}
-            countryName={selectedCountry}
-          />
-          <ChevronsUpDown
-            className={cn(
-              "-mr-2 size-4 opacity-50",
-              disabled ? "hidden" : "opacity-100"
-            )}
-          />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0">
-        <Command>
-          <CommandInput placeholder="Search country..." />
-          <CommandList>
-            <ScrollArea className="h-72">
-              <CommandEmpty>No country found.</CommandEmpty>
-              <CommandGroup>
-                {countryList.map(({ value, label }) =>
-                  value ? (
-                    <CountrySelectOption
-                      country={value}
-                      countryName={label}
-                      key={value}
-                      onChange={onChange}
-                      selectedCountry={selectedCountry}
-                    />
-                  ) : null
-                )}
-              </CommandGroup>
-            </ScrollArea>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-};
+}: CountrySelectProps) => (
+  <Popover>
+    <PopoverTrigger asChild>
+      <Button
+        className="flex gap-1 rounded-s-lg rounded-e-none border-r-0 px-3 focus:z-10"
+        disabled={disabled}
+        type="button"
+        variant="outline"
+      >
+        <FlagComponent
+          country={selectedCountry}
+          countryName={selectedCountry}
+        />
+        <ChevronsUpDown
+          className={cn(
+            "-mr-2 size-4 opacity-50",
+            disabled ? "hidden" : "opacity-100"
+          )}
+        />
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent className="w-[300px] p-0">
+      <Command>
+        <CommandInput placeholder="Search country..." />
+        <CommandList>
+          <ScrollArea className="h-72">
+            <CommandEmpty>No country found.</CommandEmpty>
+            <CommandGroup>
+              {countryList.map(({ value, label }) =>
+                value ? (
+                  <CountrySelectOption
+                    country={value}
+                    countryName={label}
+                    key={value}
+                    onChange={onChange}
+                    selectedCountry={selectedCountry}
+                  />
+                ) : null
+              )}
+            </CommandGroup>
+          </ScrollArea>
+        </CommandList>
+      </Command>
+    </PopoverContent>
+  </Popover>
+);
 
 interface CountrySelectOptionProps extends RPNInput.FlagProps {
   selectedCountry: RPNInput.Country;
@@ -142,18 +140,16 @@ const CountrySelectOption = ({
   countryName,
   selectedCountry,
   onChange,
-}: CountrySelectOptionProps) => {
-  return (
-    <CommandItem className="gap-2" onSelect={() => onChange(country)}>
-      <FlagComponent country={country} countryName={countryName} />
-      <span className="flex-1 text-sm">{countryName}</span>
-      <span className="text-foreground/50 text-sm">{`+${RPNInput.getCountryCallingCode(country)}`}</span>
-      <CheckIcon
-        className={`ml-auto size-4 ${country === selectedCountry ? "opacity-100" : "opacity-0"}`}
-      />
-    </CommandItem>
-  );
-};
+}: CountrySelectOptionProps) => (
+  <CommandItem className="gap-2" onSelect={() => onChange(country)}>
+    <FlagComponent country={country} countryName={countryName} />
+    <span className="flex-1 text-sm">{countryName}</span>
+    <span className="text-foreground/50 text-sm">{`+${RPNInput.getCountryCallingCode(country)}`}</span>
+    <CheckIcon
+      className={`ml-auto size-4 ${country === selectedCountry ? "opacity-100" : "opacity-0"}`}
+    />
+  </CommandItem>
+);
 
 const FlagComponent = ({ country, countryName }: RPNInput.FlagProps) => {
   const Flag = flags[country];

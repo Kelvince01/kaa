@@ -71,8 +71,8 @@ export const hasOrganizationPermission = async (
   return result !== null;
 };
 
-export const getUserPermissions = async (userId: string) => {
-  return await Permission.aggregate([
+export const getUserPermissions = async (userId: string) =>
+  await Permission.aggregate([
     {
       $lookup: {
         from: "rolepermissions",
@@ -143,13 +143,12 @@ export const getUserPermissions = async (userId: string) => {
       },
     },
   ]);
-};
 
 export const getUserRolesInOrganization = async (
   userId: string,
   organizationId: string
-) => {
-  return await Role.find(
+) =>
+  await Role.find(
     {
       "userRoles.memberId": {
         $in: User.find({ _id: userId }, { "members._id": 1 }).select(
@@ -163,10 +162,9 @@ export const getUserRolesInOrganization = async (
       description: 1,
     }
   );
-};
 
-export const getRolePermissions = async (roleId: string) => {
-  return await Permission.find(
+export const getRolePermissions = async (roleId: string) =>
+  await Permission.find(
     {
       _id: {
         $in: RolePermission.find({ roleId }, { permissionId: 1 }).select(
@@ -180,7 +178,6 @@ export const getRolePermissions = async (roleId: string) => {
       name: 1,
     }
   );
-};
 
 export const hasAllPermissions = async (
   userId: string,

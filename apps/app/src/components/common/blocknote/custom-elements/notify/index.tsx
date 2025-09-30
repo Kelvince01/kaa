@@ -57,29 +57,27 @@ export const Notify = createReactBlockSpec(
               <DropdownMenuContent>
                 <DropdownMenuLabel>Notify Type</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {notifyTypes.map(({ icon: Icon, title, value }) => {
-                  return (
-                    <DropdownMenuItem
-                      className="flex min-h-8 flex-row gap-2 p-1"
-                      key={value}
-                      onClick={() =>
-                        editor.updateBlock(block, {
-                          type: "notify",
-                          props: { type: value },
-                        })
-                      }
-                    >
-                      {
-                        <Icon
-                          className={"notify-icon"}
-                          data-notify-icon-type={value}
-                          size={16}
-                        />
-                      }
-                      <span className="text-sm">{title}</span>
-                    </DropdownMenuItem>
-                  );
-                })}
+                {notifyTypes.map(({ icon: Icon, title, value }) => (
+                  <DropdownMenuItem
+                    className="flex min-h-8 flex-row gap-2 p-1"
+                    key={value}
+                    onClick={() =>
+                      editor.updateBlock(block, {
+                        type: "notify",
+                        props: { type: value },
+                      })
+                    }
+                  >
+                    {
+                      <Icon
+                        className={"notify-icon"}
+                        data-notify-icon-type={value}
+                        size={16}
+                      />
+                    }
+                    <span className="text-sm">{title}</span>
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenuTrigger>
           </DropdownMenu>

@@ -52,47 +52,39 @@ export default function ChangelogPost({ entry }: ChangelogPostProps) {
     });
   };
 
-  const renderShareButton = () => {
-    return (
-      <Button
-        disabled={copying}
-        onClick={handleCopy}
-        size="iconSm"
-        variant="dashed"
-      >
-        {copying ? (
-          <Check className="h-4 w-4 text-green-500" />
-        ) : (
-          <Link2 className="h-4 w-4" />
-        )}
-      </Button>
-    );
-  };
+  const renderShareButton = () => (
+    <Button
+      disabled={copying}
+      onClick={handleCopy}
+      size="iconSm"
+      variant="dashed"
+    >
+      {copying ? (
+        <Check className="h-4 w-4 text-green-500" />
+      ) : (
+        <Link2 className="h-4 w-4" />
+      )}
+    </Button>
+  );
 
-  const renderHeader = () => {
-    return (
-      <div className="mb-4 flex items-center justify-between space-x-8 font-sans">
-        <div className="flex w-full flex-col space-y-2 sm:w-auto">
-          <div className="flex items-center gap-2">
-            <h1 className="font-sans text-3xl">
-              {entry.title}
-              <span className="ml-2 hidden sm:inline">
-                {renderShareButton()}
-              </span>
-            </h1>
-          </div>
-          <p className="text-gray-600 text-sm dark:text-gray-400">
-            {entry.type}
-          </p>
-          <div className="flex justify-between sm:hidden">
-            <p className="text-lg">{formattedDate}</p>
-            {renderShareButton()}
-          </div>
+  const renderHeader = () => (
+    <div className="mb-4 flex items-center justify-between space-x-8 font-sans">
+      <div className="flex w-full flex-col space-y-2 sm:w-auto">
+        <div className="flex items-center gap-2">
+          <h1 className="font-sans text-3xl">
+            {entry.title}
+            <span className="ml-2 hidden sm:inline">{renderShareButton()}</span>
+          </h1>
         </div>
-        <p className="hidden text-right text-3xl sm:block">{formattedDate}</p>
+        <p className="text-gray-600 text-sm dark:text-gray-400">{entry.type}</p>
+        <div className="flex justify-between sm:hidden">
+          <p className="text-lg">{formattedDate}</p>
+          {renderShareButton()}
+        </div>
       </div>
-    );
-  };
+      <p className="hidden text-right text-3xl sm:block">{formattedDate}</p>
+    </div>
+  );
 
   const renderContent = () => {
     if (!mdxSource) {

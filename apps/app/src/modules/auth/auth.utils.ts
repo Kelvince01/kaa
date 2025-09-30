@@ -56,9 +56,8 @@ export const sessionUtils = {
   },
 
   // Generate session ID
-  generateSessionId: (): string => {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  },
+  generateSessionId: (): string =>
+    `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
 
   // Check session timeout
   isSessionExpired: (timestamp: number): boolean => {
@@ -656,12 +655,9 @@ export const authUtils = {
     }
   },
 
-  getRefreshToken: () => {
-    return (
-      localStorage.getItem("kaa_refresh_token") ||
-      sessionStorage.getItem("kaa_refresh_token")
-    );
-  },
+  getRefreshToken: () =>
+    localStorage.getItem("kaa_refresh_token") ||
+    sessionStorage.getItem("kaa_refresh_token"),
 
   // Role checking functions
   hasRole: (user: any, roles: string | string[]): boolean => {
@@ -674,13 +670,11 @@ export const authUtils = {
     return user.role.toLowerCase() === roles.toLowerCase();
   },
 
-  isAdmin: (user: any): boolean => {
-    return user?.role && user.role.toLowerCase() === "admin";
-  },
+  isAdmin: (user: any): boolean =>
+    user?.role && user.role.toLowerCase() === "admin",
 
-  isSuperAdmin: (user: any): boolean => {
-    return user?.role && user.role.toLowerCase() === "super_admin";
-  },
+  isSuperAdmin: (user: any): boolean =>
+    user?.role && user.role.toLowerCase() === "super_admin",
 
   // Login attempt tracking
   trackLoginAttempt: (email: string) => {
@@ -811,13 +805,10 @@ export const authUtils = {
   // Error handling
   parseAuthError: (
     error: any
-  ): { message: string; code?: string; status?: number } => {
-    return errorUtils.parseAuthError(error);
-  },
+  ): { message: string; code?: string; status?: number } =>
+    errorUtils.parseAuthError(error),
 
-  getErrorMessage: (code: string): string => {
-    return errorUtils.getErrorMessage(code);
-  },
+  getErrorMessage: (code: string): string => errorUtils.getErrorMessage(code),
 };
 
 export const isTokenExpired = (token: string | null): boolean => {

@@ -513,10 +513,8 @@ class WebhooksService {
       const conditionResult = this.evaluateCondition(fieldValue, condition);
 
       if (currentLogicalOperator === "and") {
-        // biome-ignore lint/nursery/noUnnecessaryConditions: ignore
         result = result && conditionResult;
       } else {
-        // biome-ignore lint/nursery/noUnnecessaryConditions: ignore
         result = result || conditionResult;
       }
 

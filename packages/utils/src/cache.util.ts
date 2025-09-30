@@ -54,39 +54,31 @@ export const redisSet = async (
   key: string,
   data: any,
   lifespan = 5
-): Promise<boolean> => {
-  return (
-    (await redisClient.set(key, JSON.stringify(data), {
-      EX: lifespan * 60,
-    })) === "OK"
-  );
-};
+): Promise<boolean> =>
+  (await redisClient.set(key, JSON.stringify(data), {
+    EX: lifespan * 60,
+  })) === "OK";
 
 /*** Returns a number after deleting data of the specified key
  */
-export const redisDel = async (key: string): Promise<number> => {
-  return await redisClient.del(key);
-};
+export const redisDel = async (key: string): Promise<number> =>
+  await redisClient.del(key);
 
 /*** Search for Keys by pattern
  */
-export const redisKeys = async (pattern: string): Promise<string[]> => {
-  return await redisClient.keys(pattern);
-};
+export const redisKeys = async (pattern: string): Promise<string[]> =>
+  await redisClient.keys(pattern);
 
 /*** Check if provided Key & Data exists in cache.
  * Returns a number
  */
-export const redisExists = async (key: string): Promise<number> => {
-  return await redisClient.exists(key);
-};
+export const redisExists = async (key: string): Promise<number> =>
+  await redisClient.exists(key);
 
 /*** Returns all available data by key */
 export const redisGetAll = async <T>(
   key: string
-): Promise<Record<string, string> | null> => {
-  return await redisClient.hGetAll(key);
-};
+): Promise<Record<string, string> | null> => await redisClient.hGetAll(key);
 
 // Auth
 

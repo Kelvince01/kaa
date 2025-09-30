@@ -51,12 +51,11 @@ export function ImagePlugin({ name }: { name: string }) {
   });
 }
 
-const getDimensionsImage = async (url: string): Promise<ImageDimensions> => {
-  return await new Promise((resovle, reject) => {
+const getDimensionsImage = async (url: string): Promise<ImageDimensions> =>
+  await new Promise((resovle, reject) => {
     const img = new Image();
     img.onload = () =>
       resovle({ width: img.naturalWidth, height: img.naturalHeight });
     img.onerror = reject;
     img.src = url;
   });
-};

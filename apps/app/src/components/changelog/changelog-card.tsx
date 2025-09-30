@@ -27,31 +27,27 @@ export default function ChangelogCard({
     day: "numeric",
   });
 
-  const renderArticleHeader = () => {
-    return (
-      <header className="flex items-center justify-between font-sans">
-        <div className="flex flex-col space-y-2">
-          <h1 className="font-semibold text-xl">{entry.title}</h1>
-          <div className="flex items-center space-x-2 text-gray-600 text-xs dark:text-gray-400">
-            <p>{entry.type}</p>
-            <p className="block sm:hidden">|</p>
-            <time className="block sm:hidden">{formattedDate}</time>
-          </div>
+  const renderArticleHeader = () => (
+    <header className="flex items-center justify-between font-sans">
+      <div className="flex flex-col space-y-2">
+        <h1 className="font-semibold text-xl">{entry.title}</h1>
+        <div className="flex items-center space-x-2 text-gray-600 text-xs dark:text-gray-400">
+          <p>{entry.type}</p>
+          <p className="block sm:hidden">|</p>
+          <time className="block sm:hidden">{formattedDate}</time>
         </div>
-        <time className="hidden text-right text-xl sm:block">
-          {formattedDate}
-        </time>
-      </header>
-    );
-  };
+      </div>
+      <time className="hidden text-right text-xl sm:block">
+        {formattedDate}
+      </time>
+    </header>
+  );
 
-  const renderExcerpt = () => {
-    return (
-      <p className="font-serif text-gray-600 dark:text-gray-400">
-        {entry.excerpt}
-      </p>
-    );
-  };
+  const renderExcerpt = () => (
+    <p className="font-serif text-gray-600 dark:text-gray-400">
+      {entry.excerpt}
+    </p>
+  );
 
   const handleCopy = () => {
     copyToClipboard(`${window.location.origin}/changelog/${entry.date}`, {

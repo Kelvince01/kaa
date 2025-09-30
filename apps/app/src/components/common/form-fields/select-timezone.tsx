@@ -25,9 +25,8 @@ const SelectTimezone = ({
 
 export default SelectTimezone;
 
-const getTimezones = (timezonesArray: { utc: string[]; text: string }[]) => {
-  return timezonesArray.map((timezone) => ({
+const getTimezones = (timezonesArray: { utc: string[]; text: string }[]) =>
+  timezonesArray.map((timezone) => ({
     value: timezone.utc[0],
     label: timezone.text,
   }));
-};

@@ -21,9 +21,10 @@ export const CodeBlockMenu = () => {
     },
   });
 
-  const shouldShow = useCallback(({ editor }: any) => {
-    return editor.isActive("codeBlock");
-  }, []);
+  const shouldShow = useCallback(
+    ({ editor }: any) => editor.isActive("codeBlock"),
+    []
+  );
 
   const handleSelect = useCallback(
     (value: string) =>

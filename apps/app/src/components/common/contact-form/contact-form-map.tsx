@@ -101,30 +101,28 @@ const CustomZoomControl = ({
   controlPosition,
   zoom,
   onZoomChange,
-}: CustomZoomControlProps) => {
-  return (
-    <MapControl position={controlPosition}>
-      <div className="m-2 flex flex-col p-1">
-        <Button
-          className="rounded-b-none border-b-0"
-          onClick={() => onZoomChange(zoom + 0.5)}
-          size="micro"
-          variant="outlineGhost"
-        >
-          <Plus size={14} />
-        </Button>
-        <Button
-          className="rounded-t-none"
-          onClick={() => onZoomChange(zoom - 0.5)}
-          size="micro"
-          variant="outlineGhost"
-        >
-          <Minus size={14} />
-        </Button>
-      </div>
-    </MapControl>
-  );
-};
+}: CustomZoomControlProps) => (
+  <MapControl position={controlPosition}>
+    <div className="m-2 flex flex-col p-1">
+      <Button
+        className="rounded-b-none border-b-0"
+        onClick={() => onZoomChange(zoom + 0.5)}
+        size="micro"
+        variant="outlineGhost"
+      >
+        <Plus size={14} />
+      </Button>
+      <Button
+        className="rounded-t-none"
+        onClick={() => onZoomChange(zoom - 0.5)}
+        size="micro"
+        variant="outlineGhost"
+      >
+        <Minus size={14} />
+      </Button>
+    </div>
+  </MapControl>
+);
 
 const ContactFormMap = () => {
   const mode = useUIStore((state) => state.mode);

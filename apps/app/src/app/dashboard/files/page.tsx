@@ -191,9 +191,8 @@ export default function FilesPage(props: FilesPageProps) {
     setIsEditModalOpen(true);
   };
 
-  const getTotalSize = () => {
-    return files.reduce((total, file) => total + (file.size || 0), 0);
-  };
+  const getTotalSize = () =>
+    files.reduce((total, file) => total + (file.size || 0), 0);
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";

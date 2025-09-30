@@ -7,12 +7,10 @@ const StrikeButton = () => {
 
   const state = useEditorState({
     editor,
-    selector: (ctx) => {
-      return {
-        active: ctx.editor.isActive("strike"),
-        disabled: !ctx.editor.can().toggleStrike(),
-      };
-    },
+    selector: (ctx) => ({
+      active: ctx.editor.isActive("strike"),
+      disabled: !ctx.editor.can().toggleStrike(),
+    }),
   });
 
   return (

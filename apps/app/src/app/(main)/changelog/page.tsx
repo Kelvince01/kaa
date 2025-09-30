@@ -11,23 +11,21 @@ export const metadata: Metadata = {
 export default async function ChangelogPage() {
   const entries = await getAllChangelogEntries();
 
-  const renderHero = () => {
-    return (
-      <div className="flex flex-col items-start justify-between space-y-8 md:flex-row md:items-center md:space-y-0">
-        <div className="space-y-4">
-          <FlipText
-            className="font-sans text-4xl"
-            postTransitionText="Updates"
-            preTransitionText="Changelog"
-            srOnlyText="Changelog"
-          />
-          <p className="font-serif text-lg">
-            Track our latest updates and improvements here.
-          </p>
-        </div>
+  const renderHero = () => (
+    <div className="flex flex-col items-start justify-between space-y-8 md:flex-row md:items-center md:space-y-0">
+      <div className="space-y-4">
+        <FlipText
+          className="font-sans text-4xl"
+          postTransitionText="Updates"
+          preTransitionText="Changelog"
+          srOnlyText="Changelog"
+        />
+        <p className="font-serif text-lg">
+          Track our latest updates and improvements here.
+        </p>
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-background p-10">

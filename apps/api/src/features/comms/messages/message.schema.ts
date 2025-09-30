@@ -125,15 +125,12 @@ export const validateScheduledDate = (date: Date): boolean => {
 export const validateQuietHours = (
   startHour: number,
   endHour: number
-): boolean => {
-  return (
-    startHour >= 0 &&
-    startHour < 24 &&
-    endHour >= 0 &&
-    endHour < 24 &&
-    startHour !== endHour
-  );
-};
+): boolean =>
+  startHour >= 0 &&
+  startHour < 24 &&
+  endHour >= 0 &&
+  endHour < 24 &&
+  startHour !== endHour;
 
 // ==================== BASE SCHEMAS ====================
 

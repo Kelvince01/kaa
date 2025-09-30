@@ -66,7 +66,7 @@ export default function Home() {
         <Button
           className={styles.secondary}
           onClick={() => {
-            alert("Hello");
+            console.log("Hello");
           }}
         >
           Open alert

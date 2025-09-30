@@ -6,15 +6,14 @@ const YoutubeButton = () => {
   const { editor } = useTiptapContext();
   const state = useEditorState({
     editor,
-    selector: (ctx) => {
-      return {
-        active: ctx.editor.isActive("youtube"),
-        disabled: !ctx.editor.isEditable,
-      };
-    },
+    selector: (ctx) => ({
+      active: ctx.editor.isActive("youtube"),
+      disabled: !ctx.editor.isEditable,
+    }),
   });
 
   const handleClick = () => {
+    // biome-ignore lint/suspicious/noAlert: ignore
     const src = prompt(
       "Embed Youtube Video",
       "https://www.youtube.com/watch?v=dQw4w9WgXcQ"

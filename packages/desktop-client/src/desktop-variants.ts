@@ -21,9 +21,10 @@ const desktopPlugin = plugin(({ addVariant, e }: PluginApi) => {
   // Add support for `desktop` modifier
   // Usage: <div class="desktop:rounded-lg">...</div>
   addVariant("desktop", ({ modifySelectors, separator }: VariantOptions) => {
-    modifySelectors(({ className }: ModifySelectorsArgs) => {
-      return `html.desktop .${e(`desktop${separator}${className}`)}`;
-    });
+    modifySelectors(
+      ({ className }: ModifySelectorsArgs) =>
+        `html.desktop .${e(`desktop${separator}${className}`)}`
+    );
   });
 
   // Add support for `mac`, `windows` and `linux` modifiers
@@ -39,11 +40,12 @@ const desktopPlugin = plugin(({ addVariant, e }: PluginApi) => {
   >) {
     const variant = platformMap[platform];
     addVariant(variant, ({ modifySelectors, separator }: VariantOptions) => {
-      modifySelectors(({ className }: ModifySelectorsArgs) => {
-        return `html.desktop-platform-${platform} .${e(
-          `${variant}${separator}${className}`
-        )}`;
-      });
+      modifySelectors(
+        ({ className }: ModifySelectorsArgs) =>
+          `html.desktop-platform-${platform} .${e(
+            `${variant}${separator}${className}`
+          )}`
+      );
     });
   }
 });

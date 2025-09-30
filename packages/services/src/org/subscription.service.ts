@@ -206,7 +206,9 @@ export const subscriptionService = {
 
       if (subscription) {
         // Update existing subscription
-        subscription.plan = new mongoose.Types.ObjectId(data.plan);
+        subscription.plan = mongoose.Types.ObjectId.createFromHexString(
+          data.plan
+        );
         subscription.status = "active";
         subscription.endDate = endDate;
         subscription.billing = {
@@ -517,7 +519,9 @@ export const subscriptionService = {
       );
 
       // Update subscription
-      subscription.plan = new mongoose.Types.ObjectId(data.plan);
+      subscription.plan = mongoose.Types.ObjectId.createFromHexString(
+        data.plan
+      );
       // subscription.startDate = new Date(stripeSubscription.current_period_start * 1000);
       // subscription.endDate = new Date(stripeSubscription.current_period_end * 1000);
       subscription.startDate = new Date(stripeSubscription.start_date * 1000);

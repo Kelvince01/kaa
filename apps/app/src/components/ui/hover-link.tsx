@@ -41,21 +41,17 @@ export default function HoverLink({
       ? "relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-current after:scale-x-0 after:origin-left group-hover:after:scale-x-100 after:transition-transform after:duration-300 group-hover:after:origin-right"
       : "relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-current after:scale-x-0 after:origin-right group-hover:after:scale-x-100 after:transition-transform after:duration-300 group-hover:after:origin-left";
 
-  const renderBackArrow = () => {
-    return (
-      <span className="group-hover:-translate-x-1 inline-block transition-transform duration-700 ease-in-out group-hover:duration-300">
-        ←
-      </span>
-    );
-  };
+  const renderBackArrow = () => (
+    <span className="group-hover:-translate-x-1 inline-block transition-transform duration-700 ease-in-out group-hover:duration-300">
+      ←
+    </span>
+  );
 
-  const renderForwardArrow = () => {
-    return (
-      <span className="inline-block transition-transform duration-700 ease-in-out group-hover:translate-x-1 group-hover:duration-300">
-        →
-      </span>
-    );
-  };
+  const renderForwardArrow = () => (
+    <span className="inline-block transition-transform duration-700 ease-in-out group-hover:translate-x-1 group-hover:duration-300">
+      →
+    </span>
+  );
 
   return (
     <Link

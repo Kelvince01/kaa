@@ -74,13 +74,9 @@ export const useFileStore = create<FileStore>((set, get) => ({
     set({ selectedFiles: [] });
   },
 
-  hasSelectedFiles: () => {
-    return get().selectedFiles.length > 0;
-  },
+  hasSelectedFiles: () => get().selectedFiles.length > 0,
 
-  selectedCount: () => {
-    return get().selectedFiles.length;
-  },
+  selectedCount: () => get().selectedFiles.length,
 
   // Modal methods
   setFileModalOpen: (isOpen: boolean) => {

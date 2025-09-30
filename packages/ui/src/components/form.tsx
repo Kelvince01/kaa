@@ -43,15 +43,13 @@ const Form = <
   ...props
 }: FormProps<TFieldValues, TContext, TTransformedValues> & {
   unsavedChanges?: boolean;
-}) => {
-  return (
-    <FormProvider {...props}>
-      <LabelDirectionContext.Provider value={labelDirection}>
-        {children}
-      </LabelDirectionContext.Provider>
-    </FormProvider>
-  );
-};
+}) => (
+  <FormProvider {...props}>
+    <LabelDirectionContext.Provider value={labelDirection}>
+      {children}
+    </LabelDirectionContext.Provider>
+  </FormProvider>
+);
 
 type FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,
@@ -69,13 +67,11 @@ const FormField = <
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({
   ...props
-}: ControllerProps<TFieldValues, TName>) => {
-  return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
-      <Controller {...props} />
-    </FormFieldContext.Provider>
-  );
-};
+}: ControllerProps<TFieldValues, TName>) => (
+  <FormFieldContext.Provider value={{ name: props.name }}>
+    <Controller {...props} />
+  </FormFieldContext.Provider>
+);
 
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext);

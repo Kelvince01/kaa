@@ -8,9 +8,10 @@ import { Toolbar } from "../ui/Toolbar";
 const TableMenu = () => {
   const { editor, contentElement } = useTiptapContext();
 
-  const shouldShow = useCallback(({ editor }: any) => {
-    return editor.isActive("table");
-  }, []);
+  const shouldShow = useCallback(
+    ({ editor }: any) => editor.isActive("table"),
+    []
+  );
 
   const getReferenceClientRect = useCallback(() => {
     const node = getNodeContainer(editor, "table");

@@ -83,7 +83,6 @@ export const Indent = Extension.create({
     };
     const updateIndentLevel = (tr: Transaction, delta: number) => {
       const { doc, selection } = tr;
-      // biome-ignore lint/nursery/noUnnecessaryConditions: ignore
       if (doc && selection && selection instanceof TextSelection) {
         const { from, to } = selection;
         doc.nodesBetween(from, to, (node, pos) => {
@@ -123,18 +122,12 @@ export const Indent = Extension.create({
   },
   addKeyboardShortcuts() {
     return {
-      Tab: () => {
-        return (
-          !isNodeActive(this.editor.state, "listItem") &&
-          this.editor.commands.indent()
-        );
-      },
-      "Shift-Tab": () => {
-        return (
-          !isNodeActive(this.editor.state, "listItem") &&
-          this.editor.commands.outdent()
-        );
-      },
+      Tab: () =>
+        !isNodeActive(this.editor.state, "listItem") &&
+        this.editor.commands.indent(),
+      "Shift-Tab": () =>
+        !isNodeActive(this.editor.state, "listItem") &&
+        this.editor.commands.outdent(),
       Backspace: ({ editor }) => {
         const { selection } = editor.state;
         const { $anchor } = selection;

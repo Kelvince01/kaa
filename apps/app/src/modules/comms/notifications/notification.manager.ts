@@ -110,7 +110,6 @@ export class NotificationManager {
   ) {
     const priority = this.preferences?.channels[channel].priority || "normal";
 
-    // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
     switch (channel) {
       case "email":
         return await this.sendEmail(data, priority);

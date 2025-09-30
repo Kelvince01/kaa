@@ -20,13 +20,14 @@ export default function useCopyToClipboard() {
     }
   };
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       if (timeoutId.current) {
         clearTimeout(timeoutId.current);
       }
-    };
-  }, []);
+    },
+    []
+  );
 
   return { isCopied, copy };
 }

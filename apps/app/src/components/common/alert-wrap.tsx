@@ -48,7 +48,6 @@ export const AlertWrap = ({
       {Icon && <Icon size={16} />}
       {title && <AlertTitle className="pr-8">{t(title)}</AlertTitle>}
 
-      {/** biome-ignore lint/nursery/noUnnecessaryConditions: always true */}
       {children ? (
         <AlertDescription className="pr-8 font-light">
           {children}

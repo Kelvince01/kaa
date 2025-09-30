@@ -6,12 +6,10 @@ const BoldButton = () => {
   const { editor } = useTiptapContext();
   const state = useEditorState({
     editor,
-    selector: (ctx) => {
-      return {
-        active: ctx.editor.isActive("bold"),
-        disabled: !ctx.editor.can().toggleBold(),
-      };
-    },
+    selector: (ctx) => ({
+      active: ctx.editor.isActive("bold"),
+      disabled: !ctx.editor.can().toggleBold(),
+    }),
   });
 
   return (

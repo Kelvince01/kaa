@@ -9,21 +9,19 @@ interface LoadingProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const PageLoading = React.forwardRef<HTMLDivElement, LoadingProps>(
-  ({ className, fullPage = true, spinnerSize = "md", ...props }, ref) => {
-    return (
-      <div
-        className={cn(
-          "flex items-center justify-center",
-          fullPage && "fixed inset-0 bg-background/60 backdrop-blur-sm",
-          className
-        )}
-        ref={ref}
-        {...props}
-      >
-        <SpinnerV3 className="bg-black dark:bg-white" size={spinnerSize} />
-      </div>
-    );
-  }
+  ({ className, fullPage = true, spinnerSize = "md", ...props }, ref) => (
+    <div
+      className={cn(
+        "flex items-center justify-center",
+        fullPage && "fixed inset-0 bg-background/60 backdrop-blur-sm",
+        className
+      )}
+      ref={ref}
+      {...props}
+    >
+      <SpinnerV3 className="bg-black dark:bg-white" size={spinnerSize} />
+    </div>
+  )
 );
 
 PageLoading.displayName = "PageLoading";

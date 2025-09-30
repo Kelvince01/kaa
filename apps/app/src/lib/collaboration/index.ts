@@ -1,13 +1,11 @@
 export { default as CollaborationClient } from "./collaboration.client";
 
 // Collaboration utilities for frontend
-export const isWebRTCSupported = (): boolean => {
-  return typeof RTCPeerConnection !== "undefined";
-};
+export const isWebRTCSupported = (): boolean =>
+  typeof RTCPeerConnection !== "undefined";
 
-export const isWebSocketSupported = (): boolean => {
-  return typeof WebSocket !== "undefined";
-};
+export const isWebSocketSupported = (): boolean =>
+  typeof WebSocket !== "undefined";
 
 export const getMediaDevices = async (): Promise<{
   video: boolean;

@@ -265,7 +265,6 @@ export const meController = new Elysia()
       //   });
 
       // Keep connection alive
-      // biome-ignore lint/nursery/noUnnecessaryConditions: unnecessary condition
       while (true) {
         stream.send({
           event: "ping",

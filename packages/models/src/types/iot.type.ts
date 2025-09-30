@@ -308,7 +308,7 @@ export type IPropertyDashboard = {
   lastUpdated: Date;
 };
 
-export enum PropertyStatus {
+export enum IoTPropertyStatus {
   ONLINE = "online",
   OFFLINE = "offline",
   ERROR = "error",

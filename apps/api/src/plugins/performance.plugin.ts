@@ -104,12 +104,11 @@ export const performancePlugin = new Elysia()
  */
 export const startPerformanceMonitoring = (
   intervalMs = 300_000
-): NodeJS.Timeout => {
-  return setInterval(() => {
+): NodeJS.Timeout =>
+  setInterval(() => {
     const metrics = getPerformanceMetrics();
     logger.info("Performance metrics:", { extra: metrics });
   }, intervalMs);
-};
 
 /**
  * Measure the execution time of a function

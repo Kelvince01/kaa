@@ -44,9 +44,7 @@ const getOpenAI = () => {
 };
 
 // Check if OpenAI is available
-const isOpenAIAvailable = () => {
-  return getOpenAI() !== null;
-};
+const isOpenAIAvailable = () => getOpenAI() !== null;
 
 /**
  * OpenAI service for property-specific AI operations

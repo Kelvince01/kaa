@@ -159,8 +159,8 @@ export const useVerifyEmail = () => {
 };
 
 // Resend verification email hook
-export const useResendVerification = () => {
-  return useMutation({
+export const useResendVerification = () =>
+  useMutation({
     mutationFn: authService.resendVerification,
     onSuccess: (data) => {
       toast.success(data.message || "Verification email sent!");
@@ -171,7 +171,6 @@ export const useResendVerification = () => {
       toast.error(message);
     },
   });
-};
 
 // Verify phone hook
 export const useVerifyPhone = () => {
@@ -233,8 +232,8 @@ export const useUploadAvatar = () => {
 };
 
 // Forgot password hook
-export const useForgotPassword = () => {
-  return useMutation({
+export const useForgotPassword = () =>
+  useMutation({
     mutationFn: authService.forgotPassword,
     onSuccess: (data) => {
       toast.success(data.message || "Password reset email sent!");
@@ -245,7 +244,6 @@ export const useForgotPassword = () => {
       toast.error(message);
     },
   });
-};
 
 // Reset password hook
 export const useResetPassword = () => {

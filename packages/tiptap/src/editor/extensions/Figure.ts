@@ -99,12 +99,11 @@ const handleBackspace = (editor: Editor, nodeType: NodeType) => {
 
     return editor
       .chain()
-      .command(({ chain }) => {
-        return (
+      .command(
+        ({ chain }) =>
           $from.parent.textContent.length > 0 ||
           chain().deleteCurrentNode().run()
-        );
-      })
+      )
       .setNodeSelection($pos.pos - nodeBefore.nodeSize)
       .run();
   }

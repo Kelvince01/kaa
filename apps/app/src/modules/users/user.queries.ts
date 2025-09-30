@@ -16,20 +16,18 @@ export const userKeys = {
 };
 
 // Hooks for user data fetching
-export const useUsers = (filters: UserFilter) => {
-  return useQuery({
+export const useUsers = (filters: UserFilter) =>
+  useQuery({
     queryKey: userKeys.list(filters),
     queryFn: () => userService.getUsers(filters),
   });
-};
 
-export const useUser = (id: string) => {
-  return useQuery({
+export const useUser = (id: string) =>
+  useQuery({
     queryKey: userKeys.detail(id),
     queryFn: () => userService.getUserById(id),
     enabled: !!id,
   });
-};
 
 // Mutation hooks
 export const useCreateUser = () => {
@@ -48,8 +46,8 @@ export const useCreateUser = () => {
   });
 };
 
-export const useUpdateUser = () => {
-  return useMutation({
+export const useUpdateUser = () =>
+  useMutation({
     mutationFn: ({ id, data }: { id: string; data: UserUpdateInput }) =>
       userService.updateUser(id, data),
     onSuccess: (user) => {
@@ -61,10 +59,9 @@ export const useUpdateUser = () => {
       toast.error(`Error updating user: ${error.message}`);
     },
   });
-};
 
-export const useDeleteUser = () => {
-  return useMutation({
+export const useDeleteUser = () =>
+  useMutation({
     mutationFn: (id: string) => userService.deleteUser(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
@@ -75,7 +72,6 @@ export const useDeleteUser = () => {
       toast.error(`Error deleting user: ${error.message}`);
     },
   });
-};
 
 export const useChangePassword = () => {
   const { mutateAsync: logout } = useLogout();

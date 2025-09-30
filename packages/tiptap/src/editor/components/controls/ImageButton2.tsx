@@ -9,12 +9,10 @@ const ImageButton = () => {
   const { editor } = useTiptapContext();
   const state = useEditorState({
     editor,
-    selector: (ctx) => {
-      return {
-        active: ctx.editor.isActive("image"),
-        disabled: !ctx.editor.isEditable,
-      };
-    },
+    selector: (ctx) => ({
+      active: ctx.editor.isActive("image"),
+      disabled: !ctx.editor.isEditable,
+    }),
   });
 
   const { open, handleOpen, handleClose } = useModal();

@@ -33,9 +33,8 @@ const SelectCounty = ({
 
 export default SelectCounty;
 
-const getCounties = (countiesArray: { code: string; name: string }[]) => {
-  return countiesArray.map((county) => ({
+const getCounties = (countiesArray: { code: string; name: string }[]) =>
+  countiesArray.map((county) => ({
     value: county.name,
     label: county.name,
   }));
-};

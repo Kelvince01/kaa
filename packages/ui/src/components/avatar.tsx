@@ -83,12 +83,10 @@ const AvatarInitials = ({
 }: {
   children: React.ReactNode;
   className?: string;
-}) => {
-  return (
-    <span className={cn("font-medium leading-none", className)} {...props}>
-      {children}
-    </span>
-  );
-};
+}) => (
+  <span className={cn("font-medium leading-none", className)} {...props}>
+    {children}
+  </span>
+);
 
 export { Avatar, AvatarImage, AvatarFallback, AvatarInitials };

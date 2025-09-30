@@ -6,12 +6,10 @@ const OrderedListButton = () => {
   const { editor } = useTiptapContext();
   const state = useEditorState({
     editor,
-    selector: (ctx) => {
-      return {
-        active: ctx.editor.isActive("orderedList"),
-        disabled: !ctx.editor.isEditable,
-      };
-    },
+    selector: (ctx) => ({
+      active: ctx.editor.isActive("orderedList"),
+      disabled: !ctx.editor.isEditable,
+    }),
   });
 
   return (

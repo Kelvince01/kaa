@@ -196,9 +196,7 @@ export function getUsersTableColumns({
     {
       header: "Email",
       accessorKey: "email",
-      cell: ({ row }) => {
-        return <span>{row.original.email}</span>;
-      },
+      cell: ({ row }) => <span>{row.original.email}</span>,
     },
     {
       accessorKey: "role",
@@ -207,9 +205,8 @@ export function getUsersTableColumns({
       ),
       cell: ({ row }) =>
         getRoleBadge((row.original.role as { name: UserRole }).name),
-      filterFn: (row, _id, value) => {
-        return value.includes((row.original.role as { name: UserRole }).name);
-      },
+      filterFn: (row, _id, value) =>
+        value.includes((row.original.role as { name: UserRole }).name),
       enableSorting: true,
       enableHiding: true,
     },
@@ -228,9 +225,7 @@ export function getUsersTableColumns({
           </div>
         );
       },
-      filterFn: (row, _id, value) => {
-        return value.includes(row.original.status);
-      },
+      filterFn: (row, _id, value) => value.includes(row.original.status),
       enableSorting: true,
       enableHiding: true,
     },
@@ -239,19 +234,17 @@ export function getUsersTableColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Verified" />
       ),
-      cell: ({ row }) => {
-        return (
-          <span
-            className={`inline-flex rounded-full px-2 font-semibold text-xs leading-5 ${
-              row.original.isVerified
-                ? "bg-green-100 text-green-800"
-                : "bg-yellow-100 text-yellow-800"
-            }`}
-          >
-            {row.original.isVerified ? "Verified" : "Unverified"}
-          </span>
-        );
-      },
+      cell: ({ row }) => (
+        <span
+          className={`inline-flex rounded-full px-2 font-semibold text-xs leading-5 ${
+            row.original.isVerified
+              ? "bg-green-100 text-green-800"
+              : "bg-yellow-100 text-yellow-800"
+          }`}
+        >
+          {row.original.isVerified ? "Verified" : "Unverified"}
+        </span>
+      ),
       enableSorting: true,
       enableHiding: true,
     },

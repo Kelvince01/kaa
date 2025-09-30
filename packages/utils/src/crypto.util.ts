@@ -12,9 +12,8 @@ export enum AuthorizeCodeChallengeMethod {
   Plain = "plain",
 }
 
-export const genRandom6DigitString = (): string => {
-  return Math.floor(100_000 + Math.random() * 900_000).toString();
-};
+export const genRandom6DigitString = (): string =>
+  Math.floor(100_000 + Math.random() * 900_000).toString();
 
 const genRandomBytes = (length: number) => {
   const array = new Uint8Array(length);

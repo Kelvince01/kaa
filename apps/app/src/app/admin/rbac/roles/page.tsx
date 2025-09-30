@@ -30,6 +30,7 @@ import {
 import { Filter, Key, Plus, Search, Shield, Trash2, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { RolesTable } from "@/modules/rbac/components";
 import { useDeleteRole, useRoles } from "@/modules/rbac/rbac.queries";
 import { useRBACStore } from "@/modules/rbac/rbac.store";
@@ -65,7 +66,7 @@ export default function RolesManagementPage() {
 
   const handleDeleteRole = (role: Role) => {
     if (role.isSystem) {
-      alert("System roles cannot be deleted");
+      toast.warning("System roles cannot be deleted");
       return;
     }
     setRoleToDelete(role);
@@ -89,11 +90,12 @@ export default function RolesManagementPage() {
     });
 
     if (nonSystemRoles.length === 0) {
-      alert("Cannot delete system roles");
+      toast.warning("Cannot delete system roles");
       return;
     }
 
     if (
+      // biome-ignore lint/suspicious/noAlert: ignore
       window.confirm(
         `Are you sure you want to delete ${nonSystemRoles.length} selected roles?`
       )

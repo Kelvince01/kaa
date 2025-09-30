@@ -7,12 +7,10 @@ const SubscriptButton = () => {
 
   const state = useEditorState({
     editor,
-    selector: (ctx) => {
-      return {
-        active: ctx.editor.isActive("subscript"),
-        disabled: !ctx.editor.can().toggleSubscript(),
-      };
-    },
+    selector: (ctx) => ({
+      active: ctx.editor.isActive("subscript"),
+      disabled: !ctx.editor.can().toggleSubscript(),
+    }),
   });
 
   return (

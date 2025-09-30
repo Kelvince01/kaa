@@ -80,8 +80,8 @@ export const sendLoginAlertEmail = async (
   email: string,
   ip: string,
   userAgent: string
-): Promise<boolean> => {
-  return await emailService.sendEmail({
+): Promise<boolean> =>
+  await emailService.sendEmail({
     to: email,
     subject: "New Login Alert",
     template: "login-alert",
@@ -91,4 +91,3 @@ export const sendLoginAlertEmail = async (
       date: new Date().toLocaleString(),
     },
   });
-};

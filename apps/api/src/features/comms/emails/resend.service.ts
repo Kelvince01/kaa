@@ -245,9 +245,7 @@ class EmailService {
 
   async sendBulkEmail(emails: EmailOptions[]): Promise<boolean> {
     const results = await Promise.all(
-      emails.map(async (email) => {
-        return await this.sendEmail(email);
-      })
+      emails.map(async (email) => await this.sendEmail(email))
     );
 
     if (results.some((result) => !result)) {
@@ -263,14 +261,15 @@ class EmailService {
     emails: EmailWithTemplateRecipient[]
   ): Promise<boolean> {
     const results = await Promise.all(
-      emails.map(async (email) => {
-        return await this.sendEmailWithTemplate({
-          ...email,
-          to: email.to,
-          userId: email.userId,
-          requestMetadata: email.requestMetadata,
-        });
-      })
+      emails.map(
+        async (email) =>
+          await this.sendEmailWithTemplate({
+            ...email,
+            to: email.to,
+            userId: email.userId,
+            requestMetadata: email.requestMetadata,
+          })
+      )
     );
 
     if (results.some((result) => !result)) {

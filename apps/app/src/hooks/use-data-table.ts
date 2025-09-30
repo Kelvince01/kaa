@@ -145,11 +145,11 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     [pagination, setPage, setPerPage]
   );
 
-  const columnIds = React.useMemo(() => {
-    return new Set(
-      columns.map((column) => column.id).filter(Boolean) as string[]
-    );
-  }, [columns]);
+  const columnIds = React.useMemo(
+    () =>
+      new Set(columns.map((column) => column.id).filter(Boolean) as string[]),
+    [columns]
+  );
 
   const [sorting, setSorting] = useQueryState(
     SORT_KEY,

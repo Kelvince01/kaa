@@ -21,26 +21,22 @@ export const FlipText = ({
   srOnlyText,
   className,
 }: FlipTextProps) => {
-  const renderFlipText = () => {
-    return (
-      <div aria-hidden="true" className="group relative block overflow-hidden">
-        <span className="group-hover:-translate-y-full inline-block py-1 transition-all duration-300 ease-in-out">
-          {preTransitionText}
-        </span>
-        <span className="absolute top-0 left-0 inline-block translate-y-full py-1 transition-all duration-300 ease-in-out group-hover:translate-y-0">
-          {postTransitionText}
-        </span>
-      </div>
-    );
-  };
+  const renderFlipText = () => (
+    <div aria-hidden="true" className="group relative block overflow-hidden">
+      <span className="group-hover:-translate-y-full inline-block py-1 transition-all duration-300 ease-in-out">
+        {preTransitionText}
+      </span>
+      <span className="absolute top-0 left-0 inline-block translate-y-full py-1 transition-all duration-300 ease-in-out group-hover:translate-y-0">
+        {postTransitionText}
+      </span>
+    </div>
+  );
 
-  const renderText = () => {
-    return (
-      <div>
-        <span className="inline-block py-1">{preTransitionText}</span>
-      </div>
-    );
-  };
+  const renderText = () => (
+    <div>
+      <span className="inline-block py-1">{preTransitionText}</span>
+    </div>
+  );
 
   return (
     <div className={cn(className)}>

@@ -33,15 +33,13 @@ const DeviceMockup = ({
     <div className={cn(mockupClass, className)} ref={ref}>
       <DeviceFrame
         inView={inView}
-        renderCarousel={(className) => {
-          return (
-            <AttachmentsCarousel
-              classNameContainer={className}
-              isDialog={false}
-              slides={slides}
-            />
-          );
-        }}
+        renderCarousel={(className) => (
+          <AttachmentsCarousel
+            classNameContainer={className}
+            isDialog={false}
+            slides={slides}
+          />
+        )}
         type={type}
       />
     </div>

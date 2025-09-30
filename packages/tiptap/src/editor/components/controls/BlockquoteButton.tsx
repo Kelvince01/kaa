@@ -6,12 +6,10 @@ const BlockquoteButton = () => {
   const { editor } = useTiptapContext();
   const state = useEditorState({
     editor,
-    selector: (ctx) => {
-      return {
-        active: ctx.editor.isActive("blockquote"),
-        disabled: !ctx.editor.can().toggleBlockquote(),
-      };
-    },
+    selector: (ctx) => ({
+      active: ctx.editor.isActive("blockquote"),
+      disabled: !ctx.editor.can().toggleBlockquote(),
+    }),
   });
 
   return (

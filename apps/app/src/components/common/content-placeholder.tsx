@@ -16,23 +16,21 @@ const ContentPlaceholder = ({
   text,
   textClassName = "",
   className = "",
-}: Props) => {
-  return (
-    <div
-      className={cn(
-        "relative flex h-full w-full flex-col items-center justify-center p-8 text-center",
-        className
-      )}
-    >
-      {Icon && <Icon className="opacity-50" size={80} strokeWidth={0.7} />}
-      <p className="mt-4 text-sm opacity-60">{title}</p>
-      {text && (
-        <div className={cn("mt-12 font-medium text-sm", textClassName)}>
-          {text}
-        </div>
-      )}
-    </div>
-  );
-};
+}: Props) => (
+  <div
+    className={cn(
+      "relative flex h-full w-full flex-col items-center justify-center p-8 text-center",
+      className
+    )}
+  >
+    {Icon && <Icon className="opacity-50" size={80} strokeWidth={0.7} />}
+    <p className="mt-4 text-sm opacity-60">{title}</p>
+    {text && (
+      <div className={cn("mt-12 font-medium text-sm", textClassName)}>
+        {text}
+      </div>
+    )}
+  </div>
+);
 
 export default ContentPlaceholder;

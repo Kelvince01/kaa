@@ -39,7 +39,6 @@ function composeRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<T> {
     // value. We don't use ref cleanups internally so this will only happen if a
     // user's ref callback returns a value, which we only expect if they are
     // using the cleanup functionality added in React 19.
-    // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
     if (hasCleanup) {
       return () => {
         for (let i = 0; i < cleanups.length; i++) {

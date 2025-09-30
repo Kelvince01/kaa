@@ -32,7 +32,6 @@ export type Theme = keyof typeof _default.theme.colors | "none";
 export type Severity = (typeof _default.severityLevels)[number];
 
 function isObject(item: object) {
-  // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
   return item && typeof item === "object" && !Array.isArray(item);
 }
 

@@ -496,14 +496,12 @@ export const mfaController = new Elysia({ name: "mfa-v2" })
             token,
           });
 
-          // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
           if (isValid) {
             totpMethod.lastUsed = new Date();
             await totpMethod.save();
           }
         }
 
-        // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
         if (isValid) {
           set.status = 200;
           return {

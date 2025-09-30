@@ -46,22 +46,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ChangelogEntryPage({ params }: Props) {
   const date = (await params).date;
 
-  const renderHeader = () => {
-    return (
-      <div className="mb-8 flex items-center justify-between sm:flex">
-        <HoverLink
-          arrowDirection="back"
-          href="/changelog"
-          title="Back to Changelog"
-        />
-        <HoverLink
-          arrowDirection="forward"
-          href={"/properties"}
-          title="Browse properties"
-        />
-      </div>
-    );
-  };
+  const renderHeader = () => (
+    <div className="mb-8 flex items-center justify-between sm:flex">
+      <HoverLink
+        arrowDirection="back"
+        href="/changelog"
+        title="Back to Changelog"
+      />
+      <HoverLink
+        arrowDirection="forward"
+        href={"/properties"}
+        title="Browse properties"
+      />
+    </div>
+  );
 
   if (!date) {
     console.error("No date parameter provided");

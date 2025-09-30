@@ -26,7 +26,7 @@ const getErrorMessage = (
   const statusCode = Number(error.status);
 
   // Try resource-specific error translation if entityType and type are present and translations available
-  // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
+
   if (t && error.entityType && error.type) {
     try {
       const resourceKey = `errors.resource_${error.type}`;
@@ -43,7 +43,7 @@ const getErrorMessage = (
   }
 
   // Try generic error type translation
-  // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
+
   if (t && error.type) {
     try {
       const typeKey = `errors.${error.type}`;

@@ -11,12 +11,10 @@ export async function generateMetadata() {
   });
 }
 
-const ForgotPasswordPage = () => {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ForgotPasswordContainer />
-    </Suspense>
-  );
-};
+const ForgotPasswordPage = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <ForgotPasswordContainer />
+  </Suspense>
+);
 
 export default ForgotPasswordPage;

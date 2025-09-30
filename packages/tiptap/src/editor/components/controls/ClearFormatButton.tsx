@@ -7,11 +7,9 @@ const ClearFormatButton = () => {
 
   const state = useEditorState({
     editor,
-    selector: (ctx) => {
-      return {
-        disabled: !ctx.editor.isEditable,
-      };
-    },
+    selector: (ctx) => ({
+      disabled: !ctx.editor.isEditable,
+    }),
   });
 
   return (

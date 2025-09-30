@@ -30,9 +30,7 @@ const HandlebarsEditor = forwardRef<HandlebarsEditorRef, HandlebarsEditorProps>(
       onChange(newValue);
     };
 
-    const isValid = useMemo(() => {
-      return true;
-    }, []);
+    const isValid = useMemo(() => true, []);
 
     const copyToClipboard = (text: string) => {
       navigator.clipboard.writeText(text);

@@ -7,7 +7,6 @@ type DeviceFrameProps = {
 };
 
 const DeviceFrame = ({ type, inView, renderCarousel }: DeviceFrameProps) => {
-  // biome-ignore lint/nursery/noUnnecessaryConditions: by author
   switch (type) {
     case "tablet":
       return (

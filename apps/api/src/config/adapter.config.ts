@@ -52,9 +52,8 @@ export enum SessionKey {
   AuthInfo = "authInfo",
 }
 
-export const getAuthInfoSessionKeyByClientId = (clientId: string) => {
-  return `${SessionKey.AuthInfo}-${clientId}`;
-};
+export const getAuthInfoSessionKeyByClientId = (clientId: string) =>
+  `${SessionKey.AuthInfo}-${clientId}`;
 
 export enum FileLocation {
   NodePublicKey = "node_jwt_public_key.pem",

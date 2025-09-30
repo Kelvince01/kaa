@@ -433,6 +433,7 @@ const userSchema = new Schema<IUser>(
     },
 
     permissionFlags: Number,
+    deletedAt: Date,
   },
   {
     timestamps: true,

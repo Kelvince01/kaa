@@ -11,12 +11,10 @@ export const siteConfig = {
   url: "https://www.mjmliquid.com",
 };
 
-export const generateCustomMetadata = (title: string): Metadata => {
-  return {
-    ...metadata,
-    title: `MJMLiquid • ${title}`,
-  };
-};
+export const generateCustomMetadata = (title: string): Metadata => ({
+  ...metadata,
+  title: `MJMLiquid • ${title}`,
+});
 
 export const metadata: Metadata = {
   title: siteConfig.title,

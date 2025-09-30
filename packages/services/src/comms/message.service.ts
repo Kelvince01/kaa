@@ -847,7 +847,7 @@ export class MessageService {
     };
 
     // Emit to all user's conversations
-    // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
+
     if (conversationIds) {
       for (const conversationId of conversationIds) {
         await this.socketService.emitToConversation(

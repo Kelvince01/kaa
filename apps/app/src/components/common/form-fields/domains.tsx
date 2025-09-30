@@ -40,9 +40,7 @@ const DomainsFormField = ({ control, label, description, required }: Props) => {
     return checkValidDomain(value);
   };
 
-  const checkValidDomain = (domain: string) => {
-    return domainRegex.test(domain.trim());
-  };
+  const checkValidDomain = (domain: string) => domainRegex.test(domain.trim());
 
   useEffect(() => setDomains(formValue.map((dom: string) => dom)), [formValue]);
 
@@ -50,57 +48,54 @@ const DomainsFormField = ({ control, label, description, required }: Props) => {
     <FormField
       control={control}
       name="emailDomains"
-      render={({ field: { onChange } }) => {
-        return (
-          <FormItem>
-            <FormLabel>
-              {label}
-              {required && <span className="ml-1 opacity-50">*</span>}
-            </FormLabel>
-            {description && <FormDescription>{description}</FormDescription>}
-            <FormControl>
-              <TagInput
-                inputProps={{ value: currentValue }}
-                maxLength={100}
-                minLength={4}
-                onBlur={() => {
-                  if (checkValidDomain(currentValue))
-                    setDomains((prev) => [...prev, currentValue]);
-                  setCurrentValue("");
-                  setFieldActive(false);
-                }}
-                onFocus={() => setFieldActive(true)}
-                onInputChange={(newValue) => setCurrentValue(newValue)}
-                placeholder={t("common.placeholder.email_domains")}
-                setTags={(newTags) => {
-                  setDomains(newTags);
-                  if (Array.isArray(newTags))
-                    onChange(newTags.map((tag) => tag));
-                  setCurrentValue("");
-                }}
-                styleClasses={{
-                  tag: {
-                    body: "pr-0 gap-0.5",
-                    closeButton:
-                      "h-6 w-6 ring-inset focus-visible:ring-2 p-0 rounded-full hover:bg-transparent cursor-pointer",
-                  },
-                  input: `${
-                    fieldActive
-                      ? checkValidInput(currentValue)
-                        ? "ring-2 focus-visible:ring-2 ring-red-500 focus-visible:ring-red-500"
-                        : "max-sm:ring-offset-0  max-sm:ring-transparent ring-2 ring-offset-2 ring-white"
-                      : ""
-                  }`,
-                }}
-                tagListPlacement="inside"
-                tags={domains}
-                validateTag={checkValidDomain}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        );
-      }}
+      render={({ field: { onChange } }) => (
+        <FormItem>
+          <FormLabel>
+            {label}
+            {required && <span className="ml-1 opacity-50">*</span>}
+          </FormLabel>
+          {description && <FormDescription>{description}</FormDescription>}
+          <FormControl>
+            <TagInput
+              inputProps={{ value: currentValue }}
+              maxLength={100}
+              minLength={4}
+              onBlur={() => {
+                if (checkValidDomain(currentValue))
+                  setDomains((prev) => [...prev, currentValue]);
+                setCurrentValue("");
+                setFieldActive(false);
+              }}
+              onFocus={() => setFieldActive(true)}
+              onInputChange={(newValue) => setCurrentValue(newValue)}
+              placeholder={t("common.placeholder.email_domains")}
+              setTags={(newTags) => {
+                setDomains(newTags);
+                if (Array.isArray(newTags)) onChange(newTags.map((tag) => tag));
+                setCurrentValue("");
+              }}
+              styleClasses={{
+                tag: {
+                  body: "pr-0 gap-0.5",
+                  closeButton:
+                    "h-6 w-6 ring-inset focus-visible:ring-2 p-0 rounded-full hover:bg-transparent cursor-pointer",
+                },
+                input: `${
+                  fieldActive
+                    ? checkValidInput(currentValue)
+                      ? "ring-2 focus-visible:ring-2 ring-red-500 focus-visible:ring-red-500"
+                      : "max-sm:ring-offset-0  max-sm:ring-transparent ring-2 ring-offset-2 ring-white"
+                    : ""
+                }`,
+              }}
+              tagListPlacement="inside"
+              tags={domains}
+              validateTag={checkValidDomain}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
     />
   );
 };

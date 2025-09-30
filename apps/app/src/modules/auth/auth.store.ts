@@ -238,9 +238,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       // Security: Check if account is locked
-      isAccountLocked: (email: string) => {
-        return securityUtils.isAccountLocked(email);
-      },
+      isAccountLocked: (email: string) => securityUtils.isAccountLocked(email),
 
       // Security: Get security information
       getSecurityInfo: () => {

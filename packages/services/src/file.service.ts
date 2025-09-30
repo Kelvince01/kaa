@@ -728,9 +728,7 @@ export const detectCategory = (
 export const shouldProcess = (
   type: FileType,
   options: IFileUploadOptions
-): boolean => {
-  return type === FileType.IMAGE && !!options.processingOptions;
-};
+): boolean => type === FileType.IMAGE && !!options.processingOptions;
 
 /**
  * Queue processing job

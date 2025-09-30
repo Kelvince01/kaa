@@ -170,31 +170,29 @@ const AttachmentsCarousel = ({
       )}
 
       <CarouselContent className="h-full">
-        {slides?.map(({ url, contentType = "image" }, idx) => {
-          return (
-            <CarouselItem
-              key={url}
-              onClick={() => {
-                if (isDialog) return;
-                openAttachmentDialog(idx, slides);
-              }}
-            >
-              <AttachmentRender
-                altName={`Slide ${idx}`}
-                containerClassName={cn(
-                  "justify-center, relative flex h-full items-center overflow-hidden",
-                  classNameContainer
-                )}
-                imagePanZoom={isDialog}
-                itemClassName={itemClass}
-                showButtons={current === idx}
-                togglePanState
-                type={contentType}
-                url={url}
-              />
-            </CarouselItem>
-          );
-        })}
+        {slides?.map(({ url, contentType = "image" }, idx) => (
+          <CarouselItem
+            key={url}
+            onClick={() => {
+              if (isDialog) return;
+              openAttachmentDialog(idx, slides);
+            }}
+          >
+            <AttachmentRender
+              altName={`Slide ${idx}`}
+              containerClassName={cn(
+                "justify-center, relative flex h-full items-center overflow-hidden",
+                classNameContainer
+              )}
+              imagePanZoom={isDialog}
+              itemClassName={itemClass}
+              showButtons={current === idx}
+              togglePanState
+              type={contentType}
+              url={url}
+            />
+          </CarouselItem>
+        ))}
       </CarouselContent>
       {(slides?.length ?? 0) > 1 && (
         <>

@@ -30,6 +30,7 @@ const MediaLibrary: React.FC<MediaLibraryProps> = ({ onInsert, onClose }) => {
   const fileInput = useRef<HTMLInputElement>(null);
 
   const handleUploadClick = () => {
+    // biome-ignore lint/suspicious/noAlert: ignore
     const confirmUpload = window.confirm(
       "Please avoid uploading too many images unnecessarily to save storage space. Also, ensure your images comply with copyright rules. Do you wish to continue?"
     );

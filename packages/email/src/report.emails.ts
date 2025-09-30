@@ -50,23 +50,21 @@ export type MonthlyReportData = {
  */
 export const prepareTemplateData = (
   data: MonthlyReportData
-): MonthlyReportData => {
-  return {
-    ...data,
-    paymentStats: {
-      ...data.paymentStats,
-      totalAmount: formatNumber(data.paymentStats.totalAmount) as any,
-      averageAmount: formatNumber(data.paymentStats.averageAmount) as any,
-    },
-    leaseStats: {
-      ...data.leaseStats,
-      averageRent: formatNumber(data.leaseStats.averageRent) as any,
-    },
-    logoUrl: data.logoUrl || `${config.clientUrl}/logo.png`,
-    dashboardUrl: data.dashboardUrl || `${config.clientUrl}/dashboard`,
-    currentYear: data.currentYear || new Date().getFullYear(),
-  };
-};
+): MonthlyReportData => ({
+  ...data,
+  paymentStats: {
+    ...data.paymentStats,
+    totalAmount: formatNumber(data.paymentStats.totalAmount) as any,
+    averageAmount: formatNumber(data.paymentStats.averageAmount) as any,
+  },
+  leaseStats: {
+    ...data.leaseStats,
+    averageRent: formatNumber(data.leaseStats.averageRent) as any,
+  },
+  logoUrl: data.logoUrl || `${config.clientUrl}/logo.png`,
+  dashboardUrl: data.dashboardUrl || `${config.clientUrl}/dashboard`,
+  currentYear: data.currentYear || new Date().getFullYear(),
+});
 
 /**
  * Generate plain text version of the report

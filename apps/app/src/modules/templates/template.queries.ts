@@ -61,25 +61,23 @@ export const templateKeys = {
 /**
  * Get templates with filters
  */
-export const useTemplates = (params: TemplateListQuery = {}) => {
-  return useQuery({
+export const useTemplates = (params: TemplateListQuery = {}) =>
+  useQuery({
     queryKey: templateKeys.list(params),
     queryFn: () => getTemplates(params),
     staleTime: 30_000,
   });
-};
 
 /**
  * Get a specific template
  */
-export const useTemplate = (id: string) => {
-  return useQuery({
+export const useTemplate = (id: string) =>
+  useQuery({
     queryKey: templateKeys.detail(id),
     queryFn: () => getTemplate(id),
     enabled: !!id,
     staleTime: 60_000,
   });
-};
 
 /**
  * Get template categories
@@ -108,25 +106,23 @@ export const useTemplateTypes = () => {
  */
 export const useRenderingHistory = (
   params: { page?: number; limit?: number } = {}
-) => {
-  return useQuery({
+) =>
+  useQuery({
     queryKey: templateKeys.renderHistory(params),
     queryFn: () => getRenderingHistory(params),
     staleTime: 30_000,
   });
-};
 
 /**
  * Get specific render details
  */
-export const useRenderDetails = (id: string) => {
-  return useQuery({
+export const useRenderDetails = (id: string) =>
+  useQuery({
     queryKey: templateKeys.renderDetail(id),
     queryFn: () => getRenderDetails(id),
     enabled: !!id,
     staleTime: 60_000,
   });
-};
 
 /**
  * Get template usage statistics
@@ -143,13 +139,12 @@ export const useTemplateUsage = (id: string) => {
 /**
  * Get cache statistics
  */
-export const useCacheStats = () => {
-  return useQuery({
+export const useCacheStats = () =>
+  useQuery({
     queryKey: templateKeys.cache(),
     queryFn: getCacheStats,
     staleTime: 60_000,
   });
-};
 
 /**
  * Create template mutation
@@ -219,18 +214,17 @@ export const useDuplicateTemplate = () => {
 /**
  * Render template mutation
  */
-export const useRenderTemplate = () => {
-  return useMutation({
+export const useRenderTemplate = () =>
+  useMutation({
     mutationFn: (renderRequest: TemplateRenderRequest) =>
       renderTemplate(renderRequest),
   });
-};
 
 /**
  * Render template by ID mutation
  */
-export const useRenderTemplateById = () => {
-  return useMutation({
+export const useRenderTemplateById = () =>
+  useMutation({
     mutationFn: ({
       id,
       data,
@@ -241,53 +235,48 @@ export const useRenderTemplateById = () => {
       options?: TemplateRenderRequest["options"];
     }) => renderTemplateById(id, data, options),
   });
-};
 
 /**
  * Batch render templates mutation
  */
-export const useBatchRenderTemplates = () => {
-  return useMutation({
+export const useBatchRenderTemplates = () =>
+  useMutation({
     mutationFn: (batchRequest: BatchRenderRequest) =>
       batchRenderTemplates(batchRequest),
   });
-};
 
 /**
  * Preview template mutation
  */
-export const usePreviewTemplate = () => {
-  return useMutation({
+export const usePreviewTemplate = () =>
+  useMutation({
     mutationFn: (previewRequest: TemplatePreviewRequest) =>
       previewTemplate(previewRequest),
   });
-};
 
 /**
  * Preview template by ID
  */
-export const usePreviewTemplateById = () => {
-  return useMutation({
+export const usePreviewTemplateById = () =>
+  useMutation({
     mutationFn: ({ id, data }: { id: string; data?: Record<string, any> }) =>
       previewTemplateById(id, data),
   });
-};
 
 /**
  * Send test email mutation
  */
-export const useSendTestEmail = () => {
-  return useMutation({
+export const useSendTestEmail = () =>
+  useMutation({
     mutationFn: ({ id, data }: { id: string; data: Record<string, any> }) =>
       sendTestEmail(id, data),
   });
-};
 
 /**
  * Preview SMS template mutation
  */
-export const usePreviewSMSTemplate = () => {
-  return useMutation({
+export const usePreviewSMSTemplate = () =>
+  useMutation({
     mutationFn: ({
       id,
       sampleData,
@@ -296,7 +285,6 @@ export const usePreviewSMSTemplate = () => {
       sampleData: Record<string, any>;
     }) => previewSMSTemplate(id, sampleData),
   });
-};
 
 /**
  * Import templates mutation
@@ -316,12 +304,11 @@ export const useImportTemplates = () => {
 /**
  * Export templates mutation
  */
-export const useExportTemplates = () => {
-  return useMutation({
+export const useExportTemplates = () =>
+  useMutation({
     mutationFn: (exportRequest: FileExportRequest) =>
       exportTemplates(exportRequest),
   });
-};
 
 /**
  * Clear cache mutation

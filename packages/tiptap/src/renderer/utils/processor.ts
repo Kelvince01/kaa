@@ -9,17 +9,15 @@ type ProcessorOptions = {
   components?: Partial<Components>;
 };
 
-const addHeadingIds = () => {
-  return (tree: Root) => {
-    visit(tree, "element", (node) => {
-      if (["h2", "h3", "h4"].includes(node.tagName)) {
-        const text =
-          node.children[0]?.type === "text" ? node.children[0].value : "";
-        node.properties = { ...node.properties, id: slugify(text) };
-      }
-    });
-    return tree;
-  };
+const addHeadingIds = () => (tree: Root) => {
+  visit(tree, "element", (node) => {
+    if (["h2", "h3", "h4"].includes(node.tagName)) {
+      const text =
+        node.children[0]?.type === "text" ? node.children[0].value : "";
+      node.properties = { ...node.properties, id: slugify(text) };
+    }
+  });
+  return tree;
 };
 
 function slugify(text: string): string {

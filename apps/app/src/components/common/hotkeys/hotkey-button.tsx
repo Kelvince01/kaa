@@ -54,34 +54,32 @@ export function HotkeyButton({
       : React.createElement(Icon as LucideIcon, { className: iconClasses });
   };
 
-  const renderButton = () => {
-    return (
-      <Button
-        className={`relative ${className} ${
-          isActive
-            ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400"
-            : ""
-        }`}
-        disabled={disabled}
-        onClick={onClick}
-        size={size}
-        variant={variant}
-        {...props}
-      >
-        {renderIcon(LeftIcon, "left")}
-        <span className="sr-only">{tooltip}</span>
-        <span className="font-sans">{children}</span>
-        {renderIcon(RightIcon, "right")}
-        {isAltPressed && !disabled && (
-          <HotkeyHint
-            hintColor="foreground"
-            hotkey={hotkey}
-            show={isAltPressed && !showHotkeyOverride}
-          />
-        )}
-      </Button>
-    );
-  };
+  const renderButton = () => (
+    <Button
+      className={`relative ${className} ${
+        isActive
+          ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400"
+          : ""
+      }`}
+      disabled={disabled}
+      onClick={onClick}
+      size={size}
+      variant={variant}
+      {...props}
+    >
+      {renderIcon(LeftIcon, "left")}
+      <span className="sr-only">{tooltip}</span>
+      <span className="font-sans">{children}</span>
+      {renderIcon(RightIcon, "right")}
+      {isAltPressed && !disabled && (
+        <HotkeyHint
+          hintColor="foreground"
+          hotkey={hotkey}
+          show={isAltPressed && !showHotkeyOverride}
+        />
+      )}
+    </Button>
+  );
 
   if (tooltip) {
     return <SimpleTooltip content={tooltip}>{renderButton()}</SimpleTooltip>;

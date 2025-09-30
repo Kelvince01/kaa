@@ -325,13 +325,11 @@ export const queryPerformanceMonitor = new QueryPerformanceMonitor();
 /**
  * React hook for performance monitoring
  */
-export const useQueryPerformance = () => {
-  return {
-    getMetrics: () => queryPerformanceMonitor.getMetrics(),
-    getSlowestQueries: (limit?: number) =>
-      queryPerformanceMonitor.getSlowestQueries(limit),
-    getHighErrorRateQueries: (limit?: number, minErrorRate?: number) =>
-      queryPerformanceMonitor.getHighErrorRateQueries(limit, minErrorRate),
-    reset: () => queryPerformanceMonitor.reset(),
-  };
-};
+export const useQueryPerformance = () => ({
+  getMetrics: () => queryPerformanceMonitor.getMetrics(),
+  getSlowestQueries: (limit?: number) =>
+    queryPerformanceMonitor.getSlowestQueries(limit),
+  getHighErrorRateQueries: (limit?: number, minErrorRate?: number) =>
+    queryPerformanceMonitor.getHighErrorRateQueries(limit, minErrorRate),
+  reset: () => queryPerformanceMonitor.reset(),
+});

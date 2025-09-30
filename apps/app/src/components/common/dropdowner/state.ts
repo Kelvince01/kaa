@@ -22,9 +22,7 @@ export type ExternalDropdown = Omit<DropdownT, "id" | "content"> & {
 
 const isDropdown = (
   dropdowner: DropdownT | DropdownToRemove
-): dropdowner is DropdownT => {
-  return !("remove" in dropdowner);
-};
+): dropdowner is DropdownT => !("remove" in dropdowner);
 
 class Observer {
   subscribers: ((dropdowner: DropdownT | DropdownToRemove) => void)[];
@@ -60,9 +58,8 @@ class Observer {
       this.publish({ ...this.dropdowner, remove: true, refocus });
   };
 
-  get = (id: number | string) => {
-    return this.dropdowner ? this.dropdowner.id === id : false;
-  };
+  get = (id: number | string) =>
+    this.dropdowner ? this.dropdowner.id === id : false;
 
   updateOpenDropdown = (data: Partial<DropdownT>) => {
     if (!this.dropdowner) return;
@@ -72,9 +69,7 @@ class Observer {
     this.publish(updatedDropdown);
   };
 
-  getOpenDropdown = () => {
-    return this.dropdowner;
-  };
+  getOpenDropdown = () => this.dropdowner;
 }
 
 export const dropdownerState = new Observer();

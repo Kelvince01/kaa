@@ -71,13 +71,12 @@ export const Image = TiptapImage.extend({
       ...this.parent?.(),
       insertImage:
         ({ width, height, ...options }: any) =>
-        ({ commands }: any) => {
-          return commands.setImage({
+        ({ commands }: any) =>
+          commands.setImage({
             ...options,
             naturalWidth: width,
             naturalHeight: height,
-          } as any);
-        },
+          } as any),
     };
   },
 

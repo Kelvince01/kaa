@@ -115,7 +115,6 @@ export const useOAuthProviders = () => {
  */
 export const useInitiateOAuth = () => {
   const initiateOAuth = (provider: SupportedOAuthProvider) => {
-    // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
     switch (provider) {
       case "google":
         oauthService.initiateGoogleOAuth();

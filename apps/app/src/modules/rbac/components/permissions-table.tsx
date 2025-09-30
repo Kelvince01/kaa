@@ -35,6 +35,7 @@ export function PermissionsTable({
   const { selectedPermissions, togglePermissionSelection } = useRBACStore();
 
   const handleDeletePermission = async (permissionId: string) => {
+    // biome-ignore lint/suspicious/noAlert: ignore
     if (window.confirm("Are you sure you want to delete this permission?")) {
       await deletePermission.mutateAsync(permissionId);
     }

@@ -11,11 +11,15 @@ class MongooseSetup {
 
   constructor() {
     this.mongooseOptions = {
-      maxPoolSize: Number.parseInt(process.env.MONGODB_POOL_SIZE || "10", 10),
+      maxPoolSize:
+        config.env === "production"
+          ? 10
+          : Number.parseInt(process.env.MONGODB_POOL_SIZE || "5", 5),
       minPoolSize: 2,
-      socketTimeoutMS: 30_000,
+      socketTimeoutMS: 45_000,
       connectTimeoutMS: 30_000,
       serverSelectionTimeoutMS: 5000,
+      family: 4,
       retryWrites: true,
       w: "majority",
     };
@@ -77,9 +81,14 @@ class MongooseSetup {
 
       // Handle process termination
       process.on("SIGINT", async () => {
-        await mongoose.connection.close();
-        logger.info("MongoDB connection closed due to app termination");
-        process.exit(0);
+        try {
+          await mongoose.connection.close();
+          logger.info("📴 MongoDB connection closed through app termination");
+          process.exit(0);
+        } catch (error) {
+          console.error("Error closing MongoDB connection:", error);
+          process.exit(1);
+        }
       });
     } catch (error) {
       logger.error("❌ Error connecting to MongoDB:", { extra: error });

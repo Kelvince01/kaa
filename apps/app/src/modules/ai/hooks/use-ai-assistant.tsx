@@ -381,13 +381,14 @@ export function useAIAssistant(propertyContext?: any) {
   });
 
   // ===== Cleanup =====
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
       }
-    };
-  }, []);
+    },
+    []
+  );
 
   // Clear conversation
   const clearConversation = useCallback(() => {

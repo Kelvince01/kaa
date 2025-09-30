@@ -941,9 +941,7 @@ export const logTenantCommunication = async (
 // Additional utility functions
 export const getTenantStats = async (
   filters: Partial<TenantQueryParams> = {}
-) => {
-  return await getTenantAnalytics(filters);
-};
+) => await getTenantAnalytics(filters);
 
 export const getTenantsRequiringFollowUp = async (): Promise<ITenant[]> => {
   try {

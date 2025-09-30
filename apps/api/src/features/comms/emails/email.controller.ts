@@ -129,17 +129,11 @@ export const emailController = new Elysia({ prefix: "/emails" })
       },
     }
   )
-  .get(
-    "/:id",
-    ({ params }) => {
-      return emailService.getEmail(params.id);
+  .get("/:id", ({ params }) => emailService.getEmail(params.id), {
+    params: t.Object({ id: t.String() }),
+    detail: {
+      tags: ["emails"],
+      summary: "Get email by ID",
+      description: "Get an email by its ID",
     },
-    {
-      params: t.Object({ id: t.String() }),
-      detail: {
-        tags: ["emails"],
-        summary: "Get email by ID",
-        description: "Get an email by its ID",
-      },
-    }
-  );
+  });

@@ -10,6 +10,7 @@ import {
 } from "@kaa/ui/components/card";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   useRole,
   useRolePermissions,
@@ -37,11 +38,11 @@ export default function RolePermissionsPage() {
   const handleSave = async () => {
     try {
       await updateRolePermissions.mutateAsync(selectedPermissions);
-      alert("Permissions updated successfully");
+      toast.success("Permissions updated successfully");
       router.push("/admin/rbac/roles");
     } catch (error) {
       console.error("Failed to update permissions:", error);
-      alert("Failed to update permissions");
+      toast.error("Failed to update permissions");
     }
   };
 

@@ -40,13 +40,15 @@ export function ResetBlockTypeItem({
     allowedTypes.includes(i)
   );
 
-  const filteredItems = useMemo(() => {
-    return getSideMenuItems(dict).filter((item) =>
-      filteredSelectItems.includes(
-        item.type as BasicBlockTypes | KaaCustomBlockTypes
-      )
-    );
-  }, [dict, filteredSelectItems]);
+  const filteredItems = useMemo(
+    () =>
+      getSideMenuItems(dict).filter((item) =>
+        filteredSelectItems.includes(
+          item.type as BasicBlockTypes | KaaCustomBlockTypes
+        )
+      ),
+    [dict, filteredSelectItems]
+  );
 
   // Determine if the current block type should be shown
   const shouldShow = useMemo(

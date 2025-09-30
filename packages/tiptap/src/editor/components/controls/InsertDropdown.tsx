@@ -10,6 +10,7 @@ const InsertDropdown = () => {
   const insertBlockquote = () => editor.chain().focus().setBlockquote().run();
 
   const insertYoutube = () => {
+    // biome-ignore lint/suspicious/noAlert: ignore
     const src = prompt(
       "Embed Youtube Video",
       "https://www.youtube.com/watch?v=dQw4w9WgXcQ"

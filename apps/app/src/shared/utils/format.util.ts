@@ -18,9 +18,8 @@ export function formatDate(
   }
 }
 
-export const formatTime = (dateString: string) => {
-  return format(new Date(dateString), "hh:mm a");
-};
+export const formatTime = (dateString: string) =>
+  format(new Date(dateString), "hh:mm a");
 
 export function formatCurrency(amount: number, currency = "KES") {
   return new Intl.NumberFormat("en-KE", {
@@ -33,16 +32,13 @@ export function formatCurrency(amount: number, currency = "KES") {
 /**
  * Format a card brand name by capitalizing the first letter
  */
-export const formatCardBrand = (brand: string): string => {
-  return brand.charAt(0).toUpperCase() + brand.slice(1);
-};
+export const formatCardBrand = (brand: string): string =>
+  brand.charAt(0).toUpperCase() + brand.slice(1);
 
 /**
  * Format the last four digits of a card number
  */
-export const formatLastFour = (last4: string): string => {
-  return last4.slice(-4);
-};
+export const formatLastFour = (last4: string): string => last4.slice(-4);
 
 export function formatPhoneNumber(phone: string) {
   // Convert to international format

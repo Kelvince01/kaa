@@ -146,8 +146,8 @@ export const sendReferenceCompletedEmail = async ({
   propertyName?: string;
   rating: number;
   feedback?: string;
-}): Promise<boolean> => {
-  return await emailService.sendEmail({
+}): Promise<boolean> =>
+  await emailService.sendEmail({
     to: tenantEmail,
     subject: `✅ Reference Completed - ${formatReferenceType(referenceType)} from ${providerName}`,
     template: "reference-completed",
@@ -171,7 +171,6 @@ export const sendReferenceCompletedEmail = async ({
       { name: "rating", value: rating.toString() },
     ],
   });
-};
 
 /**
  * Send notification to tenant when reference is declined
@@ -192,8 +191,8 @@ export const sendReferenceDeclinedEmail = async ({
   propertyName?: string;
   declineReason: string;
   declineComment?: string;
-}): Promise<boolean> => {
-  return await emailService.sendEmail({
+}): Promise<boolean> =>
+  await emailService.sendEmail({
     to: tenantEmail,
     subject: `Reference Request Declined - ${formatReferenceType(referenceType)}`,
     template: "reference-declined",
@@ -218,7 +217,6 @@ export const sendReferenceDeclinedEmail = async ({
       { name: "decline-reason", value: declineReason },
     ],
   });
-};
 
 /**
  * Send welcome email to new reference provider
@@ -231,8 +229,8 @@ export const sendReferenceProviderWelcomeEmail = async ({
   providerEmail: string;
   providerName: string;
   tenantName: string;
-}): Promise<boolean> => {
-  return await emailService.sendEmail({
+}): Promise<boolean> =>
+  await emailService.sendEmail({
     to: providerEmail,
     subject: `Thank You for Providing a Reference for ${tenantName}`,
     template: "reference-provider-welcome",
@@ -245,7 +243,6 @@ export const sendReferenceProviderWelcomeEmail = async ({
     },
     tags: [{ name: "type", value: "reference-provider-welcome" }],
   });
-};
 
 /**
  * Send tenant verification status update email

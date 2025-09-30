@@ -31,31 +31,28 @@ export const useHasPasskey = (email: string) => {
 };
 
 // Hook to get user's passkey
-export const useGetPasskey = (userId: string) => {
-  return useQuery({
+export const useGetPasskey = (userId: string) =>
+  useQuery({
     queryKey: passkeyKeys.user(userId),
     queryFn: () => passkeyService.getPasskey(userId),
     enabled: !!userId,
   });
-};
 
 // Hook to get user's passkey by email
-export const useGetPasskeyByEmail = (email: string) => {
-  return useQuery({
+export const useGetPasskeyByEmail = (email: string) =>
+  useQuery({
     queryKey: passkeyKeys.userEmail(email),
     queryFn: () => passkeyService.getPasskeyByEmail(email),
     enabled: !!email,
   });
-};
 
 // Hook to list user's passkeys
-export const useListPasskeys = (userId: string) => {
-  return useQuery({
+export const useListPasskeys = (userId: string) =>
+  useQuery({
     queryKey: passkeyKeys.list(userId),
     queryFn: () => passkeyService.getUserPasskeys(userId),
     enabled: !!userId,
   });
-};
 
 // Hook to enroll a new passkey
 export const useEnrollPasskey = () => {

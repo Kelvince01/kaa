@@ -41,11 +41,12 @@ export default function useTiptapEditor({
     forceUpdate();
   }, [editor, placeholder, forceUpdate]);
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       editor?.destroy();
-    };
-  }, [editor?.destroy]);
+    },
+    [editor?.destroy]
+  );
 
   return editor;
 }

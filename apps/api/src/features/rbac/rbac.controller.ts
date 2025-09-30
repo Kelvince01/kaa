@@ -615,23 +615,19 @@ export const rbacController = new Elysia({
             limit,
           });
 
-          const rolePermissions = result.data.map((permission) => {
-            return {
-              id: (permission._id as mongoose.Types.ObjectId).toString(),
-              name: permission.name,
-              description: permission.description,
-              resource: permission.resource,
-              action: permission.action,
-              conditions: (permission.conditions as any)?.map(
-                (condition: any) => ({
-                  ...condition,
-                  field: (
-                    condition.field as mongoose.Types.ObjectId
-                  ).toString(),
-                })
-              ),
-            };
-          });
+          const rolePermissions = result.data.map((permission) => ({
+            id: (permission._id as mongoose.Types.ObjectId).toString(),
+            name: permission.name,
+            description: permission.description,
+            resource: permission.resource,
+            action: permission.action,
+            conditions: (permission.conditions as any)?.map(
+              (condition: any) => ({
+                ...condition,
+                field: (condition.field as mongoose.Types.ObjectId).toString(),
+              })
+            ),
+          }));
 
           set.status = 200;
           return {

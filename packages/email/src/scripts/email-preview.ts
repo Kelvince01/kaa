@@ -334,12 +334,10 @@ const app = new Elysia()
       }),
     }
   )
-  .get("/api/templates", () => {
-    return {
-      templates: mjmlService.getTemplates(),
-      themes: mjmlService.getThemes(),
-    };
-  })
+  .get("/api/templates", () => ({
+    templates: mjmlService.getTemplates(),
+    themes: mjmlService.getThemes(),
+  }))
   .get(
     "/api/templates/:name/validate",
     ({ params }) => {

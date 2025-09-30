@@ -148,7 +148,6 @@ export async function updateVerification(
   const user = await User.findById(userId);
   if (!user) return false;
 
-  // biome-ignore lint/nursery/noUnnecessaryConditions: ignore
   switch (type) {
     case "email":
       user.verification.emailVerified = verified;

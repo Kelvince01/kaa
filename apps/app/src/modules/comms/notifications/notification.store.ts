@@ -52,11 +52,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
   },
 
   // Computed getters
-  hasSelectedNotifications: () => {
-    return get().selectedNotifications.length > 0;
-  },
+  hasSelectedNotifications: () => get().selectedNotifications.length > 0,
 
-  selectedCount: () => {
-    return get().selectedNotifications.length;
-  },
+  selectedCount: () => get().selectedNotifications.length,
 }));

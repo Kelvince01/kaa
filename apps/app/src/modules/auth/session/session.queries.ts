@@ -13,15 +13,14 @@ export const sessionKeys = {
 };
 
 // Hooks for session data fetching
-export const useSessions = () => {
-  return useQuery({
+export const useSessions = () =>
+  useQuery({
     queryKey: sessionKeys.lists(),
     queryFn: () => sessionService.getSessions(),
   });
-};
 
-export const useSession = (id: string) => {
-  return useQuery({
+export const useSession = (id: string) =>
+  useQuery({
     queryKey: sessionKeys.detail(id),
     queryFn: async () => {
       const { sessions } = await sessionService.getSessions();
@@ -29,7 +28,6 @@ export const useSession = (id: string) => {
     },
     enabled: !!id,
   });
-};
 
 // Mutation hooks
 export const useTerminateSession = () => {

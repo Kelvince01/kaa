@@ -66,25 +66,19 @@ export function formatUpdatedData<T>(
   };
 }
 
-export const isQueryData = <T>(data: unknown): data is QueryData<T> => {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    "items" in data &&
-    "total" in data
-  );
-};
+export const isQueryData = <T>(data: unknown): data is QueryData<T> =>
+  typeof data === "object" &&
+  data !== null &&
+  "items" in data &&
+  "total" in data;
 
 export const isInfiniteQueryData = <T>(
   data: unknown
-): data is InfiniteQueryData<T> => {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    "pages" in data &&
-    "pageParams" in data
-  );
-};
+): data is InfiniteQueryData<T> =>
+  typeof data === "object" &&
+  data !== null &&
+  "pages" in data &&
+  "pageParams" in data;
 
 /**
  * Retrieves and cancels any ongoing refetch requests for the given query key(s) to prevent overwriting
@@ -138,16 +132,14 @@ export const getQueries = <T>(
  */
 const getExact = <T>(
   passedQueryKey: QueryKey
-): [QueryKey, InfiniteQueryData<T> | QueryData<T> | undefined][] => {
-  return [
-    [
-      passedQueryKey,
-      queryClient.getQueryData<InfiniteQueryData<T> | QueryData<T>>(
-        passedQueryKey
-      ),
-    ],
-  ];
-};
+): [QueryKey, InfiniteQueryData<T> | QueryData<T> | undefined][] => [
+  [
+    passedQueryKey,
+    queryClient.getQueryData<InfiniteQueryData<T> | QueryData<T>>(
+      passedQueryKey
+    ),
+  ],
+];
 
 /**
  * Retrieves queries similar to the given query key.
@@ -157,8 +149,7 @@ const getExact = <T>(
  */
 export const getSimilarQueries = <T>(
   passedQueryKey: QueryKey
-): [QueryKey, InfiniteQueryData<T> | QueryData<T> | undefined][] => {
-  return queryClient.getQueriesData<InfiniteQueryData<T> | QueryData<T>>({
+): [QueryKey, InfiniteQueryData<T> | QueryData<T> | undefined][] =>
+  queryClient.getQueriesData<InfiniteQueryData<T> | QueryData<T>>({
     queryKey: passedQueryKey,
   });
-};

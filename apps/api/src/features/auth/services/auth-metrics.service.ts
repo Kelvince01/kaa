@@ -183,7 +183,6 @@ class AuthMetricsService extends EventEmitter {
     type: "rateLimit" | "blockedIP" | "suspiciousActivity",
     metadata?: Record<string, any>
   ) {
-    // biome-ignore lint/nursery/noUnnecessaryConditions: false positive
     switch (type) {
       case "rateLimit":
         this.metrics.security.rateLimitHits++;

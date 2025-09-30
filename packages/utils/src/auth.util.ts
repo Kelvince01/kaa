@@ -35,11 +35,10 @@ export const getDeviceInfo = (request: Request, server: Server | null) => {
     return device.model || device.vendor || null;
   };
 
-  const getType = (): "mobile" | "desktop" => {
-    return device.type === "wearable" || device.type === "mobile"
+  const getType = (): "mobile" | "desktop" =>
+    device.type === "wearable" || device.type === "mobile"
       ? "mobile"
       : "desktop";
-  };
 
   const deviceInfo = {
     userAgent,

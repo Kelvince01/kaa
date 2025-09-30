@@ -8,12 +8,11 @@ import sharp from "sharp";
 
 const MAX_DIMENSION = 1000;
 
-export const processImage = async (input: Buffer) => {
-  return await sharp(input)
+export const processImage = async (input: Buffer) =>
+  await sharp(input)
     .resize(1024, 1024, { fit: "inside", withoutEnlargement: true })
     .jpeg({ quality: 85 })
     .toBuffer();
-};
 
 export async function cleanImage(input: Jimp) {
   console.log("Cleaning image...");

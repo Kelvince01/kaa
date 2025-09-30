@@ -118,55 +118,51 @@ export function ExportOptions({
     },
   });
 
-  const renderExportOptions = () => {
-    return (
-      <RadioGroup
-        className="space-y-4"
-        onValueChange={setSelectedOption}
-        value={selectedOption}
-      >
-        {options.map((option, index) => {
-          const hotkeyNumber = (index + 1).toString();
-          const hotkey = `shift + ${hotkeyNumber}`;
-          return (
-            <HotkeyRadioButton
-              description={option.description}
-              hotkey={hotkey}
-              id={option.id}
-              key={option.id}
-              label={option.label}
-              onSelect={() => setSelectedOption(option.id)}
-              value={option.id}
-            />
-          );
-        })}
-      </RadioGroup>
-    );
-  };
+  const renderExportOptions = () => (
+    <RadioGroup
+      className="space-y-4"
+      onValueChange={setSelectedOption}
+      value={selectedOption}
+    >
+      {options.map((option, index) => {
+        const hotkeyNumber = (index + 1).toString();
+        const hotkey = `shift + ${hotkeyNumber}`;
+        return (
+          <HotkeyRadioButton
+            description={option.description}
+            hotkey={hotkey}
+            id={option.id}
+            key={option.id}
+            label={option.label}
+            onSelect={() => setSelectedOption(option.id)}
+            value={option.id}
+          />
+        );
+      })}
+    </RadioGroup>
+  );
 
-  const renderExportButtons = () => {
-    return (
-      <div className="flex justify-end gap-2">
-        <HotkeyButton
-          hotkey={"⌫"}
-          onClick={handleCancel}
-          tooltip="Cancel export"
-          variant="outline"
-        >
-          Cancel
-        </HotkeyButton>
-        <HotkeyButton
-          disabled={!selectedOption || isExporting}
-          hotkey={"↩"}
-          leftIcon={isExporting ? <Loader2 className="animate-spin" /> : null}
-          onClick={handleConfirm}
-          tooltip="Export data with selected option"
-        >
-          Export
-        </HotkeyButton>
-      </div>
-    );
-  };
+  const renderExportButtons = () => (
+    <div className="flex justify-end gap-2">
+      <HotkeyButton
+        hotkey={"⌫"}
+        onClick={handleCancel}
+        tooltip="Cancel export"
+        variant="outline"
+      >
+        Cancel
+      </HotkeyButton>
+      <HotkeyButton
+        disabled={!selectedOption || isExporting}
+        hotkey={"↩"}
+        leftIcon={isExporting ? <Loader2 className="animate-spin" /> : null}
+        onClick={handleConfirm}
+        tooltip="Export data with selected option"
+      >
+        Export
+      </HotkeyButton>
+    </div>
+  );
 
   return (
     <Dialog onOpenChange={onOpenChange} open={isOpen}>

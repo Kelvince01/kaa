@@ -12,8 +12,8 @@ const Label = ({
   as: Comp = "label",
   children,
   className = "",
-}: LabelProps) => {
-  return <Comp className={clsx("rte-label", className)}>{children}</Comp>;
-};
+}: LabelProps) => (
+  <Comp className={clsx("rte-label", className)}>{children}</Comp>
+);
 
 export default Label;

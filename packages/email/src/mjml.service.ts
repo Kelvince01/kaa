@@ -211,9 +211,9 @@ class MJMLService {
     );
 
     // Conditional helper
-    Handlebars.registerHelper("ifEquals", (a: any, b: any, options: any) => {
-      return a === b ? options.fn(this) : options.inverse(this);
-    });
+    Handlebars.registerHelper("ifEquals", (a: any, b: any, options: any) =>
+      a === b ? options.fn(this) : options.inverse(this)
+    );
 
     // URL generation helper
     Handlebars.registerHelper(

@@ -46,13 +46,14 @@ const UploadWidget = ({ children, onSuccess, onError }: UploadWidgetProps) => {
     }
   }
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       widget.current?.destroy();
       widget.current = undefined;
       cloudinary.current = undefined;
-    };
-  }, []);
+    },
+    []
+  );
 
   /**
    * createWidget

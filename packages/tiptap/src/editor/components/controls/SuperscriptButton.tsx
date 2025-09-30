@@ -7,12 +7,10 @@ const SuperscriptButton = () => {
 
   const state = useEditorState({
     editor,
-    selector: (ctx) => {
-      return {
-        active: ctx.editor.isActive("superscript"),
-        disabled: !ctx.editor.can().toggleSuperscript(),
-      };
-    },
+    selector: (ctx) => ({
+      active: ctx.editor.isActive("superscript"),
+      disabled: !ctx.editor.can().toggleSuperscript(),
+    }),
   });
 
   return (

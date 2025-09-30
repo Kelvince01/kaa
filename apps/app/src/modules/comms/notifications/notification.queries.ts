@@ -11,21 +11,19 @@ export const useNotifications = ({
   page?: string;
   limit?: string;
   unreadOnly?: string;
-} = {}) => {
-  return useQuery({
+} = {}) =>
+  useQuery({
     queryKey: ["notifications", { page, limit, unreadOnly }],
     queryFn: () =>
       notificationService.getNotifications({ page, limit, unreadOnly }),
   });
-};
 
 // Get unread notification count
-export const useUnreadCount = () => {
-  return useQuery({
+export const useUnreadCount = () =>
+  useQuery({
     queryKey: ["notifications", "unread-count"],
     queryFn: notificationService.getUnreadCount,
   });
-};
 
 // Mark notification as read
 export const useMarkAsRead = () => {

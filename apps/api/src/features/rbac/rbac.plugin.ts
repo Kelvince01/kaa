@@ -13,8 +13,8 @@ export const rolePlugin = (app: Elysia) =>
     .use(authPlugin)
     .derive(async ({ user }) => {
       const userRole = await UserRole.findOne({
-        userId: new mongoose.Types.ObjectId(user.id),
-        // memberId: new mongoose.Types.ObjectId(user.memberId),
+        userId: mongoose.Types.ObjectId.createFromHexString(user.id),
+        // memberId: mongoose.Types.ObjectId.createFromHexString(user.memberId),
         roleId: user.role,
         isActive: true,
         deletedAt: { $exists: false },

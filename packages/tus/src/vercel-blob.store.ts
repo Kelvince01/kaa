@@ -70,7 +70,6 @@ export type MultipartUploadInfo = {
 function calcOffsetFromParts(
   parts?: Array<{ size: number; partNumber: number }>
 ) {
-  // biome-ignore lint/nursery/noUnnecessaryConditions: always true
   return parts && parts.length > 0
     ? parts.reduce((a, b) => a + (b.size ?? 0), 0)
     : 0;
@@ -779,13 +778,12 @@ export class VercelBlobStore extends DataStore {
         prefix: this.prefix,
       });
 
-      const expiredBlobs = result.blobs.filter((blob) => {
-        return (
+      const expiredBlobs = result.blobs.filter(
+        (blob) =>
           blob.pathname.endsWith(".info") &&
           now.getTime() >
             this.getExpirationDate(blob.uploadedAt.toISOString()).getTime()
-        );
-      });
+      );
 
       if (expiredBlobs.length > 0) {
         // Extract IDs from info blobs and delete all related blobs

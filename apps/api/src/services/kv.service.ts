@@ -34,11 +34,8 @@ export const getJwtPublicSecret = async (): Promise<string> => {
   return secretInRedis;
 };
 
-export const getDeprecatedPublicSecret = async (): Promise<string | null> => {
-  return await redisClient.get(
-    adapterConfig.BaseKVKey.DeprecatedJwtPublicSecret
-  );
-};
+export const getDeprecatedPublicSecret = async (): Promise<string | null> =>
+  await redisClient.get(adapterConfig.BaseKVKey.DeprecatedJwtPublicSecret);
 
 export const storeAuthCode = async (
   authCode: string,
@@ -454,9 +451,9 @@ export const getLockedIPsByEmail = async (email: string) => {
     email
   );
   const keys = await redisClient.keys(`${key}*`);
-  return keys.map((storedKey) => {
-    return storedKey === key ? "" : storedKey.replace(`${key}-`, "");
-  });
+  return keys.map((storedKey) =>
+    storedKey === key ? "" : storedKey.replace(`${key}-`, "")
+  );
 };
 
 export const deleteLockedIPsByEmail = async (email: string) => {

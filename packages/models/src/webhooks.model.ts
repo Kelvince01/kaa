@@ -289,9 +289,7 @@ const webhookSchema = new Schema<IWebhook>(
       enum: Object.values(WebhookEventType),
       required: true,
       validate: {
-        validator: (events: string[]) => {
-          return events.length > 0;
-        },
+        validator: (events: string[]) => events.length > 0,
         message: "At least one event type must be specified",
       },
     },
@@ -352,9 +350,7 @@ const webhookSchema = new Schema<IWebhook>(
     tags: {
       type: [String],
       validate: {
-        validator: (tags: string[]) => {
-          return tags.length <= 10;
-        },
+        validator: (tags: string[]) => tags.length <= 10,
         message: "Maximum 10 tags allowed",
       },
       index: true,
@@ -430,9 +426,8 @@ webhookSchema.methods.shouldRetry = function () {
   );
 };
 
-export const getAvailableEvents = (): string[] => {
-  return Object.values(WebhookEventType);
-};
+export const getAvailableEvents = (): string[] =>
+  Object.values(WebhookEventType);
 
 // Create and export the model
 export const Webhook = model<IWebhook>("Webhook", webhookSchema);
