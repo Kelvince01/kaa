@@ -4,6 +4,7 @@ import { getDeviceInfo } from "@kaa/utils";
 import axios from "axios";
 import Elysia, { type Context, t } from "elysia";
 import type mongoose from "mongoose";
+import type { SessionStore } from "~/services/session-store";
 import { authPlugin } from "./auth.plugin";
 
 export const sessionController = new Elysia().group("sessions", (app) =>
@@ -151,8 +152,9 @@ export const createOrUpdateSession = async (
   token: string,
   authType: "regular" | "impersonation",
   authStrategy: "password" | "otp" | "oauth",
-  ctx: Context
-): Promise<string> => {
+  ctx: Context,
+  sessionStore: SessionStore
+): Promise<{ sessionId: string; expiresAt: Date }> => {
   try {
     // const userAgent = req.headers["user-agent"] || "Unknown";
     // const ip = req.ip || req.socket.remoteAddress || "Unknown";
@@ -196,13 +198,13 @@ export const createOrUpdateSession = async (
       ip,
     });
 
+    // const sessionId = randomUUIDv7();
     const sessionId = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
 
-    //  const sessionId = randomUUIDv7();
-    // const now = Date.now();
-    // const expiresAt = now + 1000 * 60 * 60 * 24;
+    //  const now = Date.now();
+    // const expiresAt = new Date(now + SECURITY_CONFIG.sessionMaxAge * 1000);
 
     if (session) {
       // Update last active time
@@ -233,7 +235,21 @@ export const createOrUpdateSession = async (
       });
     }
 
-    return (session._id as mongoose.Types.ObjectId).toString();
+    // Also create in SessionStore for consistency if DB storage
+    if (sessionStore && process.env.SESSION_STORAGE === "db") {
+      await sessionStore.set({
+        id: sessionId,
+        userId,
+        csrfToken: null, // DB sessions don't need CSRF
+        createdAt: new Date(),
+        expiresAt,
+      });
+    }
+
+    return {
+      sessionId: (session._id as mongoose.Types.ObjectId).toString(),
+      expiresAt,
+    };
   } catch (error) {
     console.error("Error creating/updating session:", error);
     throw error;

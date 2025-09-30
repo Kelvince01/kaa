@@ -20,13 +20,7 @@ import {
 import { DateTime } from "luxon";
 import type mongoose from "mongoose";
 import { type FilterQuery, Types } from "mongoose";
-
-type QueuedWebhook = {
-  webhookId: string;
-  eventId: string;
-  scheduledAt: Date;
-  priority: number;
-};
+import { addWebhookJob } from "../queues/webhook.queue";
 
 type DeliveryResult = {
   success: boolean;
@@ -80,16 +74,10 @@ const verifyWebhookSignature = (
 };
 
 class WebhooksService {
-  private readonly deliveryQueue: Map<string, QueuedWebhook> = new Map();
   private readonly rateLimitMap: Map<
     string,
     { count: number; resetTime: Date }
   > = new Map();
-  private processingInterval: NodeJS.Timeout | null = null;
-
-  constructor() {
-    this.startQueueProcessor();
-  }
 
   // ===== WEBHOOK CONFIGURATION MANAGEMENT =====
 
@@ -300,10 +288,21 @@ class WebhooksService {
   }
 
   async getWebhookDelivery(
-    deliveryId: string
+    deliveryId: string,
+    options?: {
+      status?: WebhookStatus[];
+      nextRetryAt?: Date;
+    }
   ): Promise<IWebhookDelivery | null> {
     try {
-      return await WebhookDelivery.findById(deliveryId).lean();
+      const query: FilterQuery<IWebhookDelivery> = {
+        _id: new Types.ObjectId(deliveryId),
+      };
+      if (options?.status) query.status = { $in: options.status };
+      if (options?.nextRetryAt)
+        query.nextRetryAt = { $lte: options.nextRetryAt };
+
+      return await WebhookDelivery.findOne(query).lean();
     } catch (error) {
       throw new Error(`Failed to get delivery: ${(error as Error).message}`);
     }
@@ -585,16 +584,13 @@ class WebhooksService {
 
       await delivery.save();
 
-      // Add to in-memory queue for immediate processing
+      // Add to BullMQ queue for processing
       const priority = this.getPriorityValue(webhook.priority);
-      const queuedWebhook: QueuedWebhook = {
-        webhookId: webhook.id,
-        eventId: event.id,
-        scheduledAt: new Date(),
-        priority,
-      };
-
-      this.deliveryQueue.set(delivery.id, queuedWebhook);
+      await addWebhookJob(
+        "deliverWebhook",
+        { deliveryId: delivery.id },
+        { priority }
+      );
     } catch (error) {
       console.error("Failed to queue delivery:", error);
     }
@@ -610,7 +606,7 @@ class WebhooksService {
     return priorityMap[priority as keyof typeof priorityMap] || 2;
   }
 
-  private async deliverWebhook(delivery: IWebhookDelivery): Promise<void> {
+  async deliverWebhook(delivery: IWebhookDelivery): Promise<void> {
     try {
       const webhook = await WebhookConfig.findById(delivery.webhookId);
       const event = await WebhookEvent.findById(delivery.eventId);
@@ -963,13 +959,19 @@ class WebhooksService {
       delivery.attempt,
       webhook.retryConfig
     );
-    const nextRetryAt = new Date(Date.now() + delay);
 
     await WebhookDelivery.findByIdAndUpdate(delivery._id, {
       status: WebhookStatus.PENDING,
-      nextRetryAt,
+      nextRetryAt: new Date(Date.now() + delay),
       attempt: delivery.attempt + 1,
     });
+
+    // Schedule the retry job with delay
+    await addWebhookJob(
+      "deliverWebhook",
+      { deliveryId: (delivery._id as mongoose.Types.ObjectId).toString() },
+      { delay }
+    );
   }
 
   private calculateRetryDelay(attempt: number, retryConfig: any): number {
@@ -1016,55 +1018,6 @@ class WebhooksService {
       completedAt: new Date(),
       error,
     });
-  }
-
-  // ===== QUEUE PROCESSING =====
-
-  private startQueueProcessor(): void {
-    this.processingInterval = setInterval(async () => {
-      await this.processDeliveryQueue();
-      await this.processRetries();
-    }, 5000); // Process every 5 seconds
-  }
-
-  private async processDeliveryQueue(): Promise<void> {
-    try {
-      // Sort by priority and scheduled time
-      const sortedDeliveries = Array.from(this.deliveryQueue.entries()).sort(
-        ([, a], [, b]) => {
-          if (a.priority !== b.priority) return b.priority - a.priority;
-          return a.scheduledAt.getTime() - b.scheduledAt.getTime();
-        }
-      );
-
-      // Process up to 10 deliveries at once
-      const deliveriesToProcess = sortedDeliveries.slice(0, 10);
-
-      for (const [deliveryId] of deliveriesToProcess) {
-        const delivery = await WebhookDelivery.findById(deliveryId);
-        if (delivery && delivery.status === WebhookStatus.PENDING) {
-          await this.deliverWebhook(delivery);
-        }
-        this.deliveryQueue.delete(deliveryId);
-      }
-    } catch (error) {
-      console.error("Queue processing error:", error);
-    }
-  }
-
-  private async processRetries(): Promise<void> {
-    try {
-      const pendingRetries = await WebhookDelivery.find({
-        status: WebhookStatus.PENDING,
-        nextRetryAt: { $lte: new Date() },
-      });
-
-      for (const delivery of pendingRetries) {
-        await this.deliverWebhook(delivery);
-      }
-    } catch (error) {
-      console.error("Retry processing error:", error);
-    }
   }
 
   // ===== ANALYTICS AND MONITORING =====
@@ -1265,12 +1218,18 @@ class WebhooksService {
     }
   }
 
-  // ===== SHUTDOWN =====
+  async processRetries(): Promise<void> {
+    try {
+      const pendingRetries = await WebhookDelivery.find({
+        status: WebhookStatus.PENDING,
+        nextRetryAt: { $lte: new Date() },
+      });
 
-  shutdown(): void {
-    if (this.processingInterval) {
-      clearInterval(this.processingInterval);
-      this.processingInterval = null;
+      for (const delivery of pendingRetries) {
+        await this.deliverWebhook(delivery);
+      }
+    } catch (error) {
+      console.error("Retry processing error:", error);
     }
   }
 }

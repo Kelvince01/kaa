@@ -331,7 +331,7 @@ export type SmsEvent = {
   };
 };
 
-export type SendResult = {
+export type SmsSendResult = {
   success: boolean;
   providerMessageId?: string;
   cost?: number;

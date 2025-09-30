@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { SECURITY_CONFIG } from "~/config/security.config";
 
 const CSRF_SECRET = process.env.CSRF_SECRET_KEY || "default-csrf-secret-key";
 const TOKEN_LIFETIME = 3_600_000; // 1 hour in milliseconds
@@ -64,7 +65,7 @@ export function extractCSRFToken(
   headers: Record<string, string | undefined>
 ): string | null {
   // Check X-CSRF-Token header first
-  const headerToken = headers["x-csrf-token"];
+  const headerToken = headers[SECURITY_CONFIG.csrfHeaderName];
   if (headerToken) {
     return headerToken;
   }

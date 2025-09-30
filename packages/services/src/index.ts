@@ -2,6 +2,7 @@ export * from "./accounts/api-key.service";
 export * from "./accounts/auth.service";
 export * as passkeyV2Service from "./accounts/passkey-v2.service";
 export * as userService from "./accounts/user.service";
+export * from "./comms/message.service";
 export * from "./comms/notification.service";
 export * from "./comms/sms.service";
 export * from "./comms/whatsapp.service";

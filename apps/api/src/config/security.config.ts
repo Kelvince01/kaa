@@ -12,7 +12,7 @@ export const SECURITY_CONFIG = {
   /**
    * Name of the session ID cookie
    */
-  sessionCookieName: "sessionId",
+  sessionCookieName: "session_id",
 
   /**
    * Session expiration time in seconds (24 hours)

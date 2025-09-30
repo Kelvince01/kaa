@@ -1,5 +1,9 @@
 import { Conversation, Message, Property, User } from "@kaa/models";
-import type { IConversation, IProperty } from "@kaa/models/types";
+import type {
+  IConversation,
+  IConversationParticipant,
+  IProperty,
+} from "@kaa/models/types";
 import Elysia, { t } from "elysia";
 import type mongoose from "mongoose";
 import type { FilterQuery } from "mongoose";
@@ -50,7 +54,7 @@ export const conversationController = new Elysia({
           })
             .populate({
               path: "participants",
-              select: "firstName lastName avatar",
+              select: "profile.firstName profile.lastName profile.avatar",
             })
             .populate({
               path: "property",
@@ -80,7 +84,7 @@ export const conversationController = new Elysia({
             ]),
             title: property
               ? property.title
-              : `Conversation with ${recipient.firstName} ${recipient.lastName}`,
+              : `Conversation with ${recipient.profile.firstName} ${recipient.profile.lastName}`,
           });
 
           await conversation.save();
@@ -89,7 +93,10 @@ export const conversationController = new Elysia({
           const populatedConversation = await Conversation.findById(
             conversation._id
           )
-            .populate("participants", "firstName lastName email avatar")
+            .populate(
+              "participants",
+              "profile.firstName profile.lastName profile.email profile.avatar"
+            )
             .populate("property", "title address")
             .populate({
               path: "lastMessage",
@@ -107,7 +114,7 @@ export const conversationController = new Elysia({
           await message.save();
 
           // Update conversation with last message
-          conversation.lastMessage = message._id as mongoose.Types.ObjectId;
+          conversation.lastMessageId = message._id as mongoose.Types.ObjectId;
 
           // Update unread count for recipient
           const unreadCount =
@@ -128,8 +135,8 @@ export const conversationController = new Elysia({
           const formattedConversation = {
             _id: conversation._id,
             otherParticipant,
-            property: conversation.property,
-            lastMessage: conversation.lastMessage,
+            property: conversation.propertyId,
+            lastMessage: conversation.lastMessageId,
             unreadCount: conversation.unreadCount.get(user.id as string) || 0,
             updatedAt: conversation.updatedAt,
           };
@@ -219,9 +226,12 @@ export const conversationController = new Elysia({
 
           // Get conversations with pagination
           const conversations = await Conversation.find(filter)
-            .populate("participants", "firstName lastName email avatar")
+            .populate(
+              "participants",
+              "profile.firstName profile.lastName profile.email profile.avatar"
+            )
             .populate("property", "title location")
-            .populate("lastMessage", "content sender createdAt isRead")
+            .populate("lastMessageId", "content sender createdAt isRead")
             .sort({ updatedAt: -1 })
             .skip(skip)
             .limit(limitNum);
@@ -322,7 +332,10 @@ export const conversationController = new Elysia({
           // Check if user is participant in conversation
           const conversation = await Conversation.findById(
             conversationId
-          ).populate("participants", "firstName lastName avatar");
+          ).populate(
+            "participants",
+            "profile.firstName profile.lastName profile.avatar"
+          );
 
           if (!conversation) {
             set.status = 404;
@@ -345,8 +358,14 @@ export const conversationController = new Elysia({
             conversation: conversationId,
             deleted: false,
           })
-            .populate("sender", "firstName lastName email avatar")
-            .populate("receiver", "firstName lastName avatar")
+            .populate(
+              "sender",
+              "profile.firstName profile.lastName profile.email profile.avatar"
+            )
+            .populate(
+              "receiver",
+              "profile.firstName profile.lastName profile.avatar"
+            )
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limitNum);
@@ -360,7 +379,7 @@ export const conversationController = new Elysia({
 
           // Find other participant
           const otherParticipant = conversation.participants.find(
-            (p: any) => p._id.toString() !== user.id
+            (p: IConversationParticipant) => p.userId.toString() !== user.id
           );
 
           // Mark conversation as read for this user
@@ -372,7 +391,7 @@ export const conversationController = new Elysia({
             await Message.updateMany(
               {
                 conversation: conversationId,
-                sender: (otherParticipant as any)._id,
+                sender: otherParticipant.userId,
                 isRead: false,
               },
               {
@@ -493,7 +512,7 @@ export const conversationController = new Elysia({
           await message.save();
 
           // Update conversation
-          conversation.lastMessage = message._id as mongoose.Types.ObjectId;
+          conversation.lastMessageId = message._id as mongoose.Types.ObjectId;
           conversation.updatedAt = new Date();
 
           // Update unread counts for other participants
@@ -513,7 +532,7 @@ export const conversationController = new Elysia({
           // Populate message for response
           const populatedMessage = await Message.findById(message._id).populate(
             "sender",
-            "firstName lastName email avatar"
+            "profile.firstName profile.lastName profile.email profile.avatar"
           );
 
           set.status = 201;
@@ -602,9 +621,9 @@ export const conversationController = new Elysia({
           }
 
           // Check if user is the sender or participant in conversation
-          const conversation = message.conversation as any;
+          const conversation = message.conversationId as any;
           if (
-            message.sender.toString() !== user.id &&
+            message.senderId.toString() !== user.id &&
             !conversation.isParticipant(user.id)
           ) {
             set.status = 403;
@@ -631,11 +650,11 @@ export const conversationController = new Elysia({
 
           // If this was the last message in the conversation, update the lastMessage
           const conversation2 = await Conversation.findById(
-            message.conversation
+            message.conversationId
           );
           if (
             conversation2 &&
-            conversation2.lastMessage?.toString() === messageId
+            conversation2.lastMessageId?.toString() === messageId
           ) {
             // Find the previous message that isn't deleted
             const previousMessage = await Message.findOne({
@@ -645,7 +664,7 @@ export const conversationController = new Elysia({
             }).sort({ createdAt: -1 });
 
             if (previousMessage) {
-              conversation.lastMessage = previousMessage._id;
+              conversation.lastMessageId = previousMessage._id;
             } else {
               conversation.lastMessage = undefined;
             }

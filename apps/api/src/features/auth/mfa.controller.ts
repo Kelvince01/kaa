@@ -6,7 +6,9 @@ import { smsService } from "@kaa/services";
 import { redisClient } from "@kaa/utils";
 import Elysia, { t } from "elysia";
 import type mongoose from "mongoose";
+import { SECURITY_CONFIG } from "~/config/security.config";
 import { jwtPlugin } from "~/plugins/security.plugin";
+import { SessionStore } from "~/services/session-store";
 import { authPlugin } from "./auth.plugin";
 import { mfaManager } from "./managers/mfa.manager";
 import { createOrUpdateSession } from "./session.controller";
@@ -16,6 +18,9 @@ const PHONE_MASK_REGEX = /(\d{3})\d{6}(\d{3})/;
 
 // MFA v2 Controller - Unified implementation
 export const mfaController = new Elysia({ name: "mfa-v2" })
+  .decorate({
+    sessionStore: new SessionStore(process.env.SESSION_STORAGE as any),
+  })
   .use(jwtPlugin)
   .use(authPlugin)
   .derive(async ({ user }) => {
@@ -704,7 +709,8 @@ export const mfaController = new Elysia({ name: "mfa-v2" })
           token,
           "regular",
           "otp",
-          ctx
+          ctx,
+          ctx.sessionStore
         );
 
         // Create new access token
@@ -739,11 +745,11 @@ export const mfaController = new Elysia({ name: "mfa-v2" })
         const userProfile = user.getPublicProfile();
 
         // Set session ID in header for subsequent requests
-        set.headers["x-session-id"] = sessionId;
+        set.headers["x-session-id"] = sessionId.sessionId;
         cookie.session_id.set({
-          value: sessionId,
+          value: sessionId.sessionId,
           httpOnly: true,
-          maxAge: Number(config.jwt.expiresIn),
+          maxAge: SECURITY_CONFIG.sessionMaxAge,
           path: "/",
         });
 

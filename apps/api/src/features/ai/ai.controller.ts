@@ -1,7 +1,9 @@
+import { google } from "@ai-sdk/google";
 import { aiIntegrationsService, aiStreamingService } from "@kaa/ai";
 // import { rolesPlugin } from "~/features/rbac/rbac.plugin";
 // import { strictRateLimit } from "~/plugins/rate-limit.plugin";
 import { logger } from "@kaa/utils";
+import { convertToModelMessages, streamText } from "ai";
 import Elysia, { t } from "elysia";
 import { authPlugin } from "~/features/auth/auth.plugin";
 
@@ -82,6 +84,26 @@ export const aiController = new Elysia({
       };
       return { checkPredictLimit } as const;
     })
+
+    .post(
+      "/chat",
+      async ({ body }) => {
+        const uiMessages = body.messages || [];
+        console.log(uiMessages);
+
+        const result = await streamText({
+          model: google("gemini-2.0-flash"),
+          messages: convertToModelMessages(uiMessages as any),
+        });
+
+        return result.toUIMessageStreamResponse();
+      },
+      {
+        body: t.Object({
+          messages: t.Array(t.String()),
+        }),
+      }
+    )
 
     // ===== Property AI Endpoints for Frontend Support =====
 

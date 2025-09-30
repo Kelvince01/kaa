@@ -88,16 +88,46 @@ export type IUsageRecord = BaseDocument & {
   recordedAt: Date;
 };
 
+type IInvoiceLineItem = {
+  description: string;
+  amount: number;
+  quantity: number;
+  proration?: boolean;
+};
+
+type IPaymentMethodInfo = {
+  type: "mpesa" | "airtel" | "card" | "bank";
+  provider: string;
+  identifier: string; // phone number or card token
+  verified: boolean;
+  default: boolean;
+};
+
+type IPaymentAttempt = {
+  id: string;
+  amount: number;
+  method: IPaymentMethodInfo;
+  status: "pending" | "succeeded" | "failed";
+  failureReason?: string;
+  attemptedAt: Date;
+  completedAt?: Date;
+  transactionId?: string;
+};
+
 export type IInvoice = BaseDocument & {
   memberId: mongoose.Types.ObjectId;
   subscriptionId: mongoose.Types.ObjectId;
+  number: string;
   amount: number;
   currency: string;
-  status: string;
+  status: "draft" | "pending" | "paid" | "failed" | "voided";
   invoiceDate: Date;
   dueDate: Date;
   paidAt: Date | null;
   stripeInvoiceId: string;
+  items: IInvoiceLineItem[];
+  paymentAttempts: IPaymentAttempt[];
+  downloadUrl?: string;
 };
 
 export type IUsageBilling = BaseDocument & {

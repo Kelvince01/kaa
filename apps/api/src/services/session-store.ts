@@ -1,7 +1,8 @@
+import crypto from "node:crypto";
 import { Session, User } from "@kaa/models";
 import type { IUser } from "@kaa/models/types";
 import { redisClient } from "@kaa/utils";
-import { randomUUIDv7 } from "bun";
+// import { randomUUIDv7 } from "bun";
 import { LRUCache } from "lru-cache";
 import type { RedisClientType } from "redis";
 
@@ -129,8 +130,10 @@ export class SessionStore {
 
   createNew(): SessionData {
     const now = new Date();
-    const id = randomUUIDv7();
-    const csrfToken = randomUUIDv7();
+    // const id = randomUUIDv7();
+    const id = crypto.randomBytes(32).toString("hex");
+    const { generateCSRFToken } = require("~/shared/utils/csrf.util"); // Import for unified CSRF
+    const csrfToken = generateCSRFToken();
 
     return {
       id,

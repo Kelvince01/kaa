@@ -18,12 +18,12 @@ export const cronPlugin = (app: Elysia) =>
     )
     .use(
       cron({
-        name: "webhook-delivery-processor",
-        pattern: Patterns.EVERY_30_SECONDS,
+        name: "webhook-delivery-retries",
+        pattern: Patterns.EVERY_5_SECONDS,
         run() {
           // logger.info("Starting webhook delivery processor");
-          logger.info("Running webhook delivery processor");
-          webhooksService.processWebhookDeliveries();
+          logger.info("Running webhook retries processor");
+          webhooksService.processRetries();
           // logger.info("Run webhook delivery processor");
         },
       })
@@ -34,7 +34,7 @@ export const cronPlugin = (app: Elysia) =>
         store: {
           cron: {
             "cleanup-expired-backups": cleanupExpiredBackups,
-            "webhook-delivery-processor": webhookDeliveryProcessor,
+            "webhook-delivery-retries": webhookDeliveryRetries,
           },
         },
       }) => {
@@ -44,8 +44,9 @@ export const cronPlugin = (app: Elysia) =>
         cleanupExpiredBackups.stop();
         logger.info("Cleanup expired backups stopped");
 
-        webhookDeliveryProcessor.stop();
-        logger.info("Webhook delivery processor stopped");
+        logger.info("Stopping webhook retries processor");
+        webhookDeliveryRetries.stop();
+        logger.info("Webhook retries processor stopped");
 
         return {
           message: "Stopped cron jobs",

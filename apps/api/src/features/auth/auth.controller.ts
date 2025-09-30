@@ -760,56 +760,47 @@ export const authController = new Elysia()
             );
 
             // 10. Create session (non-blocking)
+            const { generateCSRFToken } = require("~/shared/utils/csrf.util");
+            const csrfToken = generateCSRFToken();
+
             createOrUpdateSession(
               (user._id as mongoose.Types.ObjectId).toString(),
               accessToken,
               "regular",
               "password",
-              ctx as Context
+              ctx as Context,
+              ctx.sessionStore
             )
-              .then((sessionId) => {
-                ctx.headers["x-session-id"] = sessionId;
-                ctx.cookie.session_id.set({
-                  value: sessionId,
+              .then(async (data) => {
+                await ctx.sessionStore.set({
+                  id: data.sessionId,
+                  userId: (user._id as mongoose.Types.ObjectId).toString(),
+                  csrfToken,
+                  createdAt: new Date(),
+                  expiresAt: data.expiresAt,
+                });
+
+                ctx.headers["x-session-id"] = data.sessionId;
+
+                // ✅ update reactive cookies
+                // ✅ create new authorized session
+                ctx.cookie[SECURITY_CONFIG.sessionCookieName].set({
+                  value: data.sessionId,
                   httpOnly: true,
-                  maxAge: Number(config.jwt.expiresIn),
+                  maxAge: SECURITY_CONFIG.sessionMaxAge,
                   path: "/",
+                });
+
+                ctx.cookie[SECURITY_CONFIG.csrfCookieName].set({
+                  value: csrfToken,
+                  path: "/",
+                  sameSite: "strict",
                 });
               })
               .catch((err) => logger.error("Failed to create session", err));
 
             // ❌ delete current (guest) session, if needed
             await ctx.sessionStore?.delete?.(ctx.sessionId); // only if you have a method to delete
-
-            // ✅ create new authorized session
-            const sessionId = randomUUIDv7();
-            const now = Date.now();
-            const expiresAt = new Date(
-              now + SECURITY_CONFIG.sessionMaxAge * 1000
-            );
-            const csrfToken = randomUUIDv7();
-
-            await ctx.sessionStore.set({
-              id: sessionId,
-              userId: (user._id as mongoose.Types.ObjectId).toString(),
-              csrfToken,
-              createdAt: new Date(now),
-              expiresAt,
-            });
-
-            // ✅ update reactive cookies
-            ctx.cookie[SECURITY_CONFIG.sessionCookieName].set({
-              value: sessionId,
-              path: "/",
-              httpOnly: true,
-              maxAge: SECURITY_CONFIG.sessionMaxAge,
-            });
-
-            ctx.cookie[SECURITY_CONFIG.csrfCookieName].set({
-              value: csrfToken,
-              path: "/",
-              sameSite: "strict",
-            });
 
             // 11. Set cookies
             access_token.set({

@@ -791,7 +791,7 @@ export type RealTimeMetrics = {
 };
 
 // Alert and monitoring types
-export type AlertCondition = {
+export type CommAlertCondition = {
   metric: string;
   operator: "gt" | "lt" | "eq" | "gte" | "lte";
   threshold: number;
@@ -802,14 +802,14 @@ export type AlertRule = {
   id: string;
   name: string;
   description?: string;
-  conditions: AlertCondition[];
+  conditions: CommAlertCondition[];
   channels: CommType[];
   enabled: boolean;
   cooldown: number; // minutes
   lastTriggered?: Date;
 };
 
-export type Alert = {
+export type CommAlert = {
   id: string;
   ruleId: string;
   ruleName: string;

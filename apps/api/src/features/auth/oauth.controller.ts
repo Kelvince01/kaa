@@ -6,11 +6,15 @@ import { userService } from "@kaa/services";
 import Elysia, { t } from "elysia";
 import type mongoose from "mongoose";
 import { jwtPlugin } from "~/plugins/security.plugin";
+import { SessionStore } from "~/services/session-store";
 import { authPlugin } from "./auth.plugin";
 import { createOrUpdateSession } from "./session.controller";
 
 export const oauthController = new Elysia().group("oauth", (app) =>
   app
+    .decorate({
+      sessionStore: new SessionStore(process.env.SESSION_STORAGE as any),
+    })
     .use(jwtPlugin)
     .use(cookie())
     .get(
@@ -131,7 +135,8 @@ export const oauthController = new Elysia().group("oauth", (app) =>
               token,
               "regular",
               "oauth",
-              ctx
+              ctx,
+              ctx.sessionStore
             );
 
             // Set cookie
@@ -293,7 +298,8 @@ export const oauthController = new Elysia().group("oauth", (app) =>
               token,
               "regular",
               "oauth",
-              ctx
+              ctx,
+              ctx.sessionStore
             );
 
             // Set cookie
@@ -662,6 +668,7 @@ async function processGoogleUser(
               isVerified: true,
               isActive: true,
               status: "active",
+              acceptTerms: true,
             },
           },
           true
@@ -669,7 +676,7 @@ async function processGoogleUser(
 
         // Create OAuth connection for new user
         await OAuthConnection.create({
-          userId: user._id,
+          userId: user.id,
           provider: "google",
           providerUserId: profile.id,
           accessToken,
