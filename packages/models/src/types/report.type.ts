@@ -465,7 +465,7 @@ export type IReportAnalytics = {
       fastestRender: number;
     };
   };
-  errors: {
+  reportErrors: {
     errorType: ReportErrorCode;
     count: number;
     lastOccurrence: Date;

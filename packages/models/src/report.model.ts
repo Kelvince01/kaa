@@ -577,7 +577,6 @@ const reportTemplateSchema = new Schema<IReportTemplate>(
 // Indexes for Report Template
 reportTemplateSchema.index({ name: 1, version: -1 });
 reportTemplateSchema.index({ type: 1, category: 1 });
-reportTemplateSchema.index({ tags: 1 });
 reportTemplateSchema.index({ createdBy: 1, createdAt: -1 });
 
 // Report Definition Schema
@@ -689,12 +688,10 @@ const reportDefinitionSchema = new Schema<IReportDefinition>(
 );
 
 // Indexes for Report Definition
-reportDefinitionSchema.index({ name: 1 });
 reportDefinitionSchema.index({ type: 1, isActive: 1 });
 reportDefinitionSchema.index({ frequency: 1, nextRunAt: 1 });
 reportDefinitionSchema.index({ priority: 1, nextRunAt: 1 });
 reportDefinitionSchema.index({ createdBy: 1, createdAt: -1 });
-reportDefinitionSchema.index({ tags: 1 });
 reportDefinitionSchema.index({ "metadata.kenyaSpecific": 1 });
 reportDefinitionSchema.index({ "metadata.businessCritical": 1 });
 
@@ -912,7 +909,7 @@ const reportAnalyticsSchema = new Schema<IReportAnalytics>(
         fastestRender: { type: Number, default: 0, min: 0 },
       },
     },
-    errors: [
+    reportErrors: [
       {
         errorType: {
           type: String,
@@ -1036,7 +1033,6 @@ const reportDashboardSchema = new Schema<IReportDashboard>(
 );
 
 // Indexes for Report Dashboard
-reportDashboardSchema.index({ name: 1 });
 reportDashboardSchema.index({ createdBy: 1, isActive: 1 });
 reportDashboardSchema.index({ "accessControl.isPublic": 1 });
 
@@ -1117,7 +1113,6 @@ const businessIntelligenceSchema = new Schema<IBusinessIntelligence>(
 );
 
 // Indexes for Business Intelligence
-businessIntelligenceSchema.index({ name: 1 });
 businessIntelligenceSchema.index({ category: 1, isActive: 1 });
 businessIntelligenceSchema.index({ createdBy: 1, createdAt: -1 });
 

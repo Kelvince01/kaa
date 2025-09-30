@@ -886,7 +886,6 @@ const LocationSchema = new Schema<ILocation>(
 
 // Indexes
 LocationSchema.index({ coordinates: "2dsphere" }); // Geospatial index
-LocationSchema.index({ slug: 1 }, { unique: true });
 LocationSchema.index({ type: 1, status: 1 });
 LocationSchema.index({ county: 1, type: 1 });
 LocationSchema.index({ "analytics.popularity.score": -1 });
@@ -976,7 +975,6 @@ const GeocodingCacheSchema = new Schema(
   }
 );
 
-GeocodingCacheSchema.index({ queryHash: 1 }, { unique: true });
 GeocodingCacheSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 // Location Event Schema

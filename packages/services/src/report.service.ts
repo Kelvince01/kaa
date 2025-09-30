@@ -1275,7 +1275,7 @@ export class ReportsService {
               fastestRender: 0,
             },
           },
-          errors: [],
+          reportErrors: [],
           usage: {
             topUsers: [],
             peakHours: [],
