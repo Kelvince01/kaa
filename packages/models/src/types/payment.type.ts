@@ -34,6 +34,31 @@ export enum PaymentType {
   FEE = "fee",
 }
 
+export enum TransactionType {
+  DEPOSIT = "deposit",
+  WITHDRAWAL = "withdrawal",
+  RENT_PAYMENT = "rent_payment",
+  DEPOSIT_PAYMENT = "deposit_payment",
+  REFUND = "refund",
+  COMMISSION = "commission",
+  TRANSFER = "transfer",
+}
+
+export enum TransactionStatus {
+  PENDING = "pending",
+  PROCESSING = "processing",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  REVERSED = "reversed",
+}
+
+export enum WalletStatus {
+  ACTIVE = "active",
+  SUSPENDED = "suspended",
+  FROZEN = "frozen",
+  CLOSED = "closed",
+}
+
 export interface IPayment extends BaseDocument {
   amount: number;
   currency: string;
@@ -164,4 +189,69 @@ export interface IPaymentMethod extends BaseDocument {
   isDefault: boolean;
   isActive: boolean;
   stripePaymentMethodId?: string;
+}
+
+export type WalletBalance = {
+  available: number; // KES available for use
+  pending: number; // KES in pending transactions
+  reserved: number; // KES reserved for scheduled payments
+  total: number; // Total balance
+};
+
+export interface IWallet extends Document {
+  userId: mongoose.Types.ObjectId;
+  balance: {
+    available: number;
+    pending: number;
+    reserved: number;
+    total: number;
+  };
+  currency: string;
+  status: WalletStatus;
+  dailyLimit: number;
+  monthlyLimit: number;
+  metadata: {
+    lastTransactionAt?: Date;
+    totalDeposited: number;
+    totalWithdrawn: number;
+    totalSpent: number;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IWalletTransaction extends Document {
+  walletId: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
+  type: TransactionType;
+  amount: number;
+  balanceBefore: number;
+  balanceAfter: number;
+  status: TransactionStatus;
+  reference: string;
+  description: string;
+  metadata: {
+    mpesaReceiptNumber?: string;
+    mpesaTransactionId?: string;
+    propertyId?: mongoose.Types.ObjectId;
+    bookingId?: mongoose.Types.ObjectId;
+    applicationId?: mongoose.Types.ObjectId;
+    phoneNumber?: string;
+    recipientWalletId?: mongoose.Types.ObjectId;
+  };
+  failureReason?: string;
+  processedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IScheduledPayment extends Document {
+  walletId: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
+  propertyId: mongoose.Types.ObjectId;
+  amount: number;
+  frequency: "monthly" | "weekly";
+  nextPaymentDate: Date;
+  isActive: boolean;
+  autoTopUp: boolean; // Auto deposit if insufficient balance
 }

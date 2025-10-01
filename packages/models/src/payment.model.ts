@@ -3,7 +3,12 @@ import {
   type IMpesaTransaction,
   type IPayment,
   type IPaymentMethod,
+  type IWallet,
+  type IWalletTransaction,
   PaymentStatus,
+  TransactionStatus,
+  TransactionType,
+  WalletStatus,
 } from "./types/payment.type";
 
 const PaymentSchema: Schema<IPayment> = new Schema<IPayment>(
@@ -293,4 +298,131 @@ const PaymentMethod = mongoose.model<IPaymentMethod>(
   PaymentMethodSchema
 );
 
-export { Payment, MpesaTransaction, PaymentMethod };
+const WalletSchema = new Schema<IWallet>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+      index: true,
+    },
+    balance: {
+      available: { type: Number, default: 0, min: 0 },
+      pending: { type: Number, default: 0, min: 0 },
+      reserved: { type: Number, default: 0, min: 0 },
+      total: { type: Number, default: 0, min: 0 },
+    },
+    currency: {
+      type: String,
+      default: "KES",
+      enum: ["KES"],
+    },
+    status: {
+      type: String,
+      enum: Object.values(WalletStatus),
+      default: WalletStatus.ACTIVE,
+    },
+    dailyLimit: {
+      type: Number,
+      default: 500_000, // KES 500,000
+    },
+    monthlyLimit: {
+      type: Number,
+      default: 5_000_000, // KES 5,000,000
+    },
+    metadata: {
+      lastTransactionAt: Date,
+      totalDeposited: { type: Number, default: 0 },
+      totalWithdrawn: { type: Number, default: 0 },
+      totalSpent: { type: Number, default: 0 },
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Compound indexes for queries
+WalletSchema.index({ userId: 1, status: 1 });
+WalletSchema.index({ "balance.available": 1 });
+
+const Wallet = mongoose.model<IWallet>("Wallet", WalletSchema);
+
+const WalletTransactionSchema = new Schema<IWalletTransaction>(
+  {
+    walletId: {
+      type: Schema.Types.ObjectId,
+      ref: "Wallet",
+      required: true,
+      index: true,
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    type: {
+      type: String,
+      enum: Object.values(TransactionType),
+      required: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    balanceBefore: {
+      type: Number,
+      required: true,
+    },
+    balanceAfter: {
+      type: Number,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: Object.values(TransactionStatus),
+      default: TransactionStatus.PENDING,
+      index: true,
+    },
+    reference: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    metadata: {
+      mpesaReceiptNumber: String,
+      mpesaTransactionId: String,
+      propertyId: Schema.Types.ObjectId,
+      bookingId: Schema.Types.ObjectId,
+      applicationId: Schema.Types.ObjectId,
+      phoneNumber: String,
+      recipientWalletId: Schema.Types.ObjectId,
+    },
+    failureReason: String,
+    processedAt: Date,
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Compound indexes
+WalletTransactionSchema.index({ userId: 1, createdAt: -1 });
+WalletTransactionSchema.index({ walletId: 1, status: 1 });
+WalletTransactionSchema.index({ type: 1, status: 1 });
+WalletTransactionSchema.index({ "metadata.mpesaReceiptNumber": 1 });
+
+const WalletTransaction = mongoose.model<IWalletTransaction>(
+  "WalletTransaction",
+  WalletTransactionSchema
+);
+
+export { Payment, MpesaTransaction, PaymentMethod, Wallet, WalletTransaction };

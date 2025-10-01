@@ -6,6 +6,9 @@
   "scripts": {
     "build": "tsc"
   },
+  "dependencies": {
+    "@kaa/config": "workspace:*"
+  },
   "devDependencies": {
     "@kaa/tsconfig": "workspace:*",
     "typescript": "^5.9.2"

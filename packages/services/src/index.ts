@@ -16,6 +16,7 @@ export * from "./misc/webhook.service";
 export * from "./org/billing.service";
 export * as memberService from "./org/member.service";
 export * from "./org/subscription.service";
+export * from "./payments";
 export * as permissionService from "./rbac/permission.service";
 export * as rbacService from "./rbac/rbac.service";
 export * as roleService from "./rbac/role.service";

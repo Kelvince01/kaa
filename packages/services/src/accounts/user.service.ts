@@ -1,9 +1,16 @@
-import { Member, Organization, User, VerificationToken } from "@kaa/models";
+import {
+  Member,
+  Organization,
+  User,
+  VerificationToken,
+  Wallet,
+} from "@kaa/models";
 import {
   type IUser,
   type UserResponse as UserResponseType,
   UserRole,
   UserStatus,
+  WalletStatus,
 } from "@kaa/models/types";
 import type {
   RegisterUserRequest,
@@ -376,6 +383,20 @@ export const createUser = async (
     if (role === "landlord") {
       member.usage.users += 1;
       await member.save();
+    }
+
+    if (role === "tenant") {
+      // Create wallet for new user
+      await Wallet.create({
+        userId: newUser._id as mongoose.Types.ObjectId,
+        balance: {
+          available: 0,
+          pending: 0,
+          reserved: 0,
+          total: 0,
+        },
+        status: WalletStatus.ACTIVE,
+      });
     }
 
     await assignRole(

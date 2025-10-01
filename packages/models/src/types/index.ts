@@ -15,6 +15,7 @@ export * from "./location.type";
 export * from "./member.type";
 export * from "./message.type";
 export * from "./monitoring.type";
+export * from "./mpesa.type";
 export * from "./notification.type";
 export * from "./openai.type";
 export * from "./org.type";
