@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRefreshToken } from "./auth.queries";
 import { useAuthStore } from "./auth.store";
-import { isTokenExpired } from "./auth.utils";
+import { isTokenExpired, tokenUtils } from "./auth.utils";
 
 export const useAuth = () => {
   const {
@@ -31,13 +31,24 @@ export const useAuth = () => {
 
     const initializeAuth = async () => {
       initializingRef.current = true;
+      console.log("Auth Hook: Starting initialization", {
+        hasUser: !!user,
+        timestamp: new Date().toISOString(),
+      });
 
       try {
         const token = getAccessToken();
         const refreshToken = getRefreshToken();
 
+        console.log("Auth Hook: Token check", {
+          hasAccessToken: !!token,
+          hasRefreshToken: !!refreshToken,
+          tokenExpired: token ? isTokenExpired(token) : "N/A",
+        });
+
         // No tokens at all - user is not authenticated
         if (!(token || refreshToken)) {
+          console.log("Auth Hook: No tokens found, setting unauthenticated");
           setStatus("unauthenticated");
           initializedRef.current = true;
           return;
@@ -45,34 +56,47 @@ export const useAuth = () => {
 
         // Has valid access token and user data - already authenticated
         if (token && !isTokenExpired(token) && user) {
+          console.log(
+            "Auth Hook: Valid token and user found, setting authenticated"
+          );
           setStatus("authenticated");
           initializedRef.current = true;
           return;
         }
 
-        // Has refresh token but no valid access token - attempt refresh
+        // Only attempt refresh if we have a refresh token and either:
+        // 1. No access token, or
+        // 2. Access token is expired
+        // 3. And we don't have user data
         if (refreshToken && (!token || isTokenExpired(token))) {
+          console.log("Auth Hook: Attempting token refresh");
           try {
             setStatus("refreshing");
             await refreshTokenMutation.mutateAsync();
+            console.log("Auth Hook: Token refresh successful");
             setStatus("authenticated");
           } catch (error) {
-            console.error("Token refresh failed during initialization:", error);
+            console.error(
+              "Auth Hook: Failed to initialize auth with refresh:",
+              error
+            );
             storeLogout();
             setStatus("unauthenticated");
           }
         } else {
-          // Has tokens but they're invalid
+          // No tokens at all, ensure we're logged out
+          console.log("Auth Hook: No valid refresh conditions, logging out");
           storeLogout();
           setStatus("unauthenticated");
         }
       } catch (error) {
-        console.error("Auth initialization error:", error);
+        console.error("Auth Hook: Failed to initialize auth:", error);
         storeLogout();
         setStatus("unauthenticated");
       } finally {
         initializingRef.current = false;
         initializedRef.current = true;
+        console.log("Auth Hook: Initialization complete");
       }
     };
 
@@ -97,7 +121,7 @@ export const useAuth = () => {
 
     // Check if token needs refresh every minute
     const checkInterval = setInterval(() => {
-      const needsRefresh = isTokenExpired(token);
+      const needsRefresh = tokenUtils.needsRefresh(token);
 
       if (needsRefresh && !isRefreshing) {
         refreshTokenMutation.mutateAsync().catch((error) => {

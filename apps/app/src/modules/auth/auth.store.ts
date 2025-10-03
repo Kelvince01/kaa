@@ -120,6 +120,18 @@ export const useAuthStore = create<AuthState>()(
 
       // Status management
       setStatus: (status) => {
+        const currentState = get();
+        console.log("Auth Store: Status change", {
+          from: currentState.status,
+          to: status,
+          hasUser: !!currentState.user,
+          hasTokens: !!(
+            currentState.tokens.access_token ||
+            currentState.tokens.refresh_token
+          ),
+          timestamp: new Date().toISOString(),
+        });
+
         set({
           status,
           isLoading: status === "loading",
@@ -163,6 +175,15 @@ export const useAuthStore = create<AuthState>()(
       // Enhanced logout with cleanup
       logout: () => {
         const state = get();
+        console.log("Auth Store: Logout called", {
+          currentStatus: state.status,
+          hasUser: !!state.user,
+          hasTokens: !!(
+            state.tokens.access_token || state.tokens.refresh_token
+          ),
+          sessionId: state.sessionId,
+          timestamp: new Date().toISOString(),
+        });
 
         // Clear session cache
         if (state.sessionId) {

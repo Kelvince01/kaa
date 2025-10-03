@@ -209,6 +209,15 @@ export class ResponseInterceptor {
       }
 
       const { tokens } = await authService.refreshToken();
+
+      console.log("Response Interceptor: Token refresh successful", {
+        correlationId: config.metadata?.correlationId,
+        url: config.url,
+        method: config.method,
+        hasNewTokens: !!(tokens.access_token && tokens.refresh_token),
+        timestamp: new Date().toISOString(),
+      });
+
       authStore.setTokens(tokens);
 
       if (config.headers) {
@@ -220,6 +229,14 @@ export class ResponseInterceptor {
       const { api } = await import("../http-client");
       return api(config);
     } catch (refreshError) {
+      console.error("Response Interceptor: Token refresh failed", {
+        error: refreshError,
+        correlationId: config.metadata?.correlationId,
+        url: config.url,
+        method: config.method,
+        timestamp: new Date().toISOString(),
+      });
+
       this.processQueue(refreshError, null);
       authStore.logout();
 

@@ -87,6 +87,15 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: authService.login,
     onSuccess: (data, variables) => {
+      console.log("Login Query: Login success", {
+        hasUser: "user" in data,
+        hasTokens: "tokens" in data,
+        requiresTwoFactor:
+          "requiresTwoFactor" in data && data.requiresTwoFactor,
+        userRole: "user" in data ? data.user?.role : undefined,
+        timestamp: new Date().toISOString(),
+      });
+
       // Check if 2FA is required
       if ("requiresTwoFactor" in data && data.requiresTwoFactor) {
         toast.info("Please complete two-factor authentication");
@@ -121,6 +130,13 @@ export const useLogin = () => {
         setTokens(data.tokens);
         setStatus("authenticated");
 
+        console.log("Login Query: User and tokens set successfully", {
+          userId: data.user.id,
+          userRole: data.user.role,
+          hasAccessToken: !!data.tokens.access_token,
+          hasRefreshToken: !!data.tokens.refresh_token,
+        });
+
         toast.success("Login successful!");
 
         // Reset redirect attempts on successful login
@@ -143,6 +159,7 @@ export const useLogin = () => {
           redirectPath = getRoleRedirect(userRole);
         }
 
+        console.log("Login Query: Redirecting to", redirectPath);
         // Use replace to prevent back button issues
         router.replace(redirectPath);
       }
@@ -308,24 +325,30 @@ export const useRefreshToken = () => {
       }
     },
     onSuccess: async (tokens) => {
-      try {
-        // Update tokens in store
-        setTokens(tokens.tokens);
-        setStatus("authenticated");
+      // Update tokens in store
+      setTokens(tokens.tokens);
+      setStatus("authenticated");
 
-        // Fetch and update user data with new tokens
+      // Try to fetch and update user data with new tokens
+      // But don't logout if this fails - the user might still be valid
+      try {
         const { meService } = await import("../me/me.service");
         const userData = await meService.getCurrentUser();
-
         if (userData?.user) {
           setUser(userData.user as any);
         } else {
-          // If we can't get user data, logout
-          logout();
+          console.warn(
+            "Failed to fetch user data after token refresh - user data may be stale"
+          );
+          // Don't logout here - the tokens are valid, just user data fetch failed
         }
       } catch (error) {
-        console.error("Failed to fetch user after token refresh:", error);
-        logout();
+        console.warn(
+          "Failed to fetch user after token refresh - keeping user logged in with refreshed tokens:",
+          error
+        );
+        // Don't logout - the tokens are valid, just the user fetch failed
+        // This prevents the logout loop issue
       }
     },
     onError: (error: any) => {
