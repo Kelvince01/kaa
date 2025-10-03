@@ -158,8 +158,25 @@ export async function getRoles({
     Role.countDocuments(query),
   ]);
 
+  // Get permission counts for all roles
+  const rolesWithPermissionCount = await Promise.all(
+    roles.map(async (role) => {
+      const permissionCount = await RolePermission.countDocuments({
+        roleId: role._id,
+      });
+
+      return {
+        ...role,
+        id: role._id.toString(),
+        _id: undefined,
+        __v: undefined,
+        permissionCount,
+      };
+    })
+  );
+
   return {
-    data: roles,
+    data: rolesWithPermissionCount,
     pagination: {
       total: totalCount,
       offset,
