@@ -374,7 +374,7 @@ export const subscriptionController = new Elysia({
       {
         detail: {
           summary: "Handle Stripe webhook",
-          tags: ["subscription"],
+          tags: ["subscriptions"],
         },
       }
     )

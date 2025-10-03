@@ -74,15 +74,21 @@ export const authController = new Elysia()
     app
       .post(
         "/register",
-        async ({ body, set, request, server, validateCsrf }) => {
+        async ({
+          body,
+          set,
+          request,
+          server,
+          //  validateCsrf
+        }) => {
           try {
-            if (!validateCsrf()) {
-              // log.warn("Registration failed: invalid CSRF token");
-              logger.warn("Registration failed: invalid CSRF token");
-              set.status = 403;
-              // return { error: t("auth:invalid_csrf") };
-              return { status: "error", message: "Invalid CSRF token" };
-            }
+            // if (!validateCsrf()) {
+            //   // log.warn("Registration failed: invalid CSRF token");
+            //   logger.warn("Registration failed: invalid CSRF token");
+            //   set.status = 403;
+            //   // return { error: t("auth:invalid_csrf") };
+            //   return { status: "error", message: "Invalid CSRF token" };
+            // }
 
             const existingUser = await userService.getUserBy({
               "contact.email": body.email,
@@ -529,12 +535,12 @@ export const authController = new Elysia()
             server,
           } = ctx;
 
-          if (!ctx.validateCsrf()) {
-            // ctx.log.warn("Login failed: invalid CSRF token");
-            set.status = 403;
-            // return { error: ctx.t("auth:invalid_csrf") };
-            return { status: "error", message: "Invalid CSRF token" };
-          }
+          // if (!ctx.validateCsrf()) {
+          //   // ctx.log.warn("Login failed: invalid CSRF token");
+          //   set.status = 403;
+          //   // return { error: ctx.t("auth:invalid_csrf") };
+          //   return { status: "error", message: "Invalid CSRF token" };
+          // }
 
           const startTime = Date.now();
           const { email, password } = body;
