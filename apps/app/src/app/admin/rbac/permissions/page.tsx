@@ -106,7 +106,7 @@ export default function PermissionsManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="font-bold text-2xl">
-              {permissionsData?.permissions?.length || 0}
+              {permissionsData?.pagination?.total || 0}
             </div>
           </CardContent>
         </Card>

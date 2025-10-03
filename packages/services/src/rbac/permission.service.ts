@@ -43,7 +43,7 @@ export type UserRoleAssignment = {
 
 export async function getPermissions({
   q,
-  roleId,
+  // roleId,
   resource,
   action,
   sort = "name",
@@ -70,11 +70,11 @@ export async function getPermissions({
     ];
   }
 
-  if (roleId) {
-    query.$and = [
-      { _id: { $in: RolePermission.find({ roleId }).select("permissionId") } },
-    ];
-  }
+  // if (roleId) {
+  //   query.$and = [
+  //     { _id: { $in: RolePermission.find({ roleId }).select("permissionId") } },
+  //   ];
+  // }
 
   if (resource) {
     query.resource = resource;
@@ -100,6 +100,58 @@ export async function getPermissions({
       ...row.toObject(),
       createdAt: row.createdAt ? new Date().toISOString() : undefined,
       updatedAt: row.updatedAt ? new Date().toISOString() : undefined,
+    })),
+    pagination: {
+      total: totalCount,
+      offset,
+      limit,
+    },
+  };
+}
+
+export async function getPermissionsByRole({
+  roleId,
+  sort = "name",
+  order = "asc",
+  offset = 0,
+  limit = 10,
+}: {
+  roleId?: string;
+  sort?: string;
+  order?: "asc" | "desc";
+  offset?: number;
+  limit?: number;
+}) {
+  const query: FilterQuery<IRolePermission> = {
+    roleId,
+  };
+
+  // Build sort object
+  const sortObject: Record<string, 1 | -1> = {};
+  sortObject[sort] = order === "asc" ? 1 : -1;
+
+  const permissionsResult = await RolePermission.find(query)
+    .populate("permissionId")
+    .populate("roleId")
+    .populate("grantedBy")
+    .sort(sortObject)
+    .skip(offset)
+    .limit(limit);
+
+  const totalCount = await RolePermission.countDocuments(query);
+
+  return {
+    data: permissionsResult.map((row: IRolePermission) => ({
+      ...row.toObject(),
+      createdAt: row.createdAt ? new Date().toISOString() : undefined,
+      updatedAt: row.updatedAt ? new Date().toISOString() : undefined,
+      permission: row.permissionId,
+      role: row.roleId,
+      granted: row.granted,
+      conditions: row.conditions,
+      grantedBy: row.grantedBy,
+      grantedAt: row.grantedAt,
+      expiresAt: row.expiresAt,
     })),
     pagination: {
       total: totalCount,

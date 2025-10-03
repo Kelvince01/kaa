@@ -5,7 +5,15 @@ import DashboardLayoutContainer from "@/routes/dashboard/layout";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <AuthGuard>
+    <AuthGuard
+      requiredRole={[
+        "property_manager",
+        "manager",
+        "landlord",
+        "owner",
+        "maintenance",
+      ]}
+    >
       <DashboardLayoutContainer>
         {/* <GlobalSheets /> */}
         {children}

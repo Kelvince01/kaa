@@ -4,8 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { queryClient } from "@/query/query-client";
-import { meService } from "../me/me.service";
-import type { User, UserRole, UserStatus } from "../users/user.type";
+import type { UserRole, UserStatus } from "../users/user.type";
 import { authService } from "./auth.service";
 import { useAuthStore } from "./auth.store";
 import type {
@@ -13,25 +12,6 @@ import type {
   RegisterRequest,
   ResetPasswordRequest,
 } from "./auth.type";
-
-// Get role-based redirect path
-export const getRoleRedirect = (role: string): string => {
-  switch (role.toLowerCase()) {
-    case "admin":
-    case "super_admin":
-      return "/admin";
-    case "property_manager":
-    case "manager":
-    case "landlord":
-    case "owner":
-    case "maintenance":
-      return "/dashboard";
-    case "tenant":
-      return "/account";
-    default:
-      return "/";
-  }
-};
 
 export const authKeys = {
   all: ["auth"] as const,
@@ -48,6 +28,22 @@ export const authKeys = {
     [...authKeys.all, "reset", data] as const,
   uploadAvatar: () => [...authKeys.all, "avatar"] as const,
 } as const;
+
+// Get role-based redirect path
+export const getRoleRedirect = (role: string): string => {
+  const redirects: Record<string, string> = {
+    admin: "/admin",
+    super_admin: "/admin",
+    property_manager: "/dashboard",
+    manager: "/dashboard",
+    landlord: "/dashboard",
+    owner: "/dashboard",
+    maintenance: "/dashboard",
+    tenant: "/account",
+  };
+
+  return redirects[role.toLowerCase()] || "/dashboard";
+};
 
 // Register hook
 export const useRegister = () => {
@@ -74,13 +70,23 @@ export const useRegister = () => {
 // Login hook
 export const useLogin = () => {
   const router = useRouter();
-  const { setUser, setTokens } = useAuthStore();
+  const {
+    setUser,
+    setTokens,
+    setStatus,
+    getReturnUrl,
+    clearReturnUrl,
+    getSafeRedirectPath,
+    resetRedirectAttempts,
+    trackLoginAttempt,
+  } = useAuthStore();
+
   // const { setTenant } = useSetTenant();
   // const tenant = useTenant();
 
   return useMutation({
     mutationFn: authService.login,
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       // Check if 2FA is required
       if ("requiresTwoFactor" in data && data.requiresTwoFactor) {
         toast.info("Please complete two-factor authentication");
@@ -90,6 +96,10 @@ export const useLogin = () => {
 
       // Regular login success
       if ("user" in data && "tokens" in data) {
+        // Track successful login
+        trackLoginAttempt(variables.email, true);
+
+        // Update auth store
         setUser({
           id: data.user.id,
           memberId: data.user.memberId,
@@ -99,8 +109,6 @@ export const useLogin = () => {
           email: data.user.email,
           avatar: data.user.avatar,
           role: data.user.role as UserRole,
-          // roles: data.user.roles,
-          // permissions: data.user.permissions,
           status: data.user.status as UserStatus,
           phone: data.user.phone,
           address: data.user.address,
@@ -109,28 +117,47 @@ export const useLogin = () => {
           createdAt: data.user.createdAt,
           updatedAt: data.user.updatedAt,
         });
+
         setTokens(data.tokens);
-
-        // if (data.user.role === "tenant") {
-        // 	const tenant = await tenantService.getTenant(data.user.tenantId);
-
-        // 	useSetTenant(data.user.tenant);
-        // }
+        setStatus("authenticated");
 
         toast.success("Login successful!");
 
-        // Redirect based on user role
-        const redirectPath = getRoleRedirect(data.user.role);
-        router.push(redirectPath);
+        // Reset redirect attempts on successful login
+        resetRedirectAttempts();
+
+        // Get and validate return URL
+        const returnUrl = getReturnUrl();
+        let redirectPath: string;
+
+        if (returnUrl) {
+          // Use the safe redirect path (validates the URL)
+          redirectPath = getSafeRedirectPath(returnUrl);
+          clearReturnUrl();
+        } else {
+          // No return URL, use role-based default
+          const userRole =
+            typeof data.user.role === "string"
+              ? data.user.role
+              : ((data.user.role as any)._id as string);
+          redirectPath = getRoleRedirect(userRole);
+        }
+
+        // Use replace to prevent back button issues
+        router.replace(redirectPath);
       }
     },
-    onError: (error: any) => {
+    onError: (error: any, variables) => {
       const errorData = error.response?.data;
+
+      // Track failed login
+      trackLoginAttempt(variables.email, false);
 
       if (errorData?.verified === false) {
         toast.error("Please verify your email before logging in");
-        // router.push(`/auth/verify-email?email=${encodeURIComponent(values.email)}`);
-        router.push("/auth/verify-email");
+        router.push(
+          `/auth/verify-email?email=${encodeURIComponent(variables.email)}`
+        );
         return;
       }
 
@@ -193,21 +220,25 @@ export const useVerifyPhone = () => {
 // Logout hook
 export const useLogout = () => {
   const router = useRouter();
-  const { logout } = useAuthStore();
+  const { logout, clearReturnUrl, resetRedirectAttempts } = useAuthStore();
 
   return useMutation({
     mutationFn: authService.logout,
     onSuccess: () => {
       logout();
+      clearReturnUrl();
+      resetRedirectAttempts();
       queryClient.clear();
       toast.success("Logged out successfully");
-      router.push("/auth/login");
+      router.replace("/auth/login");
     },
     onError: (_error: any) => {
       // Even if logout fails on server, clear local state
       logout();
+      clearReturnUrl();
+      resetRedirectAttempts();
       queryClient.clear();
-      router.push("/auth/login");
+      router.replace("/auth/login");
     },
   });
 };
@@ -253,7 +284,7 @@ export const useResetPassword = () => {
     mutationFn: authService.resetPassword,
     onSuccess: (data) => {
       toast.success(data.message || "Password reset successfully!");
-      router.push("/auth/login");
+      router.push("/auth/login?resetSuccess=true");
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || "Password reset failed";
@@ -264,7 +295,7 @@ export const useResetPassword = () => {
 
 // Refresh token hook
 export const useRefreshToken = () => {
-  const { setTokens, setUser } = useAuthStore();
+  const { setTokens, setUser, setStatus, logout } = useAuthStore();
 
   return useMutation({
     mutationFn: async () => {
@@ -277,32 +308,36 @@ export const useRefreshToken = () => {
       }
     },
     onSuccess: async (tokens) => {
-      // Update tokens in store
-      setTokens(tokens.tokens);
-
-      // Fetch and update user data with new tokens
       try {
+        // Update tokens in store
+        setTokens(tokens.tokens);
+        setStatus("authenticated");
+
+        // Fetch and update user data with new tokens
+        const { meService } = await import("../me/me.service");
         const userData = await meService.getCurrentUser();
+
         if (userData?.user) {
-          setUser(userData.user as User);
+          setUser(userData.user as any);
+        } else {
+          // If we can't get user data, logout
+          logout();
         }
       } catch (error) {
         console.error("Failed to fetch user after token refresh:", error);
-        // If we can't get user with new tokens, clear auth state
-        useAuthStore.getState().logout();
+        logout();
       }
     },
     onError: (error: any) => {
       console.error("Token refresh failed:", error);
-      // On any error during refresh, clear auth state
-      useAuthStore.getState().logout();
+      logout();
     },
   });
 };
 
 // Auth guard hook
-export const useAuthGuard = (requiredRole?: string) => {
-  const { user, isAuthenticated } = useAuthStore();
+export const useAuthGuard = (requiredRole?: string | string[]) => {
+  const { user, isAuthenticated, getSafeRedirectPath } = useAuthStore();
   const router = useRouter();
 
   const checkAuth = () => {
@@ -311,11 +346,17 @@ export const useAuthGuard = (requiredRole?: string) => {
       return false;
     }
 
-    if (requiredRole && user.role !== requiredRole) {
-      // Redirect to appropriate dashboard based on user role
-      const redirectPath = getRoleRedirect(user.role as string);
-      router.push(redirectPath);
-      return false;
+    if (requiredRole) {
+      const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+      const userRole =
+        typeof user.role === "string" ? user.role : user.role._id;
+
+      if (!roles.includes(userRole)) {
+        // Redirect to appropriate dashboard based on user role
+        const redirectPath = getRoleRedirect(userRole);
+        router.push(redirectPath);
+        return false;
+      }
     }
 
     return true;

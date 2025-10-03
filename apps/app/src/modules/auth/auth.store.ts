@@ -3,8 +3,6 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { authConfig } from "@/modules/auth/auth.config";
 import {
-  //   errorUtils,
-  //   isTokenExpired,
   roleUtils,
   securityUtils,
   sessionUtils,
@@ -13,11 +11,19 @@ import {
 } from "@/modules/auth/auth.utils";
 import type { User } from "@/modules/users/user.type";
 
+type AuthStatus =
+  | "idle"
+  | "loading"
+  | "authenticated"
+  | "unauthenticated"
+  | "refreshing";
+
 type AuthState = {
   user: User | null;
-  isAuthenticated: boolean;
+  status: AuthStatus;
   isLoading: boolean;
   isRefreshing: boolean;
+  isAuthenticated: boolean;
   sessionId: string | null;
   lastActivity: number;
   tokens: {
@@ -25,9 +31,15 @@ type AuthState = {
     refresh_token: string | null;
   };
 
+  // Redirect management
+  returnUrl: string | null;
+  redirectAttempts: number;
+  maxRedirectAttempts: number;
+
   // Enhanced methods
   setUser: (user: User | null) => void;
   setTokens: (tokens: { access_token: string; refresh_token: string }) => void;
+  setStatus: (status: AuthStatus) => void;
   setLoading: (loading: boolean) => void;
   setRefreshing: (refreshing: boolean) => void;
   logout: () => void;
@@ -35,6 +47,14 @@ type AuthState = {
   getAccessToken: () => string | null;
   getRefreshToken: () => string | null;
   clearTokens: () => void;
+
+  // Redirect management methods
+  setReturnUrl: (url: string | null) => void;
+  getReturnUrl: () => string | null;
+  clearReturnUrl: () => void;
+  incrementRedirectAttempts: () => void;
+  resetRedirectAttempts: () => void;
+  canRedirect: () => boolean;
 
   // New enhanced methods
   updateActivity: () => void;
@@ -51,31 +71,72 @@ type AuthState = {
   trackLoginAttempt: (email: string, success: boolean) => void;
   isAccountLocked: (email: string) => boolean;
   getSecurityInfo: () => { failedAttempts: number; lockoutRemaining: number };
+
+  // Safe redirect helper
+  getSafeRedirectPath: (requestedPath?: string | null) => string;
 };
+
+// Allowed redirect paths to prevent open redirect vulnerabilities
+const ALLOWED_REDIRECT_PATTERNS = [
+  /^\/dashboard/,
+  /^\/account/,
+  /^\/admin/,
+  /^\/properties/,
+  /^\/applications/,
+  /^\/messages/,
+  /^\/bookings/,
+  /^\/settings/,
+  /^\/wallet/,
+];
+
+// Paths that don't require authentication
+const PUBLIC_PATHS = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+  "/auth/verify-email",
+  "/auth/verify-phone",
+  "/",
+];
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      isAuthenticated: false,
+      status: "idle",
       isLoading: false,
       isRefreshing: false,
+      isAuthenticated: false,
       sessionId: null,
       lastActivity: Date.now(),
       tokens: {
         access_token: null,
         refresh_token: null,
       },
+      returnUrl: null,
+      redirectAttempts: 0,
+      maxRedirectAttempts: 3,
+
+      // Status management
+      setStatus: (status) => {
+        set({
+          status,
+          isLoading: status === "loading",
+          isRefreshing: status === "refreshing",
+          isAuthenticated: status === "authenticated",
+        });
+      },
 
       // Enhanced user management
       setUser: (user) => {
         const state = get();
         if (user && state.sessionId) {
-          // Cache the session for performance
           sessionUtils.cacheSession(user, state.sessionId);
         }
         set({
           user,
+          status: user ? "authenticated" : "unauthenticated",
           isAuthenticated: !!user,
           lastActivity: Date.now(),
         });
@@ -83,7 +144,6 @@ export const useAuthStore = create<AuthState>()(
 
       // Enhanced token management
       setTokens: (tokens) => {
-        // Validate token format
         if (!tokenUtils.isValidTokenFormat(tokens.access_token)) {
           console.error("Invalid access token format");
           return;
@@ -91,6 +151,7 @@ export const useAuthStore = create<AuthState>()(
 
         set({
           tokens,
+          status: "authenticated",
           isAuthenticated: !!tokens.access_token,
           lastActivity: Date.now(),
         });
@@ -111,8 +172,14 @@ export const useAuthStore = create<AuthState>()(
         // Clear storage
         storageUtils.clearAll();
 
+        // Clear return URL
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("returnUrl");
+        }
+
         set({
           user: null,
+          status: "unauthenticated",
           isAuthenticated: false,
           sessionId: null,
           lastActivity: Date.now(),
@@ -120,6 +187,8 @@ export const useAuthStore = create<AuthState>()(
             access_token: null,
             refresh_token: null,
           },
+          returnUrl: null,
+          redirectAttempts: 0,
         });
       },
 
@@ -132,7 +201,6 @@ export const useAuthStore = create<AuthState>()(
             lastActivity: Date.now(),
           });
 
-          // Update cached session
           const sessionId = get().sessionId;
           if (sessionId) {
             sessionUtils.cacheSession(updatedUser, sessionId);
@@ -150,29 +218,66 @@ export const useAuthStore = create<AuthState>()(
           },
         }),
 
+      // Redirect management
+      setReturnUrl: (url) => {
+        // Validate URL before setting
+        if (url && !isValidRedirectUrl(url)) {
+          console.warn("Invalid redirect URL attempted:", url);
+          return;
+        }
+        set({ returnUrl: url });
+        if (typeof window !== "undefined" && url) {
+          sessionStorage.setItem("returnUrl", url);
+        }
+      },
+
+      getReturnUrl: () => {
+        const stateUrl = get().returnUrl;
+        if (stateUrl) return stateUrl;
+
+        if (typeof window !== "undefined") {
+          const sessionUrl = sessionStorage.getItem("returnUrl");
+          if (sessionUrl && isValidRedirectUrl(sessionUrl)) {
+            return sessionUrl;
+          }
+        }
+        return null;
+      },
+
+      clearReturnUrl: () => {
+        set({ returnUrl: null, redirectAttempts: 0 });
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("returnUrl");
+        }
+      },
+
+      incrementRedirectAttempts: () => {
+        set({ redirectAttempts: get().redirectAttempts + 1 });
+      },
+
+      resetRedirectAttempts: () => {
+        set({ redirectAttempts: 0 });
+      },
+
+      canRedirect: () => get().redirectAttempts < get().maxRedirectAttempts,
+
       // NEW ENHANCED METHODS
 
-      // Update last activity timestamp
       updateActivity: () => {
         set({ lastActivity: Date.now() });
       },
 
-      // Check if session is expired
       isSessionExpired: () => {
         const state = get();
         return sessionUtils.isSessionExpired(state.lastActivity);
       },
 
-      // Check if token needs refresh
       needsTokenRefresh: () => {
         const token = get().tokens.access_token;
-        if (!token) {
-          return true;
-        }
+        if (!token) return true;
         return tokenUtils.needsRefresh(token);
       },
 
-      // Role checking methods
       hasRole: (role: string) => {
         const user = get().user;
         return roleUtils.hasRole(user, role);
@@ -200,17 +305,14 @@ export const useAuthStore = create<AuthState>()(
         );
       },
 
-      // Initialize session with security features
       initializeSession: (
         user: User,
         tokens: { access_token: string; refresh_token: string }
       ) => {
         const sessionId = sessionUtils.generateSessionId();
 
-        // Cache session for performance
         sessionUtils.cacheSession(user, sessionId);
 
-        // Store in secure storage if configured
         if (authConfig.tokenStorage !== "httpOnly") {
           storageUtils.setItem("session_id", sessionId, 24);
           storageUtils.setItem("user_data", user, 24);
@@ -220,27 +322,24 @@ export const useAuthStore = create<AuthState>()(
           user,
           tokens,
           sessionId,
+          status: "authenticated",
           isAuthenticated: true,
           lastActivity: Date.now(),
         });
       },
 
-      // Security: Track login attempts
       trackLoginAttempt: (email: string, success: boolean) => {
         const userAgent =
           typeof window !== "undefined" ? navigator.userAgent : "";
         securityUtils.trackLoginAttempt(email, success, undefined, userAgent);
 
         if (success) {
-          // Clear failed attempts on successful login
           securityUtils.clearLoginAttempts(email);
         }
       },
 
-      // Security: Check if account is locked
       isAccountLocked: (email: string) => securityUtils.isAccountLocked(email),
 
-      // Security: Get security information
       getSecurityInfo: () => {
         const user = get().user;
         if (!user?.email) {
@@ -252,26 +351,78 @@ export const useAuthStore = create<AuthState>()(
           lockoutRemaining: securityUtils.getLockoutTimeRemaining(user.email),
         };
       },
+
+      // Safe redirect helper
+      getSafeRedirectPath: (requestedPath?: string | null) => {
+        const user = get().user;
+
+        // If no requested path, use default for user role
+        if (!requestedPath) {
+          return get().getDefaultRedirectPath();
+        }
+
+        // Validate the requested path
+        if (!isValidRedirectUrl(requestedPath)) {
+          console.warn("Invalid redirect path, using default:", requestedPath);
+          return get().getDefaultRedirectPath();
+        }
+
+        // If user is authenticated, allow valid internal paths
+        if (user) {
+          return requestedPath;
+        }
+
+        // For unauthenticated users, only allow public paths
+        if (PUBLIC_PATHS.includes(requestedPath)) {
+          return requestedPath;
+        }
+
+        return "/";
+      },
     }),
     {
       name: `${config.slug}-auth-store`,
       partialize: (state) => ({
         user: state.user,
+        status: state.status,
         isAuthenticated: state.isAuthenticated,
         tokens: state.tokens,
+        sessionId: state.sessionId,
       }),
       storage: createJSONStorage(() => localStorage),
-      // Add onRehydrateStorage to validate token on page load
-      // onRehydrateStorage: () => async (state) => {
-      // 	// Check if token is valid when hydrating from storage
-      // 	if (state?.tokens?.access_token && !isTokenExpired(state.tokens.access_token)) {
-      // 		// If token invalid, reset the auth state
-      // 		await state.logout();
-      // 	} else if (state?.tokens?.access_token) {
-      // 		// If token valid, set up API client
-      // 		state.setTokens(state.tokens as { access_token: string; refresh_token: string });
-      // 	}
-      // },
     }
   )
 );
+
+// Helper function to validate redirect URLs
+function isValidRedirectUrl(url: string): boolean {
+  if (!url) return false;
+
+  try {
+    // Must be a relative URL (starts with /)
+    if (!url.startsWith("/")) {
+      return false;
+    }
+
+    // Prevent protocol-relative URLs
+    if (url.startsWith("//")) {
+      return false;
+    }
+
+    // Must match allowed patterns
+    const isAllowed =
+      ALLOWED_REDIRECT_PATTERNS.some((pattern) => pattern.test(url)) ||
+      PUBLIC_PATHS.includes(url);
+
+    return isAllowed;
+  } catch {
+    return false;
+  }
+}
+
+// Export helper for external use
+export const isPublicPath = (path: string): boolean =>
+  PUBLIC_PATHS.includes(path);
+
+export const isProtectedPath = (path: string): boolean =>
+  ALLOWED_REDIRECT_PATTERNS.some((pattern) => pattern.test(path));

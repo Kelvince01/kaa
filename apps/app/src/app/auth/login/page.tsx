@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { getMetadata } from "@/config/metadata";
+import { GuestGuard } from "@/modules/auth/components/guest-guard";
 import LoginContainer from "@/modules/auth/components/login/login-container";
 
 export async function generateMetadata() {
@@ -13,8 +13,8 @@ export async function generateMetadata() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <GuestGuard>
       <LoginContainer />
-    </Suspense>
+    </GuestGuard>
   );
 }

@@ -10,7 +10,6 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import type * as React from "react";
-// import AuthLoader from "@/modules/auth/components/auth-loader";
 import { DesktopProvider } from "@/contexts/desktop";
 import { useBreakpoints } from "@/hooks/use-breakpoints";
 import { KeyboardProvider } from "@/hooks/use-keyboard";
@@ -18,9 +17,11 @@ import { LayoutProvider } from "@/hooks/use-layout";
 import { MJMLProvider } from "@/hooks/use-mjml-processor";
 import { UIStateProvider } from "@/hooks/use-ui-state";
 import { ViewportProvider } from "@/hooks/use-viewport";
+import { BrandedAuthLoader } from "@/modules/auth/components/auth-loader";
 // import { useOnlineManager } from "@/hooks/use-online-manager";
 import { QueryClientProvider } from "@/query/provider";
 import { addBadgeToFavicon } from "@/shared/utils/add-badge-to-favicon";
+import { Logo } from "./brand";
 import { Dialoger } from "./common/dialoger";
 import { DownAlert } from "./common/down-alert";
 import { Dropdowner } from "./common/dropdowner";
@@ -48,10 +49,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <ViewportProvider>
             <DesktopProvider />
             <QueryClientProvider>
-              {/* <AuthLoader> */}
               {/* {!isLoading && user && (
-					<GuidedTour userRole={user.role as "landlord" | "tenant" | "admin" | "agent"} />
-				)} */}
+                <GuidedTour userRole={user.role as "landlord" | "tenant" | "admin" | "agent"} />
+              )} */}
 
               <Analytics />
               <SpeedInsights />
@@ -62,7 +62,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 skipDelayDuration={0}
               >
                 <MJMLProvider>
-                  <LayoutProvider>{children}</LayoutProvider>
+                  <LayoutProvider>
+                    <BrandedAuthLoader
+                      brandName="Kenyan Rental Platform"
+                      logo={<Logo />}
+                    >
+                      {children}
+                    </BrandedAuthLoader>
+                  </LayoutProvider>
                 </MJMLProvider>
               </TooltipProvider>
 

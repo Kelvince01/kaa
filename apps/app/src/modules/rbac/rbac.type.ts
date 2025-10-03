@@ -148,7 +148,7 @@ export type RoleFilter = {
   search?: string;
   memberId?: string;
   isSystem?: boolean;
-  page?: number;
+  offset?: number;
   limit?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
@@ -159,7 +159,7 @@ export type PermissionFilter = {
   roleId?: string;
   resource?: string;
   action?: PermissionAction;
-  page?: number;
+  offset?: number;
   limit?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";

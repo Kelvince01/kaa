@@ -13,6 +13,7 @@ type ActionOption<TData> = {
   onClick: (row: TData) => void;
   icon: LucideIcon;
   destructive?: boolean;
+  disabled?: boolean;
 };
 
 type DataTableRowActionsProps<TData> = {
@@ -37,12 +38,13 @@ export function DataTableRowActions<TData>({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[160px]">
-        {actions.map(({ label, onClick, icon, destructive }) => {
+        {actions.map(({ label, onClick, icon, destructive, disabled }) => {
           const Icon = icon;
 
           return (
             <DropdownMenuItem
               className={destructive ? "text-destructive" : ""}
+              disabled={disabled}
               key={label}
               onClick={() => onClick(row.original)}
             >
