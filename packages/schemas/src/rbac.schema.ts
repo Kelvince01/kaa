@@ -27,6 +27,10 @@ export const roleSchema = z.object({
   name: z.string().min(1).max(50),
   description: z.optional(z.string()),
   isSystem: z.optional(z.boolean()),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+  level: z.number().optional(),
+  permissionCount: z.number().optional(),
 });
 
 export const conditionSchema = z.object({
@@ -50,6 +54,9 @@ export const permissionSchema = z.object({
   resource: z.string().min(1),
   description: z.optional(z.string()),
   conditions: z.optional(z.array(conditionSchema)),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+  role: z.optional(z.string()),
 });
 
 export const notificationPreferenceSchema = z.object({

@@ -145,24 +145,24 @@ export type PermissionAssignmentInput = {
 
 // Filter options
 export type RoleFilter = {
-  search?: string;
+  q?: string;
   memberId?: string;
   isSystem?: boolean;
   offset?: number;
   limit?: number;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
+  sort?: string;
+  order?: "asc" | "desc";
 };
 
 export type PermissionFilter = {
-  search?: string;
+  q?: string;
   roleId?: string;
   resource?: string;
   action?: PermissionAction;
   offset?: number;
   limit?: number;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
+  sort?: string;
+  order?: "asc" | "desc";
 };
 
 // User permissions with context

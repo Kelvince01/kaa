@@ -170,6 +170,7 @@
         "player.style": "^0.2.0",
         "radix-ui": "^1.4.3",
         "react": "^19.1.1",
+        "react-colorful": "^5.6.1",
         "react-day-picker": "^9.9.0",
         "react-dom": "^19.1.1",
         "react-dropzone": "^14.3.8",
@@ -336,6 +337,9 @@
     "packages/constants": {
       "name": "@kaa/constants",
       "version": "0.0.1",
+      "dependencies": {
+        "@kaa/config": "workspace:*",
+      },
       "devDependencies": {
         "@kaa/tsconfig": "workspace:*",
         "typescript": "^5.9.2",
@@ -533,6 +537,8 @@
       "version": "0.0.0",
       "dependencies": {
         "@hookform/resolvers": "^5.2.1",
+        "@radix-ui/react-label": "^2.1.7",
+        "@radix-ui/react-separator": "^1.1.7",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",

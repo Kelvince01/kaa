@@ -66,6 +66,11 @@ export const adminSidebarItems = {
           title: "Permissions",
           url: "/admin/rbac/permissions",
         },
+        {
+          name: "Bulk Assignment",
+          href: "/admin/rbac/bulk-assign",
+          icon: Users,
+        },
       ],
     },
     { title: "Settings", url: "/admin/settings", icon: Settings },

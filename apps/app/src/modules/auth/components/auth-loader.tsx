@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import { AlertCircle, Loader2, LoaderIcon, RefreshCw } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -253,7 +253,13 @@ const CustomFallback = ({
         </div>
       )}
       <h1 className="font-bold text-2xl text-gray-900">{brandName}</h1>
-      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      {/* <Loader2 className="h-6 w-6 animate-spin text-primary" /> */}
+
+      <LoaderIcon
+        aria-label="Loading"
+        className={"size-4 animate-spin"}
+        role="status"
+      />
     </div>
   </div>
 );

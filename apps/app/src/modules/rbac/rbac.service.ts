@@ -28,8 +28,8 @@ export async function getRoles(filter: RoleFilter = {}): Promise<{
 }
 
 // Get a single role by ID
-export async function getRoleById(id: string): Promise<Role> {
-  const { data } = await httpClient.api.get<Role>(`/roles/${id}`);
+export async function getRoleById(id: string): Promise<{ role: Role }> {
+  const { data } = await httpClient.api.get<{ role: Role }>(`/roles/${id}`);
   return data;
 }
 
@@ -57,17 +57,71 @@ export async function deleteRole(id: string): Promise<void> {
 export async function getPermissions(filter: PermissionFilter = {}): Promise<{
   permissions: Permission[];
   pagination: { total: number; offset: number; limit: number };
+  meta: {
+    resources: string[];
+    actions: string[];
+  };
 }> {
   const { data } = await httpClient.api.get<{
     permissions: Permission[];
     pagination: { total: number; offset: number; limit: number };
+    meta: {
+      resources: string[];
+      actions: string[];
+    };
   }>("/permissions", { params: filter });
   return data;
 }
 
+export async function getPermissionsByRole(
+  filter: PermissionFilter = {}
+): Promise<{
+  data: (Permission & { role: string })[];
+  meta: { total: number; resources: string[]; actions: string[] };
+}> {
+  const { data } = await httpClient.api.get<{
+    data: (Permission & { role: string })[];
+    meta: { total: number; resources: string[]; actions: string[] };
+  }>(`/role/permissions/${filter.roleId}`, { params: filter });
+  return data;
+}
+
+export async function getAvailablePermissions(): Promise<{
+  data: {
+    permissions: Permission[];
+    grouped: Record<string, Permission[]>;
+    resources: string[];
+    actions: string[];
+  };
+  meta: {
+    total: number;
+    resourceCount: number;
+    actionCount: number;
+  };
+}> {
+  const { data } = await httpClient.api.get<{
+    data: {
+      permissions: Permission[];
+      grouped: Record<string, Permission[]>;
+      resources: string[];
+      actions: string[];
+    };
+    meta: {
+      total: number;
+      resourceCount: number;
+      actionCount: number;
+    };
+  }>("/permissions/all-available");
+  return data;
+}
+
 // Get a single permission by ID
-export async function getPermissionById(id: string): Promise<Permission> {
-  const { data } = await httpClient.api.get<Permission>(`/permissions/${id}`);
+export async function getPermissionById(
+  id: string
+): Promise<{ permission: Permission }> {
+  const { data } = await httpClient.api.get<{ permission: Permission }>(
+    `/permissions/${id}`
+  );
   return data;
 }
 
@@ -142,7 +196,7 @@ export async function getUsersWithRole(
   users: any[];
   pagination: { total: number; offset: number; limit: number };
 }> {
-  const { data } = await httpClient.api.get(`/rbac/roles/users/${roleId}`, {
+  const { data } = await httpClient.api.get(`/roles/users/${roleId}`, {
     params: options,
   });
   return data;
@@ -172,7 +226,7 @@ export async function getRolePermissions(
   roleId: string
 ): Promise<Permission[]> {
   const { data } = await httpClient.api.get<Permission[]>(
-    `/rbac/roles/${roleId}/permissions`
+    `/roles/permissions/${roleId}`
   );
   return data;
 }

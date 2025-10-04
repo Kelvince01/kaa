@@ -203,7 +203,7 @@ export function PaymentSettingsForm({ onSave }: PaymentSettingsFormProps) {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-4">
                     <div>
-                      {/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
+                      {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
                       <label className="font-medium text-sm">Card Number</label>
                       <Input
                         className="mt-1"
@@ -214,19 +214,19 @@ export function PaymentSettingsForm({ onSave }: PaymentSettingsFormProps) {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      {/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
+                      {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
                       <label className="font-medium text-sm">Expiry Date</label>
                       <Input className="mt-1" placeholder="MM/YY" />
                     </div>
                     <div>
-                      {/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
+                      {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
                       <label className="font-medium text-sm">CVV</label>
                       <Input className="mt-1" placeholder="123" />
                     </div>
                   </div>
 
                   <div>
-                    {/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
+                    {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
                     <label className="font-medium text-sm">
                       Cardholder Name
                     </label>
@@ -297,7 +297,7 @@ export function PaymentSettingsForm({ onSave }: PaymentSettingsFormProps) {
 
                 <div className="grid grid-cols-1 gap-4">
                   <div>
-                    {/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
+                    {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
                     <label className="font-medium text-sm">
                       Address Line 1
                     </label>
@@ -305,7 +305,7 @@ export function PaymentSettingsForm({ onSave }: PaymentSettingsFormProps) {
                   </div>
 
                   <div>
-                    {/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
+                    {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
                     <label className="font-medium text-sm">
                       Address Line 2 (Optional)
                     </label>
@@ -318,12 +318,12 @@ export function PaymentSettingsForm({ onSave }: PaymentSettingsFormProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    {/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
+                    {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
                     <label className="font-medium text-sm">City</label>
                     <Input className="mt-1" placeholder="New York" />
                   </div>
                   <div>
-                    {/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
+                    {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
                     <label className="font-medium text-sm">State</label>
                     <Select>
                       <SelectTrigger className="mt-1">
@@ -341,12 +341,12 @@ export function PaymentSettingsForm({ onSave }: PaymentSettingsFormProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    {/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
+                    {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
                     <label className="font-medium text-sm">ZIP Code</label>
                     <Input className="mt-1" placeholder="10001" />
                   </div>
                   <div>
-                    {/* biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
+                    {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
                     <label className="font-medium text-sm">Country</label>
                     <Select>
                       <SelectTrigger className="mt-1">

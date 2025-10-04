@@ -142,6 +142,12 @@ export const useAuthStore = create<AuthState>()(
 
       // Enhanced user management
       setUser: (user) => {
+        console.log("🔐 AuthStore: setUser called", {
+          userId: user?.id,
+          userRole: user?.role,
+          hasUser: !!user,
+        });
+
         const state = get();
         if (user && state.sessionId) {
           sessionUtils.cacheSession(user, state.sessionId);
@@ -156,6 +162,11 @@ export const useAuthStore = create<AuthState>()(
 
       // Enhanced token management
       setTokens: (tokens) => {
+        console.log("🔐 AuthStore: setTokens called", {
+          hasAccessToken: !!tokens.access_token,
+          hasRefreshToken: !!tokens.refresh_token,
+        });
+
         if (!tokenUtils.isValidTokenFormat(tokens.access_token)) {
           console.error("Invalid access token format");
           return;

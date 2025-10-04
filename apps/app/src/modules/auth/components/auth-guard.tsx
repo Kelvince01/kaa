@@ -38,10 +38,26 @@ export function AuthGuard({
   useEffect(() => {
     // Don't do anything until auth is initialized
     if (!isInitialized || redirectingRef.current || hasCheckedRef.current) {
+      console.log("🔒 AuthGuard: Skipping check", {
+        isInitialized,
+        redirecting: redirectingRef.current,
+        hasChecked: hasCheckedRef.current,
+        pathname,
+        status,
+        requiredRole,
+      });
       return;
     }
 
     const handleAuthCheck = () => {
+      console.log("🔒 AuthGuard: Checking auth", {
+        pathname,
+        status,
+        userRole: user?.role,
+        requiredRole,
+        userId: user?.id,
+      });
+
       // Prevent redirect loops
       if (!canRedirect()) {
         console.error(
@@ -53,6 +69,9 @@ export function AuthGuard({
 
       // User is not authenticated
       if (status === "unauthenticated") {
+        console.log(
+          "🔒 AuthGuard: User not authenticated, redirecting to login"
+        );
         // Only set return URL if it's not an auth page
         if (!pathname.startsWith("/auth")) {
           setReturnUrl(pathname);
@@ -74,24 +93,43 @@ export function AuthGuard({
           const userRole =
             typeof user.role === "string" ? user.role : user.role._id;
 
+          console.log("🔒 AuthGuard: Checking role requirements", {
+            requiredRoles: roles,
+            userRole,
+            userRoleType: typeof user.role,
+          });
+
           if (!roles.includes(userRole)) {
             // User doesn't have required role - redirect to their default page
             const defaultPath = getDefaultRedirectPath();
+
+            console.log("🔒 AuthGuard: User doesn't have required role", {
+              defaultPath,
+              currentPath: pathname,
+            });
 
             // Prevent redirect if already on their default page
             if (pathname !== defaultPath) {
               redirectingRef.current = true;
               incrementRedirectAttempts();
+              console.log(
+                "🔒 AuthGuard: Redirecting to default path:",
+                defaultPath
+              );
               router.push(defaultPath);
             } else {
               // Clear redirect attempts if we're on the right page
               resetRedirectAttempts();
+              console.log(
+                "🔒 AuthGuard: Already on correct path, clearing attempts"
+              );
             }
             return;
           }
         }
 
         // User is authenticated and has correct role
+        console.log("🔒 AuthGuard: User authenticated and authorized");
         clearReturnUrl();
         resetRedirectAttempts();
         hasCheckedRef.current = true;
@@ -117,9 +155,13 @@ export function AuthGuard({
 
   // Reset refs when pathname changes
   useEffect(() => {
+    console.log("🔒 AuthGuard: Pathname changed, resetting refs", {
+      pathname,
+      requiredRole,
+    });
     redirectingRef.current = false;
     hasCheckedRef.current = false;
-  }, []);
+  }, [pathname, requiredRole]);
 
   // Show loading state while checking auth
   if (

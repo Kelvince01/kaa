@@ -1,7 +1,18 @@
 "use client";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@kaa/ui/components/alert-dialog";
 import { Badge } from "@kaa/ui/components/badge";
 import { Button } from "@kaa/ui/components/button";
+import { Checkbox } from "@kaa/ui/components/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +28,8 @@ import {
   TableRow,
 } from "@kaa/ui/components/table";
 import { Edit, MoreHorizontal, Shield, Trash2, Users } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { useDeleteRole, useRoles } from "../rbac.queries";
 import { useRBACStore } from "../rbac.store";
 import type { Role } from "../rbac.type";
@@ -35,11 +48,24 @@ export function RolesTable({
   const { data: rolesData, isLoading } = useRoles();
   const deleteRole = useDeleteRole();
   const { selectedRoles, toggleRoleSelection } = useRBACStore();
+  const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
 
-  const handleDeleteRole = async (roleId: string) => {
-    // biome-ignore lint/suspicious/noAlert: ignore
-    if (window.confirm("Are you sure you want to delete this role?")) {
-      await deleteRole.mutateAsync(roleId);
+  const handleDeleteRole = (role: Role) => {
+    if (role.isSystem) {
+      toast.warning("System roles cannot be deleted");
+      return;
+    }
+    setRoleToDelete(role);
+  };
+
+  const confirmDeleteRole = async () => {
+    if (!roleToDelete) return;
+
+    try {
+      await deleteRole.mutateAsync(roleToDelete.id);
+      setRoleToDelete(null);
+    } catch (error) {
+      console.error("Failed to delete role:", error);
     }
   };
 
@@ -53,7 +79,7 @@ export function RolesTable({
         <TableHeader>
           <TableRow>
             <TableHead className="w-12">
-              <input
+              <Checkbox
                 checked={
                   (rolesData?.roles?.length as number) > 0 &&
                   rolesData?.roles?.every((role) =>
@@ -63,7 +89,7 @@ export function RolesTable({
                 onChange={(e) => {
                   const allRoleIds =
                     rolesData?.roles?.map((role) => role.id) || [];
-                  if (e.target.checked) {
+                  if ((e.target as HTMLInputElement).checked) {
                     for (const id of allRoleIds) {
                       if (!selectedRoles.includes(id)) {
                         toggleRoleSelection(id);
@@ -77,7 +103,6 @@ export function RolesTable({
                     }
                   }
                 }}
-                type="checkbox"
               />
             </TableHead>
             <TableHead>Name</TableHead>
@@ -93,10 +118,9 @@ export function RolesTable({
           {rolesData?.roles?.map((role) => (
             <TableRow key={role.id}>
               <TableCell>
-                <input
+                <Checkbox
                   checked={selectedRoles.includes(role.id)}
                   onChange={() => toggleRoleSelection(role.id)}
-                  type="checkbox"
                 />
               </TableCell>
               <TableCell className="font-medium">{role.name}</TableCell>
@@ -140,7 +164,7 @@ export function RolesTable({
                     {!role.isSystem && (
                       <DropdownMenuItem
                         className="text-red-600"
-                        onClick={() => handleDeleteRole(role.id)}
+                        onClick={() => handleDeleteRole(role)}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
@@ -153,6 +177,32 @@ export function RolesTable({
           ))}
         </TableBody>
       </Table>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        onOpenChange={() => setRoleToDelete(null)}
+        open={!!roleToDelete}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Role</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the role "{roleToDelete?.name}"?
+              This action cannot be undone. All users assigned to this role will
+              lose their permissions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDeleteRole}
+            >
+              Delete Role
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

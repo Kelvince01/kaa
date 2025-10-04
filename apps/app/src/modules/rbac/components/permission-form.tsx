@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@kaa/ui/components/select";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useCreatePermission, useUpdatePermission } from "../rbac.queries";
@@ -67,11 +68,25 @@ export function PermissionForm({
   const updatePermission = useUpdatePermission();
   const isPending = createPermission.isPending || updatePermission.isPending;
 
+  const resource = form.watch("resource");
+  const action = form.watch("action");
+
+  const formatDescription = (action: PermissionAction, resource: string) =>
+    `Ability to ${action === PermissionAction.CREATE ? "create new" : action} ${action === PermissionAction.READ ? "view" : action} ${action === PermissionAction.UPDATE ? "edit" : action} ${resource}.`;
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: ignore
+  useEffect(() => {
+    if (resource && action) {
+      form.setValue("name", `${resource}:${action}`);
+      form.setValue("description", formatDescription(action, resource));
+    }
+  }, [resource, action, form.setValue]);
+
   const onSubmit = async (formValues: PermissionFormData) => {
     try {
-      if (isEdit && permission?._id) {
+      if (isEdit && permission?.id) {
         await updatePermission.mutateAsync({
-          id: permission._id,
+          id: permission.id as string,
           data: formValues,
         });
       } else {
@@ -94,37 +109,6 @@ export function PermissionForm({
     <Form {...form}>
       <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Permission Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter permission name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter permission description"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
           <FormField
             control={form.control}
             name="resource"
@@ -167,6 +151,38 @@ export function PermissionForm({
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Permission Name</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter permission name"
+                  {...field}
+                  disabled
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter permission description" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="flex space-x-4">
           <Button disabled={isPending} type="submit">

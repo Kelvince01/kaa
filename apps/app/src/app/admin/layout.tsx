@@ -8,7 +8,7 @@ type AdminLayoutProps = {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <AuthGuard requiredRole="admin">
+    <AuthGuard requiredRole={["admin", "super_admin"]}>
       <AdminLayoutContainer>{children}</AdminLayoutContainer>
     </AuthGuard>
   );

@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { queryClient } from "@/query/query-client";
 import * as rbacService from "./rbac.service";
+import { removeRoleFromUser } from "./rbac.service";
 import type {
   PermissionCreateInput,
   PermissionFilter,
@@ -51,7 +52,7 @@ export const useCreateRole = () => {
     onSuccess: (role) => {
       queryClient.invalidateQueries({ queryKey: rbacKeys.roles() });
       toast.success(`Role "${role.name}" has been created successfully.`);
-      router.push("/rbac/roles");
+      router.push("/admin/rbac/roles");
     },
     onError: (error: Error) => {
       toast.error(`Error creating role: ${error.message}`);
@@ -102,6 +103,15 @@ export const usePermission = (id: string) =>
     enabled: !!id,
   });
 
+// Fetch all available permissions in the system
+export const useAvailablePermissions = () => {
+  return useQuery({
+    queryKey: ["permissions", "available"],
+    queryFn: () => rbacService.getAvailablePermissions(),
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
+  });
+};
+
 // Permission mutation hooks
 export const useCreatePermission = () => {
   const router = useRouter();
@@ -114,7 +124,7 @@ export const useCreatePermission = () => {
       toast.success(
         `Permission "${permission.name}" has been created successfully.`
       );
-      router.push("/rbac/permissions");
+      router.push("/admin/rbac/permissions");
     },
     onError: (error: Error) => {
       toast.error(`Error creating permission: ${error.message}`);
@@ -157,7 +167,7 @@ export const useDeletePermission = () =>
 export const useRolePermissions = (roleId: string) =>
   useQuery({
     queryKey: [...rbacKeys.roleDetail(roleId), "permissions"],
-    queryFn: () => rbacService.getPermissions({ roleId }),
+    queryFn: () => rbacService.getPermissionsByRole({ roleId }),
     enabled: !!roleId,
   });
 
@@ -194,5 +204,59 @@ export const useUpdateRolePermissions = (roleId: string) =>
     },
     onError: (error: Error) => {
       toast.error(`Error updating role permissions: ${error.message}`);
+    },
+  });
+
+// Get user roles
+export const useUserRoles = (userId: string, memberId?: string) =>
+  useQuery({
+    queryKey: ["user-roles", userId, memberId],
+    queryFn: () => rbacService.getUserRoles(userId, memberId),
+    enabled: !!userId,
+  });
+
+// Remove role from user
+export const useRemoveRoleFromUser = () =>
+  useMutation({
+    mutationFn: ({
+      userId,
+      roleId,
+      memberId,
+    }: {
+      userId: string;
+      roleId: string;
+      memberId?: string;
+    }) => removeRoleFromUser(userId, roleId, memberId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["user-roles", variables.userId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["roles"],
+      });
+      toast.success("Role removed successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(`Error removing role: ${error.message}`);
+    },
+  });
+
+// Bulk assign roles
+export const useBulkAssignRoles = () =>
+  useMutation({
+    mutationFn: (data: {
+      userIds: string[];
+      roleId: string;
+      isPrimary?: boolean;
+      expiresAt?: string;
+    }) =>
+      rbacService.bulkAssignRoles(data.userIds, data.roleId, {
+        isPrimary: data.isPrimary,
+        expiresAt: data.expiresAt,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["roles"] });
+      toast.success("Roles assigned successfully");
     },
   });

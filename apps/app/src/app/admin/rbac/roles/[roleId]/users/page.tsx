@@ -12,6 +12,9 @@ import {
 import { ArrowLeft, Users } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { DataTable } from "@/components/ui/data-table/data-table";
+import { useDataTable } from "@/hooks/use-data-table";
+import { AddUsersToRoleSheet } from "@/modules/rbac/components/user-roles-mgt-sheet";
 import { useRole, useUsersWithRole } from "@/modules/rbac/rbac.queries";
 import {
   getStatusIcon,
@@ -36,25 +39,6 @@ export default function RoleUsersPage() {
     error: usersError,
   } = useUsersWithRole(roleId as string, pagination);
 
-  if (roleLoading || usersLoading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
-      </div>
-    );
-  }
-
-  if (usersError) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <p className="mb-2 text-destructive">Error loading users</p>
-          <p className="text-muted-foreground text-sm">{usersError.message}</p>
-        </div>
-      </div>
-    );
-  }
-
   const users = usersData?.users || [];
   const totalUsers = usersData?.pagination?.total || 0;
 
@@ -74,29 +58,73 @@ export default function RoleUsersPage() {
     }
   }
 
-  const _columns = getUsersTableColumns({ statusCounts, setRowAction });
+  const columns = getUsersTableColumns({ statusCounts, setRowAction });
+
+  const { table, shallow, debounceMs, throttleMs } = useDataTable({
+    data: users || [],
+    columns,
+    pageCount: Math.ceil(
+      (usersData?.pagination?.total || 0) / (pagination.limit || 10)
+    ),
+    enableAdvancedFilter: false,
+    initialState: {
+      sorting: [{ id: "createdAt", desc: true }],
+      columnPinning: { right: ["actions"] },
+    },
+    getRowId: (originalRow) => originalRow.id,
+    shallow: false,
+    clearOnDefault: true,
+  });
+
+  if (roleLoading || usersLoading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+      </div>
+    );
+  }
+
+  if (usersError) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-center">
+          <p className="mb-2 text-destructive">Error loading users</p>
+          <p className="text-muted-foreground text-sm">{usersError.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            className="gap-2"
-            onClick={() => router.back()}
-            size="sm"
-            variant="ghost"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <div>
-            <h1 className="font-bold text-3xl tracking-tight">
-              Users with Role: {roleData?.name}
-            </h1>
-            <p className="text-muted-foreground">
-              Manage users assigned to this role
-            </p>
+        <div className="flex items-center justify-between space-x-4">
+          <div className="flex items-center justify-start space-x-2">
+            <Button
+              className="gap-2"
+              onClick={() => router.back()}
+              size="sm"
+              variant="ghost"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            <div>
+              <h1 className="font-bold text-3xl tracking-tight">
+                Users with Role: {roleData?.role?.name}
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                Manage users assigned to this role
+              </p>
+            </div>
+          </div>
+
+          <div className="justify-end">
+            <AddUsersToRoleSheet
+              roleId={roleId as string}
+              roleName={roleData?.role?.name || ""}
+            />
           </div>
         </div>
       </div>
@@ -109,9 +137,11 @@ export default function RoleUsersPage() {
                 <Users className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-xl">{roleData?.name}</CardTitle>
+                <CardTitle className="text-xl">
+                  {roleData?.role?.name}
+                </CardTitle>
                 <CardDescription>
-                  {roleData?.description || "No description available"}
+                  {roleData?.role?.description || "No description available"}
                 </CardDescription>
               </div>
             </div>
@@ -120,7 +150,9 @@ export default function RoleUsersPage() {
                 <Users className="h-3 w-3" />
                 {totalUsers} {totalUsers === 1 ? "User" : "Users"}
               </Badge>
-              {roleData?.isActive && <Badge variant="default">Active</Badge>}
+              {roleData?.role?.isActive && (
+                <Badge variant="default">Active</Badge>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -130,7 +162,7 @@ export default function RoleUsersPage() {
         <CardHeader>
           <CardTitle>Users List</CardTitle>
           <CardDescription>
-            All users currently assigned to the {roleData?.name} role
+            All users currently assigned to the {roleData?.role?.name} role
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -145,27 +177,25 @@ export default function RoleUsersPage() {
               </div>
             </div>
           ) : (
-            // <DataTable
-            // 	data={users || []}
-            // 	columns={columns}
-            // 	enablePagination
-            // 	pageSize={pagination.limit}
-            // 	pageIndex={Math.floor(pagination.offset / pagination.limit)}
-            // 	pageCount={Math.ceil(totalUsers / pagination.limit)}
-            // 	onPaginationChange={(updater: any) => {
-            // 		if (typeof updater === "function") {
-            // 			const newPagination = updater({
-            // 				pageIndex: Math.floor(pagination.offset / pagination.limit),
-            // 				pageSize: pagination.limit,
-            // 			});
-            // 			setPagination({
-            // 				limit: newPagination.pageSize,
-            // 				offset: newPagination.pageIndex * newPagination.pageSize,
-            // 			});
-            // 		}
-            // 	}}
-            // />
-            <div>Users</div>
+            <DataTable
+              table={table}
+              // enablePagination
+              // pageCount={Math.ceil(totalUsers / pagination.limit)}
+              // pageIndex={Math.floor(pagination.offset / pagination.limit)}
+              // pageSize={pagination.limit}
+              // 	onPaginationChange={(updater: any) => {
+              // 		if (typeof updater === "function") {
+              // 			const newPagination = updater({
+              // 				pageIndex: Math.floor(pagination.offset / pagination.limit),
+              // 				pageSize: pagination.limit,
+              // 			});
+              // 			setPagination({
+              // 				limit: newPagination.pageSize,
+              // 				offset: newPagination.pageIndex * newPagination.pageSize,
+              // 			});
+              // 		}
+              // 	}}
+            />
           )}
         </CardContent>
       </Card>

@@ -96,12 +96,14 @@ export function RoleForm({
           />
         </div>
 
-        <Button disabled={isPending} type="submit">
-          {isPending ? "Saving..." : isEdit ? "Update Role" : "Create Role"}
-        </Button>
-        <Button onClick={onCancel} type="button" variant="secondary">
-          Cancel
-        </Button>
+        <div className="flex space-x-4">
+          <Button disabled={isPending} type="submit">
+            {isPending ? "Saving..." : isEdit ? "Update Role" : "Create Role"}
+          </Button>
+          <Button onClick={onCancel} type="button" variant="secondary">
+            Cancel
+          </Button>
+        </div>
       </form>
     </Form>
   );

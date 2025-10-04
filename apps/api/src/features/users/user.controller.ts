@@ -147,7 +147,7 @@ export const usersController = new Elysia({
               : undefined,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
-            lastLoginAt: user.activity.lastLogin,
+            lastLoginAt: user?.activity?.lastLogin,
           }));
 
           return { status: "success", users: usersRes, pagination };

@@ -95,6 +95,18 @@ export async function getPermissions({
 
   const totalCount = await Permission.countDocuments(query);
 
+  const permissionsResultForMeta =
+    await Permission.find(query).sort(sortObject);
+
+  const resources = permissionsResultForMeta.map(
+    (row: IPermission) => row.resource
+  );
+  const actions = permissionsResultForMeta.map(
+    (row: IPermission) => row.action
+  );
+  const uniqueResources = [...new Set(resources)];
+  const uniqueActions = [...new Set(actions)];
+
   return {
     data: permissionsResult.map((row: IPermission) => ({
       ...row.toObject(),
@@ -106,21 +118,21 @@ export async function getPermissions({
       offset,
       limit,
     },
+    meta: {
+      resources: uniqueResources,
+      actions: uniqueActions,
+    },
   };
 }
 
 export async function getPermissionsByRole({
   roleId,
-  sort = "name",
+  sort = "createdAt",
   order = "asc",
-  offset = 0,
-  limit = 10,
 }: {
   roleId?: string;
   sort?: string;
   order?: "asc" | "desc";
-  offset?: number;
-  limit?: number;
 }) {
   const query: FilterQuery<IRolePermission> = {
     roleId,
@@ -134,11 +146,18 @@ export async function getPermissionsByRole({
     .populate("permissionId")
     .populate("roleId")
     .populate("grantedBy")
-    .sort(sortObject)
-    .skip(offset)
-    .limit(limit);
+    .sort(sortObject);
 
   const totalCount = await RolePermission.countDocuments(query);
+
+  const resources = permissionsResult.map(
+    (row: IRolePermission) => (row.permissionId as any)?.resource
+  );
+  const actions = permissionsResult.map(
+    (row: IRolePermission) => (row.permissionId as any)?.action
+  );
+  const uniqueResources = [...new Set(resources)];
+  const uniqueActions = [...new Set(actions)];
 
   return {
     data: permissionsResult.map((row: IRolePermission) => ({
@@ -153,10 +172,10 @@ export async function getPermissionsByRole({
       grantedAt: row.grantedAt,
       expiresAt: row.expiresAt,
     })),
-    pagination: {
+    meta: {
       total: totalCount,
-      offset,
-      limit,
+      resources: uniqueResources,
+      actions: uniqueActions,
     },
   };
 }

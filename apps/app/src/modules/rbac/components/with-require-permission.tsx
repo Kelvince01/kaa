@@ -43,7 +43,7 @@ export function requirePermission(resource: string, action: string) {
           toast.error("Authentication Required", {
             description: "Please sign in to access this page",
           });
-          router.push("/auth/signin");
+          router.push("/auth/login");
           return;
         }
 
@@ -51,7 +51,7 @@ export function requirePermission(resource: string, action: string) {
           toast.error("Access Denied", {
             description: "You do not have permission to access this page",
           });
-          router.push("/dashboard");
+          router.push("/");
         }
       }, [user, isLoading, router, resource, action]);
 

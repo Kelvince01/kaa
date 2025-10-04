@@ -42,7 +42,7 @@ export default function RBACOverviewPage() {
     },
     {
       title: "Total Permissions",
-      value: permissionsData?.permissions?.length || 0,
+      value: permissionsData?.pagination?.total || 0,
       icon: Key,
       description: "Available permissions",
       color: "text-green-600",
@@ -94,6 +94,13 @@ export default function RBACOverviewPage() {
       icon: Settings,
       action: () => router.push("/admin/rbac/permissions"),
       color: "bg-orange-600 hover:bg-orange-700",
+    },
+    {
+      title: "Bulk Assign Roles",
+      description: "Assign roles to multiple users",
+      icon: Users,
+      action: () => router.push("/admin/rbac/bulk-assign"),
+      color: "bg-indigo-600 hover:bg-indigo-700",
     },
   ];
 

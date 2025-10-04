@@ -1,3 +1,4 @@
+import { Permission } from "@kaa/models";
 import {
   permissionSchema,
   permissionsQuerySchema,
@@ -10,11 +11,7 @@ import type mongoose from "mongoose";
 import { z } from "zod";
 import { accessPlugin } from "./rbac.plugin";
 
-export const rbacController = new Elysia({
-  detail: {
-    // tags: ["rbac"],
-  },
-})
+export const rbacController = new Elysia()
   .group("roles", (app) =>
     app
       .use(accessPlugin("roles", "read"))
@@ -34,9 +31,12 @@ export const rbacController = new Elysia({
 
           const data = result.data.map((role) => ({
             name: role.name,
-            id: (role._id as mongoose.Types.ObjectId).toString(),
+            id: role.id,
             isSystem: role.isSystem,
             description: role.description,
+            level: role.level,
+            createdAt: role.createdAt.toString(),
+            permissionCount: role.permissionCount,
           }));
 
           set.status = 200;
@@ -189,7 +189,15 @@ export const rbacController = new Elysia({
           set.status = 201;
           return {
             status: "success",
-            role: result,
+            role: {
+              id: result.id,
+              name: result.name,
+              description: result.description,
+              isSystem: result.isSystem,
+              createdAt: result.createdAt.toString(),
+              level: result.level,
+              permissionCount: 0, // result.permissionCount,
+            },
           };
         },
         {
@@ -344,6 +352,7 @@ export const rbacController = new Elysia({
                 field: condition.field.toString(),
               })
             ),
+            createdAt: permission.createdAt.toString(),
           }));
 
           set.status = 200;
@@ -351,6 +360,7 @@ export const rbacController = new Elysia({
             status: "success",
             permissions: data,
             pagination: result.pagination,
+            meta: result.meta,
           };
         },
         {
@@ -364,6 +374,10 @@ export const rbacController = new Elysia({
                 offset: z.number(),
                 limit: z.number(),
               }),
+              meta: z.object({
+                resources: z.array(z.string()),
+                actions: z.array(z.string()),
+              }),
             }),
             403: t.Object({
               status: t.Literal("error"),
@@ -374,6 +388,107 @@ export const rbacController = new Elysia({
             tags: ["permissions"],
             description: "Get permissions",
             summary: "Get permissions",
+          },
+        }
+      )
+      // GET /permissions/all-available
+      // Returns ALL available permissions in the system (for creating new roles)
+      .get(
+        "/all-available",
+        async ({ set }) => {
+          try {
+            // This returns all possible permissions that can be assigned
+            // Useful for creating new roles or comparing
+            const allPermissions = await Permission.find()
+              .select("name action resource description")
+              .sort({ resource: 1, action: 1 })
+              .lean();
+
+            if (!allPermissions) {
+              set.status = 404;
+              return {
+                status: "error",
+                message: "No permissions found",
+              };
+            }
+
+            const data = allPermissions.map((permission) => ({
+              id: (permission._id as mongoose.Types.ObjectId).toString(),
+              name: permission.name,
+              description: permission.description,
+              resource: permission.resource,
+              action: permission.action,
+            }));
+
+            // Group by resource for easier consumption
+            const grouped = data.reduce(
+              (acc, perm) => {
+                if (!acc[perm.resource]) {
+                  acc[perm.resource] = [];
+                }
+                acc[perm.resource].push(perm);
+                return acc;
+              },
+              {} as Record<string, typeof data>
+            );
+
+            const actions = Object.keys(grouped).flatMap((resource) =>
+              grouped[resource].map((perm) => perm.action)
+            );
+            const uniqueActions = [...new Set(actions)];
+
+            set.status = 200;
+            return {
+              status: "success",
+              data: {
+                permissions: data,
+                grouped,
+                resources: Object.keys(grouped),
+                actions: uniqueActions,
+              },
+              meta: {
+                total: data.length,
+                resourceCount: Object.keys(grouped).length,
+                actionCount: uniqueActions.length,
+              },
+            };
+          } catch (error) {
+            set.status = 500;
+            return {
+              status: "error",
+              message: "Failed to get all available permissions",
+            };
+          }
+        },
+        {
+          response: {
+            200: z.object({
+              status: z.literal("success"),
+              data: z.object({
+                permissions: z.array(permissionSchema),
+                grouped: z.record(z.string(), z.array(permissionSchema)),
+                resources: z.array(z.string()),
+                actions: z.array(z.string()),
+              }),
+              meta: z.object({
+                total: z.number(),
+                resourceCount: z.number(),
+                actionCount: z.number(),
+              }),
+            }),
+            404: t.Object({
+              status: t.Literal("error"),
+              message: t.String(),
+            }),
+            500: t.Object({
+              status: t.Literal("error"),
+              message: t.String(),
+            }),
+          },
+          detail: {
+            tags: ["permissions"],
+            description: "Get all available permissions",
+            summary: "Get all available permissions",
           },
         }
       )
@@ -451,7 +566,9 @@ export const rbacController = new Elysia({
           set.status = 201;
           return {
             status: "success",
-            permission: result,
+            permission: {
+              id: (result._id as mongoose.Types.ObjectId).toString(),
+            },
           };
         },
         {
@@ -592,7 +709,7 @@ export const rbacController = new Elysia({
         "/:roleId",
         async ({ set, params, query }) => {
           const { roleId } = params;
-          const { q, resource, action, sort, order, offset, limit } = query;
+          const { sort, order } = query;
 
           // Check if role exists
           const role = await roleService.getRoleById(roleId);
@@ -604,36 +721,36 @@ export const rbacController = new Elysia({
             };
           }
 
-          const result = await permissionService.getPermissions({
-            q,
+          const result = await permissionService.getPermissionsByRole({
             roleId,
-            resource,
-            action,
             sort,
             order,
-            offset,
-            limit,
           });
 
           const rolePermissions = result.data.map((permission) => ({
-            id: (permission._id as mongoose.Types.ObjectId).toString(),
-            name: permission.name,
-            description: permission.description,
-            resource: permission.resource,
-            action: permission.action,
-            conditions: (permission.conditions as any)?.map(
+            id: (
+              permission.permission._id as mongoose.Types.ObjectId
+            ).toString(),
+            name: permission.permission.name,
+            description: permission.permission.description,
+            resource: permission.permission.resource,
+            action: permission.permission.action,
+            conditions: (permission.permission.conditions as any)?.map(
               (condition: any) => ({
                 ...condition,
                 field: (condition.field as mongoose.Types.ObjectId).toString(),
               })
             ),
+            role: permission.role.name,
+            createdAt: permission.permission.createdAt.toString(),
+            updatedAt: permission.permission.updatedAt.toString(),
           }));
 
           set.status = 200;
           return {
             status: "success",
             data: rolePermissions,
-            pagination: result.pagination,
+            meta: result.meta,
           };
         },
         {
@@ -645,10 +762,10 @@ export const rbacController = new Elysia({
             200: z.object({
               status: z.literal("success"),
               data: z.array(permissionSchema),
-              pagination: z.object({
+              meta: z.object({
                 total: z.number(),
-                offset: z.number(),
-                limit: z.number(),
+                resources: z.array(z.string()),
+                actions: z.array(z.string()),
               }),
             }),
             403: t.Object({

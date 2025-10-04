@@ -162,12 +162,12 @@ export async function getRoles({
   const rolesWithPermissionCount = await Promise.all(
     roles.map(async (role) => {
       const permissionCount = await RolePermission.countDocuments({
-        roleId: role._id,
+        roleId: role._id as mongoose.Types.ObjectId,
       });
 
       return {
         ...role,
-        id: role._id.toString(),
+        id: (role._id as mongoose.Types.ObjectId).toString(),
         _id: undefined,
         __v: undefined,
         permissionCount,

@@ -1,15 +1,5 @@
 "use client";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@kaa/ui/components/alert-dialog";
 import { Badge } from "@kaa/ui/components/badge";
 import { Button } from "@kaa/ui/components/button";
 import {
@@ -42,10 +32,9 @@ export default function RolesManagementPage() {
   const [filterType, setFilterType] = useState<"all" | "system" | "custom">(
     "all"
   );
-  const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
 
   const { data: rolesData, isLoading } = useRoles({
-    search: searchTerm,
+    q: searchTerm,
     isSystem: filterType === "all" ? undefined : filterType === "system",
   });
 
@@ -53,7 +42,6 @@ export default function RolesManagementPage() {
   const {
     selectedRoles,
     clearSelectedRoles,
-    isCreateRoleModalOpen,
     setCreateRoleModalOpen,
     setUpdateRoleModalOpen,
     hasSelectedRoles,
@@ -62,25 +50,6 @@ export default function RolesManagementPage() {
 
   const handleEditRole = (role: Role) => {
     setUpdateRoleModalOpen(true, role.id);
-  };
-
-  const handleDeleteRole = (role: Role) => {
-    if (role.isSystem) {
-      toast.warning("System roles cannot be deleted");
-      return;
-    }
-    setRoleToDelete(role);
-  };
-
-  const confirmDeleteRole = async () => {
-    if (!roleToDelete) return;
-
-    try {
-      await deleteRole.mutateAsync(roleToDelete.id);
-      setRoleToDelete(null);
-    } catch (error) {
-      console.error("Failed to delete role:", error);
-    }
   };
 
   const handleBulkDelete = async () => {
@@ -302,32 +271,6 @@ export default function RolesManagementPage() {
           />
         </CardContent>
       </Card>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        onOpenChange={() => setRoleToDelete(null)}
-        open={!!roleToDelete}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Role</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete the role "{roleToDelete?.name}"?
-              This action cannot be undone. All users assigned to this role will
-              lose their permissions.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
-              onClick={confirmDeleteRole}
-            >
-              Delete Role
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { Permission, Role, RolePermission, User, UserRole } from "@kaa/models";
+import type mongoose from "mongoose";
 
 export const addPermissionToRole = async (
   roleId: string,
@@ -279,6 +280,7 @@ export const getUsersWithRole = async (
   const [userRoles, total] = await Promise.all([
     UserRole.find({ roleId, isActive: true })
       .populate("userId")
+      .populate("roleId", "name")
       .skip(offset)
       .limit(limit)
       .lean(),
@@ -287,13 +289,35 @@ export const getUsersWithRole = async (
 
   return {
     users: userRoles.map((ur) => ({
-      ...ur.userId,
+      // ...ur.userId,
+      id: ((ur.userId as any)._id as mongoose.Types.ObjectId).toString(),
+      username: (ur.userId as any).profile?.displayName,
+      firstName: (ur.userId as any).profile?.firstName,
+      lastName: (ur.userId as any).profile?.lastName,
+      email: (ur.userId as any).contact?.email,
+      status: (ur.userId as any).status,
+      memberId: (ur.userId as any).memberId,
+      isVerified: (ur.userId as any).verification.emailVerified,
+      phoneVerified: (ur.userId as any).verification.phoneVerified,
+      identityVerified: (ur.userId as any).verification.identityVerified,
+      kycStatus: (ur.userId as any).kycStatus,
+      county: (ur.userId as any).county,
+      estate: (ur.userId as any).estate,
+      preferences: (ur.userId as any).preferences,
+      stats: (ur.userId as any).stats,
+      lastLogin: (ur.userId as any)?.activity?.lastLogin,
+      createdAt: (ur.userId as any).createdAt,
+      updatedAt: (ur.userId as any).updatedAt,
       userRole: {
         id: ur._id,
         isPrimary: ur.isPrimary,
         assignedAt: ur.assignedAt,
         expiresAt: ur.expiresAt,
         context: ur.context,
+      },
+      role: {
+        id: ur._id,
+        name: (ur.roleId as any).name,
       },
     })),
     pagination: {

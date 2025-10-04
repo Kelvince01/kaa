@@ -2,8 +2,6 @@
 
 import { type ConfigMode, config } from "@kaa/config";
 import { Toaster } from "@kaa/ui/components/sonner";
-// import { useAuthStore } from "@/modules/auth/auth.store";
-// import GuidedTour from "./tours/guided-tour";
 import { TooltipProvider } from "@kaa/ui/components/tooltip";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Analytics } from "@vercel/analytics/react";
@@ -17,6 +15,7 @@ import { LayoutProvider } from "@/hooks/use-layout";
 import { MJMLProvider } from "@/hooks/use-mjml-processor";
 import { UIStateProvider } from "@/hooks/use-ui-state";
 import { ViewportProvider } from "@/hooks/use-viewport";
+import { useAuthStore } from "@/modules/auth/auth.store";
 import { BrandedAuthLoader } from "@/modules/auth/components/auth-loader";
 // import { useOnlineManager } from "@/hooks/use-online-manager";
 import { QueryClientProvider } from "@/query/provider";
@@ -26,11 +25,12 @@ import { Dialoger } from "./common/dialoger";
 import { DownAlert } from "./common/down-alert";
 import { Dropdowner } from "./common/dropdowner";
 import { Sheeter } from "./common/sheeter";
+import GuidedTour from "./tours/guided-tour";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // const { isOnline } = useOnlineManager();
   const isMobile: boolean = useBreakpoints("max", "sm");
-  // const { user, isLoading } = useAuthStore();
+  const { user, isLoading } = useAuthStore();
   // Add badge to favicon based on config mode
   addBadgeToFavicon(config.mode as ConfigMode);
 
@@ -49,10 +49,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <ViewportProvider>
             <DesktopProvider />
             <QueryClientProvider>
-              {/* {!isLoading && user && (
-                <GuidedTour userRole={user.role as "landlord" | "tenant" | "admin" | "agent"} />
-              )} */}
-
               <Analytics />
               <SpeedInsights />
 
@@ -63,10 +59,19 @@ export function Providers({ children }: { children: React.ReactNode }) {
               >
                 <MJMLProvider>
                   <LayoutProvider>
-                    <BrandedAuthLoader
-                      brandName="Kenyan Rental Platform"
-                      logo={<Logo />}
-                    >
+                    <BrandedAuthLoader brandName="Kaa" logo={<Logo />}>
+                      {!isLoading && user && (
+                        <GuidedTour
+                          userRole={
+                            user.role as
+                              | "landlord"
+                              | "tenant"
+                              | "admin"
+                              | "agent"
+                          }
+                        />
+                      )}
+
                       {children}
                     </BrandedAuthLoader>
                   </LayoutProvider>
@@ -83,7 +88,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
               <Dropdowner />
               <DownAlert />
               <ReactQueryDevtools initialIsOpen={false} />
-              {/* </AuthLoader> */}
             </QueryClientProvider>
           </ViewportProvider>
         </UIStateProvider>

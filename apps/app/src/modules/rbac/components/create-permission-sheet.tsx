@@ -12,8 +12,8 @@ import { useRBACStore } from "../rbac.store";
 import { PermissionForm } from "./permission-form";
 
 export function CreatePermissionSheet({
-  // open,
-  // onOpenChange,
+  open,
+  onOpenChange,
   permissionId,
 }: {
   permissionId?: string;
@@ -26,31 +26,36 @@ export function CreatePermissionSheet({
 
   const handleSuccess = () => {
     setCreatePermissionModalOpen(false);
+    onOpenChange(false);
   };
 
   const handleCancel = () => {
     setCreatePermissionModalOpen(false);
+    onOpenChange(false);
   };
 
   return (
     <Sheet
-      onOpenChange={setCreatePermissionModalOpen}
-      open={isCreatePermissionModalOpen}
+      onOpenChange={setCreatePermissionModalOpen || onOpenChange}
+      open={isCreatePermissionModalOpen || open}
     >
       <SheetContent className="w-[400px] sm:w-[540px]">
         <SheetHeader>
-          <SheetTitle>Create Permission</SheetTitle>
+          <SheetTitle>
+            {permissionId ? "Edit Permission" : "Create Permission"}
+          </SheetTitle>
           <SheetDescription>
-            Create a new permission to define specific actions users can
-            perform.
+            {permissionId
+              ? "Edit an existing permission to define specific actions users can perform."
+              : "Create a new permission to define specific actions users can perform."}
           </SheetDescription>
         </SheetHeader>
         <div className="mt-6">
           <PermissionForm
-            mode="create"
+            mode={permissionId ? "edit" : "create"}
             onCancel={handleCancel}
             onSuccess={handleSuccess}
-            permission={currentPermission.data as any}
+            permission={currentPermission.data?.permission as any}
           />
         </div>
       </SheetContent>

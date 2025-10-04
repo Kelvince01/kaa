@@ -87,17 +87,18 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: authService.login,
     onSuccess: (data, variables) => {
-      console.log("Login Query: Login success", {
+      console.log("🔐 Login mutation success:", {
         hasUser: "user" in data,
         hasTokens: "tokens" in data,
         requiresTwoFactor:
           "requiresTwoFactor" in data && data.requiresTwoFactor,
-        userRole: "user" in data ? data.user?.role : undefined,
-        timestamp: new Date().toISOString(),
+        userId: (data as any)?.user?.id,
+        userRole: (data as any)?.user?.role,
       });
 
       // Check if 2FA is required
       if ("requiresTwoFactor" in data && data.requiresTwoFactor) {
+        console.log("🔐 2FA required, redirecting to two-factor page");
         toast.info("Please complete two-factor authentication");
         router.push(`/auth/two-factor?userId=${data.userId}`);
         return;
@@ -105,11 +106,12 @@ export const useLogin = () => {
 
       // Regular login success
       if ("user" in data && "tokens" in data) {
+        console.log("🔐 Processing regular login success");
         // Track successful login
         trackLoginAttempt(variables.email, true);
 
-        // Update auth store
-        setUser({
+        // Update user and tokens
+        const userData = {
           id: data.user.id,
           memberId: data.user.memberId,
           username: data.user.username,
@@ -125,17 +127,22 @@ export const useLogin = () => {
           isVerified: data.user.isVerified,
           createdAt: data.user.createdAt,
           updatedAt: data.user.updatedAt,
+        };
+
+        console.log("🔐 Setting user data:", {
+          userId: userData.id,
+          role: userData.role,
         });
+        setUser(userData);
 
-        setTokens(data.tokens);
-        setStatus("authenticated");
-
-        console.log("Login Query: User and tokens set successfully", {
-          userId: data.user.id,
-          userRole: data.user.role,
+        console.log("🔐 Setting tokens:", {
           hasAccessToken: !!data.tokens.access_token,
           hasRefreshToken: !!data.tokens.refresh_token,
         });
+        setTokens(data.tokens);
+
+        console.log("🔐 Setting status to authenticated");
+        setStatus("authenticated");
 
         toast.success("Login successful!");
 
@@ -150,6 +157,7 @@ export const useLogin = () => {
           // Use the safe redirect path (validates the URL)
           redirectPath = getSafeRedirectPath(returnUrl);
           clearReturnUrl();
+          console.log("🔐 Using return URL:", redirectPath);
         } else {
           // No return URL, use role-based default
           const userRole =
@@ -157,11 +165,19 @@ export const useLogin = () => {
               ? data.user.role
               : ((data.user.role as any)._id as string);
           redirectPath = getRoleRedirect(userRole);
+          console.log("🔐 Using role-based redirect:", {
+            userRole,
+            redirectPath,
+          });
         }
 
         console.log("Login Query: Redirecting to", redirectPath);
-        // Use replace to prevent back button issues
-        router.replace(redirectPath);
+
+        // Small delay to ensure state persistence before redirect
+        setTimeout(() => {
+          console.log("Login Query: Executing redirect now");
+          router.replace(redirectPath);
+        }, 100);
       }
     },
     onError: (error: any, variables) => {

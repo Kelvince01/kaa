@@ -3,7 +3,7 @@
 import useMounted from "@kaa/ui/hooks/use-mounted";
 import { cn } from "@kaa/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Loader2 } from "lucide-react";
+import { Loader2, Loader2Icon } from "lucide-react";
 import { Slot } from "radix-ui";
 import React from "react";
 
@@ -82,6 +82,7 @@ const SpinnerV3 = React.forwardRef<HTMLSpanElement, SpinnerProps>(
     if (!loading) return null;
 
     return (
+      // @ts-expect-error
       <Comp
         className={cn(spinnerVariants({ size, className: filteredClassName }))}
         ref={ref}
@@ -107,5 +108,16 @@ const SpinnerV3 = React.forwardRef<HTMLSpanElement, SpinnerProps>(
 );
 
 SpinnerV3.displayName = "SpinnerV3";
+
+function SpinnerV4({ className, ...props }: React.ComponentProps<"svg">) {
+  return (
+    <Loader2Icon
+      aria-label="Loading"
+      className={cn("size-4 animate-spin", className)}
+      role="status"
+      {...props}
+    />
+  );
+}
 
 export { SpinnerV3, spinnerVariants };

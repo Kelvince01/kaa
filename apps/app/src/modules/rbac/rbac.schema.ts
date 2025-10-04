@@ -38,13 +38,14 @@ export const permissionConditionSchema = z.object({
 
 export const permissionSchema = z.object({
   _id: z.string().optional(),
+  id: z.string().optional(),
   name: z
     .string()
     .min(1, "Permission name is required")
     .max(50, "Permission name must be less than 50 characters")
     .regex(
-      /^[a-zA-Z0-9\s_.-]+$/,
-      "Permission name can only contain letters, numbers, spaces, dots, hyphens, and underscores"
+      /^[a-zA-Z0-9\s_.-:]+$/,
+      "Permission name can only contain letters, numbers, spaces, dots, hyphens, colons, and underscores"
     ),
   description: z
     .string()
@@ -55,7 +56,7 @@ export const permissionSchema = z.object({
     .min(1, "Resource is required")
     .max(50, "Resource must be less than 50 characters"),
   action: z.enum(PermissionAction, {
-    // errorMap: () => ({ message: 'Please select a valid action' }),
+    error: () => ({ message: "Please select a valid action" }),
   }),
   conditions: z.array(permissionConditionSchema).optional(),
 });
