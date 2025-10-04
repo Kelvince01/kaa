@@ -15,7 +15,7 @@ import { LayoutProvider } from "@/hooks/use-layout";
 import { MJMLProvider } from "@/hooks/use-mjml-processor";
 import { UIStateProvider } from "@/hooks/use-ui-state";
 import { ViewportProvider } from "@/hooks/use-viewport";
-import { useAuthStore } from "@/modules/auth/auth.store";
+// import { useAuthStore } from "@/modules/auth/auth.store";
 import { BrandedAuthLoader } from "@/modules/auth/components/auth-loader";
 // import { useOnlineManager } from "@/hooks/use-online-manager";
 import { QueryClientProvider } from "@/query/provider";
@@ -25,12 +25,12 @@ import { Dialoger } from "./common/dialoger";
 import { DownAlert } from "./common/down-alert";
 import { Dropdowner } from "./common/dropdowner";
 import { Sheeter } from "./common/sheeter";
-import GuidedTour from "./tours/guided-tour";
+// import GuidedTour from "./tours/guided-tour";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // const { isOnline } = useOnlineManager();
   const isMobile: boolean = useBreakpoints("max", "sm");
-  const { user, isLoading } = useAuthStore();
+  // const { user, isLoading } = useAuthStore();
   // Add badge to favicon based on config mode
   addBadgeToFavicon(config.mode as ConfigMode);
 
@@ -60,7 +60,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 <MJMLProvider>
                   <LayoutProvider>
                     <BrandedAuthLoader brandName="Kaa" logo={<Logo />}>
-                      {!isLoading && user && (
+                      {/* {!isLoading && user && (
                         <GuidedTour
                           userRole={
                             user.role as
@@ -70,7 +70,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                               | "agent"
                           }
                         />
-                      )}
+                      )} */}
 
                       {children}
                     </BrandedAuthLoader>

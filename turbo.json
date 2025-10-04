@@ -23,7 +23,7 @@
     "NEXT_PUBLIC_STRIPE_SECRET_KEY",
     "NEXT_PUBLIC_STRIPE_PUBLIC_KEY",
     "VAPID_PRIVATE_KEY",
-    "SENTRY_TOKEN"
+    "SENTRY_AUTH_TOKEN"
   ],
   "tasks": {
     "build": {

@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Badge } from "@kaa/ui/components/badge";
 import { Button } from "@kaa/ui/components/button";
+import { Calendar } from "@kaa/ui/components/calendar";
 import {
   Card,
   CardContent,
@@ -14,12 +15,18 @@ import { Checkbox } from "@kaa/ui/components/checkbox";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@kaa/ui/components/form";
 import { Input } from "@kaa/ui/components/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@kaa/ui/components/popover";
 import {
   Select,
   SelectContent,
@@ -28,8 +35,11 @@ import {
   SelectValue,
 } from "@kaa/ui/components/select";
 import { Separator } from "@kaa/ui/components/separator";
+import { cn } from "@kaa/ui/lib/utils";
+import { format } from "date-fns";
 import {
   AlertCircle,
+  CalendarIcon,
   CheckCircle2,
   Loader2,
   Search,
@@ -444,7 +454,7 @@ export default function BulkRoleAssignmentPage() {
                 />
 
                 {/* Expiry Date */}
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="expiresAt"
                   render={({ field }) => (
@@ -456,6 +466,53 @@ export default function BulkRoleAssignmentPage() {
                       <p className="text-muted-foreground text-xs">
                         Leave empty for permanent assignment
                       </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                /> */}
+
+                <FormField
+                  control={form.control}
+                  name="expiresAt"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Expires At (Optional)</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              className={cn(
+                                "w-[240px] pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              variant={"outline"}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="w-auto p-0">
+                          <Calendar
+                            captionLayout="dropdown"
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            mode="single"
+                            onSelect={field.onChange}
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        Leave empty for permanent assignment
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
