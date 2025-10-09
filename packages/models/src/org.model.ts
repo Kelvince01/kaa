@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import type { IOrganization } from "./types/org.type";
+import { type IOrganization, OrganizationType } from "./types/org.type";
 
 const organizationSchema = new Schema<IOrganization>(
   {
@@ -7,7 +7,7 @@ const organizationSchema = new Schema<IOrganization>(
     slug: { type: String, required: true, trim: true, unique: true },
     type: {
       type: String,
-      enum: ["landlord", "property_manager", "agency", "other"],
+      enum: Object.values(OrganizationType),
       required: true,
     },
     registrationNumber: { type: String },

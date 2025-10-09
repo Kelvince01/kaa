@@ -117,34 +117,29 @@ export const usersController = new Elysia({
           const { users, pagination } = await userService.getUsers(
             {
               status,
-              memberId,
             },
             { page, limit }
           );
-          set.status = 200;
 
+          set.status = 200;
           const usersRes: UsersResponse = users.map((user) => ({
             id: (user._id as mongoose.Types.ObjectId).toString(),
             username: user.profile?.displayName,
             firstName: user.profile?.firstName,
             lastName: user.profile?.lastName,
             email: user.contact?.email,
-            role: {
-              _id: (
-                (user.role as any)._id as mongoose.Types.ObjectId
-              ).toString(),
-              name: (user.role as any).name,
-            },
+            // role: {
+            //   _id: userObj.roleId as any,
+            //   name: userObj.role,
+            // },
             phone: user.contact?.phone.formatted,
             status: user.status,
-            memberId: user.memberId
-              ? {
-                  _id: (
-                    (user.memberId as any)._id as mongoose.Types.ObjectId
-                  ).toString(),
-                  name: (user.memberId as any).name,
-                }
-              : undefined,
+            // memberId: userObj.memberId
+            //   ? {
+            //       _id: userObj.memberId as any,
+            //       name: `${user.profile.firstName} ${user.profile.lastName}`,
+            //     }
+            //   : undefined,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
             lastLoginAt: user?.activity?.lastLogin,
@@ -206,25 +201,21 @@ export const usersController = new Elysia({
             firstName: user.profile?.firstName,
             lastName: user.profile?.lastName,
             email: user.contact?.email,
-            role: {
-              _id: (
-                (user.role as any)._id as mongoose.Types.ObjectId
-              ).toString(),
-              name: (user.role as any).name,
-            },
+            // role: {
+            //   _id: userObj.roleId,
+            //   name: userObj.role,
+            // },
             phone: user.contact?.phone.formatted,
             status: user.status,
-            memberId: user.memberId
-              ? {
-                  _id: (
-                    (user.memberId as any)._id as mongoose.Types.ObjectId
-                  ).toString(),
-                  name: (user.memberId as any).name,
-                }
-              : undefined,
+            // memberId: userObj.memberId
+            //   ? {
+            //       _id: userObj.memberId,
+            //       name: `${user.profile.firstName} ${user.profile.lastName}`,
+            //     }
+            //   : undefined,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
-            lastLoginAt: user.activity.lastLogin,
+            lastLoginAt: user?.activity?.lastLogin,
           };
 
           return { status: "success", user: userRes };
@@ -260,10 +251,10 @@ export const usersController = new Elysia({
     .use(accessPlugin("users", "update"))
     .patch(
       "/:id",
-      async ({ params, body, set, user, role }) => {
+      async ({ params, body, set, user }) => {
         try {
           // Non-admin users can only update their own profile
-          if (user && role.name !== "admin" && user.id !== params.id) {
+          if (user && user.role.name !== "admin" && user.id !== params.id) {
             throw new BadRequestError("You can only update your own profile");
           }
 
@@ -278,26 +269,21 @@ export const usersController = new Elysia({
             firstName: updatedUser.profile?.firstName,
             lastName: updatedUser.profile?.lastName,
             email: updatedUser.contact?.email,
-            role: {
-              _id: (
-                (updatedUser.role as any)._id as mongoose.Types.ObjectId
-              ).toString(),
-              name: (updatedUser.role as any).name,
-            },
+            // role: {
+            //   _id: user.roleId.toString(),
+            //   name: user.role,
+            // },
             phone: updatedUser.contact?.phone.formatted,
             status: updatedUser.status,
-            memberId: updatedUser?.memberId
-              ? {
-                  _id: (
-                    (updatedUser?.memberId as any)
-                      ._id as mongoose.Types.ObjectId
-                  ).toString(),
-                  name: (updatedUser?.memberId as any).name,
-                }
-              : undefined,
+            // memberId: user?.memberId
+            //   ? {
+            //       _id: user?.memberId,
+            //       name: `${updatedUser.profile.firstName} ${updatedUser.profile.lastName}`,
+            //     }
+            //   : undefined,
             createdAt: updatedUser.createdAt,
             updatedAt: updatedUser.updatedAt,
-            lastLoginAt: updatedUser.activity.lastLogin,
+            lastLoginAt: updatedUser?.activity?.lastLogin,
           };
 
           set.status = 200;

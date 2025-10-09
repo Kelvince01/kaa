@@ -1,10 +1,9 @@
 import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { ElysiaAdapter } from "@bull-board/elysia";
-import { smsQueue } from "@kaa/services/queues";
+import { emailQueue, smsQueue } from "@kaa/services/queues";
 import type Elysia from "elysia";
 import { authBackgroundQueue } from "~/features/auth/services/auth-background.service";
-import { emailQueue } from "~/features/comms/emails/email.queue";
 // import { authPlugin } from "~/features/auth/auth.plugin";
 import { auditLogQueue } from "~/features/misc/audits/audit.queue";
 

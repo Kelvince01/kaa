@@ -15,12 +15,18 @@ type Config = {
   port: number;
   mongoUri: string;
   timeout: number;
+  encryptionKey: string;
   jwt: {
     name: string;
     secret: string;
     refreshTokenSecret: string;
     expiresIn: number;
     refreshTokenExpiresIn: number;
+  };
+  rateLimit: {
+    windowMs: number;
+    maxRequests: number;
+    strictMax: number;
   };
   oauth: {
     google: {
@@ -123,6 +129,10 @@ const config: Config = {
     .default("mongodb://localhost:27017/kaadb")
     .asString(),
   timeout: env.get("TIMEOUT").default("30000").asIntPositive(),
+  encryptionKey: env
+    .get("ENCRYPTION_KEY")
+    .default("your-encryption-key")
+    .asString(),
   jwt: {
     name: "jwt",
     secret: env.get("JWT_SECRET").default("your-secret-key").asString(),
@@ -138,6 +148,14 @@ const config: Config = {
       .get("JWT_REFRESH_TOKEN_EXPIRES_IN")
       .default((7 * 86_400).toString())
       .asIntPositive(),
+  },
+  rateLimit: {
+    windowMs: env.get("RATE_LIMIT_WINDOW_MS").default(900_000).asIntPositive(),
+    maxRequests: env
+      .get("RATE_LIMIT_MAX_REQUESTS")
+      .default(100)
+      .asIntPositive(),
+    strictMax: env.get("RATE_LIMIT_STRICT_MAX").default(1000).asIntPositive(),
   },
   oauth: {
     google: {

@@ -1,5 +1,5 @@
 import { Role, RolePermission, UserRole } from "@kaa/models";
-import type { IRole } from "@kaa/models/types";
+import type { IRole, IUserRole } from "@kaa/models/types";
 import type mongoose from "mongoose";
 import { type FilterQuery, Types } from "mongoose";
 import { permissionManager } from "../managers/permission.manager";
@@ -96,6 +96,39 @@ export async function getUsersWithRole_v1(
       limit,
     },
   };
+}
+
+/**
+ * Get users with a specific role
+ */
+export async function getUserRoleBy({
+  roleName,
+  roleId,
+  userId,
+}: {
+  roleName?: string;
+  roleId?: string;
+  userId?: string;
+}) {
+  const query: FilterQuery<IUserRole> = {};
+
+  if (roleName) {
+    query.roleId.name = roleName;
+  }
+
+  if (roleName) {
+    query.roleId = roleId;
+  }
+
+  if (roleName) {
+    query.userId = userId;
+  }
+
+  const role = await UserRole.findOne(query)
+    .populate("userId", "profile contact")
+    .populate("roleId", "name");
+
+  return role;
 }
 
 /**
@@ -366,6 +399,7 @@ export default {
   getDefaultRoleId,
   getRoles,
   getRoleById,
+  getUserRoleBy,
   createRole,
   updateRole,
   deleteRole,

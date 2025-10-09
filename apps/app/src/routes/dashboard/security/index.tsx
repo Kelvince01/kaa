@@ -29,10 +29,10 @@ const SessionManagement = dynamic(() => import("./session-management"), {
 });
 
 const SecurityClient = () => {
-  const { user, isLoading } = useAuth();
+  const { user, status, isInitialized } = useAuth();
   const router = useRouter();
 
-  if (isLoading) {
+  if (!isInitialized || status === "loading") {
     return (
       <div className="animate-pulse space-y-6">
         <div className="h-8 w-1/3 rounded bg-gray-200" />

@@ -10,7 +10,6 @@ import { webhooksRepository } from "@kaa/services/repositories";
 import { AppError } from "@kaa/utils";
 import { Elysia, t } from "elysia";
 import mongoose from "mongoose";
-import { z } from "zod";
 import { authPlugin } from "~/features/auth/auth.plugin";
 import { rolePlugin } from "~/features/rbac/rbac.plugin";
 // import { rateLimitPlugin } from "~/plugins/rate-limit.plugin";
@@ -95,8 +94,8 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
       return { status: "success", data: webhook };
     },
     {
-      params: z.object({
-        webhookId: z.string(),
+      params: t.Object({
+        webhookId: t.String(),
       }),
       detail: {
         tags: ["Webhooks"],
@@ -149,8 +148,8 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
       return { status: "success", data: "Webhook deleted successfully" };
     },
     {
-      params: z.object({
-        webhookId: z.string(),
+      params: t.Object({
+        webhookId: t.String(),
       }),
       detail: {
         tags: ["Webhooks"],
@@ -224,8 +223,8 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
       return { status: "success", data: result };
     },
     {
-      params: z.object({
-        webhookId: z.string(),
+      params: t.Object({
+        webhookId: t.String(),
       }),
       detail: {
         tags: ["Webhooks"],
@@ -246,8 +245,8 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
       return { status: "success", data: "Webhook activated successfully" };
     },
     {
-      params: z.object({
-        webhookId: z.string(),
+      params: t.Object({
+        webhookId: t.String(),
       }),
       detail: {
         tags: ["Webhooks"],
@@ -268,8 +267,8 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
       return { status: "success", data: "Webhook deactivated successfully" };
     },
     {
-      params: z.object({
-        webhookId: z.string(),
+      params: t.Object({
+        webhookId: t.String(),
       }),
       detail: {
         tags: ["Webhooks"],
@@ -293,8 +292,8 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
       };
     },
     {
-      params: z.object({
-        webhookId: z.string(),
+      params: t.Object({
+        webhookId: t.String(),
       }),
       detail: {
         tags: ["Webhooks", "Deliveries"],
@@ -313,8 +312,8 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
       return { status: "success", data: delivery };
     },
     {
-      params: z.object({
-        deliveryId: z.string(),
+      params: t.Object({
+        deliveryId: t.String(),
       }),
       detail: {
         tags: ["Webhooks", "Deliveries"],
@@ -331,8 +330,8 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
       return { status: "success", data: "Webhook redelivered successfully" };
     },
     {
-      params: z.object({
-        deliveryId: z.string(),
+      params: t.Object({
+        deliveryId: t.String(),
       }),
       detail: {
         tags: ["Webhooks", "Deliveries"],
@@ -350,8 +349,8 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
       return { status: "success", data: events };
     },
     {
-      params: z.object({
-        webhookId: z.string(),
+      params: t.Object({
+        webhookId: t.String(),
       }),
       detail: {
         tags: ["Webhooks", "Events"],
@@ -368,8 +367,8 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
       return { status: "success", data: analytics };
     },
     {
-      params: z.object({
-        webhookId: z.string(),
+      params: t.Object({
+        webhookId: t.String(),
       }),
       detail: {
         tags: ["Webhooks", "Analytics"],
@@ -387,8 +386,8 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
       return { status: "success", data: "Webhook handled successfully" };
     },
     {
-      params: z.object({
-        service: z.string(),
+      params: t.Object({
+        service: t.String(),
       }),
       detail: {
         tags: ["Webhooks", "Incoming"],

@@ -34,10 +34,10 @@ export function requirePermission(resource: string, action: string) {
   ) {
     return function PermissionWrapper(props: P) {
       const router = useRouter();
-      const { user, isLoading } = useAuth();
+      const { user, status, isInitialized } = useAuth();
 
       useEffect(() => {
-        if (isLoading) return;
+        if (!isInitialized || status === "loading") return;
 
         if (!user) {
           toast.error("Authentication Required", {
@@ -53,9 +53,9 @@ export function requirePermission(resource: string, action: string) {
           });
           router.push("/");
         }
-      }, [user, isLoading, router, resource, action]);
+      }, [user, isInitialized, router, resource, action, status]);
 
-      if (isLoading) {
+      if (status === "loading") {
         return (
           <div className="flex h-screen items-center justify-center">
             <div className="h-32 w-32 animate-spin rounded-full border-primary border-b-2" />

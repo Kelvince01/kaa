@@ -1,24 +1,37 @@
 import config from "@kaa/config/api";
 import {
+  SmsAnalytics,
   SmsDeliveryReport,
-  SmsMessage as SmsMessageModel,
+  SmsMessage,
   Template,
 } from "@kaa/models";
-import type {
-  CommWebhookPayload,
-  DeliveryStatus,
-  ISmsMessage,
-  ISmsRecipient,
-  ITemplate,
-  SendResult,
+import {
+  type AtIncomingMessagePayload,
+  type CommWebhookPayload,
+  type DeliveryStatus,
+  type ISmsAnalytics,
+  type ISmsMessage,
+  type ISmsRecipient,
+  type ITemplate,
+  KenyaNetworkCode,
+  type SendResult,
+  SMS_CONSTANTS,
+  SmsCategory,
+  SmsDeliveryStatus,
+  SmsError,
+  type SmsFilters,
+  type SmsListResponse,
   SmsPriority,
-  SmsProvider,
-  SmsServiceResponse,
-  SmsType,
+  type SmsProvider,
+  type SmsResponse,
+  type SmsServiceResponse,
+  SmsTemplateType,
+  type SmsType,
 } from "@kaa/models/types";
 import { genRandom6DigitString, logger } from "@kaa/utils";
 import AfricasTalking from "africastalking";
 import { DateTime } from "luxon";
+import type { FilterQuery } from "mongoose";
 import { TemplateEngine } from "../engines/template.engine";
 import { smsQueue } from "../queues/sms.queue";
 
@@ -63,6 +76,111 @@ class SmsService {
       app_name: config.africasTalking.appName,
       shortcode: config.africasTalking.shortCode,
     };
+  }
+
+  /**
+   * Get SMS by ID
+   */
+  async getSms(smsId: string): Promise<SmsResponse> {
+    try {
+      return await this.getSmsResponse(smsId);
+    } catch (error) {
+      throw this.handleError(error, "Failed to get SMS");
+    }
+  }
+
+  /**
+   * List SMS with filters
+   */
+  async listSms(filters: SmsFilters): Promise<SmsListResponse> {
+    try {
+      const page = filters.page || 1;
+      const limit = Math.min(filters.limit || 20, 100);
+      const skip = (page - 1) * limit;
+
+      // Build query
+      const query: FilterQuery<ISmsMessage> = {};
+
+      if (filters.status) {
+        query.status = Array.isArray(filters.status)
+          ? { $in: filters.status }
+          : filters.status;
+      }
+      if (filters.category) {
+        query.category = Array.isArray(filters.category)
+          ? { $in: filters.category }
+          : filters.category;
+      }
+      if (filters.templateType) {
+        query.templateType = Array.isArray(filters.templateType)
+          ? { $in: filters.templateType }
+          : filters.templateType;
+      }
+      if (filters.networkCode) query.networkCode = filters.networkCode;
+      if (filters.userId) query.userId = filters.userId;
+      if (filters.propertyId) query.propertyId = filters.propertyId;
+      if (filters.applicationId) query.applicationId = filters.applicationId;
+
+      // Date filters
+      if (filters.sentAfter || filters.sentBefore) {
+        query.sentAt = {};
+        if (filters.sentAfter) query.sentAt.$gte = filters.sentAfter;
+        if (filters.sentBefore) query.sentAt.$lte = filters.sentBefore;
+      }
+
+      // Search
+      if (filters.search) {
+        query.$text = { $search: filters.search };
+      }
+
+      // Execute query
+      const [smsMessages, total] = await Promise.all([
+        SmsMessage.find(query)
+          .sort({
+            [filters.sortBy || "createdAt"]:
+              filters.sortOrder === "asc" ? 1 : -1,
+          })
+          .skip(skip)
+          .limit(limit),
+        SmsMessage.countDocuments(query),
+      ]);
+
+      // Get summary
+      const [totalSent, totalDelivered, totalFailed, costData] =
+        await Promise.all([
+          SmsMessage.countDocuments({ status: SmsDeliveryStatus.SENT }),
+          SmsMessage.countDocuments({ status: SmsDeliveryStatus.DELIVERED }),
+          SmsMessage.countDocuments({ status: SmsDeliveryStatus.FAILED }),
+          SmsMessage.aggregate([
+            { $match: { cost: { $exists: true } } },
+            { $group: { _id: null, totalCost: { $sum: "$cost" } } },
+          ]),
+        ]);
+
+      // Transform SMS
+      const smsResponses = await Promise.all(
+        smsMessages.map((sms) => this.getSmsResponse(sms._id.toString()))
+      );
+
+      return {
+        smsMessages: smsResponses,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+        summary: {
+          totalSent,
+          totalDelivered,
+          totalFailed,
+          totalCost: costData[0]?.totalCost || 0,
+        },
+        filters,
+      };
+    } catch (error) {
+      throw this.handleError(error, "Failed to list SMS");
+    }
   }
 
   /**
@@ -134,7 +252,7 @@ class SmsService {
       });
 
       // Create SMS message record
-      const smsMessage = new SmsMessageModel({
+      const smsMessage = new SmsMessage({
         to,
         message: renderResult.content,
         template: {
@@ -192,7 +310,7 @@ class SmsService {
    * Send raw SMS message
    */
   async sendSms(options: {
-    to: string | string[] | ISmsRecipient[];
+    to: ISmsRecipient[];
     message: string;
     type: SmsType;
     priority?: SmsPriority;
@@ -211,22 +329,20 @@ class SmsService {
         scheduledAt,
       } = options;
 
-      const recipients = Array.isArray(to) ? to : [to];
+      const recipients = to;
 
       // Convert recipients to phone numbers
       const phoneNumbers = recipients
-        .map((recipient) =>
-          typeof recipient === "string" ? recipient : recipient.phoneNumber
-        )
+        .map((recipient) => recipient.phoneNumber)
         .filter((phone) => phone)
-        .map((phone) => this.normalizePhoneNumber(phone as string));
+        .map((phone) => this.normalizePhoneNumber(phone));
 
       if (phoneNumbers.length === 0) {
         throw new Error("No valid phone number recipients found");
       }
 
       // Create SMS message record
-      const smsMessage = new SmsMessageModel({
+      const smsMessage = new SmsMessage({
         to: phoneNumbers,
         message,
         type,
@@ -405,12 +521,12 @@ class SmsService {
    */
   async processSmsMessage(messageId: string): Promise<void> {
     try {
-      const message = await SmsMessageModel.findById(messageId);
+      const message = await SmsMessage.findById(messageId);
       if (!message) {
         throw new Error(`SMS message ${messageId} not found`);
       }
 
-      if (message.status !== "queued" && message.status !== "pending") {
+      if (message.status !== SmsDeliveryStatus.QUEUED) {
         logger.warn(
           `SMS message ${messageId} already processed with status: ${message.status}`
         );
@@ -418,7 +534,7 @@ class SmsService {
       }
 
       // Update status to sending
-      message.status = "sending";
+      message.status = SmsDeliveryStatus.SENDING;
       message.sentAt = new Date();
       await message.save();
 
@@ -431,15 +547,14 @@ class SmsService {
       // Send via provider
       const response = await this.sendSMSImmediate({
         to: phoneNumbers,
-        // biome-ignore lint/style/noNonNullAssertion: message is required
-        message: message.message!,
+        message: message.message ?? "",
         from: message.from,
       });
 
       // Update message with provider response
-      message.status = "sent";
+      message.status = SmsDeliveryStatus.SENT;
       message.messageId = response.Recipients.messageId;
-      message.cost = response.Recipients.cost;
+      message.cost = Number(response.Recipients.cost);
       message.deliveryStatus = {
         delivered: 0,
         failed: 0,
@@ -450,23 +565,53 @@ class SmsService {
 
       await message.save();
 
+      // Update analytics
+      await this.updateAnalytics(message, "sent");
+
       logger.info(`SMS message ${messageId} sent successfully`);
     } catch (error) {
       logger.error(`Failed to process SMS message ${messageId}:`, error);
 
       // Update message with error
-      await SmsMessageModel.findByIdAndUpdate(messageId, {
-        status: "failed",
-        error: {
-          code: "SEND_ERROR",
-          message: error instanceof Error ? error.message : "Unknown error",
-          provider: this.defaultProvider,
-          retryCount: 0,
-          lastRetryAt: new Date(),
+      const failedMessage = await SmsMessage.findByIdAndUpdate(
+        messageId,
+        {
+          status: "failed",
+          error: {
+            code: "SEND_ERROR",
+            message: error instanceof Error ? error.message : "Unknown error",
+            provider: this.defaultProvider,
+            retryCount: 0,
+            lastRetryAt: new Date(),
+          },
         },
-      });
+        { new: true }
+      );
+
+      // Update analytics for failure
+      if (failedMessage) {
+        await this.updateAnalytics(failedMessage, "failed");
+      }
 
       throw error;
+    }
+  }
+
+  /**
+   * Handle incoming SMS messages
+   */
+  async handleIncomingMessage(
+    message: AtIncomingMessagePayload
+  ): Promise<void> {
+    try {
+      // In a real implementation, you would:
+      // 1. Store incoming message
+      // 2. Process auto-replies
+      // 3. Trigger webhooks
+      console.log(`Incoming SMS from ${message.from}: ${message.text}`);
+      await Promise.resolve({});
+    } catch (error) {
+      console.error("Failed to handle incoming message:", error);
     }
   }
 
@@ -487,6 +632,17 @@ class SmsService {
       }
     );
   }
+
+  /**
+   * Queue SMS for later sending
+   */
+  // async queueSms(sms: any): Promise<void> {
+  //   // In a real implementation, you would add to a job queue
+  //   // For now, just update status
+  //   sms.status = SmsDeliveryStatus.QUEUED;
+  //   await sms.save();
+  //   console.log(`SMS queued for sending: ${sms._id}`);
+  // }
 
   /**
    * Calculate SMS segments based on message length and encoding
@@ -564,7 +720,7 @@ class SmsService {
       await deliveryReport.save();
 
       // Update message delivery status
-      const message = await SmsMessageModel.findOne({ messageId });
+      const message = await SmsMessage.findOne({ messageId });
       if (message?.deliveryStatus) {
         const deliveryStatus = message.deliveryStatus;
 
@@ -572,16 +728,25 @@ class SmsService {
           deliveryStatus.delivered += 1;
           deliveryStatus.pending -= 1;
           message.deliveredAt = new Date();
+
+          // Update analytics for delivery
+          await this.updateAnalytics(message, "delivered");
         } else if (status === "failed") {
           deliveryStatus.failed += 1;
           deliveryStatus.pending -= 1;
+
+          // Update analytics for failure
+          await this.updateAnalytics(message, "failed");
         }
 
         deliveryStatus.lastUpdated = new Date();
 
         // Update overall message status
         if (deliveryStatus.pending === 0) {
-          message.status = deliveryStatus.failed > 0 ? "failed" : "delivered";
+          message.status =
+            deliveryStatus.failed > 0
+              ? SmsDeliveryStatus.FAILED
+              : SmsDeliveryStatus.DELIVERED;
         }
 
         await message.save();
@@ -611,68 +776,196 @@ class SmsService {
   }
 
   /**
-   * Get SMS analytics
+   * Get SMS analytics with optional filters
    */
-  async getAnalytics(orgId: string, startDate: Date, endDate: Date) {
+  async getAnalytics(
+    startDate: Date,
+    endDate: Date,
+    filters?: {
+      orgId?: string;
+      templateType?: SmsTemplateType;
+      category?: SmsCategory;
+      period?: "hour" | "day" | "week" | "month";
+    }
+  ): Promise<{
+    analytics: ISmsAnalytics[];
+    summary: {
+      totalSent: number;
+      totalDelivered: number;
+      totalFailed: number;
+      deliveryRate: number;
+      totalCost: number;
+      averageCost: number;
+    };
+    kenyaSummary: {
+      safaricomPercentage: number;
+      swahiliSmsPercentage: number;
+      businessHoursSmsPercentage: number;
+      otpSmsCount: number;
+    };
+  }> {
     try {
-      const pipeline = [
-        {
-          $match: {
-            "context.orgId": orgId,
-            createdAt: { $gte: startDate, $lte: endDate },
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            totalSent: { $sum: 1 },
-            totalDelivered: {
-              $sum: { $cond: [{ $eq: ["$status", "delivered"] }, 1, 0] },
-            },
-            totalFailed: {
-              $sum: { $cond: [{ $eq: ["$status", "failed"] }, 1, 0] },
-            },
-            totalCost: { $sum: { $toDouble: { $ifNull: ["$cost", "0"] } } },
-            byType: {
-              $push: {
-                type: "$type",
-                status: "$status",
-                cost: { $toDouble: { $ifNull: ["$cost", "0"] } },
-              },
-            },
-          },
-        },
-      ];
-
-      const results = await SmsMessageModel.aggregate(pipeline);
-      const data = results[0] || {
-        totalSent: 0,
-        totalDelivered: 0,
-        totalFailed: 0,
-        totalCost: 0,
-        byType: [],
+      const query: FilterQuery<ISmsAnalytics> = {
+        startDate: { $gte: startDate },
+        endDate: { $lte: endDate },
       };
 
-      const deliveryRate =
-        data.totalSent > 0 ? (data.totalDelivered / data.totalSent) * 100 : 0;
-      const failureRate =
-        data.totalSent > 0 ? (data.totalFailed / data.totalSent) * 100 : 0;
+      if (filters?.period) query.period = filters.period;
+      if (filters?.templateType) query.templateType = filters.templateType;
+      if (filters?.category) query.category = filters.category;
+
+      const analytics = await SmsAnalytics.find(query).sort({ startDate: -1 });
+
+      // Calculate summary from analytics documents
+      const summary = analytics.reduce(
+        (acc, doc) => ({
+          totalSent: acc.totalSent + doc.totals.sent,
+          totalDelivered: acc.totalDelivered + doc.totals.delivered,
+          totalFailed: acc.totalFailed + doc.totals.failed,
+          totalCost: acc.totalCost + doc.totals.cost,
+          deliveryRate: 0,
+          averageCost: 0,
+        }),
+        {
+          totalSent: 0,
+          totalDelivered: 0,
+          totalFailed: 0,
+          deliveryRate: 0,
+          totalCost: 0,
+          averageCost: 0,
+        }
+      );
+
+      summary.deliveryRate =
+        summary.totalSent > 0
+          ? (summary.totalDelivered / summary.totalSent) * 100
+          : 0;
+      summary.averageCost =
+        summary.totalSent > 0 ? summary.totalCost / summary.totalSent : 0;
+
+      // Kenya-specific summary
+      const kenyaMetrics = analytics.reduce(
+        (acc, doc) => {
+          const kenya = doc.kenyaMetrics;
+          if (kenya) {
+            return {
+              safaricom: acc.safaricom + (kenya.safaricomCount || 0),
+              swahili: acc.swahili + (kenya.swahiliSms || 0),
+              businessHours: acc.businessHours + (kenya.businessHoursSms || 0),
+              otp: acc.otp + (kenya.otpSms || 0),
+            };
+          }
+          return acc;
+        },
+        { safaricom: 0, swahili: 0, businessHours: 0, otp: 0 }
+      );
+
+      const kenyaSummary = {
+        safaricomPercentage:
+          summary.totalSent > 0
+            ? (kenyaMetrics.safaricom / summary.totalSent) * 100
+            : 0,
+        swahiliSmsPercentage:
+          summary.totalSent > 0
+            ? (kenyaMetrics.swahili / summary.totalSent) * 100
+            : 0,
+        businessHoursSmsPercentage:
+          summary.totalSent > 0
+            ? (kenyaMetrics.businessHours / summary.totalSent) * 100
+            : 0,
+        otpSmsCount: kenyaMetrics.otp,
+      };
 
       return {
-        totals: {
-          sent: data.totalSent,
-          delivered: data.totalDelivered,
-          failed: data.totalFailed,
-          cost: data.totalCost,
-        },
-        deliveryRate,
-        failureRate,
-        averageCostPerSms:
-          data.totalSent > 0 ? data.totalCost / data.totalSent : 0,
+        analytics: analytics.map((doc) => doc.toObject()),
+        summary,
+        kenyaSummary,
       };
     } catch (error) {
-      logger.error("Failed to get SMS analytics:", error);
-      throw error;
+      throw this.handleError(error, "Failed to get analytics");
+    }
+  }
+
+  /**
+   * Update SMS analytics for daily aggregates
+   */
+  private async updateAnalytics(sms: any, event: string): Promise<void> {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const update: any = {
+        $inc: {
+          "totals.sent": event === "sent" ? 1 : 0,
+          "totals.delivered": event === "delivered" ? 1 : 0,
+          "totals.failed": event === "failed" ? 1 : 0,
+          "totals.cost": event === "sent" ? sms.cost || 0 : 0,
+        },
+      };
+
+      // Kenya-specific metrics
+      if (sms.networkCode === KenyaNetworkCode.SAFARICOM) {
+        update.$inc["kenyaMetrics.safaricomCount"] = 1;
+      } else if (sms.networkCode === KenyaNetworkCode.AIRTEL) {
+        update.$inc["kenyaMetrics.airtelCount"] = 1;
+      } else if (sms.networkCode === KenyaNetworkCode.TELKOM) {
+        update.$inc["kenyaMetrics.telkomCount"] = 1;
+      }
+
+      if (sms.isSwahili) {
+        update.$inc["kenyaMetrics.swahiliSms"] = 1;
+      }
+
+      if (this.isKenyanBusinessHours()) {
+        update.$inc["kenyaMetrics.businessHoursSms"] = 1;
+      }
+
+      if (sms.templateType === SmsTemplateType.OTP_VERIFICATION) {
+        update.$inc["kenyaMetrics.otpSms"] = 1;
+      }
+
+      if (this.containsMpesaContent(sms.message)) {
+        update.$inc["kenyaMetrics.mpesaSms"] = 1;
+      }
+
+      // Set defaults for new documents
+      const setOnInsert = {
+        period: "day",
+        startDate: today,
+        endDate: tomorrow,
+        category: sms.category || SmsCategory.TRANSACTIONAL,
+        deliveryRate: 0,
+        failureRate: 0,
+        averageCostPerSms: 0,
+        byType: {},
+        byProvider: {},
+        topTemplates: [],
+        trends: [],
+      };
+
+      if (sms.templateType) {
+        // setOnInsert.templateType = sms.templateType;
+      }
+
+      await SmsAnalytics.findOneAndUpdate(
+        {
+          period: "day",
+          startDate: today,
+          endDate: tomorrow,
+          ...(sms.templateType ? { templateType: sms.templateType } : {}),
+          category: sms.category || SmsCategory.TRANSACTIONAL,
+        },
+        {
+          ...update,
+          $setOnInsert: setOnInsert,
+        },
+        { upsert: true, new: true }
+      );
+    } catch (error) {
+      logger.error("Failed to update analytics:", error);
     }
   }
 
@@ -712,6 +1005,98 @@ class SmsService {
     // This would need to be checked via the dashboard
     return await Promise.resolve(0);
   }
+
+  /**
+   * Check if current time is within Kenyan business hours
+   */
+  isKenyanBusinessHours(): boolean {
+    const now = new Date();
+    const nairobiTime = new Date(
+      now.toLocaleString("en-US", {
+        timeZone: SMS_CONSTANTS.BUSINESS_HOURS.TIMEZONE,
+      })
+    );
+
+    const hour = nairobiTime.getHours();
+    const isWeekend = nairobiTime.getDay() === 0 || nairobiTime.getDay() === 6;
+
+    return (
+      !isWeekend &&
+      hour >= SMS_CONSTANTS.BUSINESS_HOURS.START &&
+      hour < SMS_CONSTANTS.BUSINESS_HOURS.END
+    );
+  }
+
+  /**
+   * Check opt-out status for phone numbers
+   */
+  checkOptOutStatus(_phoneNumbers: string[]): void {
+    // In a real implementation, check against opt-out database
+    // For now, just return
+    return;
+  }
+
+  /**
+   * Generate OTP code
+   */
+  generateOtp(length = 6): string {
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += Math.floor(Math.random() * 10);
+    }
+    return result;
+  }
+
+  /**
+   * Check if content contains M-Pesa keywords
+   */
+  containsMpesaContent(content: string): boolean {
+    const mpesaKeywords = [
+      "mpesa",
+      "m-pesa",
+      "paybill",
+      "lipa",
+      "pesa",
+      "malipo",
+    ];
+    const lowerContent = content.toLowerCase();
+    return mpesaKeywords.some((keyword) => lowerContent.includes(keyword));
+  }
+
+  /**
+   * Get SMS response with additional data
+   */
+  async getSmsResponse(smsId: string): Promise<SmsResponse> {
+    const sms = await SmsMessage.findById(smsId);
+    if (!sms) {
+      throw new SmsError("TEMPLATE_NOT_FOUND", "SMS not found", 404);
+    }
+
+    return {
+      sms: sms.toObject(),
+      canRetry: sms.canRetry(),
+    };
+  }
+
+  /**
+   * Handle errors consistently
+   */
+  handleError(error: any, defaultMessage: string): Error {
+    if (error instanceof SmsError) {
+      return error;
+    }
+
+    if (error.name === "ValidationError") {
+      return new SmsError("INVALID_TEMPLATE_VARIABLES", error.message, 400);
+    }
+
+    if (error.name === "CastError") {
+      return new SmsError("INVALID_PHONE_NUMBER", "Invalid ID format", 400);
+    }
+
+    console.error(defaultMessage, error);
+    return new SmsError("AT_API_ERROR", defaultMessage, 500);
+  }
 }
 
 export const smsService = new SmsService();
@@ -745,8 +1130,18 @@ export class SmsServiceFactory {
   /**
    * Send MFA SMS with template
    */
-  sendSmsMfa = async (phoneNumber: string, context?: any) => {
+  sendSmsMfa = async (
+    phoneNumber: string,
+    context?: any,
+    // userId?: string,
+    options?: {
+      length?: number;
+      language?: "en" | "sw";
+      expiryMinutes?: number;
+    }
+  ) => {
     const mfaCode = genRandom6DigitString();
+    // const otpCode = this.generateOtp(options?.length || 6);
 
     const result = await smsService.sendSmsWithTemplate({
       to: phoneNumber,
@@ -754,9 +1149,12 @@ export class SmsServiceFactory {
       data: {
         mfaCode,
         appName: "Kaa",
+        expiryMinutes: options?.expiryMinutes || 10,
       },
       type: "verification",
-      priority: "high",
+      // language: options?.language || "en",
+      // category: SmsCategory.AUTHENTICATION,
+      priority: SmsPriority.HIGH,
       context,
     });
 
@@ -794,7 +1192,7 @@ export class SmsServiceFactory {
         paymentLink,
       },
       type: "reminder",
-      priority: "high",
+      priority: SmsPriority.HIGH,
       context,
     });
   }
@@ -862,7 +1260,7 @@ export class SmsServiceFactory {
         paymentLink,
       },
       type: "alert",
-      priority: "urgent",
+      priority: SmsPriority.URGENT,
       context,
     });
   }
@@ -907,7 +1305,7 @@ export class SmsServiceFactory {
     templateId,
     templateData,
     type,
-    priority = "normal",
+    priority = SmsPriority.NORMAL,
     context,
   }: {
     recipients: ISmsRecipient[];
@@ -1021,6 +1419,13 @@ export class SmsServiceFactory {
             defaultValue: "Kaa",
             description: "Application name",
           },
+          {
+            name: "expiryMinutes",
+            type: "string" as const,
+            required: false,
+            defaultValue: "Kaa",
+            description: "OTP expiry time in minutes",
+          },
         ],
         maxLength: 160,
         encoding: "GSM_7BIT" as const,
@@ -1064,6 +1469,12 @@ export class SmsServiceFactory {
             description: "Payment link",
           },
         ],
+        translations: {
+          sw: {
+            template:
+              "Nambari yako ya uhakiki ya Kenya Rentals ni {{otpCode}}. Ni halali kwa dakika {{expiryMinutes}}.",
+          },
+        },
         maxLength: 320,
         encoding: "GSM_7BIT" as const,
         tags: ["payment", "reminder"],
@@ -1071,7 +1482,7 @@ export class SmsServiceFactory {
       {
         name: "payment-confirmation",
         description: "Payment confirmation message",
-        category: "payment" as const,
+        category: SmsCategory.TRANSACTIONAL,
         content:
           "Hi {{tenantName}}, we've received your payment of {{formatCurrency amount}} for unit {{unitNumber}}. Receipt number: {{receiptNumber}}. Thank you!",
         variables: [
@@ -1100,6 +1511,12 @@ export class SmsServiceFactory {
             description: "Receipt number",
           },
         ],
+        translations: {
+          sw: {
+            template:
+              "Malipo ya KES {{amount}} yamepokelewa. Nambari ya M-Pesa: {{mpesaCode}}. Asante!",
+          },
+        },
         maxLength: 160,
         encoding: "GSM_7BIT" as const,
         tags: ["payment", "confirmation"],

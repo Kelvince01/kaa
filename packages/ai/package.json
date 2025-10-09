@@ -10,15 +10,15 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/google": "^2.0.14",
-    "@ai-sdk/openai": "^2.0.32",
+    "@ai-sdk/google": "catalog:",
+    "@ai-sdk/openai": "catalog:",
     "@kaa/models": "workspace:*",
     "@kaa/utils": "workspace:*",
-    "ai": "^5.0.52",
-    "openai": "^5.22.0"
+    "ai": "catalog:",
+    "openai": "catalog:"
   },
   "devDependencies": {
     "@kaa/tsconfig": "workspace:*",
-    "typescript": "^5.9.2"
+    "typescript": "catalog:"
   }
 }

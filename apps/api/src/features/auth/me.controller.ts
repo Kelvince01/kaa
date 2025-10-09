@@ -2,10 +2,14 @@ import jwt from "@elysiajs/jwt";
 import Stream from "@elysiajs/stream";
 import { Passkey, User } from "@kaa/models";
 import { UserStatus } from "@kaa/models/types";
-import { passkeyV2Service, roleService, userService } from "@kaa/services";
+import {
+  memberService,
+  passkeyV2Service,
+  roleService,
+  userService,
+} from "@kaa/services";
 import { Elysia, t } from "elysia";
 import type mongoose from "mongoose";
-import z from "zod";
 import { authPlugin } from "./auth.plugin";
 
 export const streams = new Map<string, any>();
@@ -35,27 +39,30 @@ export const meController = new Elysia()
         const userProfile = currentUser.getPublicProfile();
 
         // Get user role
-        const userRole = await roleService.getRoleById(
-          userProfile.role?.toString() ?? ""
-        );
+        const userRole = await roleService.getUserRoleBy({
+          userId: userProfile._id?.toString() ?? "",
+        });
+        const member = await memberService.getMemberBy({
+          user: userProfile._id?.toString() ?? "",
+        });
 
         set.status = 200;
         return {
           status: "success",
           user: {
             id: (userProfile._id as mongoose.Types.ObjectId).toString(),
-            memberId: userProfile.memberId?.toString(),
+            memberId: member ? member._id?.toString() : undefined,
             avatar: userProfile.profile?.avatar,
             username: userProfile.profile?.displayName || "",
             firstName: userProfile.profile?.firstName,
             lastName: userProfile.profile?.lastName,
             email: userProfile.contact?.email,
             status: userProfile.status as string,
-            role: userRole?.name ?? "",
+            role: (userRole?.roleId as any)?.name ?? "",
             phone: userProfile.contact?.phone.formatted,
             address: userProfile.addresses?.[0],
             isActive: userProfile.status === UserStatus.ACTIVE,
-            isVerified: userProfile.verification?.emailVerified,
+            isVerified: !!userProfile.verification?.emailVerifiedAt,
             createdAt: (userProfile.createdAt as Date).toISOString(),
             updatedAt: (userProfile.updatedAt as Date).toISOString(),
           } as any,
@@ -148,18 +155,18 @@ export const meController = new Elysia()
       }
     },
     {
-      query: z.object({
-        public: z.string().optional().default("false"),
-        organization: z.string().optional(),
+      query: t.Object({
+        public: t.Optional(t.String()),
+        organization: t.Optional(t.String()),
       }),
       response: {
-        200: z.object({
-          status: z.literal("success"),
-          token: z.string(),
+        200: t.Object({
+          status: t.Literal("success"),
+          token: t.String(),
         }),
-        500: z.object({
-          status: z.literal("error"),
-          message: z.string(),
+        500: t.Object({
+          status: t.Literal("error"),
+          message: t.String(),
         }),
       },
       detail: {

@@ -59,11 +59,7 @@ class AuthCacheService {
         return JSON.parse(cached);
       }
 
-      const user = await User.findById(userId)
-        .select("-password")
-        .populate("role", "name")
-        .populate("memberId", "name")
-        .lean();
+      const user = await User.findById(userId).select("-password").lean();
 
       if (user) {
         await redisClient.setEx(
@@ -81,8 +77,8 @@ class AuthCacheService {
   }
 
   // Role caching
-  async getRole(roleId: string): Promise<any> {
-    const key = `${this.configs.role.prefix}${roleId}`;
+  async getRole(userId: string): Promise<any> {
+    const key = `${this.configs.role.prefix}${userId}`;
 
     try {
       const cached = await redisClient.get(key);
@@ -90,8 +86,8 @@ class AuthCacheService {
         return JSON.parse(cached);
       }
 
-      const role = await roleService.getRoleById(roleId);
-      if (role) {
+      const role = await roleService.getUserRoleBy({ userId });
+      if (role?.roleId) {
         await redisClient.setEx(
           key,
           this.configs.role.ttl,
@@ -101,7 +97,7 @@ class AuthCacheService {
 
       return role;
     } catch (error) {
-      logger.error("Role cache error", { roleId, error });
+      logger.error("Role cache error", { userId, error });
       return null;
     }
   }

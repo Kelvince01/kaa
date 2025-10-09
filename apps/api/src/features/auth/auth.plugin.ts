@@ -1,5 +1,5 @@
 import bearer from "@elysiajs/bearer";
-import { userService } from "@kaa/services";
+import { memberService, roleService, userService } from "@kaa/services";
 import { ForbiddenError, UnauthorizedError } from "@kaa/utils";
 import type Elysia from "elysia";
 import type mongoose from "mongoose";
@@ -39,6 +39,9 @@ export const authPlugin = (app: Elysia) =>
 
         const userId = jwtPayload.sub;
         const user = await userService.getUserById(userId);
+        const userRole = await roleService.getUserRoleBy({
+          userId: (user._id as mongoose.Types.ObjectId).toString(),
+        });
 
         if (!user) {
           // handle error for user not found from the provided access token
@@ -46,12 +49,21 @@ export const authPlugin = (app: Elysia) =>
           throw new Error("Access token is invalid");
         }
 
+        const member = await memberService.getMemberBy({
+          user: (user._id as mongoose.Types.ObjectId).toString(),
+        });
+
         return {
           user: {
             id: (user._id as mongoose.Types.ObjectId).toString(),
-            role: user.role,
-            memberId: user.memberId?.toString(),
-            isVerified: user.verification.emailVerified === true, // Ensure this is always a boolean
+            role: (userRole?.roleId as any).name,
+            roleId: (userRole?.roleId as any)._id.toString(),
+            memberId: member
+              ? (member._id as mongoose.Types.ObjectId).toString()
+              : undefined,
+            isVerified: !!user.verification.emailVerifiedAt, // Ensure this is always a boolean
+            firstName: user.profile.firstName,
+            lastName: user.profile.lastName,
             username: user.profile.displayName || "",
             email: user.contact.email,
             phone: user.contact.phone.formatted,

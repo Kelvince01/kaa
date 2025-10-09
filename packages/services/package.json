@@ -17,10 +17,16 @@
     "@oslojs/crypto": "^1.0.1",
     "@oslojs/encoding": "^1.1.0",
     "@oslojs/webauthn": "^1.0.0",
+    "@sendgrid/mail": "^8.1.6",
     "africastalking": "^0.7.7",
-    "axios": "^1.12.2",
+    "agora-access-token": "^2.0.4",
+    "agora-rtc-sdk-ng": "^4.24.0",
+    "axios": "catalog:",
+    "bullmq": "^5.58.5",
+    "canvas": "^3.2.0",
     "csv-writer": "^1.6.0",
-    "elysia": "latest",
+    "docxtemplater": "^3.66.7",
+    "elysia": "catalog:",
     "exceljs": "^4.4.0",
     "firebase-admin": "^13.5.0",
     "handlebars": "^4.7.8",
@@ -29,6 +35,7 @@
     "mongoose": "^8.18.1",
     "mqtt": "^5.14.1",
     "pdfkit": "^0.17.2",
+    "pizzip": "^3.2.0",
     "resend": "^6.0.3",
     "short-unique-id": "^5.3.2"
   },
@@ -36,8 +43,9 @@
     "@kaa/tsconfig": "workspace:*",
     "@types/africastalking": "^0.6.2",
     "@types/mjml": "^4.7.4",
+    "@types/pdfkit": "^0.17.3",
     "mjml-cli": "^4.15.3",
     "mjml-core": "^4.16.1",
-    "typescript": "^5.9.2"
+    "typescript": "catalog:"
   }
 }

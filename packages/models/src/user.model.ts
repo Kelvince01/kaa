@@ -245,17 +245,17 @@ const userAddressSchema = new Schema<UserAddress>(
 
 const userVerificationSchema = new Schema<UserVerification>(
   {
-    emailVerified: {
-      type: Boolean,
-      default: false,
+    emailVerifiedAt: {
+      type: Date,
+      default: null,
     },
-    phoneVerified: {
-      type: Boolean,
-      default: false,
+    phoneVerifiedAt: {
+      type: Date,
+      default: null,
     },
-    identityVerified: {
-      type: Boolean,
-      default: false,
+    identityVerifiedAt: {
+      type: Date,
+      default: null,
     },
     kycStatus: {
       type: String,
@@ -268,13 +268,20 @@ const userVerificationSchema = new Schema<UserVerification>(
           type: String,
           enum: ["national_id", "passport", "alien_id"],
         },
-        /*
-      idNumber: {
-      type: String,
-      match: [/^\d{8}$/, "Please add a valid Kenyan ID number"],
-    },
-    */
-        number: String,
+        number: {
+          type: String,
+          validate: {
+            validator(value: string) {
+              // Only apply regex if type is "national_id"
+              if (this.kycData?.identification.type === "national_id") {
+                // biome-ignore lint/performance/useTopLevelRegex: ignore
+                return /^\d{8}$/.test(value);
+              }
+              return true; // skip validation for other types
+            },
+            message: "Please add a valid Kenyan ID number (8 digits)",
+          },
+        },
         verified: {
           type: Boolean,
           default: false,
@@ -299,9 +306,9 @@ const userVerificationSchema = new Schema<UserVerification>(
 
 const userSettingsSchema = new Schema<UserSettings>(
   {
-    twoFactorEnabled: {
-      type: Boolean,
-      default: false,
+    twoFactorEnabledAt: {
+      type: Date,
+      default: null,
     },
     sessionTimeout: {
       type: Number,
@@ -373,19 +380,8 @@ const userStatsSchema = new Schema<UserStats>(
  */
 const userSchema = new Schema<IUser>(
   {
-    slug: { type: String, required: true, trim: true, unique: true },
-    memberId: {
-      type: Schema.Types.ObjectId,
-      ref: "Member",
-    },
-
     profile: userProfileSchema,
     contact: userContactSchema,
-    role: {
-      type: Schema.Types.ObjectId,
-      ref: "Role",
-      required: true,
-    },
     status: {
       type: String,
       enum: Object.values(UserStatus),
@@ -451,10 +447,10 @@ const userSchema = new Schema<IUser>(
 );
 
 // Indexes
-userSchema.index({ memberId: 1 });
-userSchema.index({ role: 1, status: 1 });
-userSchema.index({ "verification.emailVerified": 1 });
-userSchema.index({ "verification.phoneVerified": 1 });
+userSchema.index({ status: 1 });
+userSchema.index({ "verification.emailVerifiedAt": 1 });
+userSchema.index({ "verification.phoneVerifiedAt": 1 });
+userSchema.index({ "verification.identityVerifiedAt": 1 });
 userSchema.index({ "verification.kycStatus": 1 });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ "activity.lastLogin": -1 });
@@ -563,7 +559,7 @@ userSchema.statics.findByEmail = function (email: string) {
 
 // Static method to find active users
 userSchema.statics.findActive = function () {
-  return this.find({ isActive: true });
+  return this.find({ status: UserStatus.ACTIVE });
 };
 
 userSchema.methods.updateLastActivity = function (ip?: string): void {
@@ -595,9 +591,11 @@ userSchema.methods.toPublicProfile = function () {
     fullName: this.fullName,
     bio: this.profile.bio,
     avatar: this.profile.avatar,
-    role: this.role,
+    // role: this.role,
     verified:
-      this.verification.emailVerified && this.verification.phoneVerified,
+      this.verification.emailVerifiedAt &&
+      this.verification.phoneVerifiedAt &&
+      this.verification.identityVerifiedAt,
     county: this.addresses.find((addr: any) => addr.isPrimary)?.county,
     estate: this.addresses.find((addr: any) => addr.isPrimary)?.estate,
     // stats:

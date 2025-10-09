@@ -1,221 +1,270 @@
 import { AmenityCategory, KenyanCounty, LocationType } from "@kaa/models/types";
-import { z } from "zod";
+import { t } from "elysia";
 
-export const AmenitySchema = z.object({
-  name: z.string(),
-  category: z.enum(Object.values(AmenityCategory)),
-  type: z.string(),
-  coordinates: z
-    .object({
-      latitude: z.number(),
-      longitude: z.number(),
+/**
+ * Helper function to create Elysia enum from enum values
+ */
+const createEnumFromValues = (values: string[]) =>
+  Object.fromEntries(values.map((v) => [v, v]));
+
+export const AmenitySchema = t.Object({
+  name: t.String(),
+  category: t.Enum(createEnumFromValues(Object.values(AmenityCategory))),
+  type: t.String(),
+  coordinates: t.Optional(
+    t.Object({
+      latitude: t.Number(),
+      longitude: t.Number(),
     })
-    .optional(),
-  distance: z.number().optional(),
-  rating: z.number().optional(),
-  isVerified: z.boolean(),
-  contact: z
-    .object({
-      phone: z.string().optional(),
-      email: z.email().optional(),
-      website: z.string().optional(),
+  ),
+  distance: t.Optional(t.Number()),
+  rating: t.Optional(t.Number()),
+  isVerified: t.Boolean(),
+  contact: t.Optional(
+    t.Object({
+      phone: t.Optional(t.String()),
+      email: t.Optional(t.String()),
+      website: t.Optional(t.String()),
     })
-    .optional(),
-  hours: z
-    .array(
-      z.object({
-        monday: z.array(
-          z.object({
-            open: z.iso.datetime(),
-            close: z.iso.datetime(),
+  ),
+  hours: t.Optional(
+    t.Array(
+      t.Object({
+        monday: t.Array(
+          t.Object({
+            open: t.Date(),
+            close: t.Date(),
           })
         ),
-        tuesday: z.array(
-          z.object({
-            open: z.iso.datetime(),
-            close: z.iso.datetime(),
+        tuesday: t.Array(
+          t.Object({
+            open: t.Date(),
+            close: t.Date(),
           })
         ),
-        wednesday: z.array(
-          z.object({
-            open: z.iso.datetime(),
-            close: z.iso.datetime(),
+        wednesday: t.Array(
+          t.Object({
+            open: t.Date(),
+            close: t.Date(),
           })
         ),
-        thursday: z.array(
-          z.object({
-            open: z.iso.datetime(),
-            close: z.iso.datetime(),
+        thursday: t.Array(
+          t.Object({
+            open: t.Date(),
+            close: t.Date(),
           })
         ),
-        friday: z.array(
-          z.object({
-            open: z.iso.datetime(),
-            close: z.iso.datetime(),
+        friday: t.Array(
+          t.Object({
+            open: t.Date(),
+            close: t.Date(),
           })
         ),
-        saturday: z.array(
-          z.object({
-            open: z.iso.datetime(),
-            close: z.iso.datetime(),
+        saturday: t.Array(
+          t.Object({
+            open: t.Date(),
+            close: t.Date(),
           })
         ),
-        sunday: z.array(
-          z.object({
-            open: z.iso.datetime(),
-            close: z.iso.datetime(),
+        sunday: t.Array(
+          t.Object({
+            open: t.Date(),
+            close: t.Date(),
           })
         ),
       })
     )
-    .optional(),
-  metadata: z.record(z.string(), z.any()).optional(),
+  ),
+  metadata: t.Optional(t.Record(t.String(), t.Any())),
 });
 
-export const LocationAddressSchema = z.object({
-  street: z.string().optional(),
-  building: z.string().optional(),
-  estate: z.string().optional(),
-  suburb: z.string().optional(),
-  ward: z.string().optional(),
-  constituency: z.string().optional(),
-  county: z.enum(Object.values(KenyanCounty)),
-  postalCode: z.string().optional(),
-  country: z.string().min(1),
-  formatted: z.string().min(1),
+export const LocationAddressSchema = t.Object({
+  street: t.Optional(t.String()),
+  building: t.Optional(t.String()),
+  estate: t.Optional(t.String()),
+  suburb: t.Optional(t.String()),
+  ward: t.Optional(t.String()),
+  constituency: t.Optional(t.String()),
+  county: t.Enum(createEnumFromValues(Object.values(KenyanCounty))),
+  postalCode: t.Optional(t.String()),
+  country: t.String({ minLength: 1 }),
+  formatted: t.String({ minLength: 1 }),
 });
 
-export const LocationMetadataSchema = z.object({
-  population: z.number().optional(),
-  elevation: z.number().optional(),
-  timeZone: z.string(),
-  languages: z.array(z.string()),
-  currency: z.string(),
-  dialCode: z.string(),
-  alternativeNames: z.array(z.string()),
-  historicalNames: z.array(z.string()),
-  description: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  images: z
-    .array(
-      z.object({
-        url: z.string(),
-        type: z.enum(["primary", "gallery", "map", "aerial"]),
-        caption: z.string().optional(),
-        uploadedAt: z.date(),
-        uploadedBy: z.string().optional(),
+export const LocationMetadataSchema = t.Object({
+  population: t.Optional(t.Number()),
+  elevation: t.Optional(t.Number()),
+  timeZone: t.String(),
+  languages: t.Array(t.String()),
+  currency: t.String(),
+  dialCode: t.String(),
+  alternativeNames: t.Array(t.String()),
+  historicalNames: t.Array(t.String()),
+  description: t.Optional(t.String()),
+  tags: t.Optional(t.Array(t.String())),
+  images: t.Optional(
+    t.Array(
+      t.Object({
+        url: t.String(),
+        type: t.Enum({
+          primary: "primary",
+          gallery: "gallery",
+          map: "map",
+          aerial: "aerial",
+        }),
+        caption: t.Optional(t.String()),
+        uploadedAt: t.Date(),
+        uploadedBy: t.Optional(t.String()),
       })
     )
-    .optional(),
-  documents: z
-    .array(
-      z.object({
-        name: z.string(),
-        url: z.string(),
-        type: z.enum(["deed", "survey", "planning", "other"]),
-        uploadedAt: z.date(),
-        uploadedBy: z.string().optional(),
+  ),
+  documents: t.Optional(
+    t.Array(
+      t.Object({
+        name: t.String(),
+        url: t.String(),
+        type: t.Enum({
+          deed: "deed",
+          survey: "survey",
+          planning: "planning",
+          other: "other",
+        }),
+        uploadedAt: t.Date(),
+        uploadedBy: t.Optional(t.String()),
       })
     )
-    .optional(),
+  ),
 });
 
-export const DemographicsSchema = z.object({
-  population: z.number().min(1),
-  households: z.number(),
-  averageAge: z.number(),
-  literacy: z.number(),
-  employment: z.number(),
-  lastUpdated: z.date(),
-  source: z.string(),
+export const DemographicsSchema = t.Object({
+  population: t.Number({ minimum: 1 }),
+  households: t.Number(),
+  averageAge: t.Number(),
+  literacy: t.Number(),
+  employment: t.Number(),
+  lastUpdated: t.Date(),
+  source: t.String(),
 });
 
-export const TransportationSchema = z.object({
-  publicTransport: z.array(
-    z.object({
-      type: z.enum(["bus", "matatu", "boda", "taxi", "train"]),
-      routes: z.array(z.string()),
-      frequency: z.enum(["high", "medium", "low"]),
-      cost: z.object({
-        min: z.number(),
-        max: z.number(),
-        currency: z.string(),
+export const TransportationSchema = t.Object({
+  publicTransport: t.Array(
+    t.Object({
+      type: t.Enum({
+        bus: "bus",
+        matatu: "matatu",
+        boda: "boda",
+        taxi: "taxi",
+        train: "train",
+      }),
+      routes: t.Array(t.String()),
+      frequency: t.Enum({
+        high: "high",
+        medium: "medium",
+        low: "low",
+      }),
+      cost: t.Object({
+        min: t.Number(),
+        max: t.Number(),
+        currency: t.String(),
       }),
     })
   ),
-  roads: z.array(
-    z.object({
-      name: z.string(),
-      type: z.enum(["highway", "arterial", "collector", "local"]),
-      surface: z.enum(["tarmac", "murram", "dirt"]),
-      condition: z.enum(["excellent", "good", "fair", "poor"]),
-    })
-  ),
-  airports: z.array(
-    z.object({
-      name: z.string(),
-      type: z.enum(["airport", "airstrip"]),
-      distance: z.number(),
-      coordinates: z.object({
-        latitude: z.number(),
-        longitude: z.number(),
+  roads: t.Array(
+    t.Object({
+      name: t.String(),
+      type: t.Enum({
+        highway: "highway",
+        arterial: "arterial",
+        collector: "collector",
+        local: "local",
+      }),
+      surface: t.Enum({
+        tarmac: "tarmac",
+        murram: "murram",
+        dirt: "dirt",
+      }),
+      condition: t.Enum({
+        excellent: "excellent",
+        good: "good",
+        fair: "fair",
+        poor: "poor",
       }),
     })
   ),
-  trainStations: z.array(
-    z.object({
-      name: z.string(),
-      type: z.enum(["train", "railway"]),
-      distance: z.number(),
-      coordinates: z.object({
-        latitude: z.number(),
-        longitude: z.number(),
+  airports: t.Array(
+    t.Object({
+      name: t.String(),
+      type: t.Enum({
+        airport: "airport",
+        airstrip: "airstrip",
+      }),
+      distance: t.Number(),
+      coordinates: t.Object({
+        latitude: t.Number(),
+        longitude: t.Number(),
       }),
     })
   ),
-  busStations: z.array(
-    z.object({
-      name: z.string(),
-      type: z.enum(["bus", "bus_stop"]),
-      distance: z.number(),
-      coordinates: z.object({
-        latitude: z.number(),
-        longitude: z.number(),
+  trainStations: t.Array(
+    t.Object({
+      name: t.String(),
+      type: t.Enum({
+        train: "train",
+        railway: "railway",
+      }),
+      distance: t.Number(),
+      coordinates: t.Object({
+        latitude: t.Number(),
+        longitude: t.Number(),
       }),
     })
   ),
-  matatu: z.object({
-    routes: z.array(z.string()),
-    stages: z.array(
-      z.object({
-        name: z.string(),
-        distance: z.number(),
-        coordinates: z.object({
-          latitude: z.number(),
-          longitude: z.number(),
+  busStations: t.Array(
+    t.Object({
+      name: t.String(),
+      type: t.Enum({
+        bus: "bus",
+        bus_stop: "bus_stop",
+      }),
+      distance: t.Number(),
+      coordinates: t.Object({
+        latitude: t.Number(),
+        longitude: t.Number(),
+      }),
+    })
+  ),
+  matatu: t.Object({
+    routes: t.Array(t.String()),
+    stages: t.Array(
+      t.Object({
+        name: t.String(),
+        distance: t.Number(),
+        coordinates: t.Object({
+          latitude: t.Number(),
+          longitude: t.Number(),
         }),
       })
     ),
   }),
 });
 
-export const LocationSchema = z.object({
-  name: z.string().min(1),
-  type: z.enum(Object.values(LocationType)),
-  description: z.string().optional(),
-  county: z.enum(Object.values(KenyanCounty)),
-  parent: z.string().optional(),
-  address: LocationAddressSchema.optional(),
-  coordinates: z.object({
-    latitude: z.number(),
-    longitude: z.number(),
+export const LocationSchema = t.Object({
+  name: t.String({ minLength: 1 }),
+  type: t.Enum(createEnumFromValues(Object.values(LocationType))),
+  description: t.Optional(t.String()),
+  county: t.Enum(createEnumFromValues(Object.values(KenyanCounty))),
+  parent: t.Optional(t.String()),
+  address: t.Optional(LocationAddressSchema),
+  coordinates: t.Object({
+    latitude: t.Number(),
+    longitude: t.Number(),
   }),
-  tags: z.array(z.string()).optional(),
-  amenities: AmenitySchema.array().optional(),
-  metadata: LocationMetadataSchema.optional(),
+  tags: t.Optional(t.Array(t.String())),
+  amenities: t.Optional(t.Array(AmenitySchema)),
+  metadata: t.Optional(LocationMetadataSchema),
 });
 
-export const LocationSearchSchema = z.object({
-  query: z.string().min(1),
-  limit: z.number().min(1),
+export const LocationSearchSchema = t.Object({
+  query: t.String({ minLength: 1 }),
+  limit: t.Number({ minimum: 1 }),
 });

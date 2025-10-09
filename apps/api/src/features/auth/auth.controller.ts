@@ -10,7 +10,12 @@ import {
   ResetPasswordRequestSchema,
   VerifyUserRequestSchema,
 } from "@kaa/schemas";
-import { authService, fileService, userService } from "@kaa/services";
+import {
+  authService,
+  fileService,
+  memberService,
+  userService,
+} from "@kaa/services";
 import {
   AppError,
   generateResetPasswordToken,
@@ -255,7 +260,7 @@ export const authController = new Elysia()
             }
 
             // Update user
-            user.verification.emailVerified = true;
+            user.verification.emailVerifiedAt = new Date();
             await user.save();
 
             verificationTokenDoc.used = true;
@@ -325,7 +330,9 @@ export const authController = new Elysia()
           try {
             const { email } = body;
             // Find user by email
-            const user = await User.findOne({ email: email.toLowerCase() });
+            const user = await User.findOne({
+              "contact.email": email.toLowerCase(),
+            });
 
             if (!user) {
               // For security reasons, don't reveal that the user doesn't exist
@@ -338,7 +345,7 @@ export const authController = new Elysia()
             }
 
             // Check if already verified
-            if (user.verification.emailVerified) {
+            if (user.verification.emailVerifiedAt) {
               set.status = 200;
               return {
                 status: "success",
@@ -434,7 +441,7 @@ export const authController = new Elysia()
             }
 
             // Update user
-            user.verification.phoneVerified = true;
+            user.verification.phoneVerifiedAt = new Date();
             await user.save();
 
             // Send welcome email (background job)
@@ -632,7 +639,7 @@ export const authController = new Elysia()
               };
             }
 
-            if (!user.verification.emailVerified) {
+            if (!user.verification.emailVerifiedAt) {
               authMetrics.recordLogin(false, Date.now() - startTime, {
                 email,
                 ip,
@@ -712,7 +719,7 @@ export const authController = new Elysia()
             // 6. Parallel operations for successful login
             const [userRole, refreshTokenExpiry] = await Promise.all([
               authCacheService.getRole(
-                (user.role as any)._id?.toString() || ""
+                (user._id as mongoose.Types.ObjectId)?.toString() || ""
               ),
               Promise.resolve(
                 Math.floor(Date.now() / 1000) + config.jwt.refreshTokenExpiresIn
@@ -853,10 +860,14 @@ export const authController = new Elysia()
                 logger.error("Failed to queue login alert email", err)
               );
 
+            const member = await memberService.getMemberBy({
+              user: (user._id as mongoose.Types.ObjectId).toString(),
+            });
+
             authBackgroundJobs
               .trackLoginEvent(
                 (user._id as mongoose.Types.ObjectId).toString(),
-                user.memberId?.toString() || "",
+                (member?._id as mongoose.Types.ObjectId)?.toString() || "",
                 {
                   ip,
                   userAgent,
@@ -882,7 +893,7 @@ export const authController = new Elysia()
 
             logger.info("User logged in", {
               userId: user._id as mongoose.Types.ObjectId,
-              memberId: user.memberId,
+              memberId: (member?._id as mongoose.Types.ObjectId).toString(),
               responseTime: `${responseTime}ms`,
             });
 
@@ -896,7 +907,9 @@ export const authController = new Elysia()
                 lastName: user.profile.lastName,
                 email: user.contact.email,
                 avatar: user.profile.avatar,
-                memberId: user.memberId?.toString(),
+                memberId: member
+                  ? (member?._id as mongoose.Types.ObjectId)?.toString()
+                  : undefined,
                 role: userRole?.name || "",
                 phone: user.contact.phone.formatted,
                 address: user.addresses[0],
@@ -906,7 +919,7 @@ export const authController = new Elysia()
                   | "suspended"
                   | "pending",
                 isActive: user.status === UserStatus.ACTIVE,
-                isVerified: user.verification.emailVerified,
+                isVerified: !!user.verification.emailVerifiedAt,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
                 lastLoginAt: user?.activity?.lastLogin,
@@ -921,7 +934,7 @@ export const authController = new Elysia()
                 cacheHits: {
                   user: !!(await authCacheService.getUser(email)),
                   role: !!(await authCacheService.getRole(
-                    user.role?.toString() || ""
+                    (userRole._id as mongoose.Types.ObjectId)?.toString() || ""
                   )),
                   mfa: !!(await authCacheService.getMFAStatus(
                     (user._id as mongoose.Types.ObjectId).toString()
@@ -1402,12 +1415,13 @@ export const authController = new Elysia()
             path: "/",
           });
 
-          const accessTokenPayload = {
+          /*const accessTokenPayload = {
             id: user.id,
             email: user.contact.email,
             username: user.profile.displayName,
             role: (user.role as mongoose.Types.ObjectId).toString(),
-          };
+          };*/
+
           // create new refresh token
           const refreshJWTToken = await jwt.sign({
             sub: user.id,

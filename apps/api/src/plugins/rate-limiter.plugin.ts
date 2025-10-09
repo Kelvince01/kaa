@@ -1,5 +1,5 @@
 // import { Elysia } from "elysia";
-import { rateLimitConfig } from "~/config";
+import config from "@kaa/config/api";
 
 // import { ERROR_CODES, getErrorMessage } from "~/shared/constants/errors";
 
@@ -247,7 +247,7 @@ export const createUserBasedRateLimit = (context: any) => {
 // Global rate limit for all endpoints
 export const globalRateLimit = {
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: rateLimitConfig.strictMax, // From config
+  maxRequests: config.rateLimit.strictMax, // From config
   keyGenerator: (context: any) => context.ip,
   message: "Too many requests from this IP, please try again later.",
 };

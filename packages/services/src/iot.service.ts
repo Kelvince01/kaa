@@ -10,7 +10,6 @@ import {
   CommunicationProtocol,
   DataQuality,
   DeviceStatus,
-  DeviceType,
   type IAlertAction,
   type IAlertActionResult,
   type IAlertCondition,
@@ -25,6 +24,7 @@ import {
   type IIoTAlert,
   type IIoTDevice,
   IOT_CONSTANTS,
+  IotDeviceType,
   type IPropertyDashboard,
   type IPropertyOverview,
   type ISecurityStatus,
@@ -815,9 +815,9 @@ class IoTService extends EventEmitter {
     for (const device of devices) {
       if (
         [
-          DeviceType.TEMPERATURE_SENSOR,
-          DeviceType.HUMIDITY_SENSOR,
-          DeviceType.AIR_QUALITY_SENSOR,
+          IotDeviceType.TEMPERATURE_SENSOR,
+          IotDeviceType.HUMIDITY_SENSOR,
+          IotDeviceType.AIR_QUALITY_SENSOR,
         ].includes(device.type)
       ) {
         const readings = await SensorReading.find({ deviceId: device.id });
@@ -860,9 +860,9 @@ class IoTService extends EventEmitter {
   ): Promise<ISecurityStatus> {
     const securityDevices = devices.filter((d) =>
       [
-        DeviceType.DOOR_LOCK,
-        DeviceType.SECURITY_CAMERA,
-        DeviceType.MOTION_DETECTOR,
+        IotDeviceType.DOOR_LOCK,
+        IotDeviceType.SECURITY_CAMERA,
+        IotDeviceType.MOTION_DETECTOR,
       ].includes(d.type)
     );
 
@@ -878,18 +878,18 @@ class IoTService extends EventEmitter {
       if (readings && readings.length > 0) {
         const lastReading = readings.at(-1);
 
-        if (device.type === DeviceType.DOOR_LOCK) {
+        if (device.type === IotDeviceType.DOOR_LOCK) {
           if (lastReading?.data.locked) lockedDoors++;
           else unlockedDoors++;
         }
 
-        if (device.type === DeviceType.SECURITY_CAMERA) {
+        if (device.type === IotDeviceType.SECURITY_CAMERA) {
           if (device.status === DeviceStatus.ONLINE) activeCameras++;
           else inactiveCameras++;
         }
 
         if (
-          device.type === DeviceType.MOTION_DETECTOR &&
+          device.type === IotDeviceType.MOTION_DETECTOR &&
           lastReading?.data.motion
         )
           motionDetected = true;
@@ -1081,7 +1081,7 @@ class IoTService extends EventEmitter {
     // Calculate energy consumption and costs
     const devices = await IoTDevice.find();
     for (const device of devices) {
-      if (device.type === DeviceType.ELECTRICITY_METER) {
+      if (device.type === IotDeviceType.ELECTRICITY_METER) {
         const readings = await SensorReading.find({ deviceId: device.id });
         if (readings && readings.length >= 2) {
           const latest = readings.at(-1);

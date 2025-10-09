@@ -753,6 +753,95 @@ export type EmailPreviewResponse = {
   template: ITemplate;
 };
 
+// =========================== //
+export type SendEmailBase = {
+  metadata?: Record<string, any> | undefined;
+  priority?: string | undefined;
+  settings?:
+    | {
+        enableDeliveryReports?: boolean | undefined;
+        maxRetries?: number | undefined;
+        retryInterval?: number | undefined;
+        provider?: string | undefined;
+      }
+    | undefined;
+  to: string[];
+  subject: string;
+  content: string;
+  headers?: Record<string, any> | undefined;
+  tags?: string[] | undefined;
+  cc?: string | string[] | undefined;
+  bcc?: string | string[] | undefined;
+  replyTo?: string | undefined;
+  attachments?:
+    | {
+        content: ArrayBuffer;
+        filename: string;
+      }[]
+    | undefined;
+};
+
+export type SendEmail = SendEmailBase & {
+  html?: string | undefined;
+  text?: string | undefined;
+};
+
+export type SendEmailWithTemplate = SendEmailBase & {
+  data?: Record<string, any> | undefined;
+  template?: Record<string, any> | undefined;
+  userId: string;
+  content: string;
+  templateId: string;
+  requestMetadata: {
+    requestId: string;
+    ipAddress: string;
+    userAgent: string;
+  };
+};
+
+export type SendBulkEmail = {
+  priority?: string | undefined;
+  settings?:
+    | {
+        enableDeliveryReports?: boolean | undefined;
+        maxRetries?: number | undefined;
+        retryInterval?: number | undefined;
+        provider?: string | undefined;
+      }
+    | undefined;
+  subject: string;
+  content: string;
+  recipients: string[];
+};
+
+export type SendBulkEmailWithTemplate = {
+  data?: Record<string, any> | undefined;
+  metadata?: Record<string, any> | undefined;
+  priority?: string | undefined;
+  settings?:
+    | {
+        enableDeliveryReports?: boolean | undefined;
+        maxRetries?: number | undefined;
+        retryInterval?: number | undefined;
+        provider?: string | undefined;
+      }
+    | undefined;
+  recipients: string[];
+  templateId: string;
+};
+
+export type QueryEmails = {
+  data?: Record<string, any> | undefined;
+  page?: number | undefined;
+  limit?: number | undefined;
+  subject?: string | undefined;
+  content?: string | undefined;
+  metadata?: Record<string, any> | undefined;
+  priority?: string | undefined;
+  recipients?: string[] | undefined;
+  templateId?: string | undefined;
+};
+
 export default {
   EmailTemplateType,
   EmailStatus,

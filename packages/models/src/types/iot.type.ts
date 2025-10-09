@@ -4,7 +4,7 @@ import type { BaseDocument } from "./base.type";
 export type IIoTDevice = BaseDocument & {
   propertyId: mongoose.Types.ObjectId;
   name: string;
-  type: DeviceType;
+  type: IotDeviceType;
   category: DeviceCategory;
   manufacturer: string;
   model: string;
@@ -21,7 +21,7 @@ export type IIoTDevice = BaseDocument & {
   updatedAt: Date;
 };
 
-export enum DeviceType {
+export enum IotDeviceType {
   // Environmental Sensors
   TEMPERATURE_SENSOR = "temperature_sensor",
   HUMIDITY_SENSOR = "humidity_sensor",

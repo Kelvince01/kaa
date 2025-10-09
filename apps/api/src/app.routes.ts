@@ -7,7 +7,9 @@ import { securityMonitoringController } from "./features/auth/security-monitorin
 import { conversationController } from "./features/comms/messages/conversation.controller";
 import { notificationController } from "./features/comms/notifications/notification.controller";
 import { smsController } from "./features/comms/sms/sms.controller";
+import { legalDocumentController } from "./features/documents/legal-document.controller";
 import { fileController } from "./features/files/file.controller";
+import { locationsController } from "./features/locations/location.controller";
 import { monitoringController } from "./features/misc/monitoring/monitoring.controller";
 import { billingController } from "./features/org/billing.controller";
 import { memberController } from "./features/org/member.controller";
@@ -26,8 +28,10 @@ const routes = new Elysia({ prefix: "api/v1" })
   .use(usersController)
   .use(smsController)
   .use(conversationController)
+  .use(locationsController)
   .use(aiController)
   .use(fileController)
+  .use(legalDocumentController)
   .use(templatesController)
   .use(monitoringController)
   .use(notificationController)

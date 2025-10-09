@@ -5,13 +5,16 @@ import {
   NotificationPriority,
   NotificationType,
 } from "@kaa/models/types";
-import { notificationService, whatsappService } from "@kaa/services";
+import {
+  NotificationUtils,
+  notificationService,
+  WhatsAppTemplates,
+  whatsappService,
+} from "@kaa/services";
 import Elysia, { t } from "elysia";
 import type { FilterQuery } from "mongoose";
 import mongoose from "mongoose";
 import { authPlugin } from "~/features/auth/auth.plugin";
-import { NotificationUtils } from "./notification.utils";
-import { WhatsAppTemplates } from "./whatsapp-templates";
 
 export const notificationController = new Elysia({ prefix: "/notifications" })
   .use(authPlugin)

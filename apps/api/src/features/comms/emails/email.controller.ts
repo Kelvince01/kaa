@@ -1,3 +1,4 @@
+import { emailService } from "@kaa/services";
 import { Elysia, t } from "elysia";
 import { authPlugin } from "../../auth/auth.plugin";
 import {
@@ -7,7 +8,6 @@ import {
   sendEmailSchema,
   sendEmailWithTemplateSchema,
 } from "./email.schema";
-import emailService from "./email.service";
 
 export const emailController = new Elysia({ prefix: "/emails" })
   .use(authPlugin)

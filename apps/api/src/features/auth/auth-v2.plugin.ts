@@ -3,7 +3,7 @@
 // import { User } from "@kaa/models";
 // import { UserRole, UserStatus } from "@kaa/models/types";
 // import { Elysia } from "elysia";
-// import { jwtConfig } from "~/config";
+// import config from "@kaa/config/api";
 // import { ERROR_CODES, getErrorMessage } from "~/shared/constants/errors";
 
 // // JWT types

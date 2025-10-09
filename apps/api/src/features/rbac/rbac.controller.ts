@@ -1,15 +1,14 @@
 import { Permission } from "@kaa/models";
+import { permissionService, rbacService, roleService } from "@kaa/services";
+import Elysia, { t } from "elysia";
+import type mongoose from "mongoose";
+import { accessPlugin } from "./rbac.plugin";
 import {
   permissionSchema,
   permissionsQuerySchema,
   roleSchema,
   rolesQuerySchema,
-} from "@kaa/schemas";
-import { permissionService, rbacService, roleService } from "@kaa/services";
-import Elysia, { t } from "elysia";
-import type mongoose from "mongoose";
-import { z } from "zod";
-import { accessPlugin } from "./rbac.plugin";
+} from "./rbac.schema";
 
 export const rbacController = new Elysia()
   .group("roles", (app) =>
@@ -49,13 +48,13 @@ export const rbacController = new Elysia()
         {
           query: rolesQuerySchema,
           response: {
-            200: z.object({
-              status: z.literal("success"),
-              roles: z.array(roleSchema),
-              pagination: z.object({
-                total: z.number(),
-                offset: z.number(),
-                limit: z.number(),
+            200: t.Object({
+              status: t.Literal("success"),
+              roles: t.Array(roleSchema),
+              pagination: t.Object({
+                total: t.Number(),
+                offset: t.Number(),
+                limit: t.Number(),
               }),
             }),
             403: t.Object({
@@ -103,8 +102,8 @@ export const rbacController = new Elysia()
             id: t.String(),
           }),
           response: {
-            200: z.object({
-              status: z.literal("success"),
+            200: t.Object({
+              status: t.Literal("success"),
               role: roleSchema,
             }),
             403: t.Object({
@@ -203,8 +202,8 @@ export const rbacController = new Elysia()
         {
           body: roleSchema,
           response: {
-            200: z.object({
-              status: z.literal("success"),
+            200: t.Object({
+              status: t.Literal("success"),
               role: roleSchema,
             }),
             403: t.Object({
@@ -252,8 +251,8 @@ export const rbacController = new Elysia()
           }),
           body: roleSchema,
           response: {
-            200: z.object({
-              status: z.literal("success"),
+            200: t.Object({
+              status: t.Literal("success"),
               role: roleSchema,
             }),
             403: t.Object({
@@ -366,17 +365,17 @@ export const rbacController = new Elysia()
         {
           query: permissionsQuerySchema,
           response: {
-            200: z.object({
-              status: z.literal("success"),
-              permissions: z.array(permissionSchema),
-              pagination: z.object({
-                total: z.number(),
-                offset: z.number(),
-                limit: z.number(),
+            200: t.Object({
+              status: t.Literal("success"),
+              permissions: t.Array(permissionSchema),
+              pagination: t.Object({
+                total: t.Number(),
+                offset: t.Number(),
+                limit: t.Number(),
               }),
-              meta: z.object({
-                resources: z.array(z.string()),
-                actions: z.array(z.string()),
+              meta: t.Object({
+                resources: t.Array(t.String()),
+                actions: t.Array(t.String()),
               }),
             }),
             403: t.Object({
@@ -462,18 +461,18 @@ export const rbacController = new Elysia()
         },
         {
           response: {
-            200: z.object({
-              status: z.literal("success"),
-              data: z.object({
-                permissions: z.array(permissionSchema),
-                grouped: z.record(z.string(), z.array(permissionSchema)),
-                resources: z.array(z.string()),
-                actions: z.array(z.string()),
+            200: t.Object({
+              status: t.Literal("success"),
+              data: t.Object({
+                permissions: t.Array(permissionSchema),
+                grouped: t.Record(t.String(), t.Array(permissionSchema)),
+                resources: t.Array(t.String()),
+                actions: t.Array(t.String()),
               }),
-              meta: z.object({
-                total: z.number(),
-                resourceCount: z.number(),
-                actionCount: z.number(),
+              meta: t.Object({
+                total: t.Number(),
+                resourceCount: t.Number(),
+                actionCount: t.Number(),
               }),
             }),
             404: t.Object({
@@ -531,8 +530,8 @@ export const rbacController = new Elysia()
             id: t.String(),
           }),
           response: {
-            200: z.object({
-              status: z.literal("success"),
+            200: t.Object({
+              status: t.Literal("success"),
               permission: permissionSchema,
             }),
             403: t.Object({
@@ -574,8 +573,8 @@ export const rbacController = new Elysia()
         {
           body: permissionSchema,
           response: {
-            201: z.object({
-              status: z.literal("success"),
+            201: t.Object({
+              status: t.Literal("success"),
               permission: permissionSchema,
             }),
             403: t.Object({
@@ -634,8 +633,8 @@ export const rbacController = new Elysia()
           }),
           body: permissionSchema,
           response: {
-            200: z.object({
-              status: z.literal("success"),
+            200: t.Object({
+              status: t.Literal("success"),
               permission: permissionSchema,
             }),
             403: t.Object({
@@ -759,13 +758,13 @@ export const rbacController = new Elysia()
           }),
           query: permissionsQuerySchema,
           response: {
-            200: z.object({
-              status: z.literal("success"),
-              data: z.array(permissionSchema),
-              meta: z.object({
-                total: z.number(),
-                resources: z.array(z.string()),
-                actions: z.array(z.string()),
+            200: t.Object({
+              status: t.Literal("success"),
+              data: t.Array(permissionSchema),
+              meta: t.Object({
+                total: t.Number(),
+                resources: t.Array(t.String()),
+                actions: t.Array(t.String()),
               }),
             }),
             403: t.Object({
@@ -1381,13 +1380,13 @@ export const rbacController = new Elysia()
           }),
           query: permissionsQuerySchema,
           response: {
-            200: z.object({
-              status: z.literal("success"),
-              data: z.array(permissionSchema),
-              pagination: z.object({
-                total: z.number(),
-                offset: z.number(),
-                limit: z.number(),
+            200: t.Object({
+              status: t.Literal("success"),
+              data: t.Array(permissionSchema),
+              pagination: t.Object({
+                total: t.Number(),
+                offset: t.Number(),
+                limit: t.Number(),
               }),
             }),
             403: t.Object({

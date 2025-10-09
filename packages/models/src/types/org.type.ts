@@ -1,9 +1,16 @@
 import type { BaseDocument } from "./base.type";
 
+export enum OrganizationType {
+  LANDLORD = "landlord",
+  PROPERTY_MANAGER = "property_manager",
+  AGENCY = "agency",
+  OTHER = "other",
+}
+
 export interface IOrganization extends BaseDocument {
   name: string;
   slug: string;
-  type: "landlord" | "property_manager" | "agency" | "other";
+  type: OrganizationType;
   registrationNumber?: string;
   kraPin?: string;
   email: string;

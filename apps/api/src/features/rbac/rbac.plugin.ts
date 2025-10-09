@@ -15,10 +15,10 @@ export const rolePlugin = (app: Elysia) =>
       const userRole = await UserRole.findOne({
         userId: mongoose.Types.ObjectId.createFromHexString(user.id),
         // memberId: mongoose.Types.ObjectId.createFromHexString(user.memberId),
-        roleId: user.role,
+        roleId: mongoose.Types.ObjectId.createFromHexString(user.roleId),
         isActive: true,
         deletedAt: { $exists: false },
-      }).populate("roleId", "_id name");
+      }).populate("roleId", "name");
 
       if (!userRole) {
         throw new Error("User role not found");
@@ -40,18 +40,15 @@ export const accessPlugin =
   (resource: string, action: PermittedAction) => (app: Elysia) =>
     app
       .use(rolePlugin)
-      .derive(async ({ role, set }) => {
+      .derive(async ({ role }) => {
         const access = await permissionManager.can(resource, action, {
           roleId: role.id,
         });
 
         if (!access) {
-          set.status = 403;
-          return {
-            status: "error",
-            message:
-              "Access denied. You are not authorized to access this resource.",
-          };
+          throw new ForbiddenError(
+            "Access denied. You are not authorized to access this resource."
+          );
         }
       })
       .as("scoped");

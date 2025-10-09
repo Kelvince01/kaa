@@ -14,10 +14,10 @@
     "@kaa/config": "workspace:*",
     "@kaa/utils": "workspace:*",
     "mongoose": "^8.18.1",
-    "typescript": "^5.9.2"
+    "typescript": "catalog:"
   },
   "devDependencies": {
     "@kaa/tsconfig": "workspace:*",
-    "@types/bun": "^1.2.21"
+    "@types/bun": "catalog:"
   }
 }

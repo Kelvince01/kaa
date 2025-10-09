@@ -55,7 +55,7 @@ export type EmailRecipient = {
   role?: string;
 };
 
-class EmailService {
+class ResendService {
   private resend: Resend | undefined;
 
   constructor() {
@@ -292,4 +292,4 @@ class EmailService {
   }
 }
 
-export default new EmailService();
+export const resendService = new ResendService();

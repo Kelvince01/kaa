@@ -1,3 +1,4 @@
+import { SmsPriority } from "@kaa/models/types";
 import { t } from "elysia";
 
 // Validation schemas
@@ -8,11 +9,12 @@ export const smsRecipientSchema = t.Object({
 });
 
 export const sendSmsSchema = t.Object({
-  to: t.Union([
+  /*to: t.Union([
     t.String({ pattern: "^\\+?[1-9]\\d{1,14}$" }),
     t.Array(t.String({ pattern: "^\\+?[1-9]\\d{1,14}$" })),
     t.Array(smsRecipientSchema),
-  ]),
+  ]),*/
+  to: t.Array(smsRecipientSchema),
   message: t.String({ minLength: 1, maxLength: 1600 }),
   type: t.Union([
     t.Literal("transactional"),
@@ -23,14 +25,7 @@ export const sendSmsSchema = t.Object({
     t.Literal("verification"),
     t.Literal("bulk"),
   ]),
-  priority: t.Optional(
-    t.Union([
-      t.Literal("low"),
-      t.Literal("normal"),
-      t.Literal("high"),
-      t.Literal("urgent"),
-    ])
-  ),
+  priority: t.Optional(t.Enum(SmsPriority)),
   scheduledAt: t.Optional(t.String({ format: "date-time" })),
   settings: t.Optional(
     t.Object({
@@ -51,11 +46,7 @@ export const sendSmsSchema = t.Object({
 });
 
 export const sendSmsWithTemplateSchema = t.Object({
-  to: t.Union([
-    t.String({ pattern: "^\\+?[1-9]\\d{1,14}$" }),
-    t.Array(t.String({ pattern: "^\\+?[1-9]\\d{1,14}$" })),
-    t.Array(smsRecipientSchema),
-  ]),
+  to: t.Array(smsRecipientSchema),
   templateId: t.String(),
   data: t.Record(t.String(), t.Any()),
   type: t.Union([
@@ -67,14 +58,7 @@ export const sendSmsWithTemplateSchema = t.Object({
     t.Literal("verification"),
     t.Literal("bulk"),
   ]),
-  priority: t.Optional(
-    t.Union([
-      t.Literal("low"),
-      t.Literal("normal"),
-      t.Literal("high"),
-      t.Literal("urgent"),
-    ])
-  ),
+  priority: t.Optional(t.Enum(SmsPriority)),
   scheduledAt: t.Optional(t.String({ format: "date-time" })),
   settings: t.Optional(
     t.Object({
@@ -107,14 +91,7 @@ export const bulkSmsSchema = t.Object({
     t.Literal("verification"),
     t.Literal("bulk"),
   ]),
-  priority: t.Optional(
-    t.Union([
-      t.Literal("low"),
-      t.Literal("normal"),
-      t.Literal("high"),
-      t.Literal("urgent"),
-    ])
-  ),
+  priority: t.Optional(t.Enum(SmsPriority)),
 });
 
 export const listSmsQuerySchema = t.Object({

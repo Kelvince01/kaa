@@ -4,9 +4,10 @@ import type { BaseDocument } from "./base.type";
 export interface IRole extends BaseDocument {
   name: string;
   description?: string;
-  isSystem: boolean;
+  isSystem: boolean; // Immutable core roles
   isDefault: boolean;
   level: number; // For hierarchical roles
+  scope: "global" | "organization"; // Org-specific for members
   deletedAt?: Date;
 }
 
@@ -56,6 +57,7 @@ export interface IUserRole extends BaseDocument {
   userId: mongoose.Types.ObjectId;
   roleId: mongoose.Types.ObjectId;
   memberId?: mongoose.Types.ObjectId;
+  organization?: mongoose.Types.ObjectId;
   isPrimary: boolean; // Primary role for the user
   assignedBy: mongoose.Types.ObjectId;
   assignedAt: Date;

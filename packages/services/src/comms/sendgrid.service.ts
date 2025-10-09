@@ -45,7 +45,7 @@ type EmailServiceConfig = {
 /**
  * Email Service Class
  */
-export class EmailService {
+export class SendgridService {
   private readonly config: EmailServiceConfig;
   private isInitialized = false;
 
@@ -981,3 +981,11 @@ export class EmailService {
     return new EmailError("SENDGRID_API_ERROR", defaultMessage, 500);
   }
 }
+
+const config: EmailServiceConfig = {
+  sendGridApiKey: "",
+  fromEmail: "",
+  fromName: "",
+};
+
+export const sendgridService = new SendgridService(config);

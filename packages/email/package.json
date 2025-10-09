@@ -18,7 +18,7 @@
   "dependencies": {
     "@elysiajs/cors": "^1.4.0",
     "@elysiajs/html": "^1.4.0",
-    "elysia": "latest",
+    "elysia": "catalog:",
     "handlebars": "^4.7.8",
     "luxon": "^3.7.2",
     "mjml": "^4.15.3",
@@ -30,6 +30,6 @@
     "@types/mjml": "^4.7.4",
     "mjml-cli": "^4.15.3",
     "nodemon": "^3.1.10",
-    "typescript": "^5.9.2"
+    "typescript": "catalog:"
   }
 }

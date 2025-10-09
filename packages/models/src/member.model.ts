@@ -5,12 +5,22 @@ const memberSchema = new Schema<IMember>(
   {
     type: {
       type: String,
-      // required: true,
-      // trim: true,
+      enum: ["admin", "agent", "caretaker", "viewer"],
+      default: "viewer",
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     organization: {
       type: Schema.Types.ObjectId,
       ref: "Organization",
+      required: true,
+    },
+    role: {
+      type: Schema.Types.ObjectId,
+      ref: "Role",
       required: true,
     },
     name: {
@@ -36,20 +46,15 @@ const memberSchema = new Schema<IMember>(
       trim: true,
     },
     plan: {
-      type: String,
-      enum: ["free", "starter", "professional", "enterprise"],
-      default: "free",
+      type: Schema.Types.ObjectId,
+      ref: "Role",
+      required: true,
     },
     isActive: {
       type: Boolean,
       default: true,
     },
     settings: {
-      theme: {
-        type: String,
-        enum: ["light", "dark"],
-        default: "light",
-      },
       maxUsers: { type: Number, default: 5 },
       features: [{ type: String }],
       customBranding: { type: Boolean, default: false },
@@ -69,6 +74,9 @@ const memberSchema = new Schema<IMember>(
       storage: { type: Number, default: 1_073_741_824 }, // 1GB
       bandwidth: { type: Number, default: 10_737_418_240 }, // 10GB
     },
+
+    // Permissions Override (for fine-grained control)
+    customPermissions: [{ type: String }], // e.g., ['approve_tenants']
   },
   {
     timestamps: true,

@@ -2,16 +2,17 @@ import type mongoose from "mongoose";
 import type { BaseDocument } from "./base.type";
 
 export interface IMember extends BaseDocument {
-  type: string;
+  type?: "admin" | "agent" | "caretaker" | "viewer";
+  user: mongoose.Types.ObjectId;
   organization: mongoose.Types.ObjectId;
+  role: mongoose.Types.ObjectId;
   name: string;
   slug: string;
-  plan: string;
+  plan: mongoose.Types.ObjectId;
   domain?: string;
   logo?: string;
   isActive: boolean;
   settings: {
-    theme: string;
     maxUsers: number;
     features: string[];
     customBranding: boolean;
@@ -31,4 +32,6 @@ export interface IMember extends BaseDocument {
     storage: number;
     bandwidth: number;
   };
+
+  customPermissions?: string[];
 }

@@ -714,7 +714,7 @@ export type SecuritySettings = {
   monitoring: {
     accessLogging: boolean;
     anomalyDetection: boolean;
-    alertRules: AlertRule[];
+    alertRules: VirtualAlertRule[];
   };
 };
 
@@ -725,7 +725,7 @@ export type AccessControl = {
   expiry?: Date;
 };
 
-export type AlertRule = {
+export type VirtualAlertRule = {
   id: string;
   condition: string;
   threshold: number;

@@ -7,10 +7,12 @@ export const UserResponseSchema = t.Object({
   firstName: t.String(),
   lastName: t.String(),
   email: t.String(),
-  role: t.Object({
-    _id: t.String(),
-    name: t.String(),
-  }),
+  role: t.Optional(
+    t.Object({
+      _id: t.String(),
+      name: t.String(),
+    })
+  ),
   status: t.Enum(UserStatus),
   phone: t.Optional(t.String()),
   memberId: t.Optional(

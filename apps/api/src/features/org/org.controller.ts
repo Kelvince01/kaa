@@ -1,4 +1,4 @@
-import { Member, Organization } from "@kaa/models";
+import { Member, Organization, Role } from "@kaa/models";
 import type { IOrganization } from "@kaa/models/types";
 import Elysia, { t } from "elysia";
 import type { FilterQuery, SortOrder } from "mongoose";
@@ -15,7 +15,7 @@ export const organizationController = new Elysia({
     // Get all organizations
     .get(
       "/",
-      async ({ set, query }) => {
+      async ({ set, query, user }) => {
         try {
           const {
             page = 1,
@@ -25,6 +25,8 @@ export const organizationController = new Elysia({
             email,
             phone,
           } = query;
+
+          console.log(user);
 
           const filter: FilterQuery<IOrganization> = { isActive: true };
 
@@ -212,11 +214,30 @@ export const organizationController = new Elysia({
     // Create organization
     .post(
       "/",
-      async ({ body, set }) => {
+      async ({ body, set, user }) => {
         try {
-          const org = await Organization.create(body);
+          const name = body.name;
+          const slug = name.toLowerCase().replace(/\s+/g, "-");
+
+          const org = await Organization.create({
+            ...body,
+            slug,
+          });
 
           // await checkSlugExists(body.slug);
+
+          // Auto-add creator as 'owner'
+          const ownerRole = await Role.findOne({ name: "owner" });
+          if (ownerRole)
+            await Member.create({
+              user: user.id,
+              organization: org._id,
+              role: ownerRole._id,
+              name: `${user.firstName} ${user.lastName}`,
+              slug: `${user.firstName} ${user.lastName}`
+                .toLowerCase()
+                .replace(/\s+/g, "-"),
+            });
 
           set.status = 201;
           return {
@@ -334,7 +355,7 @@ export const organizationController = new Elysia({
     // Add member to organization
     .post(
       "/:id/members",
-      async ({ set, params, body }) => {
+      async ({ set, params, body, user }) => {
         try {
           const org = await Organization.findById(params.id);
 
@@ -349,10 +370,17 @@ export const organizationController = new Elysia({
             return { status: "error", message: "Member not found" };
           }
 
-          // if (!org.members.includes(member._id as mongoose.Types.ObjectId)) {
-          // 	org.members.push(member._id as mongoose.Types.ObjectId);
-          // 	await org.save();
-          // }
+          const ownerRole = await Role.findOne({ name: user.role });
+          if (ownerRole)
+            await Member.create({
+              user: user.id,
+              organization: org._id,
+              role: ownerRole._id,
+              name: `${user.firstName} ${user.lastName}`,
+              slug: `${user.firstName} ${user.lastName}`
+                .toLowerCase()
+                .replace(/\s+/g, "-"),
+            });
 
           // await checkSlugExists(body.slug);
 

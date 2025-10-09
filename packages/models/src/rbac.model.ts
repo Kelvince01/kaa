@@ -16,6 +16,11 @@ export const RoleSchema = new mongoose.Schema<IRole>(
     isSystem: { type: Boolean, default: false },
     isDefault: { type: Boolean, default: false },
     level: { type: Number, default: 0 }, // 0 = lowest, higher = more permissions
+    scope: {
+      type: String,
+      enum: ["global", "organization"],
+      default: "global",
+    }, // Org-specific for members
     deletedAt: Date,
   },
   { timestamps: true }
@@ -93,6 +98,7 @@ export const UserRoleSchema = new mongoose.Schema<IUserRole>(
       required: true,
     },
     memberId: { type: mongoose.Schema.Types.ObjectId, ref: "Member" },
+    organization: { type: mongoose.Schema.Types.ObjectId, ref: "Organization" }, // Null for global
     isPrimary: { type: Boolean, default: false },
     assignedBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -114,6 +120,8 @@ export const UserRoleSchema = new mongoose.Schema<IUserRole>(
   { timestamps: true }
 );
 // Compound index for efficient lookups
+UserRoleSchema.index({ user: 1, organization: 1 });
+UserRoleSchema.index({ role: 1, isActive: 1 });
 UserRoleSchema.index({ userId: 1, memberId: 1 });
 UserRoleSchema.index({ roleId: 1, memberId: 1 });
 UserRoleSchema.index({ userId: 1, roleId: 1, memberId: 1 }, { unique: true });

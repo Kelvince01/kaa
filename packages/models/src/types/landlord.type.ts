@@ -28,7 +28,7 @@ export enum VerificationStatus {
   REQUIRES_REVIEW = "requires_review",
 }
 
-export enum DocumentType {
+export enum LandlordDocumentType {
   NATIONAL_ID = "national_id",
   PASSPORT = "passport",
   DRIVERS_LICENSE = "drivers_license",
@@ -216,7 +216,7 @@ export type ILandlord = Document & {
 
   // Documents
   documents: Array<{
-    type: DocumentType;
+    type: LandlordDocumentType;
     name: string;
     url: string;
     fileType: string;
@@ -520,7 +520,7 @@ export type LandlordQueryParams = {
 export type LandlordVerificationDto = {
   verificationType: "identity" | "address" | "financial" | "business";
   documents?: Array<{
-    type: DocumentType;
+    type: LandlordDocumentType;
     url: string;
     name: string;
     expiryDate?: Date;

@@ -12,15 +12,15 @@
   },
   "dependencies": {
     "@kaa/ui": "*",
-    "next": "^15.5.3",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
     "@kaa/tsconfig": "*",
-    "@types/node": "^22.18.3",
-    "@types/react": "^19.1.13",
-    "@types/react-dom": "^19.1.9",
-    "typescript": "5.9.2"
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:"
   }
 }

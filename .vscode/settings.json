@@ -4,7 +4,7 @@
         "editor.defaultFormatter": "biomejs.biome"
     },
     "[typescript]": {
-        "editor.defaultFormatter": "biomejs.biome"
+        "editor.defaultFormatter": "vscode.typescript-language-features"
     },
     "[javascriptreact]": {
         "editor.defaultFormatter": "biomejs.biome"
@@ -16,7 +16,7 @@
         "editor.defaultFormatter": "biomejs.biome"
     },
     "[jsonc]": {
-        "editor.defaultFormatter": "biomejs.biome"
+        "editor.defaultFormatter": "vscode.json-language-features"
     },
     "[css]": {
         "editor.defaultFormatter": "biomejs.biome"
@@ -38,6 +38,7 @@
     "cSpell.words": [
         "africas",
         "africastalking",
+        "AIRTEL",
         "ALFAJORES",
         "autocannon",
         "autocrop",
@@ -61,6 +62,7 @@
         "elysia",
         "elysiajs",
         "Embla",
+        "EQUITEL",
         "evilmartians",
         "exceljs",
         "exif",
@@ -85,6 +87,8 @@
         "jspdf",
         "kaadb",
         "kaapro",
+        "Kash",
+        "keccak",
         "Keymap",
         "keyspace",
         "keyval",
@@ -95,6 +99,7 @@
         "Lngs",
         "loadtest",
         "Logestic",
+        "lowlight",
         "luxon",
         "MAPBOX",
         "mapboxgl",
@@ -102,6 +107,7 @@
         "maxlength",
         "mfas",
         "Millis",
+        "mistralai",
         "mjml",
         "mmdb",
         "MMKV",
@@ -115,6 +121,7 @@
         "nosniff",
         "nuqs",
         "Nyumba",
+        "officeparser",
         "oklch",
         "OPENSTREETMAP",
         "optiflow",
@@ -128,6 +135,7 @@
         "papaparse",
         "partialize",
         "passcodes",
+        "paybill",
         "Pesa",
         "pngquant",
         "Prefs",
@@ -143,12 +151,15 @@
         "selectednode",
         "sendgrid",
         "shadcn",
+        "shiki",
         "simplewebauthn",
         "sourcify",
         "stardazed",
         "Subsecond",
         "Sutro",
         "tauri",
+        "Telkom",
+        "tkash",
         "TOTP",
         "turbopack",
         "Turborepo",
@@ -159,9 +170,11 @@
         "ungap",
         "unlisten",
         "unmaximize",
+        "unpdf",
         "Unsub",
         "unsubs",
         "uppy",
+        "USSD",
         "vaul",
         "vercelblob",
         "Viem",

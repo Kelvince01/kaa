@@ -1,4 +1,4 @@
-import { Member, Role, User } from "@kaa/models";
+import { Member, Role, User, UserRole } from "@kaa/models";
 import type { IMember } from "@kaa/models/types";
 import {
   AuditActionType,
@@ -70,10 +70,18 @@ export const getAllMembers = async (
 
 export async function getMemberById(memberId: string): Promise<IMember> {
   try {
-    const member = await Member.findById(memberId);
+    const member = await Member.findById(memberId)
+      .populate(
+        "user",
+        "profile.firstName profile.lastName contact.email contact.phone"
+      )
+      .populate("role", "name")
+      .populate("organization", "name slug");
+
     if (!member) {
       throw new NotFoundError("Member not found");
     }
+
     return member;
   } catch (error) {
     logger.error("Failed to get member", error);
@@ -81,10 +89,29 @@ export async function getMemberById(memberId: string): Promise<IMember> {
   }
 }
 
+export async function getMemberBy(query: {
+  user?: string;
+  organization?: string;
+  role?: string;
+}): Promise<IMember | null> {
+  const member = await Member.findOne(query)
+    .populate(
+      "user",
+      "profile.firstName profile.lastName contact.email contact.phone"
+    )
+    .populate("role", "name")
+    .populate("organization", "name slug");
+
+  return member;
+}
+
 /**
  * Create new tenant
  */
 export const createMember = async (memberData: {
+  user: string;
+  organization: string;
+  role: string;
   name: string;
   slug: string;
   plan?: string;
@@ -163,13 +190,9 @@ export async function deleteMember(
 ): Promise<void> {
   try {
     // Check if user is admin of this member
-    const user = await User.findById(userId).populate("roleId");
-    const role = await Role.findById(user?.role);
-    if (
-      !user ||
-      user.memberId?.toString() !== memberId ||
-      role?.name !== "admin"
-    ) {
+    const user = await UserRole.findById(userId).populate("roleId");
+    const role = await Role.findById(user?.roleId._id);
+    if (!user || role?.name !== "admin") {
       throw new UnauthorizedError("Only admin can delete a member");
     }
 

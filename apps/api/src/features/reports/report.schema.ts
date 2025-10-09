@@ -1,7 +1,7 @@
-import { z } from "zod";
+import { t } from "elysia";
 
-export const ReportRequestSchema = z.object({});
+export const ReportRequestSchema = t.Object({});
 
-export const ReportScheduleSchema = z.object({});
+export const ReportScheduleSchema = t.Object({});
 
-export const ReportTemplateSchema = z.object({});
+export const ReportTemplateSchema = t.Object({});

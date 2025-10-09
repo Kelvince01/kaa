@@ -1,6 +1,6 @@
 import { createQueue, logger, redisOptions } from "@kaa/utils";
 import { Worker } from "bullmq";
-import emailService from "./resend.service";
+import { resendService } from "../comms/resend.service";
 
 // Create queue
 export const emailQueue = createQueue("email");
@@ -12,11 +12,11 @@ const worker = new Worker(
     logger.info(`Processing email job ${job.id}`);
 
     if (job.name === "sendEmail") {
-      await emailService.sendEmail(job.data);
+      await resendService.sendEmail(job.data);
     }
 
     if (job.name === "sendEmailWithTemplate") {
-      await emailService.sendEmailWithTemplate({
+      await resendService.sendEmailWithTemplate({
         ...job.data,
         userId: job.data.userId,
         requestMetadata: job.data.requestMetadata,
@@ -24,11 +24,11 @@ const worker = new Worker(
     }
 
     if (job.name === "sendBulkEmail") {
-      await emailService.sendBulkEmail(job.data);
+      await resendService.sendBulkEmail(job.data);
     }
 
     if (job.name === "sendBulkEmailWithTemplate") {
-      await emailService.sendBulkEmailWithTemplate(job.data);
+      await resendService.sendBulkEmailWithTemplate(job.data);
     }
 
     logger.info(`Completed email job ${job.id}`);

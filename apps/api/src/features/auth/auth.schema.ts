@@ -1,21 +1,24 @@
-import { commonSchemas } from "@kaa/schemas";
 import { t } from "elysia";
-import { z } from "zod";
 
 // User parameter validation
-export const userParamsSchema = z.object({
-  id: commonSchemas.objectId,
+export const userParamsSchema = t.Object({
+  id: t.String(),
 });
 
 // Verification status update schema
-export const verificationStatusSchema = z.object({
-  emailVerified: z.boolean().optional(),
-  phoneVerified: z.boolean().optional(),
-  identityVerified: z.boolean().optional(),
-  kycStatus: z
-    .enum(["pending", "submitted", "verified", "rejected"])
-    .optional(),
-  rejectionReason: z.string().optional(),
+export const verificationStatusSchema = t.Object({
+  emailVerified: t.Optional(t.Date()),
+  phoneVerified: t.Optional(t.Date()),
+  identityVerified: t.Optional(t.Date()),
+  kycStatus: t.Optional(
+    t.Enum({
+      pending: "pending",
+      submitted: "submitted",
+      verified: "verified",
+      rejected: "rejected",
+    })
+  ),
+  rejectionReason: t.Optional(t.String()),
 });
 
 export const LoginUserResponseSchema = t.Object({

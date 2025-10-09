@@ -90,7 +90,7 @@ export class NotificationUtils {
     try {
       // Get user phone number
       const user = await User.findById(userId);
-      if (!user?.phone) {
+      if (!user?.contact.phone) {
         throw new Error("User phone number not found");
       }
 
@@ -108,7 +108,7 @@ export class NotificationUtils {
       // Send templated message
       return await WhatsAppTemplates.sendTemplatedMessage(
         templateName,
-        user.phone,
+        user.contact.phone.formatted,
         variables
       );
     } catch (error) {
@@ -274,9 +274,9 @@ export class NotificationUtils {
       if (user) {
         data.user = {
           id: user._id,
-          name: `${user.firstName} ${user.lastName}`,
-          email: user.email,
-          phone: user.phone,
+          name: `${user.profile.firstName} ${user.profile.lastName}`,
+          email: user.contact.email,
+          phone: user.contact.phone,
         };
       }
 

@@ -13,11 +13,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type React from "react";
 import { useEffect, useState } from "react";
-import { useAuthStore } from "@/modules/auth/auth.store";
+import { useAuth } from "@/modules/auth/use-auth";
 import NotificationPopover from "@/modules/comms/notifications/components/notification-popup";
 
 const Header: React.FC = () => {
-  const { user, logout, isAuthenticated } = useAuthStore();
+  const { user, logout, status, isInitialized } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
@@ -120,12 +120,12 @@ const Header: React.FC = () => {
 
           {/* User Actions (Desktop) */}
           <div className="hidden md:ml-6 md:flex md:items-center">
-            {isAuthenticated && (
+            {status === "authenticated" && (
               <div className="mr-4">
                 <NotificationPopover />
               </div>
             )}
-            {isAuthenticated ? (
+            {status === "authenticated" && user ? (
               <div className="user-dropdown relative ml-3">
                 <div>
                   <button
@@ -245,7 +245,7 @@ const Header: React.FC = () => {
 
           {/* Mobile menu button */}
           <div className="-mr-2 flex items-center md:hidden">
-            {isAuthenticated && (
+            {status === "authenticated" && (
               <div className="mr-4">
                 <Link href="/dashboard">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/60 text-sm text-white">
@@ -318,7 +318,7 @@ const Header: React.FC = () => {
             </Link>
           </div>
 
-          {!isAuthenticated && (
+          {status === "unauthenticated" && (
             <div className="border-gray-200 border-t pt-4 pb-3">
               <div className="flex items-center px-4">
                 <div className="flex-shrink-0">
@@ -341,7 +341,7 @@ const Header: React.FC = () => {
             </div>
           )}
 
-          {isAuthenticated && (
+          {status === "authenticated" && (
             <>
               <Link
                 className="block border-transparent border-l-4 py-2 pr-4 pl-3 font-medium text-base text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"

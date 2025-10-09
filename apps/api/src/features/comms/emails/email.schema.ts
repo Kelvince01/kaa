@@ -89,6 +89,7 @@ export const queryEmailsSchema = t.Object({
   priority: t.Optional(t.String()),
 });
 
+export type SendEmailBasic = Static<typeof basicEmailSchema>;
 export type SendEmail = Static<typeof sendEmailSchema>;
 export type SendEmailWithTemplate = Static<typeof sendEmailWithTemplateSchema>;
 export type SendBulkEmail = Static<typeof sendBulkEmailSchema>;

@@ -200,5 +200,6 @@ export const useAuth = () => {
     isRefreshing,
     isInitialized: initializedRef.current,
     getAccessToken,
+    logout: storeLogout,
   };
 };

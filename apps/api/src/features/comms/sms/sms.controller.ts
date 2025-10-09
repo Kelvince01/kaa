@@ -1,4 +1,5 @@
 import { SmsDeliveryReport, SmsMessage } from "@kaa/models";
+import { SmsDeliveryStatus } from "@kaa/models/types";
 import { smsService, smsServiceFactory } from "@kaa/services";
 import { logger } from "@kaa/utils";
 import { Elysia, t } from "elysia";
@@ -150,7 +151,7 @@ export const smsController = new Elysia({ prefix: "/sms" })
    * Send bulk SMS
    */
   .post(
-    "/bulk",
+    "/send/bulk",
     async ({ body, set, headers }) => {
       try {
         const userId = headers["x-user-id"] as string;
@@ -275,6 +276,27 @@ export const smsController = new Elysia({ prefix: "/sms" })
     }
   )
 
+  /*
+  // Get user SMS messages
+  .get('/user/messages', smsController.getUserSMS.bind(smsController), {
+    beforeHandle: ({ requireAuth }) => requireAuth(),
+    detail: {
+      tags: ['SMS'],
+      summary: 'Get user SMS',
+      description: 'Get SMS messages for the authenticated user'
+    }
+  })
+    
+  // Get SMS status
+  .get('/:smsId/status', smsController.getSMSStatus.bind(smsController), {
+    beforeHandle: ({ requireAuth }) => requireAuth(),
+    detail: {
+      tags: ['SMS'],
+      summary: 'Get SMS status',
+      description: 'Get delivery status of an SMS'
+    }
+  })*/
+
   /**
    * Get SMS message by ID
    */
@@ -398,9 +420,9 @@ export const smsController = new Elysia({ prefix: "/sms" })
         const { startDate, endDate } = query;
 
         const analytics = await smsService.getAnalytics(
-          orgId,
           new Date(startDate),
-          new Date(endDate)
+          new Date(endDate),
+          { orgId }
         );
 
         return {
@@ -453,7 +475,7 @@ export const smsController = new Elysia({ prefix: "/sms" })
         }
 
         // Reset message status and queue for retry
-        message.status = "queued";
+        message.status = SmsDeliveryStatus.QUEUED;
         message.error = undefined;
         await message.save();
 
@@ -623,5 +645,34 @@ export const smsController = new Elysia({ prefix: "/sms" })
       },
     }
   );
+
+/*
+.get('/analytics/delivery', smsController.getDeliveryAnalytics.bind(smsController), {
+  beforeHandle: ({ requireAuth }) => requireAuth(),
+  detail: {
+    tags: ['SMS', 'Analytics'],
+    summary: 'Get delivery analytics',
+    description: 'Get SMS delivery rate and performance analytics'
+  }
+})
+ 
+// Delivery reports (webhook endpoint)
+.post('/delivery-report', smsController.handleDeliveryReport.bind(smsController), {
+  detail: {
+    tags: ['SMS', 'Webhooks'],
+    summary: 'Handle delivery report',
+    description: 'Handle SMS delivery report from Africa\'s Talking'
+  }
+})
+ 
+// Account and balance
+.get('/account/balance', smsController.getAccountBalance.bind(smsController), {
+  beforeHandle: ({ requireAuth }) => requireAuth(),
+  detail: {
+    tags: ['SMS', 'Account'],
+    summary: 'Get account balance',
+    description: 'Get SMS credit balance from Africa\'s Talking'
+  }
+})*/
 
 export default smsController;

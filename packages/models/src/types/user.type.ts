@@ -2,7 +2,6 @@
  * User type definitions for the Kaa API
  */
 
-import type mongoose from "mongoose";
 import type { BaseDocument } from "./base.type";
 
 export enum KYCStatus {
@@ -92,9 +91,9 @@ export type UserAddress = {
 
 // User verification information
 export type UserVerification = {
-  emailVerified: boolean;
-  phoneVerified: boolean;
-  identityVerified: boolean;
+  emailVerifiedAt: Date;
+  phoneVerifiedAt: Date;
+  identityVerifiedAt: Date;
   kycStatus: KYCStatus;
   kycData?: {
     identification: KenyanIdentification;
@@ -138,7 +137,7 @@ export type UserPreferences = {
 
 // User settings
 export type UserSettings = {
-  twoFactorEnabled: boolean;
+  twoFactorEnabledAt: Date;
   sessionTimeout: number; // minutes
   autoLogout: boolean;
   darkMode?: boolean;
@@ -171,14 +170,10 @@ export type UserStats = {
 /**
  * User document interface
  */
-export interface IUser extends BaseDocument {
-  slug: string;
-  memberId?: mongoose.Types.ObjectId;
-
+export type IUser = BaseDocument & {
   // Basic info
   profile: UserProfile;
   contact: UserContact;
-  role: mongoose.Types.ObjectId;
   status: UserStatus;
 
   // Security
@@ -224,7 +219,7 @@ export interface IUser extends BaseDocument {
   getPublicProfile(): Partial<IUser>;
   getFullName(): string;
   isLocked(): boolean;
-}
+};
 
 // User creation data
 export type CreateUserData = {
@@ -233,7 +228,7 @@ export type CreateUserData = {
   password: string;
   firstName: string;
   lastName: string;
-  role: UserRole;
+  role: string;
   county?: string;
   estate?: string;
   acceptTerms: boolean;
@@ -271,7 +266,7 @@ export type PhoneLoginData = {
 
 // User search filters
 export type UserSearchFilters = {
-  role?: UserRole;
+  role?: string;
   status?: UserStatus;
   county?: string;
   verified?: boolean;
@@ -294,7 +289,7 @@ export type UserResponse = {
   fullName: string;
   bio?: string;
   avatar?: string;
-  role: UserRole;
+  role: string;
   status: UserStatus;
   emailVerified: boolean;
   phoneVerified: boolean;
@@ -317,7 +312,7 @@ export type UserProfileResponse = {
   fullName: string;
   bio?: string;
   avatar?: string;
-  role: UserRole;
+  role: string;
   verified: boolean;
   county?: string;
   estate?: string;

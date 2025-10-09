@@ -18,7 +18,7 @@ const VerifyEmailContainer = () => {
   const t = useTranslations("auth");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isAuthenticated } = useAuth();
+  const { user, status, isInitialized } = useAuth();
   const verifyEmailMutation = useVerifyEmail();
   const resendVerificationMutation = useResendVerification();
 
@@ -36,10 +36,10 @@ const VerifyEmailContainer = () => {
 
   // If user is already verified and logged in, redirect to dashboard
   useEffect(() => {
-    if (isAuthenticated && user?.isVerified) {
+    if (isInitialized && user?.isVerified) {
       getRoleRedirect(user.role as string);
     }
-  }, [isAuthenticated, user]);
+  }, [isInitialized, user]);
 
   // Create a stable verification function
   const verifyEmailToken = useCallback(async () => {

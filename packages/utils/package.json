@@ -13,12 +13,12 @@
     "@kaa/config": "workspace:*",
     "@kaa/constants": "workspace:*",
     "@vercel/blob": "^2.0.0",
-    "axios": "^1.12.2",
+    "axios": "catalog:",
     "base32-decode": "^1.0.0",
     "base32-encode": "^2.0.0",
     "bullmq": "^5.58.5",
     "chalk": "^5.6.2",
-    "elysia": "latest",
+    "elysia": "catalog:",
     "file-type": "^21.0.0",
     "http-status-codes": "^2.3.0",
     "imagemin": "^9.0.1",
@@ -35,9 +35,9 @@
   },
   "devDependencies": {
     "@kaa/tsconfig": "workspace:*",
-    "@types/bun": "^1.2.21",
+    "@types/bun": "catalog:",
     "@types/imagemin": "^9.0.1",
     "@types/mime-types": "^3.0.1",
-    "typescript": "^5.9.2"
+    "typescript": "catalog:"
   }
 }

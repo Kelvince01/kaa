@@ -1,7 +1,7 @@
 /**
  * Message System Validation Schemas
  *
- * Zod validation schemas for messaging system
+ * Elysia validation schemas for messaging system
  * Includes Kenya-specific validations and business rules
  */
 
@@ -15,7 +15,13 @@ import {
   MessageType,
   ParticipantRole,
 } from "@kaa/models/types";
-import { z } from "zod";
+import { t } from "elysia";
+
+/**
+ * Helper function to create Elysia enum from enum values
+ */
+const createEnumFromValues = (values: string[]) =>
+  Object.fromEntries(values.map((v) => [v, v]));
 
 // ==================== CUSTOM VALIDATION FUNCTIONS ====================
 
@@ -137,73 +143,67 @@ export const validateQuietHours = (
 /**
  * MongoDB ObjectId schema
  */
-const objectIdSchema = z
-  .string()
-  .regex(/^[0-9a-fA-F]{24}$/, "Invalid ObjectId format");
+const objectIdSchema = t.String({
+  pattern: "^[0-9a-fA-F]{24}$",
+  error: "Invalid ObjectId format",
+});
 
 /**
  * URL schema
  */
-const urlSchema = z.string().url("Invalid URL format");
+const urlSchema = t.String({
+  format: "url",
+  error: "Invalid URL format",
+});
 
 /**
  * File size schema
  */
-const fileSizeSchema = z
-  .number()
-  .min(1, "File size must be positive")
-  .max(
-    MESSAGING_CONSTANTS.FILE_LIMITS.VIDEO_MAX_SIZE,
-    "File size exceeds maximum allowed"
-  );
+const fileSizeSchema = t.Number({
+  minimum: 1,
+  maximum: MESSAGING_CONSTANTS.FILE_LIMITS.VIDEO_MAX_SIZE,
+  error: "File size exceeds maximum allowed",
+});
 
 // ==================== ATTACHMENT VALIDATION ====================
 
 /**
  * Message attachment validation schema
  */
-export const messageAttachmentSchema = z
-  .object({
-    _id: z.string().optional(),
-    type: z.enum(Object.values(AttachmentType), {
-      error: () => ({ message: "Invalid attachment type" }),
-    }),
-    filename: z
-      .string()
-      .min(1, "Filename is required")
-      .max(255, "Filename too long"),
-    originalName: z
-      .string()
-      .min(1, "Original name is required")
-      .max(255, "Original name too long"),
-    url: urlSchema,
-    thumbnailUrl: urlSchema.optional(),
-    size: fileSizeSchema,
-    mimeType: z
-      .string()
-      .min(1, "MIME type is required")
-      .max(100, "MIME type too long"),
-    uploadedBy: objectIdSchema,
-    uploadedAt: z.date().default(() => new Date()),
-    metadata: z.record(z.string(), z.any()).optional().default({}),
-  })
-  .refine((data) => validateFileSize(data.size, data.type), {
-    message: "File size exceeds limit for this attachment type",
-    path: ["size"],
-  });
+export const messageAttachmentSchema = t.Object({
+  _id: t.Optional(t.String()),
+  type: t.Enum(createEnumFromValues(Object.values(AttachmentType))),
+  filename: t.String({
+    minLength: 1,
+    maxLength: 255,
+    error: "Filename is required",
+  }),
+  originalName: t.String({
+    minLength: 1,
+    maxLength: 255,
+    error: "Original name is required",
+  }),
+  url: urlSchema,
+  thumbnailUrl: t.Optional(urlSchema),
+  size: fileSizeSchema,
+  mimeType: t.String({
+    minLength: 1,
+    maxLength: 100,
+    error: "MIME type is required",
+  }),
+  uploadedBy: objectIdSchema,
+  uploadedAt: t.Date(),
+  metadata: t.Optional(t.Record(t.String(), t.Any())),
+});
 
 /**
  * Message delivery validation schema
  */
-export const messageDeliverySchema = z.object({
+export const messageDeliverySchema = t.Object({
   participantId: objectIdSchema,
-  status: z
-    .enum(Object.values(MessageStatus), {
-      error: () => ({ message: "Invalid message status" }),
-    })
-    .default(MessageStatus.SENT),
-  timestamp: z.date().default(() => new Date()),
-  readAt: z.date().optional(),
+  status: t.Enum(createEnumFromValues(Object.values(MessageStatus))),
+  timestamp: t.Date(),
+  readAt: t.Optional(t.Date()),
 });
 
 // ==================== MESSAGE VALIDATION ====================
@@ -211,58 +211,33 @@ export const messageDeliverySchema = z.object({
 /**
  * Core message validation schema
  */
-export const messageSchema = z.object({
-  _id: objectIdSchema.optional(),
+export const messageSchema = t.Object({
+  _id: t.Optional(objectIdSchema),
   conversationId: objectIdSchema,
   senderId: objectIdSchema,
-  type: z
-    .enum(Object.values(MessageType), {
-      error: () => ({ message: "Invalid message type" }),
-    })
-    .default(MessageType.TEXT),
-  content: z
-    .string()
-    .min(1, "Message content is required")
-    .max(
-      MESSAGING_CONSTANTS.LIMITS.MAX_MESSAGE_LENGTH,
-      "Message content too long"
-    )
-    .refine(
-      (content) => validateMessageContent(content).isValid
-      //   (content: string) => ({
-      //     message:
-      //       validateMessageContent(content).reason || "Invalid message content",
-      //   })
-    ),
-  attachments: z
-    .array(messageAttachmentSchema)
-    .max(
-      MESSAGING_CONSTANTS.LIMITS.MAX_ATTACHMENTS_PER_MESSAGE,
-      "Too many attachments"
-    )
-    .default([]),
-  replyToMessageId: objectIdSchema.optional(),
-  status: z
-    .nativeEnum(MessageStatus, {
-      error: () => ({ message: "Invalid message status" }),
-    })
-    .default(MessageStatus.SENT),
-  priority: z
-    .nativeEnum(MessagePriority, {
-      error: () => ({ message: "Invalid message priority" }),
-    })
-    .default(MessagePriority.NORMAL),
-  deliveries: z.array(messageDeliverySchema).default([]),
-  metadata: z.record(z.string(), z.any()).optional().default({}),
-  translatedContent: z.record(z.string(), z.string()).optional(),
-  sentAt: z.date().default(() => new Date()),
-  editedAt: z.date().optional(),
-  deletedAt: z.date().optional(),
-  isEdited: z.boolean().default(false),
-  isDeleted: z.boolean().default(false),
-  isPinned: z.boolean().default(false),
-  createdAt: z.date().optional(),
-  updatedAt: z.date().optional(),
+  type: t.Enum(createEnumFromValues(Object.values(MessageType))),
+  content: t.String({
+    minLength: 1,
+    maxLength: MESSAGING_CONSTANTS.LIMITS.MAX_MESSAGE_LENGTH,
+    error: "Message content is required",
+  }),
+  attachments: t.Array(messageAttachmentSchema, {
+    maxItems: MESSAGING_CONSTANTS.LIMITS.MAX_ATTACHMENTS_PER_MESSAGE,
+  }),
+  replyToMessageId: t.Optional(objectIdSchema),
+  status: t.Enum(createEnumFromValues(Object.values(MessageStatus))),
+  priority: t.Enum(createEnumFromValues(Object.values(MessagePriority))),
+  deliveries: t.Array(messageDeliverySchema),
+  metadata: t.Optional(t.Record(t.String(), t.Any())),
+  translatedContent: t.Optional(t.Record(t.String(), t.String())),
+  sentAt: t.Date(),
+  editedAt: t.Optional(t.Date()),
+  deletedAt: t.Optional(t.Date()),
+  isEdited: t.Boolean(),
+  isDeleted: t.Boolean(),
+  isPinned: t.Boolean(),
+  createdAt: t.Optional(t.Date()),
+  updatedAt: t.Optional(t.Date()),
 });
 
 // ==================== CONVERSATION VALIDATION ====================
@@ -270,97 +245,78 @@ export const messageSchema = z.object({
 /**
  * Conversation participant validation schema
  */
-export const conversationParticipantSchema = z.object({
+export const conversationParticipantSchema = t.Object({
   userId: objectIdSchema,
-  role: z.nativeEnum(ParticipantRole, {
-    error: () => ({ message: "Invalid participant role" }),
+  role: t.Enum(createEnumFromValues(Object.values(ParticipantRole))),
+  joinedAt: t.Date(),
+  leftAt: t.Optional(t.Date()),
+  isActive: t.Boolean(),
+  permissions: t.Object({
+    canRead: t.Boolean(),
+    canWrite: t.Boolean(),
+    canAddParticipants: t.Boolean(),
+    canRemoveParticipants: t.Boolean(),
+    canDeleteMessages: t.Boolean(),
+    canPinMessages: t.Boolean(),
   }),
-  joinedAt: z.date().default(() => new Date()),
-  leftAt: z.date().optional(),
-  isActive: z.boolean().default(true),
-  permissions: z.object({
-    canRead: z.boolean().default(true),
-    canWrite: z.boolean().default(true),
-    canAddParticipants: z.boolean().default(false),
-    canRemoveParticipants: z.boolean().default(false),
-    canDeleteMessages: z.boolean().default(false),
-    canPinMessages: z.boolean().default(false),
-  }),
-  lastReadMessageId: objectIdSchema.optional(),
-  lastReadAt: z.date().optional(),
-  isMuted: z.boolean().default(false),
-  mutedUntil: z.date().optional(),
+  lastReadMessageId: t.Optional(objectIdSchema),
+  lastReadAt: t.Optional(t.Date()),
+  isMuted: t.Boolean(),
+  mutedUntil: t.Optional(t.Date()),
 });
 
 /**
  * Conversation settings validation schema
  */
-export const conversationSettingsSchema = z.object({
-  allowFileSharing: z.boolean().default(true),
-  allowImageSharing: z.boolean().default(true),
-  maxFileSize: z
-    .number()
-    .min(1024, "File size limit too small")
-    .max(
-      MESSAGING_CONSTANTS.FILE_LIMITS.VIDEO_MAX_SIZE,
-      "File size limit too large"
-    )
-    .default(MESSAGING_CONSTANTS.FILE_LIMITS.DOCUMENT_MAX_SIZE),
-  allowedFileTypes: z
-    .array(z.nativeEnum(AttachmentType))
-    .default(Object.values(AttachmentType)),
-  autoTranslate: z.boolean().default(false),
-  defaultLanguage: z
-    .enum(["en", "sw"], {
-      error: () => ({ message: 'Language must be either "en" or "sw"' }),
+export const conversationSettingsSchema = t.Object({
+  allowFileSharing: t.Boolean(),
+  allowImageSharing: t.Boolean(),
+  maxFileSize: t.Number({
+    minimum: 1024,
+    maximum: MESSAGING_CONSTANTS.FILE_LIMITS.VIDEO_MAX_SIZE,
+    error: "File size limit too large",
+  }),
+  allowedFileTypes: t.Array(
+    t.Enum(createEnumFromValues(Object.values(AttachmentType)))
+  ),
+  autoTranslate: t.Boolean(),
+  defaultLanguage: t.Union([t.Literal("en"), t.Literal("sw")]),
+  businessHoursOnly: t.Boolean(),
+  retentionDays: t.Optional(
+    t.Number({
+      minimum: 1,
+      maximum: MESSAGING_CONSTANTS.LIMITS.MESSAGE_RETENTION_DAYS,
+      error: "Retention period too long",
     })
-    .default("en"),
-  businessHoursOnly: z.boolean().default(false),
-  retentionDays: z
-    .number()
-    .min(1, "Retention period too short")
-    .max(
-      MESSAGING_CONSTANTS.LIMITS.MESSAGE_RETENTION_DAYS,
-      "Retention period too long"
-    )
-    .optional(),
+  ),
 });
 
 /**
  * Core conversation validation schema
  */
-export const conversationSchema = z.object({
-  _id: objectIdSchema.optional(),
-  type: z.nativeEnum(ConversationType, {
-    error: () => ({ message: "Invalid conversation type" }),
+export const conversationSchema = t.Object({
+  _id: t.Optional(objectIdSchema),
+  type: t.Enum(createEnumFromValues(Object.values(ConversationType))),
+  title: t.Optional(t.String({ maxLength: 200 })),
+  description: t.Optional(t.String({ maxLength: 1000 })),
+  status: t.Enum(createEnumFromValues(Object.values(ConversationStatus))),
+  participants: t.Array(conversationParticipantSchema, {
+    minItems: 1,
+    maxItems: MESSAGING_CONSTANTS.LIMITS.MAX_PARTICIPANTS,
   }),
-  title: z.string().max(200, "Title too long").optional(),
-  description: z.string().max(1000, "Description too long").optional(),
-  status: z
-    .nativeEnum(ConversationStatus, {
-      error: () => ({ message: "Invalid conversation status" }),
-    })
-    .default(ConversationStatus.ACTIVE),
-  participants: z
-    .array(conversationParticipantSchema)
-    .min(1, "Conversation must have at least one participant")
-    .max(MESSAGING_CONSTANTS.LIMITS.MAX_PARTICIPANTS, "Too many participants"),
   createdBy: objectIdSchema,
-  propertyId: objectIdSchema.optional(),
-  applicationId: objectIdSchema.optional(),
-  messageCount: z
-    .number()
-    .min(0, "Message count cannot be negative")
-    .default(0),
-  lastMessageId: objectIdSchema.optional(),
-  lastMessageAt: z.date().optional(),
-  lastActivity: z.date().default(() => new Date()),
+  propertyId: t.Optional(objectIdSchema),
+  applicationId: t.Optional(objectIdSchema),
+  messageCount: t.Number({ minimum: 0 }),
+  lastMessageId: t.Optional(objectIdSchema),
+  lastMessageAt: t.Optional(t.Date()),
+  lastActivity: t.Date(),
   settings: conversationSettingsSchema,
-  metadata: z.record(z.string(), z.any()).optional().default({}),
-  isArchived: z.boolean().default(false),
-  isPinned: z.boolean().default(false),
-  createdAt: z.date().optional(),
-  updatedAt: z.date().optional(),
+  metadata: t.Optional(t.Record(t.String(), t.Any())),
+  isArchived: t.Boolean(),
+  isPinned: t.Boolean(),
+  createdAt: t.Optional(t.Date()),
+  updatedAt: t.Optional(t.Date()),
 });
 
 // ==================== REQUEST VALIDATION SCHEMAS ====================
@@ -368,130 +324,133 @@ export const conversationSchema = z.object({
 /**
  * Create conversation request validation
  */
-export const createConversationRequestSchema = z.object({
-  type: z.nativeEnum(ConversationType, {
-    error: () => ({ message: "Invalid conversation type" }),
+export const createConversationRequestSchema = t.Object({
+  type: t.Enum(createEnumFromValues(Object.values(ConversationType))),
+  title: t.Optional(t.String({ maxLength: 200 })),
+  description: t.Optional(t.String({ maxLength: 1000 })),
+  participantIds: t.Array(objectIdSchema, {
+    minItems: 1,
+    maxItems: MESSAGING_CONSTANTS.LIMITS.MAX_PARTICIPANTS - 1,
   }),
-  title: z.string().max(200, "Title too long").optional(),
-  description: z.string().max(1000, "Description too long").optional(),
-  participantIds: z
-    .array(objectIdSchema)
-    .min(1, "Must include at least one participant")
-    .max(
-      MESSAGING_CONSTANTS.LIMITS.MAX_PARTICIPANTS - 1,
-      "Too many participants"
-    ),
-  propertyId: objectIdSchema.optional(),
-  applicationId: objectIdSchema.optional(),
-  settings: conversationSettingsSchema.partial().optional(),
-  metadata: z.record(z.string(), z.any()).optional(),
+  propertyId: t.Optional(objectIdSchema),
+  applicationId: t.Optional(objectIdSchema),
+  settings: t.Optional(t.Partial(conversationSettingsSchema)),
+  metadata: t.Optional(t.Record(t.String(), t.Any())),
 });
 
 /**
  * Send message request validation
  */
-export const sendMessageRequestSchema = z.object({
+export const sendMessageRequestSchema = t.Object({
   conversationId: objectIdSchema,
-  content: z
-    .string()
-    .min(1, "Message content is required")
-    .max(
-      MESSAGING_CONSTANTS.LIMITS.MAX_MESSAGE_LENGTH,
-      "Message content too long"
+  content: t.String({
+    minLength: 1,
+    maxLength: MESSAGING_CONSTANTS.LIMITS.MAX_MESSAGE_LENGTH,
+    error: "Message content is required",
+  }),
+  type: t.Optional(t.Enum(createEnumFromValues(Object.values(MessageType)))),
+  attachments: t.Optional(
+    t.Array(
+      t.Object({
+        file: t.Any(), // File object - will be validated by multer middleware
+        type: t.Enum(createEnumFromValues(Object.values(AttachmentType))),
+      }),
+      {
+        maxItems: MESSAGING_CONSTANTS.LIMITS.MAX_ATTACHMENTS_PER_MESSAGE,
+      }
     )
-    .refine(
-      (content) => validateMessageContent(content).isValid
-      //   (content: string) => ({
-      //     message:
-      //       validateMessageContent(content).reason || "Invalid message content",
-      //   })
-    ),
-  type: z
-    .enum(Object.values(MessageType), {
-      error: () => ({ message: "Invalid message type" }),
+  ),
+  replyToMessageId: t.Optional(objectIdSchema),
+  priority: t.Optional(
+    t.Enum({
+      low: "low",
+      normal: "normal",
+      high: "high",
+      urgent: "urgent",
     })
-    .optional()
-    .default(MessageType.TEXT),
-  attachments: z
-    .array(
-      z.object({
-        file: z.any(), // File object - will be validated by multer middleware
-        type: z.nativeEnum(AttachmentType),
-      })
-    )
-    .max(
-      MESSAGING_CONSTANTS.LIMITS.MAX_ATTACHMENTS_PER_MESSAGE,
-      "Too many attachments"
-    )
-    .optional(),
-  replyToMessageId: objectIdSchema.optional(),
-  priority: z
-    .enum(Object.values(MessagePriority))
-    .optional()
-    .default(MessagePriority.NORMAL),
-  metadata: z.record(z.string(), z.any()).optional(),
-  autoTranslate: z.boolean().optional().default(false),
+  ),
+  metadata: t.Optional(t.Record(t.String(), t.Any())),
+  autoTranslate: t.Optional(t.Boolean()),
 });
 
 /**
  * Update conversation request validation
  */
-export const updateConversationRequestSchema = z.object({
-  title: z.string().max(200, "Title too long").optional(),
-  description: z.string().max(1000, "Description too long").optional(),
-  status: z.enum(Object.values(ConversationStatus)).optional(),
-  settings: conversationSettingsSchema.partial().optional(),
-  metadata: z.record(z.string(), z.any()).optional(),
+export const updateConversationRequestSchema = t.Object({
+  title: t.Optional(t.String({ maxLength: 200 })),
+  description: t.Optional(t.String({ maxLength: 1000 })),
+  status: t.Optional(
+    t.Enum({
+      active: "active",
+      archived: "archived",
+      muted: "muted",
+      blocked: "blocked",
+      closed: "closed",
+    })
+  ),
+  settings: t.Optional(t.Partial(conversationSettingsSchema)),
+  metadata: t.Optional(t.Record(t.String(), t.Any())),
 });
 
 /**
  * Add participant request validation
  */
-export const addParticipantRequestSchema = z.object({
+export const addParticipantRequestSchema = t.Object({
   userId: objectIdSchema,
-  role: z.nativeEnum(ParticipantRole, {
-    error: () => ({ message: "Invalid participant role" }),
+  role: t.Enum({
+    tenant: "tenant",
+    landlord: "landlord",
+    agent: "agent",
+    admin: "admin",
+    system: "system",
+    support: "support",
   }),
-  permissions: z
-    .object({
-      canRead: z.boolean().optional(),
-      canWrite: z.boolean().optional(),
-      canAddParticipants: z.boolean().optional(),
-      canRemoveParticipants: z.boolean().optional(),
-      canDeleteMessages: z.boolean().optional(),
-      canPinMessages: z.boolean().optional(),
+  permissions: t.Optional(
+    t.Object({
+      canRead: t.Optional(t.Boolean()),
+      canWrite: t.Optional(t.Boolean()),
+      canAddParticipants: t.Optional(t.Boolean()),
+      canRemoveParticipants: t.Optional(t.Boolean()),
+      canDeleteMessages: t.Optional(t.Boolean()),
+      canPinMessages: t.Optional(t.Boolean()),
     })
-    .optional(),
+  ),
 });
 
 /**
  * Bulk message request validation
  */
-export const bulkMessageRequestSchema = z.object({
-  conversationIds: z
-    .array(objectIdSchema)
-    .min(1, "Must include at least one conversation")
-    .max(
-      MESSAGING_CONSTANTS.LIMITS.BULK_MESSAGE_LIMIT,
-      "Too many conversations"
-    ),
-  content: z
-    .string()
-    .min(1, "Message content is required")
-    .max(
-      MESSAGING_CONSTANTS.LIMITS.MAX_MESSAGE_LENGTH,
-      "Message content too long"
-    ),
-  type: z.enum(Object.values(MessageType)).default(MessageType.TEXT),
-  priority: z
-    .enum(Object.values(MessagePriority))
-    .default(MessagePriority.NORMAL),
-  metadata: z.record(z.string(), z.any()).optional().default({}),
-  scheduledFor: z
-    .date()
-    .refine(validateScheduledDate, "Invalid scheduled date")
-    .optional(),
-  respectBusinessHours: z.boolean().default(true),
+export const bulkMessageRequestSchema = t.Object({
+  conversationIds: t.Array(objectIdSchema, {
+    minItems: 1,
+    maxItems: MESSAGING_CONSTANTS.LIMITS.BULK_MESSAGE_LIMIT,
+  }),
+  content: t.String({
+    minLength: 1,
+    maxLength: MESSAGING_CONSTANTS.LIMITS.MAX_MESSAGE_LENGTH,
+    error: "Message content is required",
+  }),
+  type: t.Enum({
+    text: "text",
+    attachment: "attachment",
+    system: "system",
+    property_inquiry: "property_inquiry",
+    application_discussion: "application_discussion",
+    payment_notification: "payment_notification",
+    maintenance_request: "maintenance_request",
+    renewal_discussion: "renewal_discussion",
+    complaint: "complaint",
+    announcement: "announcement",
+  }),
+  priority: t.Enum({
+    low: "low",
+    normal: "normal",
+    high: "high",
+    urgent: "urgent",
+  }),
+  metadata: t.Optional(t.Record(t.String(), t.Any())),
+  scheduledFor: t.Optional(t.Date()),
+  respectBusinessHours: t.Boolean(),
 });
 
 // ==================== QUERY VALIDATION SCHEMAS ====================
@@ -499,78 +458,119 @@ export const bulkMessageRequestSchema = z.object({
 /**
  * Message list query validation
  */
-export const messageListQuerySchema = z.object({
-  conversationId: objectIdSchema.optional(),
-  senderId: objectIdSchema.optional(),
-  type: z.enum(Object.values(MessageType)).optional(),
-  status: z.enum(Object.values(MessageStatus)).optional(),
-  priority: z.enum(Object.values(MessagePriority)).optional(),
-  hasAttachments: z.boolean().optional(),
-  dateFrom: z.coerce.date().optional(),
-  dateTo: z.coerce.date().optional(),
-  search: z.string().max(200, "Search query too long").optional(),
-  isDeleted: z.boolean().optional(),
-  page: z.coerce.number().min(1, "Page must be positive").default(1),
-  limit: z.coerce
-    .number()
-    .min(1, "Limit must be positive")
-    .max(100, "Limit too large")
-    .default(20),
-  sortBy: z.enum(["sentAt", "priority", "status"]).default("sentAt"),
-  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+export const messageListQuerySchema = t.Object({
+  conversationId: t.Optional(objectIdSchema),
+  senderId: t.Optional(objectIdSchema),
+  type: t.Optional(
+    t.Enum({
+      text: "text",
+      attachment: "attachment",
+      system: "system",
+      property_inquiry: "property_inquiry",
+      application_discussion: "application_discussion",
+      payment_notification: "payment_notification",
+      maintenance_request: "maintenance_request",
+      renewal_discussion: "renewal_discussion",
+      complaint: "complaint",
+      announcement: "announcement",
+    })
+  ),
+  status: t.Optional(
+    t.Enum({
+      sent: "sent",
+      delivered: "delivered",
+      read: "read",
+      failed: "failed",
+      deleted: "deleted",
+    })
+  ),
+  priority: t.Optional(
+    t.Enum({
+      low: "low",
+      normal: "normal",
+      high: "high",
+      urgent: "urgent",
+    })
+  ),
+  hasAttachments: t.Optional(t.Boolean()),
+  dateFrom: t.Optional(t.Date()),
+  dateTo: t.Optional(t.Date()),
+  search: t.Optional(t.String({ maxLength: 200 })),
+  isDeleted: t.Optional(t.Boolean()),
+  page: t.Number({ minimum: 1, default: 1 }),
+  limit: t.Number({ minimum: 1, maximum: 100, default: 20 }),
+  sortBy: t.Union([
+    t.Literal("sentAt"),
+    t.Literal("priority"),
+    t.Literal("status"),
+  ]),
+  sortOrder: t.Union([t.Literal("asc"), t.Literal("desc")]),
 });
 
 /**
  * Conversation list query validation
  */
-export const conversationListQuerySchema = z.object({
-  type: z.nativeEnum(ConversationType).optional(),
-  status: z.nativeEnum(ConversationStatus).optional(),
-  participantId: objectIdSchema.optional(),
-  propertyId: objectIdSchema.optional(),
-  applicationId: objectIdSchema.optional(),
-  hasUnread: z.boolean().optional(),
-  isArchived: z.boolean().optional(),
-  createdAfter: z.coerce.date().optional(),
-  lastActivityAfter: z.coerce.date().optional(),
-  search: z.string().max(200, "Search query too long").optional(),
-  page: z.coerce.number().min(1, "Page must be positive").default(1),
-  limit: z.coerce
-    .number()
-    .min(1, "Limit must be positive")
-    .max(100, "Limit too large")
-    .default(20),
-  sortBy: z
-    .enum(["lastActivity", "createdAt", "messageCount"])
-    .default("lastActivity"),
-  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+export const conversationListQuerySchema = t.Object({
+  type: t.Optional(
+    t.Enum({
+      direct: "direct",
+      group: "group",
+      support: "support",
+      property_thread: "property_thread",
+      application_thread: "application_thread",
+      system: "system",
+    })
+  ),
+  status: t.Optional(
+    t.Enum({
+      active: "active",
+      archived: "archived",
+      muted: "muted",
+      blocked: "blocked",
+      closed: "closed",
+    })
+  ),
+  participantId: t.Optional(objectIdSchema),
+  propertyId: t.Optional(objectIdSchema),
+  applicationId: t.Optional(objectIdSchema),
+  hasUnread: t.Optional(t.Boolean()),
+  isArchived: t.Optional(t.Boolean()),
+  createdAfter: t.Optional(t.Date()),
+  lastActivityAfter: t.Optional(t.Date()),
+  search: t.Optional(t.String({ maxLength: 200 })),
+  page: t.Number({ minimum: 1, default: 1 }),
+  limit: t.Number({ minimum: 1, maximum: 100, default: 20 }),
+  sortBy: t.Union([
+    t.Literal("lastActivity"),
+    t.Literal("createdAt"),
+    t.Literal("messageCount"),
+  ]),
+  sortOrder: t.Union([t.Literal("asc"), t.Literal("desc")]),
 });
 
 /**
  * Message analytics query validation
  */
-export const messageAnalyticsQuerySchema = z
-  .object({
-    conversationId: objectIdSchema.optional(),
-    startDate: z.coerce.date(),
-    endDate: z.coerce.date(),
-    groupBy: z.enum(["day", "week", "month"]).default("day"),
-    includeKenyaMetrics: z.boolean().default(true),
-  })
-  .refine((data) => data.endDate >= data.startDate, {
-    message: "End date must be after start date",
-    path: ["endDate"],
-  });
+export const messageAnalyticsQuerySchema = t.Object({
+  conversationId: t.Optional(objectIdSchema),
+  startDate: t.Date(),
+  endDate: t.Date(),
+  groupBy: t.Union([t.Literal("day"), t.Literal("week"), t.Literal("month")]),
+  includeKenyaMetrics: t.Boolean(),
+});
 
 /**
  * Send test notification validation
  */
-export const sendTestNotificationSchema = z.object({
+export const sendTestNotificationSchema = t.Object({
   conversationId: objectIdSchema,
-  messageContent: z.string().min(1, "Test message content is required"),
-  channels: z
-    .array(z.enum(["email", "sms", "push"]))
-    .min(1, "Must include at least one channel"),
+  messageContent: t.String({ minLength: 1 }),
+  channels: t.Array(
+    t.Union([t.Literal("email"), t.Literal("sms"), t.Literal("push")]),
+    {
+      minItems: 1,
+    }
+  ),
 });
 
 // ==================== VALIDATION UTILITY FUNCTIONS ====================
@@ -610,8 +610,8 @@ export const validateNotificationData = (
  * Custom validation error class
  */
 export class MessageValidationError extends Error {
-  errors: z.ZodError<any>[];
-  constructor(errors: z.ZodError<any>[], _statusCode = 400) {
+  errors: any[];
+  constructor(errors: any[], _statusCode = 400) {
     super("Validation failed");
     this.name = "MessageValidationError";
     this.errors = errors;

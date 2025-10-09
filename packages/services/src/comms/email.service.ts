@@ -3,17 +3,15 @@ import type {
   CommWebhookPayload,
   DeliveryStatus,
   IEmail,
-} from "@kaa/models/types";
-import { logger } from "@kaa/utils";
-import type { FilterQuery } from "mongoose";
-import { emailQueue } from "./email.queue";
-import type {
   QueryEmails,
   SendBulkEmail,
   SendBulkEmailWithTemplate,
   SendEmail,
   SendEmailWithTemplate,
-} from "./email.schema";
+} from "@kaa/models/types";
+import { logger } from "@kaa/utils";
+import type { FilterQuery } from "mongoose";
+import { emailQueue } from "../queues/email.queue";
 
 class EmailService {
   async sendEmail(email: SendEmail) {
@@ -190,4 +188,4 @@ class EmailService {
   }
 }
 
-export default new EmailService();
+export const emailService = new EmailService();

@@ -1,8 +1,7 @@
 import config from "@kaa/config/api";
-import { TemplateService } from "@kaa/services";
+import { emailService, TemplateService } from "@kaa/services";
 import type { Job } from "bullmq";
 import type mongoose from "mongoose";
-import emailService from "~/features/comms/emails/email.service";
 
 /**
  * Send email verification to a newly registered user

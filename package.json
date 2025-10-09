@@ -42,7 +42,7 @@
     "rimraf": "^6.0.1",
     "semantic-release": "^24.2.8",
     "turbo": "^2.5.6",
-    "typescript": "^5.9.2",
+    "typescript": "catalog:",
     "ultracite": "^5.3.4"
   },
   "keywords": [
@@ -62,11 +62,33 @@
     "node": ">=20"
   },
   "packageManager": "bun@1.2.21",
-  "workspaces": [
-    "apps/*",
-    "packages/*",
-    "tooling/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*",
+      "tooling/*"
+    ],
+    "catalog": {
+      "ai": "^5.0.52",
+      "axios": "^1.12.2",
+      "elysia": "latest",
+      "lucide-react": "^0.526.0",
+      "next": "^15.5.3",
+      "react": "^19.1.1",
+      "react-dom": "^19.1.1",
+      "tailwindcss": "^4.1.13",
+      "typescript": "^5.9.2",
+      "zod": "^4.1.11",
+      "openai": "^5.22.0",
+      "@ai-sdk/openai": "^2.0.32",
+      "@ai-sdk/google": "^2.0.14",
+      "@types/bun": "^1.2.21",
+      "@types/node": "^22.18.3",
+      "@types/react": "^19.1.13",
+      "@types/react-dom": "^19.1.9",
+      "@tailwindcss/postcss": "^4.1.13"
+    }
+  },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,jsonc,css,scss,md,mdx}": [
       "bun x ultracite fix"
@@ -99,6 +121,7 @@
     "@sentry/cli",
     "@tailwindcss/oxide",
     "@vercel/speed-insights",
+    "canvas",
     "core-js",
     "core-js-pure",
     "esbuild",

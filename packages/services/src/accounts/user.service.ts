@@ -2,13 +2,13 @@ import {
   Member,
   Organization,
   User,
+  UserRole,
   VerificationToken,
   Wallet,
 } from "@kaa/models";
 import {
   type IUser,
   type UserResponse as UserResponseType,
-  UserRole,
   UserStatus,
   WalletStatus,
 } from "@kaa/models/types";
@@ -26,10 +26,12 @@ import {
   md5hash,
   NotFoundError,
 } from "@kaa/utils";
-import mongoose, { type FilterQuery } from "mongoose";
+import type mongoose from "mongoose";
+import type { FilterQuery } from "mongoose";
+import { memberService } from "..";
 import { notificationService } from "../comms/notification.service";
 import { auditService } from "../misc/audit.service";
-import {
+import roleService, {
   assignRole,
   getDefaultRoleId,
   getRoleByName,
@@ -56,10 +58,7 @@ type UserProjection = {
 
 const findOne = async (id: string) => {
   try {
-    return await User.findById(id)
-      .select("-password")
-      .populate("role", "name")
-      .populate("memberId", "name");
+    return await User.findById(id).select("-password");
   } catch (error) {
     console.error("Error finding user:", error);
     return null;
@@ -150,20 +149,20 @@ export async function updateActivity(
 export async function updateVerification(
   userId: string,
   type: "email" | "phone" | "identity",
-  verified = true
+  verifiedAt = new Date()
 ): Promise<boolean> {
   const user = await User.findById(userId);
   if (!user) return false;
 
   switch (type) {
     case "email":
-      user.verification.emailVerified = verified;
+      user.verification.emailVerifiedAt = verifiedAt;
       break;
     case "phone":
-      user.verification.phoneVerified = verified;
+      user.verification.phoneVerifiedAt = verifiedAt;
       break;
     case "identity":
-      user.verification.identityVerified = verified;
+      user.verification.identityVerifiedAt = verifiedAt;
       break;
     default:
       return false;
@@ -171,8 +170,8 @@ export async function updateVerification(
 
   // Check if user should be activated
   if (
-    user.verification.emailVerified &&
-    user.verification.phoneVerified &&
+    user.verification.emailVerifiedAt &&
+    user.verification.phoneVerifiedAt &&
     user.status === UserStatus.PENDING
   ) {
     user.status = UserStatus.ACTIVE;
@@ -199,8 +198,8 @@ export const getUsers = async (
     // Build query
     const query: FilterQuery<IUser> = {
       status: UserStatus.ACTIVE,
-      "verification.emailVerified": true,
-      // "verification.phoneVerified": true,
+      "verification.emailVerifiedAt": { $ne: null },
+      // "verification.phoneVerifiedAt": { $ne: null },
     };
 
     // Apply filters
@@ -216,13 +215,13 @@ export const getUsers = async (
       ];
     }
 
-    if (role) {
-      query.role = new mongoose.Types.ObjectId(role);
-    }
+    // if (role) {
+    //   query.role = new mongoose.Types.ObjectId(role);
+    // }
 
-    if (memberId) {
-      query.memberId = new mongoose.Types.ObjectId(memberId);
-    }
+    // if (memberId) {
+    //   query.memberId = new mongoose.Types.ObjectId(memberId);
+    // }
 
     if (status) {
       query.status = status;
@@ -233,9 +232,7 @@ export const getUsers = async (
       .sort({ [sort]: order === "asc" ? 1 : -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .select("-password")
-      .populate("role", "name")
-      .populate("memberId", "name");
+      .select("-password");
 
     // Get total count for pagination
     const total = await User.countDocuments(query);
@@ -288,31 +285,6 @@ export const createUser = async (
     const name = `${firstName} ${lastName}`;
     const slug = name.toLowerCase().replace(/\s+/g, "-");
 
-    let memberId: any | null = null;
-    let member: any | null = null;
-    if (role === "landlord") {
-      const org = await Organization.create({
-        name,
-        slug,
-        type: "landlord",
-        phone,
-        email,
-      });
-
-      member = new Member({
-        name,
-        slug,
-        organization: org._id as mongoose.Types.ObjectId,
-      });
-      await member.save();
-      memberId = member._id as mongoose.Types.ObjectId;
-
-      // Check member limits
-      if (member.usage.users >= member.limits.users) {
-        throw new Error("User limit reached for this member"); // ValidationError
-      }
-    }
-
     const username = `${firstName.toLowerCase()}${lastName.toLowerCase()}`;
     const emailHash = md5hash(email);
     const profileImage = `https://www.gravatar.com/avatar/${emailHash}?d=identicon`;
@@ -342,7 +314,6 @@ export const createUser = async (
       "profile.lastName": lastName,
       "profile.displayName": username,
       "profile.avatar": avatar || profileImage,
-      role: role ? userRole.id : defaultRoleId,
       "verification.emailVerified": isVerified,
       status: status || "pending",
       addresses:
@@ -362,7 +333,37 @@ export const createUser = async (
           : [],
     });
 
-    if (role === "landlord") newUser.memberId = memberId;
+    const userRoleObj = await UserRole.create({
+      userId: newUser._id,
+      roleId: role ? userRole.id : defaultRoleId,
+    });
+
+    let memberId: any | null = null;
+    let member: any | null = null;
+    if (role === "landlord") {
+      const org = await Organization.create({
+        name,
+        slug,
+        type: "landlord",
+        phone,
+        email,
+      });
+
+      member = new Member({
+        name,
+        slug,
+        role: userRoleObj.roleId as mongoose.Types.ObjectId,
+        organization: org._id as mongoose.Types.ObjectId,
+        user: newUser._id as mongoose.Types.ObjectId,
+      });
+      await member.save();
+      memberId = member._id as mongoose.Types.ObjectId;
+
+      // Check member limits
+      if (member.usage.users >= member.limits.users) {
+        throw new Error("User limit reached for this member"); // ValidationError
+      }
+    }
 
     // Create verification token
     const { verificationTokenHex, verificationToken, verificationExpires } =
@@ -445,11 +446,11 @@ export const createUser = async (
       memberId: memberId ? memberId.toString() : undefined,
       bio: newUser.profile.bio,
       avatar: newUser.profile.avatar,
-      role: userRole.name as UserRole,
+      role: userRole.name,
       status: newUser.status,
-      emailVerified: newUser.verification.emailVerified,
-      phoneVerified: newUser.verification.phoneVerified,
-      identityVerified: newUser.verification.identityVerified,
+      emailVerified: newUser.verification.emailVerifiedAt !== undefined,
+      phoneVerified: newUser.verification.phoneVerifiedAt !== undefined,
+      identityVerified: newUser.verification.identityVerifiedAt !== undefined,
       kycStatus: newUser.verification.kycStatus,
       county: newUser.addresses.find((addr) => addr.isPrimary)?.county,
       estate: newUser.addresses.find((addr) => addr.isPrimary)?.estate,
@@ -515,10 +516,7 @@ export const updateUser = async ({
         id,
         { $set: body },
         { new: true, runValidators: true }
-      )
-        .select("-password")
-        .populate("role", "name")
-        .populate("memberId", "name");
+      ).select("-password");
 
       if (!user) {
         throw new NotFoundError("User not found");
@@ -620,7 +618,7 @@ export async function getLandlordsByCounty(
   limit = 10
 ): Promise<IUser[]> {
   return await User.find({
-    "role.name": UserRole.LANDLORD,
+    // "role.name": "landlord",
     status: UserStatus.ACTIVE,
     "addresses.county": county,
     "addresses.isPrimary": true,
@@ -639,7 +637,7 @@ export async function getUserStats(userId: string): Promise<any> {
   return {
     profile: {
       verified:
-        user.verification.emailVerified && user.verification.phoneVerified,
+        user.verification.emailVerifiedAt && user.verification.phoneVerifiedAt,
       kycStatus: user.verification.kycStatus,
       joinDate: user.createdAt,
       lastActive: user.activity.lastActivity,
@@ -755,7 +753,7 @@ export async function getUserFollowers(
   })
     .limit(limit)
     .select(
-      "profile contact role verification.emailVerified verification.phoneVerified"
+      "profile contact verification.emailVerifiedAt verification.phoneVerifiedAt"
     );
 }
 
@@ -775,7 +773,7 @@ export async function getUserFollowing(
   })
     .limit(limit)
     .select(
-      "profile contact role verification.emailVerified verification.phoneVerified"
+      "profile contact role verification.emailVerifiedAt verification.phoneVerifiedAt"
     );
 }
 
@@ -783,9 +781,7 @@ export async function getUserFollowing(
  * Get user dashboard data
  */
 export async function getUserDashboardData(userId: string): Promise<any> {
-  const user = await User.findById(userId)
-    .populate("role", "name")
-    .populate("memberId", "name");
+  const user = await User.findById(userId);
 
   if (!user) return null;
 
@@ -796,9 +792,9 @@ export async function getUserDashboardData(userId: string): Promise<any> {
       email: user.contact.email,
       phone: user.contact.phone.formatted,
       avatar: user.profile.avatar,
-      role: user.role,
+      // role: user.role,
       verified:
-        user.verification.emailVerified && user.verification.phoneVerified,
+        user.verification.emailVerifiedAt && user.verification.phoneVerifiedAt,
       kycStatus: user.verification.kycStatus,
     },
     activity: {
@@ -808,10 +804,14 @@ export async function getUserDashboardData(userId: string): Promise<any> {
     },
   };
 
+  const userRole = await roleService.getUserRoleBy({
+    userId: (user._id as mongoose.Types.ObjectId).toString(),
+  });
+
   // Role-specific data
   if (
-    (user.role as any).name === UserRole.LANDLORD ||
-    (user.role as any).name === UserRole.AGENT
+    (userRole?.roleId as any).name === "landlord" ||
+    (userRole?.roleId as any).name === "agent"
   ) {
     return {
       ...baseData,
@@ -829,9 +829,9 @@ export async function getUserDashboardData(userId: string): Promise<any> {
 export async function updateVerificationStatus(
   userId: string,
   verificationData: {
-    emailVerified?: boolean;
-    phoneVerified?: boolean;
-    identityVerified?: boolean;
+    emailVerified?: Date;
+    phoneVerified?: Date;
+    identityVerified?: Date;
     kycStatus?: string;
     rejectionReason?: string;
   },
@@ -854,13 +854,13 @@ export async function updateVerificationStatus(
 
     // Update verification fields
     if (verificationData.emailVerified !== undefined) {
-      user.verification.emailVerified = verificationData.emailVerified;
+      user.verification.emailVerifiedAt = verificationData.emailVerified;
     }
     if (verificationData.phoneVerified !== undefined) {
-      user.verification.phoneVerified = verificationData.phoneVerified;
+      user.verification.phoneVerifiedAt = verificationData.phoneVerified;
     }
     if (verificationData.identityVerified !== undefined) {
-      user.verification.identityVerified = verificationData.identityVerified;
+      user.verification.identityVerifiedAt = verificationData.identityVerified;
     }
     if (verificationData.kycStatus) {
       user.verification.kycStatus = verificationData.kycStatus as any;
@@ -878,8 +878,8 @@ export async function updateVerificationStatus(
 
     // Update user status if fully verified
     if (
-      user.verification.emailVerified &&
-      user.verification.phoneVerified &&
+      user.verification.emailVerifiedAt &&
+      user.verification.phoneVerifiedAt &&
       user.verification.kycStatus === "verified" &&
       user.status === UserStatus.PENDING
     ) {
@@ -887,6 +887,13 @@ export async function updateVerificationStatus(
     }
 
     await user.save();
+
+    const member = await memberService.getMemberBy({
+      user: (user._id as mongoose.Types.ObjectId).toString(),
+    });
+    const userRole = await roleService.getUserRoleBy({
+      userId: (user._id as mongoose.Types.ObjectId).toString(),
+    });
 
     const userResponse: UserResponseType = {
       id: (user._id as mongoose.Types.ObjectId).toString(),
@@ -896,14 +903,16 @@ export async function updateVerificationStatus(
       lastName: user.profile.lastName,
       fullName: user.fullName,
       username: user.profile.displayName,
-      memberId: user.memberId ? user.memberId.toString() : undefined,
+      memberId: member
+        ? (member._id as mongoose.Types.ObjectId).toString()
+        : undefined,
       bio: user.profile.bio,
       avatar: user.profile.avatar,
-      role: (user.role as any).name,
+      role: (userRole?.roleId as any).name,
       status: user.status,
-      emailVerified: user.verification.emailVerified,
-      phoneVerified: user.verification.phoneVerified,
-      identityVerified: user.verification.identityVerified,
+      emailVerified: user.verification.emailVerifiedAt !== undefined,
+      phoneVerified: user.verification.phoneVerifiedAt !== undefined,
+      identityVerified: user.verification.identityVerifiedAt !== undefined,
       kycStatus: user.verification.kycStatus,
       county: user.addresses.find((addr) => addr.isPrimary)?.county,
       estate: user.addresses.find((addr) => addr.isPrimary)?.estate,

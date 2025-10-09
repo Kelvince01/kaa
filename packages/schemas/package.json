@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "@kaa/models": "workspace:*",
-    "zod": "^4.1.11"
+    "zod": "catalog:"
   }
 }

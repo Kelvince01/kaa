@@ -41,7 +41,7 @@ export class InvoiceProcessor {
               {
                 type: "file",
                 data: documentUrl,
-                mimeType: "application/pdf",
+                mediaType: "application/pdf",
               },
             ],
           },
