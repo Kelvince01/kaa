@@ -39,7 +39,8 @@ export const fileV2Controller = new Elysia().group("files/v2", (app) =>
             relatedEntityId: body.relatedEntityId,
             relatedEntityType: body.relatedEntityType,
             tags: body.tags ? body.tags.split(",") : [],
-            processingOptions: body.addWatermark
+            // biome-ignore lint/complexity/noExtraBooleanCast: ignore
+            processingOptions: Boolean(body.addWatermark)
               ? {
                   operation: ImageOperation.WATERMARK,
                   parameters: {
@@ -125,7 +126,7 @@ export const fileV2Controller = new Elysia().group("files/v2", (app) =>
           tags: t.Optional(t.String()),
 
           // Watermark options
-          addWatermark: t.Optional(t.Boolean()),
+          addWatermark: t.Optional(t.Union([t.String(), t.Boolean()])),
           watermarkType: t.Optional(t.String()), // 'text' or 'image'
           watermarkText: t.Optional(t.String()),
           watermarkPath: t.Optional(t.String()),

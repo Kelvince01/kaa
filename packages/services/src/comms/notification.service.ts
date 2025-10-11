@@ -4,7 +4,11 @@ import {
   Template,
   User,
 } from "@kaa/models";
-import type { INotification, IUser } from "@kaa/models/types";
+import type {
+  INotification,
+  INotificationPreference,
+  IUser,
+} from "@kaa/models/types";
 import { AppError, logger } from "@kaa/utils";
 import type mongoose from "mongoose";
 import type { FilterQuery } from "mongoose";
@@ -269,7 +273,15 @@ export const notificationService = {
  * Get notification preferences with defaults
  */
 async function getNotificationPreferences(userId: string, memberId?: string) {
-  let preferences = await NotificationPreference.findOne({ userId, memberId });
+  const query: FilterQuery<INotificationPreference> = {
+    userId,
+  };
+
+  if (memberId) {
+    query.memberId = memberId;
+  }
+
+  let preferences = await NotificationPreference.findOne(query);
 
   if (!preferences) {
     // Create default preferences

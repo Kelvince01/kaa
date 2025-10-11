@@ -1470,7 +1470,7 @@ export class FilesService {
     }
 
     // 3. Check for obfuscation (high entropy)
-    const entropy = this.calculateEntropy(buffer.slice(0, 1024));
+    const entropy = this.calculateEntropy(buffer.subarray(0, 1024));
     if (entropy > 7.5) {
       warnings.push("High entropy detected - possible encryption/obfuscation");
     }
@@ -1482,9 +1482,11 @@ export class FilesService {
     }
 
     // 5. Check for null bytes in text files (potential binary injection)
-    if (content.includes("\0")) {
-      warnings.push("Null bytes detected in file content");
-    }
+    // if (content.includes("\0")) {
+    //   warnings.push("Null bytes detected in file content");
+    // }
+
+    console.log(warnings);
 
     return await Promise.resolve({ warnings });
   }

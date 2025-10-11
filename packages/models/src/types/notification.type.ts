@@ -62,7 +62,7 @@ export enum NotificationChannel {
  */
 export interface INotification extends BaseDocument {
   userId: mongoose.Types.ObjectId;
-  memberId: mongoose.Types.ObjectId;
+  memberId?: mongoose.Types.ObjectId;
   recipients?: Schema.Types.ObjectId[];
   type: "info" | "success" | "warning" | "error";
   channel: string;

@@ -371,7 +371,6 @@ const ReviewResponseSchema = new Schema<IReviewResponse & Document>(
       type: String,
       required: true,
       ref: "Review",
-      index: true,
     },
     responderId: {
       type: String,
@@ -465,7 +464,6 @@ const ReviewAnalyticsSchema = new Schema<IReviewAnalytics & Document>(
     date: {
       type: Date,
       required: true,
-      index: true,
     },
     type: {
       type: String,

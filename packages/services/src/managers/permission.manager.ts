@@ -5,6 +5,7 @@ import mongoose from "mongoose";
  * Define the actions that can be performed on an entity.
  */
 export type PermittedAction =
+  | "*"
   | "create"
   | "read"
   | "update"

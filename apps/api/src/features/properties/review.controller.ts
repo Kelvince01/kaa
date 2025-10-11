@@ -831,7 +831,7 @@ export const reviewController = new Elysia().group("reviews", (app) =>
 
     // ==================== MODERATION ENDPOINTS (ADMIN/MODERATOR) ====================
 
-    .use(accessPlugin("reviews", "manage"))
+    .use(accessPlugin("reviews", "*")) // manage
 
     /**
      * Get pending reviews for moderation

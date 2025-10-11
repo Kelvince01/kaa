@@ -135,7 +135,7 @@ fileSchema.index({
   tags: "text",
 });
 
-const File = mongoose.model<IFile>("File", fileSchema);
+const File = mongoose.model<IFile>("FileOld", fileSchema);
 
 // File Access Log Model
 const fileAccessLogSchema = new mongoose.Schema(
@@ -362,7 +362,7 @@ fileProcessingJobSchema.pre("save", function () {
 });
 
 export const FileProcessingJob = mongoose.model<IFileProcessingJob & Document>(
-  "FileProcessingJob",
+  "FileProcessingJobOld",
   fileProcessingJobSchema
 );
 

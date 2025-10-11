@@ -219,7 +219,6 @@ const FileSchema = new Schema<IFile & Document>(
     // Lifecycle management
     expiresAt: {
       type: Date,
-      index: true,
     },
     archivedAt: {
       type: Date,
@@ -227,7 +226,6 @@ const FileSchema = new Schema<IFile & Document>(
     },
     deletedAt: {
       type: Date,
-      index: true,
     },
 
     // Audit trail
@@ -469,7 +467,6 @@ const FileProcessingJobSchema = new Schema<IFileProcessingJob & Document>(
     },
     completedAt: {
       type: Date,
-      index: true,
     },
 
     // Processing metadata
@@ -587,7 +584,6 @@ const FileAnalyticsSchema = new Schema<IFileAnalytics & Document>(
     date: {
       type: Date,
       required: true,
-      index: true,
     },
 
     // Upload metrics
