@@ -833,7 +833,7 @@ export const authController = new Elysia()
               path: "/",
             });
             role_token.set({
-              value: userRole?.name || "",
+              value: userRole.roleId?.name || "",
               maxAge: config.jwt.refreshTokenExpiresIn,
               path: "/",
             });
@@ -912,7 +912,7 @@ export const authController = new Elysia()
                 memberId: member
                   ? (member?._id as mongoose.Types.ObjectId)?.toString()
                   : undefined,
-                role: userRole?.name || "",
+                role: userRole.roleId?.name || "",
                 phone: user.contact.phone.formatted,
                 address: user.addresses[0],
                 status: user.status as
@@ -936,7 +936,9 @@ export const authController = new Elysia()
                 cacheHits: {
                   user: !!(await authCacheService.getUser(email)),
                   role: !!(await authCacheService.getRole(
-                    (userRole._id as mongoose.Types.ObjectId)?.toString() || ""
+                    (
+                      userRole.roleId._id as mongoose.Types.ObjectId
+                    )?.toString() || ""
                   )),
                   mfa: !!(await authCacheService.getMFAStatus(
                     (user._id as mongoose.Types.ObjectId).toString()

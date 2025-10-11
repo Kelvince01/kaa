@@ -12,6 +12,7 @@ import {
   SquareTerminal,
   UserIcon,
   Users,
+  Video,
   Wrench,
 } from "lucide-react";
 import type { User } from "@/modules/users/user.type";
@@ -91,6 +92,11 @@ export const dashboardSidebarItems = (user: User) => ({
           },
         ]
       : []),
+    {
+      title: "Video Calls",
+      url: "/dashboard/calls",
+      icon: Video,
+    },
     {
       title: "Messages",
       url: "/messages",

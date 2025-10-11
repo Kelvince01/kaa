@@ -1,3 +1,4 @@
+import { CallType } from "@kaa/models/types";
 import { t } from "elysia";
 
 // Enums
@@ -91,7 +92,7 @@ export const networkQualitySchema = t.Object({
 
 // Request schemas
 export const createCallSchema = t.Object({
-  type: callTypeSchema,
+  type: t.Enum(CallType), // callTypeSchema,
   title: t.String(),
   description: t.Optional(t.String()),
   propertyId: t.Optional(t.String()),
@@ -110,8 +111,12 @@ export const generateTokenSchema = t.Object({
 export const joinCallSchema = t.Object({
   displayName: t.String(),
   avatar: t.Optional(t.String()),
-  audio: t.Optional(t.Boolean()),
-  video: t.Optional(t.Boolean()),
+  mediaStreams: t.Optional(
+    t.Object({
+      audio: t.Optional(t.Boolean()),
+      video: t.Optional(t.Boolean()),
+    })
+  ),
 });
 
 export const createPropertyTourSchema = t.Object({

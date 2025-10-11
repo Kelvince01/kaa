@@ -7,6 +7,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <AuthGuard
       requiredRole={[
+        "admin",
         "property_manager",
         "manager",
         "landlord",

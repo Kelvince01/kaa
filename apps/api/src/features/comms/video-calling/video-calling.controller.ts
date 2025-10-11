@@ -43,17 +43,13 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
           };
         }
 
-        const call = await videoCallingService.createCall(
-          user.id,
-          body.type as any,
-          {
-            ...body,
-            kenyaSpecific: {
-              ...body.kenyaSpecific,
-              orgId,
-            },
-          }
-        );
+        const call = await videoCallingService.createCall(user.id, body.type, {
+          ...body,
+          kenyaSpecific: {
+            ...body.kenyaSpecific,
+            orgId,
+          },
+        });
 
         set.status = 201;
         return {
@@ -148,7 +144,12 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
         const result = await videoCallingService.joinCall(
           params.callId,
           user.id,
-          body
+          {
+            displayName: body.displayName,
+            avatar: body.avatar,
+            audio: body.mediaStreams?.audio,
+            video: body.mediaStreams?.video,
+          }
         );
 
         return {
@@ -365,6 +366,98 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
   )
 
   /**
+   * Get active calls
+   */
+  .get(
+    "/calls/active",
+    async ({ set, user }) => {
+      try {
+        if (!user.id) {
+          set.status = 401;
+          return {
+            success: false,
+            error: "Unauthorized",
+            message: "User ID required",
+          };
+        }
+
+        const calls = await videoCallingService.getActiveCalls();
+
+        return {
+          success: true,
+          data: {
+            calls,
+            total: calls.length,
+            page: 1,
+            limit: calls.length,
+          },
+          message: "Active calls retrieved successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to get active calls:", error);
+        set.status = 500;
+        return {
+          success: false,
+          error: "Internal server error",
+          message: "Failed to retrieve active calls",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["video-calling"],
+        summary: "Get active calls",
+        description: "Get all currently active video calls",
+      },
+    }
+  )
+
+  /**
+   * Get calls for a specific user
+   */
+  .get(
+    "/calls/user/:userId",
+    async ({ params, set, user }) => {
+      try {
+        if (!user.id) {
+          set.status = 401;
+          return {
+            success: false,
+            error: "Unauthorized",
+            message: "User ID required",
+          };
+        }
+
+        const calls = await videoCallingService.getCallsByUser(
+          params.userId,
+          {}
+        );
+
+        return {
+          success: true,
+          data: calls,
+          message: "User calls retrieved successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to get user calls:", error);
+        set.status = 500;
+        return {
+          success: false,
+          error: "Internal server error",
+          message: "Failed to retrieve user calls",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["video-calling"],
+        summary: "Get user calls",
+        description: "Get all calls for a specific user",
+      },
+    }
+  )
+
+  /**
    * Create property tour
    */
   .post(
@@ -469,6 +562,142 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
     },
     {
       params: getCallParamsSchema,
+      body: addTourQuestionSchema,
+      detail: {
+        tags: ["video-calling"],
+        summary: "Add tour question",
+        description: "Add a question during the property tour",
+      },
+    }
+  )
+
+  /**
+   * Get property tour
+   */
+  .get(
+    "/tours/:callId",
+    async ({ params, set, user }) => {
+      try {
+        if (!user.id) {
+          set.status = 401;
+          return {
+            success: false,
+            message: "Unauthorized",
+          };
+        }
+
+        const tour = await videoCallingService.getPropertyTour(params.callId);
+
+        return {
+          success: true,
+          data: tour,
+          message: "Property tour retrieved successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to get property tour:", error);
+        set.status = 500;
+        return {
+          success: false,
+          error: "Internal server error",
+          message: "Failed to retrieve property tour",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["video-calling"],
+        summary: "Get property tour",
+        description: "Get property tour details for a call",
+      },
+    }
+  )
+
+  /**
+   * Create property tour (alternative endpoint)
+   */
+  .post(
+    "/tours",
+    async ({ body, set, user }) => {
+      try {
+        if (!user.id) {
+          set.status = 401;
+          return {
+            success: false,
+            message: "Unauthorized",
+          };
+        }
+
+        // Extract callId from body
+        const { callId, propertyId, tourPlan } = body as any;
+
+        const tour = await videoCallingService.createPropertyTour(
+          callId,
+          user.id,
+          propertyId,
+          tourPlan
+        );
+
+        return {
+          success: true,
+          data: tour,
+          message: "Property tour created successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to create property tour:", error);
+        set.status = 500;
+        return {
+          success: false,
+          error: "Internal server error",
+          message: "Failed to create property tour",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["video-calling"],
+        summary: "Create property tour",
+        description: "Create a new property tour",
+      },
+    }
+  )
+
+  /**
+   * Add tour question (alternative endpoint)
+   */
+  .post(
+    "/tours/:callId/questions",
+    async ({ params, body, set, user }) => {
+      try {
+        if (!user.id) {
+          set.status = 401;
+          return {
+            success: false,
+            message: "Unauthorized",
+          };
+        }
+
+        await videoCallingService.addTourQuestion(
+          params.callId,
+          user.id,
+          body.question,
+          body.category
+        );
+
+        return {
+          success: true,
+          message: "Question added successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to add tour question:", error);
+        set.status = 500;
+        return {
+          success: false,
+          error: "Internal server error",
+          message: "Failed to add question",
+        };
+      }
+    },
+    {
       body: addTourQuestionSchema,
       detail: {
         tags: ["video-calling"],
@@ -622,6 +851,140 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
   )
 
   /**
+   * Get a specific recording
+   */
+  .get(
+    "/recordings/:recordingId",
+    async ({ params, set, user }) => {
+      try {
+        if (!user.id) {
+          set.status = 401;
+          return {
+            success: false,
+            message: "Unauthorized",
+          };
+        }
+
+        const recording = await videoCallingService.getRecording(
+          params.recordingId
+        );
+
+        return {
+          success: true,
+          data: recording,
+          message: "Recording retrieved successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to get recording:", error);
+        set.status = 500;
+        return {
+          success: false,
+          error: "Internal server error",
+          message: "Failed to retrieve recording",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["video-calling"],
+        summary: "Get recording",
+        description: "Get a specific recording by ID",
+      },
+    }
+  )
+
+  /**
+   * Get all recordings for a call
+   */
+  .get(
+    "/calls/:callId/recordings",
+    async ({ params, set, user }) => {
+      try {
+        if (!user.id) {
+          set.status = 401;
+          return {
+            success: false,
+            message: "Unauthorized",
+          };
+        }
+
+        const recordings = await videoCallingService.getCallRecordings(
+          params.callId
+        );
+
+        return {
+          success: true,
+          data: recordings,
+          message: "Call recordings retrieved successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to get call recordings:", error);
+        set.status = 500;
+        return {
+          success: false,
+          error: "Internal server error",
+          message: "Failed to retrieve call recordings",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["video-calling"],
+        summary: "Get call recordings",
+        description: "Get all recordings for a specific call",
+      },
+    }
+  )
+
+  /**
+   * Delete recording (alternative endpoint without callId)
+   */
+  .delete(
+    "/recordings/:recordingId",
+    async ({ params, set, user }) => {
+      try {
+        if (!user.id) {
+          set.status = 401;
+          return {
+            success: false,
+            message: "Unauthorized",
+          };
+        }
+
+        // Find the recording to get the callId
+        const recording = await videoCallingService.getRecording(
+          params.recordingId
+        );
+        await videoCallingService.deleteRecording(
+          recording.callId,
+          params.recordingId,
+          user.id
+        );
+
+        return {
+          success: true,
+          message: "Recording deleted successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to delete recording:", error);
+        set.status = 500;
+        return {
+          success: false,
+          error: "Internal server error",
+          message: "Failed to delete recording",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["video-calling"],
+        summary: "Delete recording",
+        description: "Delete a recording by ID",
+      },
+    }
+  )
+
+  /**
    * Toggle audio
    */
   .post(
@@ -693,6 +1056,44 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
         tags: ["video-calling"],
         summary: "Toggle video",
         description: "Enable or disable video in the call",
+      },
+    }
+  )
+
+  /**
+   * Toggle screen sharing
+   */
+  .post(
+    "/:callId/screen-share",
+    async ({ params, body, set, user }) => {
+      try {
+        if (body.enabled) {
+          await videoCallingService.startScreenShare(params.callId, user.id);
+        } else {
+          await videoCallingService.stopScreenShare(params.callId, user.id);
+        }
+
+        return {
+          success: true,
+          message: `Screen sharing ${body.enabled ? "started" : "stopped"} successfully`,
+        };
+      } catch (error) {
+        logger.error("Failed to toggle screen sharing:", error);
+        set.status = 500;
+        return {
+          success: false,
+          error: "Internal server error",
+          message: "Failed to toggle screen sharing",
+        };
+      }
+    },
+    {
+      params: getCallParamsSchema,
+      body: toggleMediaSchema,
+      detail: {
+        tags: ["video-calling"],
+        summary: "Toggle screen sharing",
+        description: "Enable or disable screen sharing in the call",
       },
     }
   )
@@ -993,6 +1394,54 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
         tags: ["video-calling"],
         summary: "Get recording upload status",
         description: "Get the status of a recording upload",
+      },
+    }
+  )
+
+  /**
+   * Get all recordings for the current user
+   */
+  .get(
+    "/recordings",
+    async ({ set, user, query }) => {
+      try {
+        if (!user.id) {
+          set.status = 401;
+          return {
+            success: false,
+            message: "Unauthorized",
+          };
+        }
+
+        const page = Number(query.page) || 1;
+        const limit = Number(query.limit) || 20;
+
+        const recordings = await videoCallingService.getUserRecordings(
+          user.id,
+          page,
+          limit
+        );
+
+        return {
+          success: true,
+          data: recordings,
+          message: "Recordings retrieved successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to get user recordings:", error);
+        set.status = 500;
+        return {
+          success: false,
+          error: "Internal server error",
+          message: "Failed to retrieve recordings",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["video-calling"],
+        summary: "Get user recordings",
+        description: "Get all recordings for the authenticated user",
       },
     }
   );

@@ -190,7 +190,7 @@ export function AuthGuard({
   }
 
   // User is authenticated but doesn't have required role
-  if (requiredRole && user) {
+  if (!requiredRole && user) {
     const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     const userRole = typeof user.role === "string" ? user.role : user.role._id;
 

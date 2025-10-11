@@ -89,6 +89,7 @@ class VideoCallingWebRTCService {
     const tokenData = await engine.generateWebRTCToken(callId, userId);
 
     return {
+      callId,
       participant,
       roomId: tokenData.roomId,
       iceServers: tokenData.iceServers,
@@ -501,6 +502,144 @@ class VideoCallingWebRTCService {
           ? new Date(recording.chunks.at(-1)?.timestamp || Date.now())
           : undefined,
     };
+  }
+
+  /**
+   * Get all recordings for a user
+   */
+  async getUserRecordings(
+    userId: string,
+    page = 1,
+    limit = 20
+  ): Promise<{
+    recordings: any[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    try {
+      const { CallRecording } = await import("@kaa/models");
+
+      // Find all calls where the user is a participant
+      const userCalls = await VideoCall.find({
+        $or: [{ host: userId }, { "participants.userId": userId }],
+      })
+        .select("_id")
+        .lean();
+
+      const callIds = userCalls.map((call: any) => call._id.toString());
+
+      // Get recordings for these calls
+      const skip = (page - 1) * limit;
+      const recordings = await CallRecording.find({
+        callId: { $in: callIds },
+      })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+
+      const total = await CallRecording.countDocuments({
+        callId: { $in: callIds },
+      });
+
+      return {
+        recordings,
+        total,
+        page,
+        limit,
+      };
+    } catch (error) {
+      console.error("Error getting user recordings:", error);
+      throw new Error("Failed to get user recordings");
+    }
+  }
+
+  /**
+   * Get active calls
+   */
+  async getActiveCalls(): Promise<any[]> {
+    try {
+      const calls = await VideoCall.find({
+        status: "connected",
+      })
+        .sort({ startedAt: -1 })
+        .limit(50)
+        .lean();
+
+      return calls;
+    } catch (error) {
+      console.error("Error getting active calls:", error);
+      throw new Error("Failed to get active calls");
+    }
+  }
+
+  /**
+   * Get a specific recording
+   */
+  async getRecording(recordingId: string): Promise<any> {
+    try {
+      const { CallRecording } = await import("@kaa/models");
+
+      const recording = await CallRecording.findById(recordingId).lean();
+
+      if (!recording) {
+        throw new Error("Recording not found");
+      }
+
+      return recording;
+    } catch (error) {
+      console.error("Error getting recording:", error);
+      throw new Error("Failed to get recording");
+    }
+  }
+
+  /**
+   * Get all recordings for a call
+   */
+  async getCallRecordings(callId: string): Promise<{
+    recordings: any[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    try {
+      const { CallRecording } = await import("@kaa/models");
+
+      const recordings = await CallRecording.find({ callId })
+        .sort({ createdAt: -1 })
+        .lean();
+
+      return {
+        recordings,
+        total: recordings.length,
+        page: 1,
+        limit: recordings.length,
+      };
+    } catch (error) {
+      console.error("Error getting call recordings:", error);
+      throw new Error("Failed to get call recordings");
+    }
+  }
+
+  /**
+   * Get property tour
+   */
+  async getPropertyTour(callId: string): Promise<any> {
+    try {
+      const { PropertyTour } = await import("@kaa/models");
+
+      const tour = await PropertyTour.findOne({ callId }).lean();
+
+      if (!tour) {
+        throw new Error("Property tour not found");
+      }
+
+      return tour;
+    } catch (error) {
+      console.error("Error getting property tour:", error);
+      throw new Error("Failed to get property tour");
+    }
   }
 }
 

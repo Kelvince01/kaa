@@ -128,6 +128,7 @@ export type ICallParticipant = {
 };
 
 export type IVideoCall = {
+  _id?: string;
   id: string;
   type: CallType;
   status: CallStatus;
