@@ -3,6 +3,8 @@
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "target": "esnext",
     "baseUrl": ".",
     "paths": {
       "@kaa/services/*": ["./src/*"]

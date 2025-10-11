@@ -1,6 +1,7 @@
 import "../instrument"; // Must be the first import
 
 import { etag } from "@bogeychan/elysia-etag";
+import { logger } from "@chneau/elysia-logger";
 import cookie from "@elysiajs/cookie";
 import { serverTiming } from "@elysiajs/server-timing";
 import staticPlugin from "@elysiajs/static";
@@ -12,8 +13,11 @@ import prometheusPlugin from "elysia-prometheus";
 import { rateLimit } from "elysia-rate-limit";
 import { elysiaXSS } from "elysia-xss";
 import { Logestic } from "logestic";
+import { WebSocketServer } from "ws";
+
 import { AppRoutes } from "./app.routes";
 import { MongooseSetup } from "./database/mongoose.setup";
+import { videoCallingService } from "./features/comms";
 import { i18nRoutes } from "./features/i18n";
 import { performancePlugin as monitoringPlugin } from "./features/misc/monitoring/monitoring.plugin";
 import { wsRoutes } from "./features/ws";
@@ -44,6 +48,7 @@ const idDev = config.env !== "production";
 const app = new Elysia();
 
 app
+  .use(logger())
   // Add correlation ID middleware (replaces request ID)
   .use(correlationPlugin)
   // Add error handling middleware
@@ -133,6 +138,9 @@ if (!idDev)
 app.use(elysiaXSS({}));
 if (!idDev) app.use(compression());
 if (!idDev) app.use(etag());
+
+const wsServer = new WebSocketServer({ port: 8080 });
+videoCallingService.initialize(wsServer);
 
 export default app;
 export type App = typeof app;

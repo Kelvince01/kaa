@@ -22,7 +22,7 @@ import { rolePlugin } from "~/features/rbac/rbac.plugin";
 
 export const mpesaController = new Elysia({
   detail: {
-    tags: ["payments"],
+    tags: ["mpesa"],
     security: [
       {
         bearerAuth: [],
@@ -214,7 +214,7 @@ export const mpesaController = new Elysia({
             paymentType: t.String(),
           }),
           detail: {
-            tags: ["payments"],
+            tags: ["mpesa"],
             summary: "Initiate M-Pesa payment",
             description: "Initiate M-Pesa payment",
           },
@@ -382,7 +382,7 @@ export const mpesaController = new Elysia({
             }),
           }),
           detail: {
-            tags: ["payments"],
+            tags: ["mpesa"],
             summary: "Process M-Pesa callback data",
             description: "Process M-Pesa callback data",
           },
@@ -414,7 +414,7 @@ export const mpesaController = new Elysia({
             checkoutRequestID: t.String(),
           }),
           detail: {
-            tags: ["payments"],
+            tags: ["mpesa"],
             summary: "Verify M-Pesa payment status",
             description: "Query the status of an M-Pesa payment",
           },
@@ -467,7 +467,7 @@ export const mpesaController = new Elysia({
             commandId: t.Optional(t.String()),
           }),
           detail: {
-            tags: ["payments"],
+            tags: ["mpesa"],
             summary: "Initiate B2C payment",
             description: "Send money from business to customer",
           },
@@ -523,7 +523,7 @@ export const mpesaController = new Elysia({
             commandId: t.Optional(t.String()),
           }),
           detail: {
-            tags: ["payments"],
+            tags: ["mpesa"],
             summary: "Initiate B2B payment",
             description: "Send money from business to business",
           },
@@ -571,7 +571,7 @@ export const mpesaController = new Elysia({
             occassion: t.Optional(t.String()),
           }),
           detail: {
-            tags: ["payments"],
+            tags: ["mpesa"],
             summary: "Reverse M-Pesa transaction",
             description: "Reverse a completed M-Pesa transaction",
           },
@@ -606,7 +606,7 @@ export const mpesaController = new Elysia({
         },
         {
           detail: {
-            tags: ["payments"],
+            tags: ["mpesa"],
             summary: "Check M-Pesa account balance",
             description: "Get the current account balance",
           },
@@ -641,7 +641,7 @@ export const mpesaController = new Elysia({
             conversationId: t.String(),
           }),
           detail: {
-            tags: ["payments"],
+            tags: ["mpesa"],
             summary: "Query transaction status",
             description: "Check the status of a specific transaction",
           },
@@ -676,7 +676,7 @@ export const mpesaController = new Elysia({
         },
         {
           detail: {
-            tags: ["payments"],
+            tags: ["mpesa"],
             summary: "Register validation and confirmation URLs",
             description:
               "Register URLs for C2B validation and confirmation callbacks",

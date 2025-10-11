@@ -2,7 +2,12 @@ import { type Model, model, Schema } from "mongoose";
 import { addressSchema } from "./base.model";
 import {
   CommunicationPreference,
+  CreditRating,
+  EmploymentStatus,
   type ITenant,
+  type ITenantScreening,
+  ScreeningStatus,
+  ScreeningType,
   TenantPriority,
   TenantStatus,
   TenantType,
@@ -503,3 +508,325 @@ tenantSchema.statics.searchTenants = async function (
 
 // Create the model
 export const Tenant: Model<ITenant> = model<ITenant>("Tenant", tenantSchema);
+
+const TenantScreeningSchema = new Schema<ITenantScreening>(
+  {
+    tenant: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    property: {
+      type: Schema.Types.ObjectId,
+      ref: "Property",
+      required: true,
+    },
+    landlord: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    application: {
+      type: Schema.Types.ObjectId,
+      ref: "Application",
+      required: true,
+    },
+
+    // Screening details
+    screeningType: {
+      type: String,
+      enum: Object.values(ScreeningType),
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: Object.values(ScreeningStatus),
+      default: ScreeningStatus.PENDING,
+    },
+    requestedDate: {
+      type: Date,
+      required: true,
+    },
+    completedDate: Date,
+    expiryDate: {
+      type: Date,
+      required: true,
+    },
+
+    // Identity verification
+    identityVerification: {
+      idNumber: { type: String, required: true },
+      idType: {
+        type: String,
+        enum: ["national_id", "passport", "drivers_license"],
+        required: true,
+      },
+      verified: { type: Boolean, default: false },
+      verificationDate: Date,
+      verificationMethod: {
+        type: String,
+        enum: ["manual", "automated", "third_party"],
+        default: "manual",
+      },
+      documents: [
+        {
+          type: String,
+          url: String,
+          verified: { type: Boolean, default: false },
+        },
+      ],
+    },
+
+    // Credit check
+    creditCheck: {
+      creditScore: Number,
+      creditRating: {
+        type: String,
+        enum: Object.values(CreditRating),
+        required: true,
+      },
+      creditReportUrl: String,
+      creditBureau: { type: String, default: "CRB Africa" },
+      checkDate: { type: Date, required: true },
+      outstandingDebts: [
+        {
+          creditor: String,
+          amount: Number,
+          status: {
+            type: String,
+            enum: ["current", "overdue", "defaulted"],
+          },
+          monthsOverdue: Number,
+        },
+      ],
+      creditHistory: {
+        totalAccounts: { type: Number, default: 0 },
+        activeAccounts: { type: Number, default: 0 },
+        closedAccounts: { type: Number, default: 0 },
+        defaultedAccounts: { type: Number, default: 0 },
+        paymentHistory: {
+          type: String,
+          enum: ["excellent", "good", "fair", "poor"],
+          default: "fair",
+        },
+      },
+    },
+
+    // Employment verification
+    employmentVerification: {
+      status: {
+        type: String,
+        enum: Object.values(EmploymentStatus),
+        required: true,
+      },
+      employer: String,
+      jobTitle: String,
+      employmentDuration: Number,
+      monthlyIncome: Number,
+      verified: { type: Boolean, default: false },
+      verificationDate: Date,
+      verificationMethod: {
+        type: String,
+        enum: ["payslip", "employment_letter", "bank_statement", "tax_returns"],
+        default: "payslip",
+      },
+      documents: [
+        {
+          type: String,
+          url: String,
+          verified: { type: Boolean, default: false },
+        },
+      ],
+    },
+
+    // Income verification
+    incomeVerification: {
+      monthlyIncome: { type: Number, required: true },
+      annualIncome: { type: Number, required: true },
+      incomeSource: {
+        type: String,
+        enum: ["salary", "business", "investments", "pension", "other"],
+        required: true,
+      },
+      incomeStability: {
+        type: String,
+        enum: ["stable", "variable", "irregular"],
+        default: "stable",
+      },
+      verified: { type: Boolean, default: false },
+      verificationDate: Date,
+      documents: [
+        {
+          type: String,
+          url: String,
+          verified: { type: Boolean, default: false },
+        },
+      ],
+    },
+
+    // Background check
+    backgroundCheck: {
+      criminalRecord: {
+        checked: { type: Boolean, default: false },
+        hasRecord: { type: Boolean, default: false },
+        details: String,
+        checkDate: Date,
+      },
+      previousAddresses: [
+        {
+          address: String,
+          duration: Number,
+          landlordContact: String,
+          reason_for_leaving: String,
+        },
+      ],
+      references: [
+        {
+          name: String,
+          relationship: {
+            type: String,
+            enum: ["employer", "landlord", "personal", "professional"],
+          },
+          contact: String,
+          verified: { type: Boolean, default: false },
+          feedback: String,
+        },
+      ],
+    },
+
+    // Financial assessment
+    financialAssessment: {
+      debtToIncomeRatio: { type: Number, required: true },
+      rentToIncomeRatio: { type: Number, required: true },
+      bankBalance: Number,
+      savingsAmount: Number,
+      financialStability: {
+        type: String,
+        enum: ["excellent", "good", "fair", "poor"],
+        required: true,
+      },
+      affordabilityScore: {
+        type: Number,
+        min: 0,
+        max: 100,
+        required: true,
+      },
+    },
+
+    // Risk assessment
+    riskAssessment: {
+      overallRiskScore: {
+        type: Number,
+        min: 0,
+        max: 100,
+        required: true,
+      },
+      riskLevel: {
+        type: String,
+        enum: ["low", "medium", "high", "very_high"],
+        required: true,
+      },
+      riskFactors: [String],
+      mitigatingFactors: [String],
+      recommendation: {
+        type: String,
+        enum: ["approve", "approve_with_conditions", "reject"],
+        required: true,
+      },
+      conditions: [String],
+    },
+
+    // AI insights
+    aiInsights: {
+      paymentProbability: {
+        type: Number,
+        min: 0,
+        max: 100,
+        required: true,
+      },
+      tenancySuccessScore: {
+        type: Number,
+        min: 0,
+        max: 100,
+        required: true,
+      },
+      redFlags: [String],
+      positiveIndicators: [String],
+      similarTenantPerformance: {
+        averagePaymentDelay: { type: Number, default: 0 },
+        completionRate: { type: Number, default: 85 },
+      },
+    },
+
+    // External service data
+    externalServices: [
+      {
+        service: String,
+        serviceType: {
+          type: String,
+          enum: ["credit_bureau", "background_check", "identity_verification"],
+        },
+        requestId: String,
+        response: Schema.Types.Mixed,
+        cost: Number,
+        requestDate: Date,
+        responseDate: Date,
+        status: {
+          type: String,
+          enum: ["pending", "completed", "failed"],
+          default: "pending",
+        },
+      },
+    ],
+
+    // Screening results
+    results: {
+      passed: { type: Boolean, required: true },
+      score: {
+        type: Number,
+        min: 0,
+        max: 100,
+        required: true,
+      },
+      grade: {
+        type: String,
+        enum: ["A", "B", "C", "D", "F"],
+        required: true,
+      },
+      summary: { type: String, required: true },
+      recommendations: [String],
+      conditions: [String],
+    },
+
+    // Metadata
+    requestedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    reviewedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    notes: String,
+    metadata: {
+      type: Map,
+      of: Schema.Types.Mixed,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Indexes
+TenantScreeningSchema.index({ tenant: 1, status: 1 });
+TenantScreeningSchema.index({ landlord: 1, status: 1 });
+TenantScreeningSchema.index({ property: 1, status: 1 });
+TenantScreeningSchema.index({ application: 1 });
+TenantScreeningSchema.index({ status: 1, requestedDate: -1 });
+
+export const TenantScreening = model<ITenantScreening>(
+  "TenantScreening",
+  TenantScreeningSchema
+);

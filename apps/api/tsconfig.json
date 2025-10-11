@@ -22,13 +22,6 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
   },
-  "include": [
-    "src/**/*",
-    "instrument.ts",
-    "scripts/**/*",
-    "../../packages/services/src/comms/email.service.ts",
-    "../../packages/services/src/comms/whatsapp-templates.ts",
-    "../../packages/services/src/comms/notification.utils.ts"
-  ],
+  "include": ["src/**/*", "instrument.ts", "scripts/**/*"],
   "exclude": ["node_modules", "dist", "build", "**/*.test.ts", "**/*.spec.ts"]
 }

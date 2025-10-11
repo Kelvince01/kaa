@@ -506,5 +506,3 @@ export type IContractTemplate = {
   createdAt: Date;
   updatedAt: Date;
 };
-
-export default IContract;

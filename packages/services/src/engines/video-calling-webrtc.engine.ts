@@ -7,7 +7,6 @@ import {
   ConnectionState,
   type ICallAnalytics,
   type ICallParticipant,
-  // type IPropertyTour,
   type NetworkQualityReport,
   RecordingStatus,
   type SignalingMessage,
@@ -21,28 +20,27 @@ import { redisClient } from "@kaa/utils";
 import type { RedisClientType } from "redis";
 import { v4 as uuidv4 } from "uuid";
 import type { WebSocket, WebSocketServer } from "ws";
-import { AgoraMediaEngine } from "./agora-media.engine";
-import { AgoraTokenService } from "./agora-token.service";
+import {
+  type RecordingSession,
+  WebRTCMediaServerEngine,
+  type WebRTCRecordingEngine,
+} from "./webrtc";
 
-export type AgoraCredentials = {
-  appId: string;
-  appCertificate: string;
-};
-
-// Main Video Calling Engine Class
-export class VideoCallingEngine extends EventEmitter {
+/**
+ * Video Calling Engine with Native WebRTC
+ * Complete replacement for Agora using our own WebRTC implementation
+ */
+export class VideoCallingWebRTCEngine extends EventEmitter {
   private readonly redis: RedisClientType;
   private readonly wsServer: WebSocketServer;
   private readonly webrtcConfig: WebRTCConfig;
   private readonly config: VideoConfig;
-  private readonly agoraMedia: AgoraMediaEngine;
-  private readonly agoraToken: AgoraTokenService;
+  private readonly webrtcServer: WebRTCMediaServerEngine;
 
   constructor(
     wsServer: WebSocketServer,
     webrtcConfig: WebRTCConfig,
-    config: VideoConfig,
-    agoraCredentials: AgoraCredentials
+    config: VideoConfig
   ) {
     super();
     this.redis = redisClient;
@@ -50,21 +48,238 @@ export class VideoCallingEngine extends EventEmitter {
     this.webrtcConfig = webrtcConfig;
     this.config = config;
 
-    // Initialize Agora services
-    this.agoraMedia = new AgoraMediaEngine({
-      appId: agoraCredentials.appId,
-      appCertificate: agoraCredentials.appCertificate,
-      enableCloudRecording: true,
+    // Initialize WebRTC Media Server
+    this.webrtcServer = new WebRTCMediaServerEngine({
+      iceServers: webrtcConfig.iceServers,
+      maxParticipantsPerRoom: 50,
+      recordingEnabled: true,
+      qualityMonitoringInterval: 5000,
+      bandwidthLimits: {
+        audio: webrtcConfig.encodingOptions.audio.bitrate,
+        video: webrtcConfig.encodingOptions.video.bitrate.max,
+      },
     });
 
-    this.agoraToken = new AgoraTokenService(
-      agoraCredentials.appId,
-      agoraCredentials.appCertificate
-    );
-
-    this.setupAgoraEventHandlers();
+    this.setupWebRTCEventHandlers();
     this.setupWebSocketHandlers();
     this.startPeriodicTasks();
+  }
+
+  /**
+   * Get recording engine for direct access
+   * @returns Recording engine instance or null
+   */
+  getRecordingEngine(): WebRTCRecordingEngine | null {
+    return this.webrtcServer.getRecordingEngine() || null;
+  }
+
+  /**
+   * Get media server for advanced operations
+   * @returns Media server instance
+   */
+  getMediaServer(): WebRTCMediaServerEngine {
+    return this.webrtcServer;
+  }
+
+  /**
+   * Setup WebRTC event handlers
+   */
+  private setupWebRTCEventHandlers(): void {
+    // User joined room
+    this.webrtcServer.on("userjoined", async ({ roomId, userId }) => {
+      const call = await VideoCall.findById(roomId);
+      if (!call) return;
+
+      const participant = call.participants.find((p) => p.userId === userId);
+      if (participant) {
+        participant.connectionState = ConnectionState.CONNECTED;
+        await call.save();
+      }
+
+      this.emit("webrtcUserJoined", { callId: roomId, userId });
+    });
+
+    // User left room
+    this.webrtcServer.on("userleft", async ({ roomId, userId }) => {
+      const call = await VideoCall.findById(roomId);
+      if (!call) return;
+
+      const participant = call.participants.find((p) => p.userId === userId);
+      if (participant) {
+        participant.connectionState = ConnectionState.DISCONNECTED;
+        await call.save();
+      }
+
+      this.emit("webrtcUserLeft", { callId: roomId, userId });
+    });
+
+    // Peer connected
+    this.webrtcServer.on("peerconnected", ({ roomId, userId, peerId }) => {
+      this.emit("peerConnected", { callId: roomId, userId, peerId });
+    });
+
+    // Quality warning
+    this.webrtcServer.on(
+      "qualitywarning",
+      async ({ roomId, userId, type, value, severity }) => {
+        const call = await VideoCall.findById(roomId);
+        if (!call) return;
+
+        // Update call quality based on warnings
+        if (type === "packet_loss" && value > 0.05) {
+          call.quality.overall = CallQuality.FAIR;
+        } else if (type === "high_latency" && value > 0.3) {
+          call.quality.networkStability = Math.max(
+            0,
+            call.quality.networkStability - 20
+          );
+        }
+
+        await call.save();
+
+        this.emit("qualityWarning", {
+          callId: roomId,
+          userId,
+          type,
+          value,
+          severity,
+        });
+      }
+    );
+
+    // Recording started
+    this.webrtcServer.on("recordingstarted", ({ roomId, recordingId }) => {
+      this.emit("webrtcRecordingStarted", { callId: roomId, recordingId });
+    });
+
+    // Recording stopped
+    this.webrtcServer.on(
+      "recordingstopped",
+      ({ roomId, recordingId, duration }) => {
+        this.emit("webrtcRecordingStopped", {
+          callId: roomId,
+          recordingId,
+          duration,
+        });
+      }
+    );
+
+    // Recording completed
+    this.webrtcServer.on("recordingcompleted", ({ roomId, recordingId }) => {
+      this.emit("webrtcRecordingCompleted", { callId: roomId, recordingId });
+    });
+
+    // Room created
+    this.webrtcServer.on("roomcreated", ({ roomId }) => {
+      this.emit("roomCreated", { roomId });
+    });
+
+    // Room deleted
+    this.webrtcServer.on("roomdeleted", ({ roomId }) => {
+      this.emit("roomDeleted", { roomId });
+    });
+  }
+
+  /**
+   * Setup WebSocket handlers
+   */
+  private setupWebSocketHandlers(): void {
+    this.wsServer.on("connection", (ws: WebSocket) => {
+      ws.on("message", async (data: Buffer) => {
+        try {
+          const message: SignalingMessage = JSON.parse(data.toString());
+          await this.handleSignalingMessage(ws, message);
+        } catch (error) {
+          console.error("Error handling WebSocket message:", error);
+        }
+      });
+
+      ws.on("close", () => {
+        this.handleWebSocketDisconnect(ws);
+      });
+    });
+  }
+
+  private async handleSignalingMessage(
+    ws: WebSocket,
+    message: SignalingMessage
+  ): Promise<void> {
+    const { type, callId, fromParticipant, data } = message;
+
+    switch (type) {
+      case "join":
+        await this.handleJoinMessage(ws, message);
+        break;
+      case "leave":
+        await this.leaveCall(callId, fromParticipant);
+        break;
+      case "mute":
+      case "unmute":
+        await this.handleMuteToggle(callId, fromParticipant, type === "mute");
+        break;
+      default:
+        break;
+    }
+  }
+
+  private async handleJoinMessage(
+    ws: WebSocket,
+    message: SignalingMessage
+  ): Promise<void> {
+    try {
+      const participant = await this.joinCall(
+        message.callId,
+        message.fromParticipant,
+        message.data
+      );
+
+      // Associate WebSocket with participant
+      (ws as any).participantId = participant.id;
+      (ws as any).callId = message.callId;
+
+      // Send join confirmation
+      const call = await VideoCall.findById(message.callId);
+      ws.send(
+        JSON.stringify({
+          type: "joined",
+          participantId: participant.id,
+          callId: message.callId,
+          participants: call?.participants || [],
+        })
+      );
+    } catch (error) {
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          message: (error as Error).message,
+        })
+      );
+    }
+  }
+
+  private async handleMuteToggle(
+    callId: string,
+    participantId: string,
+    muted: boolean
+  ): Promise<void> {
+    const call = await VideoCall.findById(callId);
+    if (!call) return;
+
+    const participant = call.participants.find((p) => p.id === participantId);
+    if (!participant) return;
+
+    participant.mediaStreams.audio = !muted;
+    await call.save();
+    this.emit("participantMuteToggled", { callId, participantId, muted });
+  }
+
+  private handleWebSocketDisconnect(ws: WebSocket): void {
+    const participantId = (ws as any).participantId;
+    const callId = (ws as any).callId;
+
+    if (participantId && callId) {
+      this.leaveCall(callId, participantId);
+    }
   }
 
   // Call Management
@@ -239,6 +454,9 @@ export class VideoCallingEngine extends EventEmitter {
     await call.save();
     await this.saveCallToRedis(call);
 
+    // Close WebRTC room
+    this.webrtcServer.closeRoom(callId, "Call ended");
+
     this.emit("callEnded", call);
   }
 
@@ -328,7 +546,9 @@ export class VideoCallingEngine extends EventEmitter {
       throw new Error("Recording not allowed for this call");
     }
 
-    const recordingId = uuidv4();
+    // Start WebRTC recording
+    const recordingId = await this.webrtcServer.startRecording(callId);
+
     const recording = new CallRecording({
       callId,
       filename: `call_${callId}_${Date.now()}`,
@@ -360,13 +580,9 @@ export class VideoCallingEngine extends EventEmitter {
     call.recordingStatus = RecordingStatus.RECORDING;
     call.recordingUrl = recording.downloadUrl;
 
-    recording.storageInfo.path = `recordings/${callId}/${recording._id.toString()}`;
-    recording.save();
-
     await call.save();
     await this.saveCallToRedis(call);
 
-    // TODO: Start actual recording process
     this.emit("recordingStarted", { call, recording });
     return recording;
   }
@@ -375,12 +591,32 @@ export class VideoCallingEngine extends EventEmitter {
     const call = await VideoCall.findById(callId);
     if (!call) return;
 
+    // Stop WebRTC recording
+    await this.webrtcServer.stopRecording(callId);
+
     call.recordingStatus = RecordingStatus.PROCESSING;
     await call.save();
     await this.saveCallToRedis(call);
 
-    // TODO: Stop actual recording process and process file
     this.emit("recordingStopped", { callId });
+  }
+
+  async getRecordingStatus(recordingId: string): Promise<
+    RecordingSession & {
+      status:
+        | "recording"
+        | "stopping"
+        | "stopped"
+        | "processing"
+        | "completed"
+        | "failed";
+    }
+  > {
+    return (await this.webrtcServer.getRecordingStatus(recordingId)) as any;
+  }
+
+  async deleteRecording(recordingId: string): Promise<void> {
+    await this.webrtcServer.deleteRecording(recordingId);
   }
 
   // Media and Screen Sharing
@@ -496,145 +732,67 @@ export class VideoCallingEngine extends EventEmitter {
   }
 
   private async reduceBitrate(participantId: string): Promise<void> {
-    // TODO: Implement bitrate reduction logic
-    this.emit("qualityAdapted", {
+    // WebRTC handles bitrate adaptation automatically
+    await this.emit("qualityAdapted", {
       participantId,
       adaptation: "bitrate_reduced",
     });
-    await Promise.resolve();
   }
 
-  // WebSocket Signaling
-  private setupWebSocketHandlers(): void {
-    this.wsServer.on("connection", (ws: WebSocket) => {
-      ws.on("message", async (data: Buffer) => {
-        try {
-          const message: SignalingMessage = JSON.parse(data.toString());
-          await this.handleSignalingMessage(ws, message);
-        } catch (error) {
-          console.error("Error handling WebSocket message:", error);
-        }
-      });
+  // WebRTC Integration Methods
 
-      ws.on("close", () => {
-        // Handle WebSocket disconnection
-        this.handleWebSocketDisconnect(ws);
-      });
+  /**
+   * Generate WebRTC connection info for a participant
+   */
+  async generateWebRTCToken(callId: string, userId: string) {
+    return await Promise.resolve({
+      roomId: callId,
+      userId,
+      iceServers: this.webrtcConfig.iceServers,
+      expiresAt: new Date(Date.now() + 3_600_000), // 1 hour
     });
   }
 
-  private async handleSignalingMessage(
-    ws: WebSocket,
-    message: SignalingMessage
-  ): Promise<void> {
-    const { type, callId, fromParticipant, toParticipant, data } = message;
-
-    switch (type) {
-      case "join":
-        await this.handleJoinMessage(ws, message);
-        break;
-      case "leave":
-        await this.leaveCall(callId, fromParticipant);
-        break;
-      case "offer":
-      case "answer":
-      case "ice-candidate":
-        await this.relaySignalingMessage(message);
-        break;
-      case "mute":
-      case "unmute":
-        await this.handleMuteToggle(callId, fromParticipant, type === "mute");
-        break;
-      case "screen-share":
-        if (data.enabled) {
-          await this.enableScreenShare(callId, fromParticipant);
-        } else {
-          await this.disableScreenShare(callId, fromParticipant);
-        }
-        break;
-      default:
-        break;
-    }
+  /**
+   * Handle WebSocket connection for WebRTC signaling
+   */
+  handleWebSocketConnection(ws: WebSocket, userId: string) {
+    this.webrtcServer.handleConnection(ws, userId);
   }
 
-  private async handleJoinMessage(
-    ws: WebSocket,
-    message: SignalingMessage
-  ): Promise<void> {
-    try {
-      const participant = await this.joinCall(
-        message.callId,
-        message.fromParticipant,
-        message.data
-      );
-
-      // Associate WebSocket with participant
-      (ws as any).participantId = participant.id;
-      (ws as any).callId = message.callId;
-
-      // Send join confirmation
-      const call = await VideoCall.findById(message.callId);
-      ws.send(
-        JSON.stringify({
-          type: "joined",
-          participantId: participant.id,
-          callId: message.callId,
-          participants: call?.participants || [],
-        })
-      );
-    } catch (error) {
-      ws.send(
-        JSON.stringify({
-          type: "error",
-          message: (error as Error).message,
-        })
-      );
-    }
+  /**
+   * Get WebRTC signaling server
+   */
+  getSignalingServer() {
+    return this.webrtcServer.getSignaling();
   }
 
-  private async relaySignalingMessage(
-    message: SignalingMessage
-  ): Promise<void> {
-    const call = await VideoCall.findById(message.callId);
-    if (!call) return;
-
-    // Relay message to target participant or broadcast to all
-    for (const participant of call.participants) {
-      if (
-        participant.id !== message.fromParticipant &&
-        (!message.toParticipant || participant.id === message.toParticipant)
-      ) {
-        // TODO: Send message to participant's WebSocket connection
-        this.emit("signalingMessage", { participant, message });
-      }
-    }
-
-    await Promise.resolve();
+  /**
+   * Get WebRTC room statistics
+   */
+  async getWebRTCStats(callId: string) {
+    return await this.webrtcServer.getRoomStats(callId);
   }
 
-  private async handleMuteToggle(
-    callId: string,
-    participantId: string,
-    muted: boolean
-  ): Promise<void> {
-    const call = await VideoCall.findById(callId);
-    if (!call) return;
-
-    const participant = call.participants.find((p) => p.id === participantId);
-    if (!participant) return;
-
-    participant.mediaStreams.audio = !muted;
-    await call.save();
-    this.emit("participantMuteToggled", { callId, participantId, muted });
+  /**
+   * Get server statistics
+   */
+  getServerStats() {
+    return this.webrtcServer.getServerStats();
   }
 
-  private handleWebSocketDisconnect(ws: WebSocket): void {
-    const participantId = (ws as any).participantId;
-    const callId = (ws as any).callId;
+  /**
+   * Kick user from call
+   */
+  kickUser(callId: string, userId: string, reason?: string) {
+    this.webrtcServer.kickUser(callId, userId, reason);
+  }
 
-    if (participantId && callId) {
-      this.leaveCall(callId, participantId);
-    }
+  /**
+   * Close call room
+   */
+  closeCallRoom(callId: string, reason?: string) {
+    this.webrtcServer.closeRoom(callId, reason);
   }
 
   // Utility Methods
@@ -696,8 +854,14 @@ export class VideoCallingEngine extends EventEmitter {
       call.analytics.totalDuration = Date.now() - call.startedAt.getTime();
     }
 
-    // Calculate average quality and other metrics
-    // TODO: Implement detailed analytics calculations
+    // Get WebRTC stats
+    const webrtcStats = await this.webrtcServer.getRoomStats(
+      call._id.toString()
+    );
+    if (webrtcStats) {
+      // Update analytics from WebRTC stats
+      call.analytics.participantCount = webrtcStats.participantCount;
+    }
 
     await call.save();
     await this.saveCallToRedis(call);
@@ -772,9 +936,8 @@ export class VideoCallingEngine extends EventEmitter {
 
   async sendDataWarning(participantId: string, usage: number): Promise<void> {
     if (usage > this.config.dataWarningThreshold) {
-      this.emit("dataWarning", { participantId, usage });
+      await this.emit("dataWarning", { participantId, usage });
     }
-    await Promise.resolve();
   }
 
   async optimizeForNetwork(networkType: "wifi" | "cellular"): Promise<void> {
@@ -786,177 +949,15 @@ export class VideoCallingEngine extends EventEmitter {
         height: 480,
       };
     }
+
     await Promise.resolve();
-  }
-
-  // Agora Integration Methods
-
-  /**
-   * Generate Agora token for a participant to join a call
-   */
-  async generateAgoraToken(
-    callId: string,
-    userId: string,
-    role: "publisher" | "subscriber" = "publisher"
-  ) {
-    const tokenData = this.agoraToken.generateRtcTokenWithAccount({
-      channelName: callId,
-      uid: userId,
-      role,
-      expirationTimeInSeconds: 3600, // 1 hour
-    });
-
-    return await Promise.resolve({
-      token: tokenData.token,
-      channelName: callId,
-      uid: userId,
-      expiresAt: tokenData.expiresAt,
-    });
-  }
-
-  /**
-   * Join Agora channel with media
-   */
-  async joinAgoraChannel(
-    callId: string,
-    userId: string,
-    options: {
-      audio?: boolean;
-      video?: boolean;
-    } = {}
-  ) {
-    const tokenData = await this.generateAgoraToken(callId, userId);
-
-    await this.agoraMedia.joinChannel(callId, userId, tokenData.token, {
-      audio: options.audio !== false,
-      video: options.video !== false,
-    });
-
-    return tokenData;
-  }
-
-  /**
-   * Leave Agora channel
-   */
-  async leaveAgoraChannel(callId: string) {
-    await this.agoraMedia.leaveChannel(callId);
-  }
-
-  /**
-   * Toggle audio in Agora
-   */
-  async toggleAudio(callId: string, enabled: boolean) {
-    await this.agoraMedia.setAudioEnabled(callId, enabled);
-  }
-
-  /**
-   * Toggle video in Agora
-   */
-  async toggleVideo(callId: string, enabled: boolean) {
-    await this.agoraMedia.setVideoEnabled(callId, enabled);
-  }
-
-  /**
-   * Start screen sharing in Agora
-   */
-  async startAgoraScreenShare(callId: string) {
-    await this.agoraMedia.startScreenShare(callId);
-  }
-
-  /**
-   * Stop screen sharing in Agora
-   */
-  async stopAgoraScreenShare(callId: string) {
-    await this.agoraMedia.stopScreenShare(callId);
-  }
-
-  /**
-   * Get Agora call statistics
-   */
-  async getAgoraStats(callId: string) {
-    return await this.agoraMedia.getCallStats(callId);
-  }
-
-  /**
-   * Setup Agora event handlers
-   */
-  private setupAgoraEventHandlers(): void {
-    // User joined Agora channel
-    this.agoraMedia.on("userJoined", async ({ callId, userId }) => {
-      const call = await VideoCall.findById(callId);
-      if (!call) return;
-
-      const participant = call.participants.find((p) => p.userId === userId);
-      if (participant) {
-        participant.connectionState = ConnectionState.CONNECTED;
-        await call.save();
-      }
-
-      this.emit("agoraUserJoined", { callId, userId });
-    });
-
-    // User left Agora channel
-    this.agoraMedia.on("userLeft", async ({ callId, userId }) => {
-      const call = await VideoCall.findById(callId);
-      if (!call) return;
-
-      const participant = call.participants.find((p) => p.userId === userId);
-      if (participant) {
-        participant.connectionState = ConnectionState.DISCONNECTED;
-        await call.save();
-      }
-
-      this.emit("agoraUserLeft", { callId, userId });
-    });
-
-    // Network quality updates
-    this.agoraMedia.on(
-      "networkQuality",
-      async ({ callId, uplinkQuality, downlinkQuality }) => {
-        const call = await VideoCall.findById(callId);
-        if (!call) return;
-
-        // Update call quality metrics
-        const avgQuality = (uplinkQuality + downlinkQuality) / 2;
-        call.quality.networkStability = Math.round(avgQuality);
-
-        await call.save();
-      }
-    );
-
-    // Connection state changes
-    this.agoraMedia.on(
-      "connectionStateChange",
-      ({ callId, currentState, reason }) => {
-        this.emit("agoraConnectionStateChange", {
-          callId,
-          currentState,
-          reason,
-        });
-      }
-    );
-
-    // Errors
-    this.agoraMedia.on("error", ({ callId, error }) => {
-      console.error(`Agora error in call ${callId}:`, error);
-      this.emit("agoraError", { callId, error });
-    });
-
-    // Recording events
-    this.agoraMedia.on("recordingStarted", ({ callId, resourceId }) => {
-      this.emit("agoraRecordingStarted", { callId, resourceId });
-    });
-
-    this.agoraMedia.on("recordingStopped", ({ callId, resourceId }) => {
-      this.emit("agoraRecordingStopped", { callId, resourceId });
-    });
   }
 
   /**
    * Clean up and destroy engine
    */
   async destroy() {
-    await this.agoraMedia.destroy();
+    await this.webrtcServer.destroy();
     this.removeAllListeners();
   }
 }

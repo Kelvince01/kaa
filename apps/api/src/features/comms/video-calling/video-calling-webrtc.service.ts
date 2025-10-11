@@ -1,8 +1,4 @@
-import {
-  // CallRecording,
-  // PropertyTour,
-  VideoCall,
-} from "@kaa/models";
+import { VideoCall } from "@kaa/models";
 import type {
   CallStatus,
   CallType,
@@ -12,47 +8,36 @@ import type {
 import {
   createDefaultWebRTCConfig,
   createVideoConfig,
-  VideoCallingEngine,
+  VideoCallingWebRTCEngine,
 } from "@kaa/services/engines";
 import type { WebSocketServer } from "ws";
 
 /**
- * Video Calling Service
+ * Video Calling Service with Native WebRTC
  * Business logic layer for video calling operations
  */
-class VideoCallingService {
-  private engine: VideoCallingEngine | null = null;
+class VideoCallingWebRTCService {
+  private engine: VideoCallingWebRTCEngine | null = null;
 
   /**
-   * Initialize the video calling engine
+   * Initialize the video calling engine with WebRTC
    */
   initialize(wsServer: WebSocketServer) {
     if (this.engine) {
       return; // Already initialized
     }
 
-    const agoraAppId = process.env.AGORA_APP_ID;
-    const agoraAppCertificate = process.env.AGORA_APP_CERTIFICATE;
-
-    if (!(agoraAppId && agoraAppCertificate)) {
-      throw new Error("Agora credentials not configured");
-    }
-
-    this.engine = new VideoCallingEngine(
+    this.engine = new VideoCallingWebRTCEngine(
       wsServer,
       createDefaultWebRTCConfig(),
-      createVideoConfig(),
-      {
-        appId: agoraAppId,
-        appCertificate: agoraAppCertificate,
-      }
+      createVideoConfig()
     );
   }
 
   /**
    * Get the engine instance
    */
-  private getEngine(): VideoCallingEngine {
+  private getEngine(): VideoCallingWebRTCEngine {
     if (!this.engine) {
       throw new Error("Video calling engine not initialized");
     }
@@ -68,15 +53,15 @@ class VideoCallingService {
   }
 
   /**
-   * Generate Agora token for a user
+   * Generate WebRTC connection info for a user
    */
   async generateToken(
     callId: string,
     userId: string,
-    role: "publisher" | "subscriber" = "publisher"
+    _role: "publisher" | "subscriber" = "publisher"
   ) {
     const engine = this.getEngine();
-    return await engine.generateAgoraToken(callId, userId, role);
+    return await engine.generateWebRTCToken(callId, userId);
   }
 
   /**
@@ -100,19 +85,13 @@ class VideoCallingService {
       avatar: options.avatar,
     });
 
-    // Generate Agora token
-    const tokenData = await engine.generateAgoraToken(callId, userId);
-
-    // Join Agora channel
-    await engine.joinAgoraChannel(callId, userId, {
-      audio: options.audio !== false,
-      video: options.video !== false,
-    });
+    // Generate WebRTC connection info
+    const tokenData = await engine.generateWebRTCToken(callId, userId);
 
     return {
       participant,
-      token: tokenData.token,
-      channelName: tokenData.channelName,
+      roomId: tokenData.roomId,
+      iceServers: tokenData.iceServers,
       expiresAt: tokenData.expiresAt,
     };
   }
@@ -134,10 +113,7 @@ class VideoCallingService {
       throw new Error("Participant not found");
     }
 
-    // Leave Agora channel
-    await engine.leaveAgoraChannel(callId);
-
-    // Leave call in database
+    // Leave call in database (WebRTC signaling handles the rest)
     await engine.leaveCall(callId, participant.id);
   }
 
@@ -157,10 +133,7 @@ class VideoCallingService {
       throw new Error("Only the host can end the call");
     }
 
-    // Leave Agora channel
-    await engine.leaveAgoraChannel(callId);
-
-    // End call
+    // End call (WebRTC room will be closed automatically)
     await engine.endCall(callId);
   }
 
@@ -305,13 +278,57 @@ class VideoCallingService {
   }
 
   /**
+   * Get recording status
+   */
+  async getRecordingStatus(
+    callId: string,
+    recordingId: string,
+    userId: string
+  ): Promise<any> {
+    const engine = this.getEngine();
+
+    // Verify user has access to the call
+    const call = await VideoCall.findById(callId);
+    if (!call) {
+      throw new Error("Call not found");
+    }
+
+    const hasAccess =
+      call.host === userId ||
+      call.participants.some((p) => p.userId === userId);
+
+    if (!hasAccess) {
+      throw new Error("Access denied");
+    }
+
+    return await engine.getRecordingStatus(recordingId);
+  }
+
+  /**
+   * Delete recording
+   */
+  async deleteRecording(callId: string, recordingId: string, userId: string) {
+    const engine = this.getEngine();
+
+    // Verify user is host
+    const call = await VideoCall.findById(callId);
+    if (!call) {
+      throw new Error("Call not found");
+    }
+
+    if (call.host !== userId) {
+      throw new Error("Only the host can delete recordings");
+    }
+
+    await engine.deleteRecording(recordingId);
+  }
+
+  /**
    * Toggle audio
    */
   async toggleAudio(callId: string, userId: string, enabled: boolean) {
-    const engine = this.getEngine();
-    await engine.toggleAudio(callId, enabled);
-
     // Update participant state in database
+    // WebRTC client handles actual media toggle
     const call = await VideoCall.findById(callId);
     if (call) {
       const participant = call.participants.find((p) => p.userId === userId);
@@ -326,10 +343,8 @@ class VideoCallingService {
    * Toggle video
    */
   async toggleVideo(callId: string, userId: string, enabled: boolean) {
-    const engine = this.getEngine();
-    await engine.toggleVideo(callId, enabled);
-
     // Update participant state in database
+    // WebRTC client handles actual media toggle
     const call = await VideoCall.findById(callId);
     if (call) {
       const participant = call.participants.find((p) => p.userId === userId);
@@ -345,17 +360,7 @@ class VideoCallingService {
    */
   async startScreenShare(callId: string, userId: string) {
     const engine = this.getEngine();
-    await engine.startAgoraScreenShare(callId);
-
-    // Update participant state in database
-    const call = await VideoCall.findById(callId);
-    if (call) {
-      const participant = call.participants.find((p) => p.userId === userId);
-      if (participant) {
-        participant.mediaStreams.screen = true;
-        await call.save();
-      }
-    }
+    await engine.enableScreenShare(callId, userId);
   }
 
   /**
@@ -363,17 +368,7 @@ class VideoCallingService {
    */
   async stopScreenShare(callId: string, userId: string) {
     const engine = this.getEngine();
-    await engine.stopAgoraScreenShare(callId);
-
-    // Update participant state in database
-    const call = await VideoCall.findById(callId);
-    if (call) {
-      const participant = call.participants.find((p) => p.userId === userId);
-      if (participant) {
-        participant.mediaStreams.screen = false;
-        await call.save();
-      }
-    }
+    await engine.disableScreenShare(callId, userId);
   }
 
   /**
@@ -443,7 +438,7 @@ class VideoCallingService {
       throw new Error("Access denied");
     }
 
-    return await engine.getAgoraStats(callId);
+    return await engine.getWebRTCStats(callId);
   }
 
   /**
@@ -455,7 +450,59 @@ class VideoCallingService {
       this.engine = null;
     }
   }
+
+  /**
+   * Add recording chunk (for client-side recording)
+   */
+  async addRecordingChunk(
+    recordingId: string,
+    participantId: string,
+    chunkData: Buffer,
+    type: "audio" | "video",
+    timestamp: number,
+    sequence: number
+  ): Promise<string> {
+    const engine = this.getEngine();
+    const recordingEngine = engine.getRecordingEngine();
+
+    if (!recordingEngine) {
+      throw new Error("Recording engine not available");
+    }
+
+    await recordingEngine.addChunk(recordingId, participantId, chunkData, type);
+    return `chunk_${recordingId}_${participantId}_${sequence}_${timestamp}`;
+  }
+
+  /**
+   * Get recording upload status
+   */
+  async getRecordingUploadStatus(recordingId: string): Promise<{
+    recordingId: string;
+    chunksReceived: number;
+    participants: string[];
+    status: string;
+    lastChunkAt?: Date;
+  } | null> {
+    const engine = this.getEngine();
+
+    // const recording = await engine.getRecordingEngine()?.getRecording(recordingId);
+    const recording = await engine.getRecordingStatus(recordingId);
+    if (!recording) {
+      return null;
+    }
+
+    return {
+      recordingId: recording.id,
+      chunksReceived: recording.chunks.length,
+      participants: Array.from(recording.participants as string[]),
+      status: recording.status,
+      lastChunkAt:
+        recording.chunks.length > 0
+          ? new Date(recording.chunks.at(-1)?.timestamp || Date.now())
+          : undefined,
+    };
+  }
 }
 
 // Export singleton instance
-export const videoCallingService = new VideoCallingService();
+export const videoCallingService = new VideoCallingWebRTCService();

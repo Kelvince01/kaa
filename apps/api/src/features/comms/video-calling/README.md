@@ -11,6 +11,7 @@ REST API endpoints for video calling and property tours with Agora integration.
 ## Authentication
 
 All endpoints require authentication via headers:
+
 - `x-user-id`: Current user ID
 - `x-org-id`: Organization ID (optional)
 
@@ -47,6 +48,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -77,6 +79,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -107,6 +110,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -134,6 +138,7 @@ POST /api/video-calls/:callId/leave
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -150,6 +155,7 @@ POST /api/video-calls/:callId/end
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -166,6 +172,7 @@ GET /api/video-calls/:callId
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -203,6 +210,7 @@ GET /api/video-calls?status=connected&type=property_tour&page=1&limit=20
 ```
 
 **Query Parameters:**
+
 - `status`: Filter by call status
 - `type`: Filter by call type
 - `startDate`: Filter by start date (ISO 8601)
@@ -211,6 +219,7 @@ GET /api/video-calls?status=connected&type=property_tour&page=1&limit=20
 - `limit`: Items per page (default: 20, max: 100)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -298,6 +307,7 @@ POST /api/video-calls/:callId/recording/start
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -395,6 +405,7 @@ GET /api/video-calls/:callId/analytics
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -438,6 +449,7 @@ GET /api/video-calls/:callId/stats
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,

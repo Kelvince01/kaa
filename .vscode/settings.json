@@ -4,7 +4,7 @@
         "editor.defaultFormatter": "biomejs.biome"
     },
     "[typescript]": {
-        "editor.defaultFormatter": "vscode.typescript-language-features"
+        "editor.defaultFormatter": "biomejs.biome"
     },
     "[javascriptreact]": {
         "editor.defaultFormatter": "biomejs.biome"
@@ -42,6 +42,7 @@
         "ALFAJORES",
         "autocannon",
         "autocrop",
+        "autopay",
         "autoplay",
         "autotable",
         "blocknote",
@@ -187,5 +188,8 @@
         "worklets",
         "zoomable",
         "zxcvbn"
-    ]
+    ],
+    "[markdown]": {
+        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+    }
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install node-gyp, build tools and pngquant
 npm install -g node-gyp
-apt-get update && apt-get install -y python3 make g++ build-essential libssl-dev pngquant
+apt-get update && apt-get install -y python3 make g++ build-essential libssl-dev pngquant ffmpeg
 # Continue normal build
 
 # Install dependencies

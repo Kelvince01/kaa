@@ -51,7 +51,9 @@ export const meController = new Elysia()
           status: "success",
           user: {
             id: (userProfile._id as mongoose.Types.ObjectId).toString(),
-            memberId: member ? member._id?.toString() : undefined,
+            memberId: member
+              ? (member._id as mongoose.Types.ObjectId)?.toString()
+              : undefined,
             avatar: userProfile.profile?.avatar,
             username: userProfile.profile?.displayName || "",
             firstName: userProfile.profile?.firstName,
@@ -254,31 +256,39 @@ export const meController = new Elysia()
   /*
    *  Get SSE stream
    */
-  .get("/sse", ({ user, set }) => {
-    return new Stream(async (stream) => {
-      set.headers["Content-Encoding"] = "";
-      streams.set(user.id, stream);
+  .get(
+    "/sse",
+    ({ user, set }) => {
+      return new Stream(async (stream) => {
+        set.headers["Content-Encoding"] = "";
+        streams.set(user.id, stream);
 
-      console.info("User connected to SSE", user.id);
-      stream.send({
-        event: "connected",
-        data: "connected",
-        retry: 5000,
-      });
-
-      //   stream.onAbort(async () => {
-      //     console.info("User disconnected from SSE", user.id);
-      //     await streams.delete(user.id);
-      //   });
-
-      // Keep connection alive
-      while (true) {
+        console.info("User connected to SSE", user.id);
         stream.send({
-          event: "ping",
-          data: "pong",
+          event: "connected",
+          data: "connected",
           retry: 5000,
         });
-        await stream.wait(30_000);
-      }
-    });
-  });
+
+        //   stream.onAbort(async () => {
+        //     console.info("User disconnected from SSE", user.id);
+        //     await streams.delete(user.id);
+        //   });
+
+        // Keep connection alive
+        while (true) {
+          stream.send({
+            event: "ping",
+            data: "pong",
+            retry: 5000,
+          });
+          await stream.wait(30_000);
+        }
+      });
+    },
+    {
+      detail: {
+        tags: ["auth"],
+      },
+    }
+  );

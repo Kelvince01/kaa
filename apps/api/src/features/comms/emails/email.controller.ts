@@ -1,8 +1,10 @@
 import { emailService } from "@kaa/services";
+import { getDeviceInfo } from "@kaa/utils";
+import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
 import { authPlugin } from "../../auth/auth.plugin";
 import {
-  getEmailsQuerySchema,
+  queryEmailsSchema,
   sendBulkEmailSchema,
   sendBulkEmailWithTemplateSchema,
   sendEmailSchema,
@@ -19,7 +21,6 @@ export const emailController = new Elysia({ prefix: "/emails" })
         subject: body.subject,
         content: body.content,
         html: body.html,
-        context: body.context,
       });
 
       return {
@@ -37,15 +38,20 @@ export const emailController = new Elysia({ prefix: "/emails" })
   )
   .post(
     "/send-with-template",
-    ({ body }) => {
+    ({ body, user, request, server }) => {
+      const { ip, userAgent } = getDeviceInfo(request, server);
+
       emailService.sendEmailWithTemplate({
         to: body.to,
-        subject: body.subject,
-        content: body.content,
         templateId: body.templateId,
         data: body.data,
         metadata: body.metadata,
-        context: body.context,
+        userId: user.id,
+        requestMetadata: {
+          requestId: randomUUIDv7(),
+          ipAddress: ip || "",
+          userAgent,
+        },
       });
 
       return {
@@ -121,7 +127,7 @@ export const emailController = new Elysia({ prefix: "/emails" })
       });
     },
     {
-      query: getEmailsQuerySchema,
+      query: queryEmailsSchema,
       detail: {
         tags: ["emails"],
         summary: "Get emails",

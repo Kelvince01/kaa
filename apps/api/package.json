@@ -39,6 +39,7 @@
     "@bogeychan/elysia-etag": "^0.1.0",
     "@bogeychan/elysia-logger": "^0.1.10",
     "@bull-board/elysia": "^6.12.7",
+    "@chneau/elysia-logger": "^1.0.10",
     "@elysiajs/bearer": "^1.4.1",
     "@elysiajs/cookie": "^0.8.0",
     "@elysiajs/cors": "^1.4.0",

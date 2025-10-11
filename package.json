@@ -20,10 +20,14 @@
     "dev:api": "turbo -F @kaa/api dev",
     "dev:docs": "turbo -F @kaa/docs dev",
     "release": "semantic-release",
-    "commit~": "cz"
+    "commit~": "cz",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release:docs": "turbo run build --filter=@kaa/docs^... && changeset publish"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",
+    "@changesets/cli": "^2.29.7",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@evilmartians/lefthook": "^1.13.0",

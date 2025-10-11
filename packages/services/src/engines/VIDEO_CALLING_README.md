@@ -336,21 +336,25 @@ const call = await engine.createCall(hostId, CallType.PROPERTY_TOUR, {
 ### Common Issues
 
 **1. "Token expired" error**
+
 - Tokens expire after 1 hour by default
 - Generate a new token before expiry
 - Check server time synchronization
 
 **2. Poor video quality**
+
 - Check network bandwidth
 - Enable low bandwidth mode
 - Reduce video resolution
 
 **3. Echo/feedback**
+
 - Ensure AEC (Acoustic Echo Cancellation) is enabled
 - Check microphone settings
 - Use headphones
 
 **4. Recording not starting**
+
 - Verify cloud recording is enabled in Agora console
 - Check AWS/GCP credentials
 - Ensure sufficient storage space
@@ -385,8 +389,9 @@ engine.onAny((event, data) => {
 ## Support
 
 For issues or questions:
-- Agora Documentation: https://docs.agora.io/
-- Agora Support: https://www.agora.io/en/support/
+
+- Agora Documentation: <https://docs.agora.io/>
+- Agora Support: <https://www.agora.io/en/support/>
 
 ## License
 

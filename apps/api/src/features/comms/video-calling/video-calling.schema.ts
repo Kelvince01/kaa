@@ -148,3 +148,62 @@ export const listCallsQuerySchema = t.Object({
   page: t.Optional(t.Number({ minimum: 1 })),
   limit: t.Optional(t.Number({ minimum: 1, maximum: 100 })),
 });
+
+/**
+ * Upload recording chunk endpoint
+ * Allows clients to upload media chunks for server-side processing
+ */
+export const uploadChunkSchema = {
+  body: t.Object({
+    recordingId: t.String(),
+    participantId: t.String(),
+    chunk: t.String(), // Base64 encoded chunk data
+    type: t.Union([t.Literal("audio"), t.Literal("video")]),
+    timestamp: t.Number(),
+    sequence: t.Number(),
+  }),
+  response: {
+    200: t.Object({
+      success: t.Boolean(),
+      message: t.String(),
+      chunkId: t.Optional(t.String()),
+    }),
+    400: t.Object({
+      success: t.Boolean(),
+      message: t.String(),
+    }),
+    401: t.Object({
+      success: t.Boolean(),
+      message: t.String(),
+    }),
+    500: t.Object({
+      success: t.Boolean(),
+      message: t.String(),
+    }),
+  },
+};
+
+/**
+ * Get recording upload status
+ */
+export const getUploadStatusSchema = {
+  params: t.Object({
+    recordingId: t.String(),
+  }),
+  response: {
+    200: t.Object({
+      success: t.Boolean(),
+      data: t.Object({
+        recordingId: t.String(),
+        chunksReceived: t.Number(),
+        participants: t.Array(t.String()),
+        status: t.String(),
+        lastChunkAt: t.Optional(t.Date()),
+      }),
+    }),
+    404: t.Object({
+      success: t.Boolean(),
+      message: t.String(),
+    }),
+  },
+};

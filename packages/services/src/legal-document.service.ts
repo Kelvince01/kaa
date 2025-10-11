@@ -1278,7 +1278,7 @@ class LegalDocumentsService extends EventEmitter {
     }
 
     // Get from database
-    const template = await DocumentTemplate.findOne({ id: templateId }).lean();
+    const template = await DocumentTemplate.findOne({ _id: templateId }).lean();
 
     if (template) {
       // Cache for future use
@@ -1338,7 +1338,7 @@ class LegalDocumentsService extends EventEmitter {
     updates: Partial<IDocumentTemplate>
   ): Promise<IDocumentTemplate | null> {
     const updated = await DocumentTemplate.findOneAndUpdate(
-      { id: templateId },
+      { _id: templateId },
       { $set: updates },
       { new: true }
     ).lean();
@@ -1356,7 +1356,7 @@ class LegalDocumentsService extends EventEmitter {
   }
 
   async deleteTemplate(templateId: string): Promise<boolean> {
-    const result = await DocumentTemplate.deleteOne({ id: templateId });
+    const result = await DocumentTemplate.deleteOne({ _id: templateId });
 
     if (result.deletedCount > 0) {
       // Remove from cache
@@ -1380,7 +1380,9 @@ class LegalDocumentsService extends EventEmitter {
     }
 
     // Get from database
-    const document = await GeneratedDocument.findOne({ id: documentId }).lean();
+    const document = await GeneratedDocument.findOne({
+      _id: documentId,
+    }).lean();
 
     if (document) {
       // Cache for future use
@@ -1440,7 +1442,7 @@ class LegalDocumentsService extends EventEmitter {
     status: LegalDocumentStatus
   ): Promise<IGeneratedDocument | null> {
     const updated = await GeneratedDocument.findOneAndUpdate(
-      { id: documentId },
+      { _id: documentId },
       { $set: { status } },
       { new: true }
     ).lean();
@@ -1462,7 +1464,7 @@ class LegalDocumentsService extends EventEmitter {
       signatureHash: string;
     }
   ): Promise<IGeneratedDocument | null> {
-    const document = await GeneratedDocument.findOne({ id: documentId });
+    const document = await GeneratedDocument.findOne({ _id: documentId });
 
     if (!document) {
       return null;
@@ -1498,7 +1500,7 @@ class LegalDocumentsService extends EventEmitter {
     archivedBy: string
   ): Promise<IGeneratedDocument | null> {
     const updated = await GeneratedDocument.findOneAndUpdate(
-      { id: documentId },
+      { _id: documentId },
       {
         $set: {
           archived: true,
@@ -1525,7 +1527,7 @@ class LegalDocumentsService extends EventEmitter {
     const updateField = accessType === "view" ? "viewCount" : "downloadCount";
 
     await GeneratedDocument.findOneAndUpdate(
-      { id: documentId },
+      { _id: documentId },
       {
         $inc: { [updateField]: 1 },
         $set: { lastAccessedAt: new Date() },

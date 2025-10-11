@@ -29,7 +29,7 @@ export const locationsController = new Elysia({ prefix: "/locations" })
       // beforeHandle: ({ requireAdmin }) => requireAdmin(),
       body: LocationSchema,
       detail: {
-        tags: ["Locations"],
+        tags: ["locations"],
         summary: "Create location",
         description: "Create a new location (admin only)",
       },
@@ -64,7 +64,7 @@ export const locationsController = new Elysia({ prefix: "/locations" })
         locationId: t.String(),
       }),
       detail: {
-        tags: ["Locations"],
+        tags: ["locations"],
         summary: "Get location",
         description: "Get location details by ID",
       },
@@ -90,7 +90,7 @@ export const locationsController = new Elysia({ prefix: "/locations" })
     {
       query: LocationSearchSchema,
       detail: {
-        tags: ["Locations"],
+        tags: ["locations"],
         summary: "Search locations",
         description: "Search locations with filters",
       },
@@ -137,7 +137,7 @@ export const locationsController = new Elysia({ prefix: "/locations" })
         limit: t.Optional(t.String()),
       }),
       detail: {
-        tags: ["Locations"],
+        tags: ["locations"],
         summary: "Get nearby locations",
         description: "Get locations within a specified radius",
       },
@@ -172,7 +172,7 @@ export const locationsController = new Elysia({ prefix: "/locations" })
         address: t.String(),
       }),
       detail: {
-        tags: ["Locations"],
+        tags: ["locations"],
         summary: "Geocode address",
         description: "Convert address to coordinates",
       },
@@ -212,7 +212,7 @@ export const locationsController = new Elysia({ prefix: "/locations" })
         longitude: t.String(),
       }),
       detail: {
-        tags: ["Locations"],
+        tags: ["locations"],
         summary: "Reverse geocode",
         description: "Convert coordinates to address",
       },
@@ -257,7 +257,7 @@ export const locationsController = new Elysia({ prefix: "/locations" })
         limit: t.Optional(t.String()),
       }),
       detail: {
-        tags: ["Locations"],
+        tags: ["locations"],
         summary: "Get location suggestions",
         description: "Get autocomplete suggestions for locations",
       },
@@ -296,7 +296,7 @@ export const locationsController = new Elysia({ prefix: "/locations" })
       params: t.Object({ locationId: t.String() }),
       body: LocationSchema,
       detail: {
-        tags: ["Locations"],
+        tags: ["locations"],
         summary: "Update location",
         description: "Update location details (admin only)",
       },
@@ -325,7 +325,7 @@ export const locationsController = new Elysia({ prefix: "/locations" })
       // beforeHandle: ({ requireAdmin }) => requireAdmin(),
       params: t.Object({ locationId: t.String() }),
       detail: {
-        tags: ["Locations"],
+        tags: ["locations"],
         summary: "Delete location",
         description: "Delete a location (admin only)",
       },
@@ -355,7 +355,7 @@ export const locationsController = new Elysia({ prefix: "/locations" })
       // beforeHandle: ({ requireAuth }) => requireAuth(),
       params: t.Object({ locationId: t.String() }),
       detail: {
-        tags: ["Locations"],
+        tags: ["locations"],
         summary: "Get location analytics",
         description: "Get analytics for a specific location",
       },
@@ -383,7 +383,7 @@ export const locationsController = new Elysia({ prefix: "/locations" })
     },
     {
       detail: {
-        tags: ["Locations", "Kenya"],
+        tags: ["locations"],
         summary: "Get Kenya counties",
         description: "Get all counties in Kenya",
       },
@@ -411,7 +411,7 @@ export const locationsController = new Elysia({ prefix: "/locations" })
     {
       params: t.Object({ county: t.Enum(KenyanCounty) }),
       detail: {
-        tags: ["Locations", "Kenya"],
+        tags: ["locations"],
         summary: "Get places by county",
         description: "Get all places within a specific Kenyan county",
       },

@@ -1,6 +1,7 @@
 import type mongoose from "mongoose";
 import type { BaseDocument } from "./base.type";
 import type { ImageOperation } from "./file.enum";
+import type { FileCategory } from "./file-v2.type";
 
 export interface IFile extends BaseDocument {
   url: string;
@@ -277,6 +278,8 @@ export type IFileUploadResponse = {
 export type IFileUploadOptions = {
   type: IFileCategory;
   processingOptions?: IFileProcessingOptions;
+  organizationId?: string;
+  category?: FileCategory;
 };
 
 export type IFileValidationResult = {
@@ -315,4 +318,58 @@ export type IFileProcessingOptions = {
   operation: ImageOperation;
   parameters?: Record<string, any>;
   priority?: "low" | "normal" | "high";
+};
+
+// Storage information
+export type IFileStorageInfo = {
+  provider: string;
+  bucket: string;
+  key: string;
+  url: string;
+  cdnUrl?: string;
+  etag?: string;
+};
+
+// Files response with pagination
+export type IFilesResponse = {
+  files: IFile[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+  filters?: Record<string, any>;
+};
+
+// File usage statistics
+export type IFileUsageStats = {
+  totalFiles: number;
+  totalSize: number;
+  totalDownloads: number;
+  totalViews: number;
+  averageSize: number;
+  typeDistribution: string[];
+  categoryDistribution: string[];
+};
+
+// Extended file search query
+export type IFileSearchQuery = {
+  search?: string;
+  type?: string | string[];
+  category?: string | string[];
+  status?: string | string[];
+  ownerId?: string;
+  organizationId?: string;
+  tags?: string[];
+  dateFrom?: Date;
+  dateTo?: Date;
+  sizeMin?: number;
+  sizeMax?: number;
+  county?: string;
+  hasGps?: boolean;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  limit?: number;
 };

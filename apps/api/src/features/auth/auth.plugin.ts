@@ -61,6 +61,9 @@ export const authPlugin = (app: Elysia) =>
             memberId: member
               ? (member._id as mongoose.Types.ObjectId).toString()
               : undefined,
+            organizationId: member
+              ? (member.organization as any)._id.toString()
+              : undefined,
             isVerified: !!user.verification.emailVerifiedAt, // Ensure this is always a boolean
             firstName: user.profile.firstName,
             lastName: user.profile.lastName,

@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/style/noNonNullAssertion: ignore */
-
 import { randomUUID } from "node:crypto";
 import { Elysia } from "elysia";
 
@@ -89,7 +87,7 @@ class MetricsCollector {
     if (!this.histograms.has(key)) {
       this.histograms.set(key, []);
     }
-    this.histograms.get(key)!.push(value);
+    this.histograms.get(key)?.push(value);
   }
 
   // Summary metrics
@@ -98,6 +96,7 @@ class MetricsCollector {
     if (!this.summaries.has(key)) {
       this.summaries.set(key, { sum: 0, count: 0, quantiles: [] });
     }
+    // biome-ignore lint/style/noNonNullAssertion: ingore
     const summary = this.summaries.get(key)!;
     summary.sum += value;
     summary.count++;

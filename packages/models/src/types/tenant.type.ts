@@ -1,4 +1,5 @@
 import type { Document, Types } from "mongoose";
+import type { BaseDocument } from "./base.type";
 import type { IAddress } from "./common.type";
 
 export enum TenantStatus {
@@ -394,3 +395,204 @@ export type TenantCommunicationLog = {
   response?: string;
   responseAt?: Date;
 };
+
+// ============================================= //
+
+export enum ScreeningStatus {
+  PENDING = "pending",
+  IN_PROGRESS = "in_progress",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  EXPIRED = "expired",
+}
+
+export enum ScreeningType {
+  BASIC = "basic",
+  STANDARD = "standard",
+  COMPREHENSIVE = "comprehensive",
+}
+
+export enum CreditRating {
+  EXCELLENT = "excellent", // 750+
+  GOOD = "good", // 650-749
+  FAIR = "fair", // 550-649
+  POOR = "poor", // 350-549
+  VERY_POOR = "very_poor", // <350
+}
+
+export enum EmploymentStatus {
+  EMPLOYED = "employed",
+  SELF_EMPLOYED = "self_employed",
+  UNEMPLOYED = "unemployed",
+  STUDENT = "student",
+  RETIRED = "retired",
+}
+
+export interface ITenantScreening extends BaseDocument {
+  tenant: Types.ObjectId;
+  property: Types.ObjectId;
+  landlord: Types.ObjectId;
+  application: Types.ObjectId;
+
+  // Screening details
+  screeningType: ScreeningType;
+  status: ScreeningStatus;
+  requestedDate: Date;
+  completedDate?: Date;
+  expiryDate: Date;
+
+  // Identity verification
+  identityVerification: {
+    idNumber: string;
+    idType: "national_id" | "passport" | "drivers_license";
+    verified: boolean;
+    verificationDate?: Date;
+    verificationMethod: "manual" | "automated" | "third_party";
+    documents: Array<{
+      type: string;
+      url: string;
+      verified: boolean;
+    }>;
+  };
+
+  // Credit check
+  creditCheck: {
+    creditScore?: number;
+    creditRating: CreditRating;
+    creditReportUrl?: string;
+    creditBureau: string;
+    checkDate: Date;
+    outstandingDebts: Array<{
+      creditor: string;
+      amount: number;
+      status: "current" | "overdue" | "defaulted";
+      monthsOverdue?: number;
+    }>;
+    creditHistory: {
+      totalAccounts: number;
+      activeAccounts: number;
+      closedAccounts: number;
+      defaultedAccounts: number;
+      paymentHistory: "excellent" | "good" | "fair" | "poor";
+    };
+  };
+
+  // Employment verification
+  employmentVerification: {
+    status: EmploymentStatus;
+    employer?: string;
+    jobTitle?: string;
+    employmentDuration?: number; // months
+    monthlyIncome?: number;
+    verified: boolean;
+    verificationDate?: Date;
+    verificationMethod:
+      | "payslip"
+      | "employment_letter"
+      | "bank_statement"
+      | "tax_returns";
+    documents: Array<{
+      type: string;
+      url: string;
+      verified: boolean;
+    }>;
+  };
+
+  // Income verification
+  incomeVerification: {
+    monthlyIncome: number;
+    annualIncome: number;
+    incomeSource: "salary" | "business" | "investments" | "pension" | "other";
+    incomeStability: "stable" | "variable" | "irregular";
+    verified: boolean;
+    verificationDate?: Date;
+    documents: Array<{
+      type: string;
+      url: string;
+      verified: boolean;
+    }>;
+  };
+
+  // Background check
+  backgroundCheck: {
+    criminalRecord: {
+      checked: boolean;
+      hasRecord: boolean;
+      details?: string;
+      checkDate?: Date;
+    };
+    previousAddresses: Array<{
+      address: string;
+      duration: number; // months
+      landlordContact?: string;
+      reason_for_leaving?: string;
+    }>;
+    references: Array<{
+      name: string;
+      relationship: "employer" | "landlord" | "personal" | "professional";
+      contact: string;
+      verified: boolean;
+      feedback?: string;
+    }>;
+  };
+
+  // Financial assessment
+  financialAssessment: {
+    debtToIncomeRatio: number;
+    rentToIncomeRatio: number;
+    bankBalance?: number;
+    savingsAmount?: number;
+    financialStability: "excellent" | "good" | "fair" | "poor";
+    affordabilityScore: number; // 0-100
+  };
+
+  // Risk assessment
+  riskAssessment: {
+    overallRiskScore: number; // 0-100 (lower is better)
+    riskLevel: "low" | "medium" | "high" | "very_high";
+    riskFactors: string[];
+    mitigatingFactors: string[];
+    recommendation: "approve" | "approve_with_conditions" | "reject";
+    conditions?: string[];
+  };
+
+  // AI insights
+  aiInsights: {
+    paymentProbability: number; // 0-100
+    tenancySuccessScore: number; // 0-100
+    redFlags: string[];
+    positiveIndicators: string[];
+    similarTenantPerformance: {
+      averagePaymentDelay: number; // days
+      completionRate: number; // percentage
+    };
+  };
+
+  // External service data
+  externalServices: Array<{
+    service: string;
+    serviceType: "credit_bureau" | "background_check" | "identity_verification";
+    requestId: string;
+    response: any;
+    cost: number;
+    requestDate: Date;
+    responseDate?: Date;
+    status: "pending" | "completed" | "failed";
+  }>;
+
+  // Screening results
+  results: {
+    passed: boolean;
+    score: number; // 0-100
+    grade: "A" | "B" | "C" | "D" | "F";
+    summary: string;
+    recommendations: string[];
+    conditions: string[];
+  };
+
+  // Metadata
+  requestedBy: Types.ObjectId;
+  reviewedBy?: Types.ObjectId;
+  notes?: string;
+  metadata?: Record<string, any>;
+}

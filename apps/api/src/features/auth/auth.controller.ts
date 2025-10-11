@@ -893,7 +893,9 @@ export const authController = new Elysia()
 
             logger.info("User logged in", {
               userId: user._id as mongoose.Types.ObjectId,
-              memberId: (member?._id as mongoose.Types.ObjectId).toString(),
+              memberId: member
+                ? (member?._id as mongoose.Types.ObjectId).toString()
+                : undefined,
               responseTime: `${responseTime}ms`,
             });
 

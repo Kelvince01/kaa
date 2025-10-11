@@ -31,7 +31,6 @@ class AuthCacheService {
 
       const user = await User.findOne({ "contact.email": email.toLowerCase() })
         .select("+password")
-        .populate("role", "name")
         .lean();
 
       if (user) {

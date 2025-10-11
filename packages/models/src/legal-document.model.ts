@@ -122,7 +122,6 @@ const documentTemplateSchema = new Schema<IDocumentTemplate>(
 );
 
 // Indexes for document templates
-documentTemplateSchema.index({ id: 1 });
 documentTemplateSchema.index({ type: 1 });
 documentTemplateSchema.index({ category: 1 });
 documentTemplateSchema.index({ status: 1 });
@@ -228,7 +227,6 @@ const generatedDocumentSchema = new Schema<IGeneratedDocument>(
 );
 
 // Indexes for generated documents
-generatedDocumentSchema.index({ id: 1 });
 generatedDocumentSchema.index({ templateId: 1 });
 generatedDocumentSchema.index({ type: 1 });
 generatedDocumentSchema.index({ status: 1 });

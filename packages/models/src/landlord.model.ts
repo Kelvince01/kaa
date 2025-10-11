@@ -2,9 +2,9 @@ import { type Model, model, Schema, type Types } from "mongoose";
 import { addressSchema } from "./base.model";
 import {
   ComplianceType,
-  DocumentType,
   type ILandlord,
   KYCLevel,
+  LandlordDocumentType,
   LandlordStatus,
   LandlordType,
   RiskLevel,
@@ -285,7 +285,7 @@ const landlordSchema: Schema<ILandlord> = new Schema<ILandlord>(
       {
         type: {
           type: String,
-          enum: Object.values(DocumentType),
+          enum: Object.values(LandlordDocumentType),
           required: true,
         },
         name: { type: String, required: true },
@@ -917,6 +917,7 @@ landlordSchema.methods.updatePropertyStats = async function () {
 };
 
 // Create the model
-const Landlord: Model<ILandlord> = model<ILandlord>("Landlord", landlordSchema);
-
-export default Landlord;
+export const Landlord: Model<ILandlord> = model<ILandlord>(
+  "Landlord",
+  landlordSchema
+);

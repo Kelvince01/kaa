@@ -195,7 +195,7 @@ export const stripeController = new Elysia().group("/stripe", (app) =>
         }
       },
       {
-        body: t.Object(t.Any()),
+        body: t.Any(),
         detail: {
           tags: ["stripe"],
           summary: "Handle a webhook",

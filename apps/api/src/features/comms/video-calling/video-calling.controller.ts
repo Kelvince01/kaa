@@ -1,36 +1,40 @@
 import { logger } from "@kaa/utils";
 import { Elysia } from "elysia";
+import { authPlugin } from "~/features/auth/auth.plugin";
 import {
   addTourQuestionSchema,
   createCallSchema,
   createPropertyTourSchema,
   generateTokenSchema,
   getCallParamsSchema,
+  getUploadStatusSchema,
   joinCallSchema,
   listCallsQuerySchema,
   navigateTourSchema,
   toggleMediaSchema,
   updateNetworkQualitySchema,
+  uploadChunkSchema,
 } from "./video-calling.schema";
-import { videoCallingService } from "./video-calling.service";
+import { videoCallingService } from "./video-calling-webrtc.service";
 
 /**
  * Video Calling Controller
- * Handles video calling, property tours, and Agora integration
+ * Handles video calling, property tours, and WebRTC integration
  */
 export const videoCallingController = new Elysia({ prefix: "/video-calls" })
+  .use(authPlugin)
 
   /**
    * Create a new video call
    */
   .post(
     "/",
-    async ({ body, set, headers }) => {
+    async ({ body, set, headers, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
+        // const userId = headers["x-user-id"] as string;
         const orgId = headers["x-org-id"] as string;
 
-        if (!userId) {
+        if (!user.id) {
           set.status = 401;
           return {
             success: false,
@@ -40,7 +44,7 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
         }
 
         const call = await videoCallingService.createCall(
-          userId,
+          user.id,
           body.type as any,
           {
             ...body,
@@ -78,15 +82,13 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
   )
 
   /**
-   * Generate Agora token for joining a call
+   * Generate Web token for joining a call
    */
   .post(
     "/:callId/token",
-    async ({ params, body, set, headers }) => {
+    async ({ params, body, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
-        if (!userId) {
+        if (!user.id) {
           set.status = 401;
           return {
             success: false,
@@ -97,7 +99,7 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
 
         const tokenData = await videoCallingService.generateToken(
           params.callId,
-          userId,
+          user.id,
           body.role
         );
 
@@ -121,8 +123,8 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
       body: generateTokenSchema,
       detail: {
         tags: ["video-calling"],
-        summary: "Generate Agora token",
-        description: "Generate an Agora RTC token for joining a call",
+        summary: "Generate Web token",
+        description: "Generate an Web RTC token for joining a call",
       },
     }
   )
@@ -132,11 +134,9 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .post(
     "/:callId/join",
-    async ({ params, body, set, headers }) => {
+    async ({ params, body, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
-        if (!userId) {
+        if (!user.id) {
           set.status = 401;
           return {
             success: false,
@@ -147,7 +147,7 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
 
         const result = await videoCallingService.joinCall(
           params.callId,
-          userId,
+          user.id,
           body
         );
 
@@ -172,7 +172,7 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
       detail: {
         tags: ["video-calling"],
         summary: "Join video call",
-        description: "Join a video call and get Agora credentials",
+        description: "Join a video call and get Web credentials",
       },
     }
   )
@@ -182,11 +182,9 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .post(
     "/:callId/leave",
-    async ({ params, set, headers }) => {
+    async ({ params, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
-        if (!userId) {
+        if (!user.id) {
           set.status = 401;
           return {
             success: false,
@@ -195,7 +193,7 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
           };
         }
 
-        await videoCallingService.leaveCall(params.callId, userId);
+        await videoCallingService.leaveCall(params.callId, user.id);
 
         return {
           success: true,
@@ -226,11 +224,9 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .post(
     "/:callId/end",
-    async ({ params, set, headers }) => {
+    async ({ params, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
-        if (!userId) {
+        if (!user.id) {
           set.status = 401;
           return {
             success: false,
@@ -239,7 +235,7 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
           };
         }
 
-        await videoCallingService.endCall(params.callId, userId);
+        await videoCallingService.endCall(params.callId, user.id);
 
         return {
           success: true,
@@ -270,10 +266,8 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .get(
     "/:callId",
-    async ({ params, set, headers }) => {
+    async ({ params, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
         const call = await videoCallingService.getCall(params.callId);
 
         if (!call) {
@@ -287,8 +281,8 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
 
         // Check if user has access to this call
         const hasAccess =
-          call.host === userId ||
-          call.participants.some((p: any) => p.userId === userId);
+          call.host === user.id ||
+          call.participants.some((p: any) => p.userId === user.id);
 
         if (!hasAccess) {
           set.status = 403;
@@ -329,11 +323,9 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .get(
     "/",
-    async ({ query, set, headers }) => {
+    async ({ query, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
-        if (!userId) {
+        if (!user.id) {
           set.status = 401;
           return {
             success: false,
@@ -343,7 +335,7 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
         }
 
         const calls = await videoCallingService.getCallsByUser(
-          userId,
+          user.id,
           query as any
         );
 
@@ -377,14 +369,12 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .post(
     "/:callId/tour",
-    async ({ params, body, set, headers }) => {
+    async ({ params, body, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
         const tour = await videoCallingService.createPropertyTour(
           params.callId,
           body.propertyId,
-          userId,
+          user.id,
           body.tourPlan
         );
 
@@ -454,13 +444,11 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .post(
     "/:callId/tour/question",
-    async ({ params, body, set, headers }) => {
+    async ({ params, body, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
         await videoCallingService.addTourQuestion(
           params.callId,
-          userId,
+          user.id,
           body.question,
           body.category
         );
@@ -495,13 +483,11 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .post(
     "/:callId/recording/start",
-    async ({ params, set, headers }) => {
+    async ({ params, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
         const recording = await videoCallingService.startRecording(
           params.callId,
-          userId
+          user.id
         );
 
         return {
@@ -534,11 +520,9 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .post(
     "/:callId/recording/stop",
-    async ({ params, set, headers }) => {
+    async ({ params, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
-        await videoCallingService.stopRecording(params.callId, userId);
+        await videoCallingService.stopRecording(params.callId, user.id);
 
         return {
           success: true,
@@ -565,17 +549,88 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
   )
 
   /**
+   * Get recording status
+   */
+  .get(
+    "/:callId/recording/:recordingId",
+    async ({ params, set, user }) => {
+      try {
+        const status = await videoCallingService.getRecordingStatus(
+          params.callId,
+          params.recordingId,
+          user.id
+        );
+
+        return {
+          success: true,
+          data: status,
+          message: "Recording status retrieved successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to get recording status:", error);
+        set.status = 500;
+        return {
+          success: false,
+          error: "Internal server error",
+          message: "Failed to retrieve recording status",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["video-calling"],
+        summary: "Get recording status",
+        description: "Get the status of a recording",
+      },
+    }
+  )
+
+  /**
+   * Delete recording
+   */
+  .delete(
+    "/:callId/recording/:recordingId",
+    async ({ params, set, user }) => {
+      try {
+        await videoCallingService.deleteRecording(
+          params.callId,
+          params.recordingId,
+          user.id
+        );
+
+        return {
+          success: true,
+          message: "Recording deleted successfully",
+        };
+      } catch (error) {
+        logger.error("Failed to delete recording:", error);
+        set.status = 500;
+        return {
+          success: false,
+          error: "Internal server error",
+          message: "Failed to delete recording",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["video-calling"],
+        summary: "Delete recording",
+        description: "Delete a recording",
+      },
+    }
+  )
+
+  /**
    * Toggle audio
    */
   .post(
     "/:callId/audio",
-    async ({ params, body, set, headers }) => {
+    async ({ params, body, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
         await videoCallingService.toggleAudio(
           params.callId,
-          userId,
+          user.id,
           body.enabled
         );
 
@@ -609,13 +664,11 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .post(
     "/:callId/video",
-    async ({ params, body, set, headers }) => {
+    async ({ params, body, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
         await videoCallingService.toggleVideo(
           params.callId,
-          userId,
+          user.id,
           body.enabled
         );
 
@@ -649,11 +702,9 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .post(
     "/:callId/screen-share/start",
-    async ({ params, set, headers }) => {
+    async ({ params, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
-        await videoCallingService.startScreenShare(params.callId, userId);
+        await videoCallingService.startScreenShare(params.callId, user.id);
 
         return {
           success: true,
@@ -684,11 +735,9 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .post(
     "/:callId/screen-share/stop",
-    async ({ params, set, headers }) => {
+    async ({ params, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
-        await videoCallingService.stopScreenShare(params.callId, userId);
+        await videoCallingService.stopScreenShare(params.callId, user.id);
 
         return {
           success: true,
@@ -719,13 +768,11 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .post(
     "/:callId/network-quality",
-    async ({ params, body, set, headers }) => {
+    async ({ params, body, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
         await videoCallingService.updateNetworkQuality(
           params.callId,
-          userId,
+          user.id,
           body as any
         );
 
@@ -759,13 +806,11 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .get(
     "/:callId/analytics",
-    async ({ params, set, headers }) => {
+    async ({ params, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
         const analytics = await videoCallingService.getCallAnalytics(
           params.callId,
-          userId
+          user.id
         );
 
         if (!analytics) {
@@ -807,13 +852,11 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
    */
   .get(
     "/:callId/stats",
-    async ({ params, set, headers }) => {
+    async ({ params, set, user }) => {
       try {
-        const userId = headers["x-user-id"] as string;
-
         const stats = await videoCallingService.getCallStats(
           params.callId,
-          userId
+          user.id
         );
 
         return {
@@ -839,6 +882,117 @@ export const videoCallingController = new Elysia({ prefix: "/video-calls" })
         description: "Get real-time statistics for a video call",
       },
     }
-  );
+  )
+  /**
+   * Upload recording chunk (for client-side recording)
+   */
+  .post(
+    "/recording/chunk",
+    async ({ body, set, user }) => {
+      try {
+        if (!user.id) {
+          set.status = 401;
+          return {
+            success: false,
+            message: "Unauthorized",
+          };
+        }
 
-export default videoCallingController;
+        const { recordingId, participantId, chunk, type, timestamp, sequence } =
+          body;
+
+        // Validate chunk data
+        if (!chunk || chunk.length === 0) {
+          set.status = 400;
+          return {
+            success: false,
+            message: "Invalid chunk data",
+          };
+        }
+
+        // Decode base64 chunk
+        const chunkBuffer = Buffer.from(chunk, "base64");
+
+        // Add chunk to recording
+        const chunkId = await videoCallingService.addRecordingChunk(
+          recordingId,
+          participantId,
+          chunkBuffer,
+          type,
+          timestamp,
+          sequence
+        );
+
+        return {
+          success: true,
+          message: "Chunk uploaded successfully",
+          chunkId,
+        };
+      } catch (error) {
+        logger.error("Error uploading chunk:", error);
+        set.status = 500;
+        return {
+          success: false,
+          message: (error as Error).message || "Failed to upload chunk",
+        };
+      }
+    },
+    {
+      ...uploadChunkSchema,
+      detail: {
+        tags: ["video-calling"],
+        summary: "Upload recording chunk",
+        description: "Upload a media chunk for client-side recording",
+      },
+    }
+  )
+
+  /**
+   * Get recording upload status
+   */
+  .get(
+    "/recording/:recordingId/status",
+    async ({ params, set, user }) => {
+      try {
+        if (!user.id) {
+          set.status = 401;
+          return {
+            success: false,
+            message: "Unauthorized",
+          };
+        }
+
+        const status = await videoCallingService.getRecordingUploadStatus(
+          params.recordingId
+        );
+
+        if (!status) {
+          set.status = 404;
+          return {
+            success: false,
+            message: "Recording not found",
+          };
+        }
+
+        return {
+          success: true,
+          data: status,
+        };
+      } catch (error) {
+        logger.error("Error getting upload status:", error);
+        set.status = 500;
+        return {
+          success: false,
+          message: "Failed to get upload status",
+        };
+      }
+    },
+    {
+      ...getUploadStatusSchema,
+      detail: {
+        tags: ["video-calling"],
+        summary: "Get recording upload status",
+        description: "Get the status of a recording upload",
+      },
+    }
+  );
