@@ -9,7 +9,6 @@ import {
   type ICallParticipant,
   type NetworkQualityReport,
   RecordingStatus,
-  type SignalingMessage,
   type TourQuestion,
   type TourStop,
   type VideoConfig,
@@ -19,7 +18,6 @@ import {
 import { redisClient } from "@kaa/utils";
 import type { RedisClientType } from "redis";
 import { v4 as uuidv4 } from "uuid";
-import type { WebSocket, WebSocketServer } from "ws";
 import {
   type RecordingSession,
   WebRTCMediaServerEngine,
@@ -29,22 +27,17 @@ import {
 /**
  * Video Calling Engine with Native WebRTC
  * Complete replacement for Agora using our own WebRTC implementation
+ * Now uses individual WebSocket connections instead of WebSocketServer
  */
 export class VideoCallingWebRTCEngine extends EventEmitter {
   private readonly redis: RedisClientType;
-  private readonly wsServer: WebSocketServer;
   private readonly webrtcConfig: WebRTCConfig;
   private readonly config: VideoConfig;
   private readonly webrtcServer: WebRTCMediaServerEngine;
 
-  constructor(
-    wsServer: WebSocketServer,
-    webrtcConfig: WebRTCConfig,
-    config: VideoConfig
-  ) {
+  constructor(webrtcConfig: WebRTCConfig, config: VideoConfig) {
     super();
     this.redis = redisClient;
-    this.wsServer = wsServer;
     this.webrtcConfig = webrtcConfig;
     this.config = config;
 
@@ -61,8 +54,41 @@ export class VideoCallingWebRTCEngine extends EventEmitter {
     });
 
     this.setupWebRTCEventHandlers();
-    this.setupWebSocketHandlers();
     this.startPeriodicTasks();
+  }
+
+  /**
+   * Handle individual WebSocket connection (called by Elysia controller)
+   * This method is called when a WebSocket connection is established
+   */
+  handleWebSocketConnection(ws: any, userId: string): void {
+    // Store the WebSocket and user ID for later use
+    (ws as any).userId = userId;
+    (ws as any).engine = this;
+
+    // Pass to media server for WebRTC handling
+    this.webrtcServer.handleConnection(ws, userId);
+  }
+
+  /**
+   * Handle WebSocket message (called by Elysia message handler)
+   */
+  handleWebSocketMessage(ws: any, message: any): void {
+    try {
+      // Pass message to media server for processing
+      this.webrtcServer.handleMessage(ws, message);
+    } catch (error) {
+      console.error("Error handling WebSocket message:", error);
+    }
+  }
+
+  /**
+   * Handle WebSocket close (called by Elysia close handler)
+   */
+  handleWebSocketClose(ws: any): void {
+    // Pass to media server for cleanup
+    this.webrtcServer.handleClose(ws);
+    this.handleWebSocketDisconnect(ws);
   }
 
   /**
@@ -180,100 +206,8 @@ export class VideoCallingWebRTCEngine extends EventEmitter {
     });
   }
 
-  /**
-   * Setup WebSocket handlers
-   */
-  private setupWebSocketHandlers(): void {
-    this.wsServer.on("connection", (ws: WebSocket) => {
-      ws.on("message", async (data: Buffer) => {
-        try {
-          const message: SignalingMessage = JSON.parse(data.toString());
-          await this.handleSignalingMessage(ws, message);
-        } catch (error) {
-          console.error("Error handling WebSocket message:", error);
-        }
-      });
-
-      ws.on("close", () => {
-        this.handleWebSocketDisconnect(ws);
-      });
-    });
-  }
-
-  private async handleSignalingMessage(
-    ws: WebSocket,
-    message: SignalingMessage
-  ): Promise<void> {
-    const { type, callId, fromParticipant, data } = message;
-
-    switch (type) {
-      case "join":
-        await this.handleJoinMessage(ws, message);
-        break;
-      case "leave":
-        await this.leaveCall(callId, fromParticipant);
-        break;
-      case "mute":
-      case "unmute":
-        await this.handleMuteToggle(callId, fromParticipant, type === "mute");
-        break;
-      default:
-        break;
-    }
-  }
-
-  private async handleJoinMessage(
-    ws: WebSocket,
-    message: SignalingMessage
-  ): Promise<void> {
-    try {
-      const participant = await this.joinCall(
-        message.callId,
-        message.fromParticipant,
-        message.data
-      );
-
-      // Associate WebSocket with participant
-      (ws as any).participantId = participant.id;
-      (ws as any).callId = message.callId;
-
-      // Send join confirmation
-      const call = await VideoCall.findById(message.callId);
-      ws.send(
-        JSON.stringify({
-          type: "joined",
-          participantId: participant.id,
-          callId: message.callId,
-          participants: call?.participants || [],
-        })
-      );
-    } catch (error) {
-      ws.send(
-        JSON.stringify({
-          type: "error",
-          message: (error as Error).message,
-        })
-      );
-    }
-  }
-
-  private async handleMuteToggle(
-    callId: string,
-    participantId: string,
-    muted: boolean
-  ): Promise<void> {
-    const call = await VideoCall.findById(callId);
-    if (!call) return;
-
-    const participant = call.participants.find((p) => p.id === participantId);
-    if (!participant) return;
-
-    participant.mediaStreams.audio = !muted;
-    await call.save();
-    this.emit("participantMuteToggled", { callId, participantId, muted });
-  }
-
-  private handleWebSocketDisconnect(ws: WebSocket): void {
+  private handleWebSocketDisconnect(ws: any): void {
+    console.log("disconnected", ws);
     const participantId = (ws as any).participantId;
     const callId = (ws as any).callId;
 
@@ -364,6 +298,15 @@ export class VideoCallingWebRTCEngine extends EventEmitter {
     const call = await VideoCall.findById(callId);
     if (!call) {
       throw new Error("Call not found");
+    }
+
+    // ✅ Check if user already joined
+    const existingParticipant = call.participants.find(
+      (p) => p.userId === userId
+    );
+
+    if (existingParticipant) {
+      return existingParticipant;
     }
 
     if (call.participants.length >= call.maxParticipants) {
@@ -751,13 +694,6 @@ export class VideoCallingWebRTCEngine extends EventEmitter {
       iceServers: this.webrtcConfig.iceServers,
       expiresAt: new Date(Date.now() + 3_600_000), // 1 hour
     });
-  }
-
-  /**
-   * Handle WebSocket connection for WebRTC signaling
-   */
-  handleWebSocketConnection(ws: WebSocket, userId: string) {
-    this.webrtcServer.handleConnection(ws, userId);
   }
 
   /**

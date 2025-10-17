@@ -351,6 +351,7 @@ export type SignalingMessage = {
     | "unmute"
     | "screen-share";
   callId: string;
+  roomId: string;
   fromParticipant: string;
   toParticipant?: string;
   data: any;

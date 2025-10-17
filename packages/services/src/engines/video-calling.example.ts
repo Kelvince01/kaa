@@ -5,26 +5,16 @@
  */
 
 import { CallType } from "@kaa/models/types";
-import { WebSocketServer } from "ws";
 import {
   createDefaultWebRTCConfig,
   createVideoConfig,
-  VideoCallingEngine,
-} from "./video-calling.engine";
+  VideoCallingWebRTCEngine as VideoCallingEngine,
+} from "./video-calling-webrtc.engine";
 
 // Initialize the engine
-const wsServer = new WebSocketServer({ port: 8080 });
-
 const engine = new VideoCallingEngine(
-  wsServer,
   createDefaultWebRTCConfig(),
-  createVideoConfig(),
-  {
-    // biome-ignore lint/style/noNonNullAssertion: ignore
-    appId: process.env.AGORA_APP_ID!,
-    // biome-ignore lint/style/noNonNullAssertion: ignore
-    appCertificate: process.env.AGORA_APP_CERTIFICATE!,
-  }
+  createVideoConfig()
 );
 
 // Example 1: Create and join a property tour call
@@ -53,10 +43,9 @@ async function startPropertyTourCall() {
   console.log("Call created:", call._id);
 
   // 2. Generate Agora token for the host
-  const hostToken = await engine.generateAgoraToken(
+  const hostToken = await engine.generateWebRTCToken(
     call._id.toString(),
-    "landlord-123",
-    "publisher"
+    "landlord-123"
   );
 
   console.log("Host token:", hostToken);
@@ -68,10 +57,10 @@ async function startPropertyTourCall() {
   });
 
   // 4. Host joins Agora channel with audio/video
-  await engine.joinAgoraChannel(call._id.toString(), "landlord-123", {
-    audio: true,
-    video: true,
-  });
+  // await engine.joinChannel(call._id.toString(), "landlord-123", {
+  //   audio: true,
+  //   video: true,
+  // });
 
   // 5. Create property tour
   const tour = await engine.createPropertyTour(
@@ -106,10 +95,9 @@ async function startPropertyTourCall() {
 // Example 2: Prospect joins the tour
 async function prospectJoinsTour(callId: string) {
   // 1. Generate token for prospect
-  const prospectToken = await engine.generateAgoraToken(
+  const prospectToken = await engine.generateWebRTCToken(
     callId,
-    "prospect-789",
-    "publisher"
+    "prospect-789"
   );
 
   // 2. Prospect joins the call
@@ -119,10 +107,10 @@ async function prospectJoinsTour(callId: string) {
   });
 
   // 3. Prospect joins Agora channel
-  await engine.joinAgoraChannel(callId, "prospect-789", {
-    audio: true,
-    video: true,
-  });
+  // await engine.joinAgoraChannel(callId, "prospect-789", {
+  //   audio: true,
+  //   video: true,
+  // });
 
   console.log("Prospect joined with token:", prospectToken);
 
@@ -163,23 +151,23 @@ async function startRecording(callId: string) {
 }
 
 // Example 6: Handle screen sharing
-async function handleScreenShare(callId: string) {
+async function handleScreenShare(_callId: string) {
   // Start screen sharing
-  await engine.startAgoraScreenShare(callId);
+  // await engine.startAgoraScreenShare(callId);
   console.log("Screen sharing started");
 
   // Share for 5 minutes
   await new Promise((resolve) => setTimeout(resolve, 300_000));
 
   // Stop screen sharing
-  await engine.stopAgoraScreenShare(callId);
+  // await engine.stopAgoraScreenShare(callId);
   console.log("Screen sharing stopped");
 }
 
 // Example 7: Monitor call quality
 async function monitorCallQuality(callId: string) {
-  const stats = await engine.getAgoraStats(callId);
-  console.log("Call statistics:", stats);
+  // const stats = await engine.getAgoraStats(callId);
+  // console.log("Call statistics:", stats);
 
   const analytics = await engine.getCallAnalytics(callId);
   console.log("Call analytics:", analytics);
@@ -191,7 +179,7 @@ async function endCall(callId: string) {
   await engine.stopRecording(callId);
 
   // Leave Agora channel
-  await engine.leaveAgoraChannel(callId);
+  // await engine.leaveAgoraChannel(callId);
 
   // End the call
   await engine.endCall(callId);

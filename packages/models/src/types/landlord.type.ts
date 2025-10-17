@@ -45,7 +45,7 @@ export enum LandlordDocumentType {
   OTHER = "other",
 }
 
-export enum ComplianceType {
+export enum LandlordComplianceType {
   FIRE_SAFETY = "fire_safety",
   BUILDING_CODE = "building_code",
   HEALTH_PERMIT = "health_permit",
@@ -261,7 +261,7 @@ export type ILandlord = Document & {
     }>;
 
     complianceChecks: Array<{
-      type: ComplianceType;
+      type: LandlordComplianceType;
       status: VerificationStatus;
       checkDate: Date;
       expiryDate?: Date;
@@ -597,7 +597,7 @@ export type LandlordBulkOperationResult = {
 
 export type ComplianceAlert = {
   landlord: Types.ObjectId;
-  type: ComplianceType;
+  type: LandlordComplianceType;
   alertType: "expiring" | "expired" | "missing" | "violation";
   severity: "low" | "medium" | "high" | "critical";
   title: string;

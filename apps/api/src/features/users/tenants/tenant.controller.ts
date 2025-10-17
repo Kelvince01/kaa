@@ -15,6 +15,7 @@ import {
   updateTenantSchema,
   updateVerificationSchema,
 } from "./tenant.schema";
+import { tenantScreeningController } from "./tenant-screening.controller";
 
 // Metrics for tenants
 const activeTenantsGauge = new prom.Gauge({
@@ -586,4 +587,5 @@ export const tenantController = new Elysia().group("tenants", (app) =>
         },
       }
     )
+    .use(tenantScreeningController)
 );

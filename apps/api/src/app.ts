@@ -13,14 +13,12 @@ import prometheusPlugin from "elysia-prometheus";
 import { rateLimit } from "elysia-rate-limit";
 import { elysiaXSS } from "elysia-xss";
 import { Logestic } from "logestic";
-import { WebSocketServer } from "ws";
 
 import { AppRoutes } from "./app.routes";
 import { MongooseSetup } from "./database/mongoose.setup";
 import { videoCallingService } from "./features/comms";
 import { i18nRoutes } from "./features/i18n";
 import { performancePlugin as monitoringPlugin } from "./features/misc/monitoring/monitoring.plugin";
-import { wsRoutes } from "./features/ws";
 import { i18n } from "./i18n";
 import { telemetryConfig } from "./instrument";
 import setupBullBoard from "./plugins/bull-board.plugin";
@@ -43,6 +41,7 @@ import { requestSigningPlugin } from "./plugins/request-signing.plugin";
 import { corsPlugin } from "./plugins/security.plugin";
 import sitePlugin, { publicPath } from "./plugins/site.plugin";
 import { geoIP } from "./shared/utils/geo-ip.util";
+import { WSRoutes } from "./ws.routes";
 
 const idDev = config.env !== "production";
 const app = new Elysia();
@@ -92,7 +91,7 @@ app
   )
   .use(cookie())
   .use(serverTiming())
-  .use(Logestic.preset("fancy"))
+  .use(Logestic.preset("common"))
   .use(
     staticPlugin({
       prefix: "/",
@@ -111,7 +110,7 @@ app
   .use(geoIP) // required geo id db in data/GeoLite2-Country.mmdb
   .use(i18nRoutes)
   .use(AppRoutes)
-  .use(wsRoutes)
+  .use(WSRoutes)
   .use(metricsEndpointPlugin)
   .use(healthCheckPlugin)
   .use(setupBullBoard)
@@ -139,8 +138,8 @@ app.use(elysiaXSS({}));
 if (!idDev) app.use(compression());
 if (!idDev) app.use(etag());
 
-const wsServer = new WebSocketServer({ port: 8080 });
-videoCallingService.initialize(wsServer);
+// Initialize video calling service (WebSocket handled by Elysia routes)
+videoCallingService.initialize();
 
 export default app;
 export type App = typeof app;

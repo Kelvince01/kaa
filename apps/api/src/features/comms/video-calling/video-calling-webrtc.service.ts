@@ -10,7 +10,6 @@ import {
   createVideoConfig,
   VideoCallingWebRTCEngine,
 } from "@kaa/services/engines";
-import type { WebSocketServer } from "ws";
 
 /**
  * Video Calling Service with Native WebRTC
@@ -21,17 +20,50 @@ class VideoCallingWebRTCService {
 
   /**
    * Initialize the video calling engine with WebRTC
+   * No longer needs WebSocketServer - connections handled individually
    */
-  initialize(wsServer: WebSocketServer) {
+  initialize() {
     if (this.engine) {
       return; // Already initialized
     }
 
     this.engine = new VideoCallingWebRTCEngine(
-      wsServer,
       createDefaultWebRTCConfig(),
       createVideoConfig()
     );
+  }
+
+  /**
+   * Handle individual WebSocket connection (called by Elysia WS controller)
+   */
+  handleWebSocketConnection(ws: any, userId: string) {
+    if (!this.engine) {
+      this.initialize();
+    }
+
+    this.engine?.handleWebSocketConnection(ws, userId);
+  }
+
+  /**
+   * Handle WebSocket message (called by Elysia message handler)
+   */
+  handleWebSocketMessage(ws: any, message: any): void {
+    if (!this.engine) {
+      this.initialize();
+    }
+
+    this.engine?.handleWebSocketMessage(ws, message);
+  }
+
+  /**
+   * Handle WebSocket close (called by Elysia close handler)
+   */
+  handleWebSocketClose(ws: any): void {
+    if (!this.engine) {
+      return;
+    }
+
+    this.engine.handleWebSocketClose(ws);
   }
 
   /**
@@ -142,7 +174,7 @@ class VideoCallingWebRTCService {
    * Get call details
    */
   async getCall(callId: string) {
-    return await VideoCall.findById(callId);
+    return await VideoCall.findById(callId).lean();
   }
 
   /**

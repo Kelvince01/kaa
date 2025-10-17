@@ -1,403 +1,432 @@
 // import { reportsService } from "@kaa/services";
-// import type { Context as ReportContext } from "elysia";
+import { Elysia } from "elysia";
+import { authPlugin } from "~/features/auth/auth.plugin";
 // import {
 //   ReportRequestSchema,
 //   ReportScheduleSchema,
 //   ReportTemplateSchema,
 // } from "./report.schema";
 
-// type Context = ReportContext & {
-//   user: any;
-// };
+// import { rateLimitPlugin } from '../../plugins/rate-limit.plugin';
 
-// export class ReportsController {
-//   /**
-//    * @description Generate a report
-//    * @param {Context} context
-//    * @returns {Promise<any>}
-//    */
-//   async generateReport(context: Context): Promise<any> {
-//     const validation = ReportRequestSchema.safeParse(context.body);
+export const reportsController = new Elysia({ prefix: "/reports" }).use(
+  authPlugin
+);
+//   // .use(rateLimitPlugin)
 
-//     if (!validation.success) {
-//       context.set.status = 400;
-//       return {
-//         error: "Invalid report request",
-//         details: validation.error.flatten(),
-//       };
-//     }
-
-//     try {
-//       const { userId } = context.user as { userId: string };
-//       const report = await reportsService.generateReport(
-//         validation.data,
-//         userId
-//       );
-//       return { success: true, data: report };
-//     } catch (error: any) {
-//       context.set.status = 500;
-//       return { error: "Failed to generate report", details: error.message };
-//     }
-//   }
-
-//   /**
-//    * @description Get report by ID
-//    * @param {Context} context
-//    * @returns {Promise<any>}
-//    */
-//   async getReport(context: Context): Promise<any> {
-//     try {
-//       const { reportId } = context.params as { reportId: string };
-
-//       if (!reportId) {
-//         context.set.status = 400;
-//         return { error: "Report ID is required" };
+//   // Generate report
+//   .post(
+//     "/generate",
+//     async (context) => {
+//       try {
+//         const { id } = context.user;
+//         const report = await reportsService.generateReport(context.body, id);
+//         return { success: true, data: report };
+//       } catch (error: any) {
+//         context.set.status = 500;
+//         return { error: "Failed to generate report", details: error.message };
 //       }
+//     },
+//     {
+//       body: ReportRequestSchema,
+//       detail: {
+//         tags: ["reports"],
+//         summary: "Generate report",
+//         description: "Generate a new report based on specified parameters",
+//       },
+//     }
+//   )
 
-//       const report = await reportsService.getReportById(reportId);
-//       if (!report) {
-//         context.set.status = 404;
-//         return { error: "Report not found" };
+//   // Get report by ID
+//   .get(
+//     "/:reportId",
+//     async (context) => {
+//       try {
+//         const { reportId } = context.params;
+//         const report = await reportsService.getReportById(reportId);
+//         return { success: true, data: report };
+//       } catch (error: any) {
+//         context.set.status = 500;
+//         return { error: "Failed to get report", details: error.message };
 //       }
-
-//       return { success: true, data: report };
-//     } catch (error: any) {
-//       context.set.status = 500;
-//       return { error: "Failed to get report", details: error.message };
+//     },
+//     {
+//       params: t.Object({
+//         reportId: t.String(),
+//       }),
+//       detail: {
+//         tags: ["Reports"],
+//         summary: "Get report",
+//         description: "Get report details and data by ID",
+//       },
 //     }
-//   }
+//   )
 
-//   /**
-//    * @description Get user reports
-//    * @param {Context} context
-//    * @returns {Promise<any>}
-//    */
-//   async getUserReports(context: Context): Promise<any> {
-//     try {
-//       const { userId } = context.user as { userId: string };
-//       const {
-//         page = "1",
-//         limit = "20",
-//         status,
-//         type,
-//       } = context.query as {
-//         page?: string;
-//         limit?: string;
-//         status?: string;
-//         type?: string;
-//       };
-
-//       const reports = await reportsService.getUserReports(userId, {
-//         page: Number.parseInt(page, 10),
-//         limit: Number.parseInt(limit, 10),
-//         status,
-//         type,
-//       });
-
-//       return { success: true, data: reports };
-//     } catch (error: any) {
-//       context.set.status = 500;
-//       return { error: "Failed to get user reports", details: error.message };
-//     }
-//   }
-
-//   /**
-//    * @description Download report file
-//    * @param {Context} context
-//    * @returns {Promise<any>}
-//    */
-//   async downloadReport(context: Context): Promise<any> {
-//     try {
-//       const { reportId } = context.params as { reportId: string };
-//       const { format = "pdf" } = context.query as { format?: string };
-
-//       if (!reportId) {
-//         context.set.status = 400;
-//         return { error: "Report ID is required" };
+//   // Get user reports
+//   .get(
+//     "/user/reports",
+//     async (context) => {
+//       try {
+//         const { id } = context.user;
+//         const { page = 1, limit = 20, status, type } = context.query;
+//         const reports = await reportsService.getUserReports(id, {
+//           page,
+//           limit,
+//           status,
+//           type,
+//         });
+//         return { success: true, data: reports };
+//       } catch (error: any) {
+//         context.set.status = 500;
+//         return { error: "Failed to get user reports", details: error.message };
 //       }
-
-//       const downloadUrl = await reportsService.getReportDownloadUrl(
-//         reportId,
-//         format
-//       );
-//       return { success: true, data: { downloadUrl } };
-//     } catch (error: any) {
-//       context.set.status = 500;
-//       return { error: "Failed to get download URL", details: error.message };
+//     },
+//     {
+//       query: t.Object({
+//         page: t.Number(),
+//         limit: t.Number(),
+//         status: t.String(),
+//         type: t.String(),
+//       }),
+//       detail: {
+//         tags: ["Reports"],
+//         summary: "Get user reports",
+//         description: "Get all reports for the authenticated user",
+//       },
 //     }
-//   }
+//   )
 
-//   /**
-//    * @description Schedule a report
-//    * @param {Context} context
-//    * @returns {Promise<any>}
-//    */
-//   async scheduleReport(context: Context): Promise<any> {
-//     const validation = ReportScheduleSchema.safeParse(context.body);
+//   // Download report
+//   .get(
+//     "/:reportId/download",
+//     async (context) => {
+//       try {
+//         const { reportId } = context.params;
+//         const { format = "pdf" } = context.query;
+//         const downloadUrl = await reportsService.getReportDownloadUrl(
+//           reportId,
+//           format
+//         );
 
-//     if (!validation.success) {
-//       context.set.status = 400;
-//       return {
-//         error: "Invalid schedule data",
-//         details: validation.error.flatten(),
-//       };
-//     }
-
-//     try {
-//       const { userId } = context.user as { userId: string };
-//       const schedule = await reportsService.scheduleReport(
-//         validation.data,
-//         userId
-//       );
-//       return { success: true, data: schedule };
-//     } catch (error: any) {
-//       context.set.status = 500;
-//       return { error: "Failed to schedule report", details: error.message };
-//     }
-//   }
-
-//   /**
-//    * @description Get scheduled reports
-//    * @param {Context} context
-//    * @returns {Promise<any>}
-//    */
-//   async getScheduledReports(context: Context): Promise<any> {
-//     try {
-//       const { userId } = context.user as { userId: string };
-//       const {
-//         page = "1",
-//         limit = "20",
-//         active,
-//       } = context.query as {
-//         page?: string;
-//         limit?: string;
-//         active?: string;
-//       };
-
-//       const schedules = await reportsService.getScheduledReports(userId, {
-//         page: Number.parseInt(page, 10),
-//         limit: Number.parseInt(limit, 10),
-//         active: active === "true",
-//       });
-
-//       return { success: true, data: schedules };
-//     } catch (error: any) {
-//       context.set.status = 500;
-//       return {
-//         error: "Failed to get scheduled reports",
-//         details: error.message,
-//       };
-//     }
-//   }
-
-//   /**
-//    * @description Update report schedule
-//    * @param {Context} context
-//    * @returns {Promise<any>}
-//    */
-//   async updateReportSchedule(context: Context): Promise<any> {
-//     try {
-//       const { scheduleId } = context.params as { scheduleId: string };
-
-//       if (!scheduleId) {
-//         context.set.status = 400;
-//         return { error: "Schedule ID is required" };
+//         return { success: true, data: { downloadUrl } };
+//       } catch (error: any) {
+//         context.set.status = 500;
+//         return { error: "Failed to download report", details: error.message };
 //       }
+//     },
+//     {
+//       params: t.Object({
+//         reportId: t.String(),
+//       }),
+//       query: t.Object({
+//         format: t.String(),
+//       }),
+//       detail: {
+//         tags: ["Reports"],
+//         summary: "Download report",
+//         description: "Get download URL for report file",
+//       },
+//     }
+//   )
 
-//       const validation = ReportScheduleSchema.partial().safeParse(context.body);
-//       if (!validation.success) {
-//         context.set.status = 400;
+//   // Schedule report
+//   .post(
+//     "/schedule",
+//     async (context) => {
+//       try {
+//         const { id } = context.user;
+//         const schedule = await reportsService.scheduleReport(context.body, id);
+//         return { success: true, data: schedule };
+//       } catch (error: any) {
+//         context.set.status = 500;
+//         return { error: "Failed to schedule report", details: error.message };
+//       }
+//     },
+//     {
+//       body: ReportScheduleSchema,
+//       detail: {
+//         tags: ["Reports", "Schedule"],
+//         summary: "Schedule report",
+//         description: "Schedule a report to be generated automatically",
+//       },
+//     }
+//   )
+
+//   // Get scheduled reports
+//   .get(
+//     "/schedules",
+//     async (context) => {
+//       try {
+//         const { id } = context.user;
+//         const { page = 1, limit = 20, active = true } = context.query;
+
+//         const schedules = await reportsService.getScheduledReports(id, {
+//           page,
+//           limit,
+//           active,
+//         });
+//         return { success: true, data: schedules };
+//       } catch (error: any) {
+//         context.set.status = 500;
 //         return {
-//           error: "Invalid schedule data",
-//           details: validation.error.flatten(),
+//           error: "Failed to get scheduled reports",
+//           details: error.message,
 //         };
 //       }
+//     },
+//     {
+//       query: t.Object({
+//         page: t.Number(),
+//         limit: t.Number(),
+//         active: t.Boolean(),
+//       }),
+//       detail: {
+//         tags: ["Reports", "Schedule"],
+//         summary: "Get scheduled reports",
+//         description: "Get all scheduled reports for the user",
+//       },
+//     }
+//   )
 
-//       const schedule = await reportsService.updateReportSchedule(
-//         scheduleId,
-//         validation.data
-//       );
-//       if (!schedule) {
-//         context.set.status = 404;
-//         return { error: "Schedule not found" };
+//   // Update report schedule
+//   .put(
+//     "/schedules/:scheduleId",
+//     async (context) => {
+//       try {
+//         const { scheduleId } = context.params;
+//         const schedule = await reportsService.updateReportSchedule(
+//           scheduleId,
+//           context.body
+//         );
+//         return { success: true, data: schedule };
+//       } catch (error: any) {
+//         context.set.status = 500;
+//         return {
+//           error: "Failed to update report schedule",
+//           details: error.message,
+//         };
 //       }
-
-//       return { success: true, data: schedule };
-//     } catch (error: any) {
-//       context.set.status = 500;
-//       return { error: "Failed to update schedule", details: error.message };
+//     },
+//     {
+//       params: t.Object({
+//         scheduleId: t.String(),
+//       }),
+//       body: t.Object({
+//         frequency: t.String(),
+//         parameters: t.Any(),
+//         email: t.String(),
+//         active: t.Boolean(),
+//       }),
+//       detail: {
+//         tags: ["Reports", "Schedule"],
+//         summary: "Update report schedule",
+//         description: "Update an existing report schedule",
+//       },
 //     }
-//   }
+//   )
 
-//   /**
-//    * @description Cancel report schedule
-//    * @param {Context} context
-//    * @returns {Promise<any>}
-//    */
-//   async cancelReportSchedule(context: Context): Promise<any> {
-//     try {
-//       const { scheduleId } = context.params as { scheduleId: string };
-
-//       if (!scheduleId) {
-//         context.set.status = 400;
-//         return { error: "Schedule ID is required" };
+//   // Cancel report schedule
+//   .delete(
+//     "/schedules/:scheduleId",
+//     async (context) => {
+//       try {
+//         const { scheduleId } = context.params;
+//         await reportsService.cancelReportSchedule(scheduleId);
+//         return { success: true, message: "Schedule cancelled successfully" };
+//       } catch (error: any) {
+//         context.set.status = 500;
+//         return {
+//           error: "Failed to cancel report schedule",
+//           details: error.message,
+//         };
 //       }
-
-//       await reportsService.cancelReportSchedule(scheduleId);
-//       return { success: true, message: "Schedule cancelled successfully" };
-//     } catch (error: any) {
-//       context.set.status = 500;
-//       return { error: "Failed to cancel schedule", details: error.message };
+//     },
+//     {
+//       params: t.Object({
+//         scheduleId: t.String(),
+//       }),
+//       detail: {
+//         tags: ["Reports", "Schedule"],
+//         summary: "Cancel report schedule",
+//         description: "Cancel a scheduled report",
+//       },
 //     }
-//   }
+//   )
 
-//   /**
-//    * @description Create report template
-//    * @param {Context} context
-//    * @returns {Promise<any>}
-//    */
-//   async createReportTemplate(context: Context): Promise<any> {
-//     const validation = ReportTemplateSchema.safeParse(context.body);
-
-//     if (!validation.success) {
-//       context.set.status = 400;
-//       return {
-//         error: "Invalid template data",
-//         details: validation.error.flatten(),
-//       };
+//   // Create report template
+//   .post(
+//     "/templates",
+//     async (context) => {
+//       try {
+//         const { id } = context.user;
+//         const template = await reportsService.createReportTemplate(
+//           context.body,
+//           id
+//         );
+//         return { success: true, data: template };
+//       } catch (error: any) {
+//         context.set.status = 500;
+//         return {
+//           error: "Failed to create report template",
+//           details: error.message,
+//         };
+//       }
+//     },
+//     {
+//       body: ReportTemplateSchema,
+//       detail: {
+//         tags: ["Reports", "Templates"],
+//         summary: "Create report template",
+//         description: "Create a new report template",
+//       },
 //     }
+//   )
 
-//     try {
-//       const { userId } = context.user as { userId: string };
-//       const template = await reportsService.createReportTemplate(
-//         validation.data,
-//         userId
-//       );
-//       return { success: true, data: template };
-//     } catch (error: any) {
-//       context.set.status = 500;
-//       return { error: "Failed to create template", details: error.message };
+//   // Get report templates
+//   .get(
+//     "/templates",
+//     async (context) => {
+//       try {
+//         const { id } = context.user;
+//         const { page = "1", limit = "20", category } = context.query;
+//         const templates = await reportsService.getReportTemplates(id, {
+//           page,
+//           limit,
+//           category,
+//         });
+//         return { success: true, data: templates };
+//       } catch (error: any) {
+//         context.set.status = 500;
+//         return {
+//           error: "Failed to get report templates",
+//           details: error.message,
+//         };
+//       }
+//     },
+//     {
+//       query: t.Object({
+//         page: t.Number(),
+//         limit: t.Number(),
+//         category: t.String(),
+//       }),
+//       detail: {
+//         tags: ["Reports", "Templates"],
+//         summary: "Get report templates",
+//         description: "Get available report templates",
+//       },
 //     }
-//   }
+//   )
 
-//   /**
-//    * @description Get report templates
-//    * @param {Context} context
-//    * @returns {Promise<any>}
-//    */
-//   async getReportTemplates(context: Context): Promise<any> {
-//     try {
-//       const { userId } = context.user as { userId: string };
-//       const {
-//         page = "1",
-//         limit = "20",
-//         category,
-//       } = context.query as {
-//         page?: string;
-//         limit?: string;
-//         category?: string;
-//       };
-
-//       const templates = await reportsService.getReportTemplates(userId, {
-//         page: Number.parseInt(page, 10),
-//         limit: Number.parseInt(limit, 10),
-//         category,
-//       });
-
-//       return { success: true, data: templates };
-//     } catch (error: any) {
-//       context.set.status = 500;
-//       return { error: "Failed to get templates", details: error.message };
+//   // Get report analytics
+//   .get(
+//     "/analytics/reports",
+//     async (context) => {
+//       try {
+//         const { id } = context.user;
+//         const { period = "30d" } = context.query;
+//         const analytics = await reportsService.getReportAnalytics(id, period);
+//         return { success: true, data: analytics };
+//       } catch (error: any) {
+//         context.set.status = 500;
+//         return {
+//           error: "Failed to get report analytics",
+//           details: error.message,
+//         };
+//       }
+//     },
+//     {
+//       query: t.Object({
+//         period: t.String(),
+//       }),
+//       detail: {
+//         tags: ["Reports", "Analytics"],
+//         summary: "Get report analytics",
+//         description: "Get analytics on report usage and performance",
+//       },
 //     }
-//   }
+//   )
 
-//   /**
-//    * @description Get report analytics
-//    * @param {Context} context
-//    * @returns {Promise<any>}
-//    */
-//   async getReportAnalytics(context: Context): Promise<any> {
-//     try {
-//       const { userId } = context.user as { userId: string };
-//       const { period = "30d" } = context.query as { period?: string };
+//   // Get business intelligence
+//   .get(
+//     "/business-intelligence",
+//     async (context) => {
+//       try {
+//         const {
+//           timeframe = "30d",
+//           metrics,
+//           county,
+//           propertyType,
+//         } = context.query;
 
-//       const analytics = await reportsService.getReportAnalytics(userId, period);
-//       return { success: true, data: analytics };
-//     } catch (error: any) {
-//       context.set.status = 500;
-//       return {
-//         error: "Failed to get report analytics",
-//         details: error.message,
-//       };
+//         const bi = await reportsService.getBusinessIntelligence({
+//           timeframe,
+//           metrics: metrics?.split(","),
+//           county,
+//           propertyType,
+//         });
+
+//         return { success: true, data: bi };
+//       } catch (error: any) {
+//         context.set.status = 500;
+//         return {
+//           error: "Failed to get business intelligence",
+//           details: error.message,
+//         };
+//       }
+//     },
+//     {
+//       query: t.Object({
+//         timeframe: t.String(),
+//         metrics: t.String(),
+//         county: t.String(),
+//         propertyType: t.String(),
+//       }),
+//       detail: {
+//         tags: ["Reports", "BI"],
+//         summary: "Get business intelligence",
+//         description: "Get business intelligence dashboard and metrics",
+//       },
 //     }
-//   }
+//   )
 
-//   /**
-//    * @description Get business intelligence dashboard
-//    * @param {Context} context
-//    * @returns {Promise<any>}
-//    */
-//   async getBusinessIntelligence(context: Context): Promise<any> {
-//     try {
-//       const {
-//         timeframe = "30d",
-//         metrics,
-//         county,
-//         propertyType,
-//       } = context.query as {
-//         timeframe?: string;
-//         metrics?: string;
-//         county?: string;
-//         propertyType?: string;
-//       };
+//   // Get market insights
+//   .get(
+//     "/market-insights",
+//     async (context) => {
+//       try {
+//         const {
+//           location,
+//           propertyType,
+//           priceRange,
+//           period = "30d",
+//         } = context.query;
 
-//       const bi = await reportsService.getBusinessIntelligence({
-//         timeframe,
-//         metrics: metrics?.split(","),
-//         county,
-//         propertyType,
-//       });
-
-//       return { success: true, data: bi };
-//     } catch (error: any) {
-//       context.set.status = 500;
-//       return {
-//         error: "Failed to get business intelligence",
-//         details: error.message,
-//       };
+//         const insights = await reportsService.getMarketInsights({
+//           location,
+//           propertyType,
+//           priceRange,
+//           period,
+//         });
+//         return { success: true, data: insights };
+//       } catch (error: any) {
+//         context.set.status = 500;
+//         return {
+//           error: "Failed to get market insights",
+//           details: error.message,
+//         };
+//       }
+//     },
+//     {
+//       query: t.Object({
+//         location: t.String(),
+//         propertyType: t.String(),
+//         priceRange: t.String(),
+//         period: t.String(),
+//       }),
+//       detail: {
+//         tags: ["Reports", "Market"],
+//         summary: "Get market insights",
+//         description: "Get market insights and rental market analysis",
+//       },
 //     }
-//   }
-
-//   /**
-//    * @description Get market insights
-//    * @param {Context} context
-//    * @returns {Promise<any>}
-//    */
-//   async getMarketInsights(context: Context): Promise<any> {
-//     try {
-//       const {
-//         location,
-//         propertyType,
-//         priceRange,
-//         period = "30d",
-//       } = context.query as {
-//         location?: string;
-//         propertyType?: string;
-//         priceRange?: string;
-//         period?: string;
-//       };
-
-//       const insights = await reportsService.getMarketInsights({
-//         location,
-//         propertyType,
-//         priceRange,
-//         period,
-//       });
-
-//       return { success: true, data: insights };
-//     } catch (error: any) {
-//       context.set.status = 500;
-//       return { error: "Failed to get market insights", details: error.message };
-//     }
-//   }
-// }
+//   );

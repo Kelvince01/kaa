@@ -11,11 +11,13 @@ export const metadata: Metadata = {
 };
 
 type CallRoomPageProps = {
-  params: {
+  params: Promise<{
     callId: string;
-  };
+  }>;
 };
 
-export default function CallRoomPage({ params }: CallRoomPageProps) {
-  return <CallRoom callId={params.callId} />;
+export default async function CallRoomPage({ params }: CallRoomPageProps) {
+  const callId = (await params).callId;
+
+  return <CallRoom callId={callId} />;
 }

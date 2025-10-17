@@ -134,6 +134,88 @@ export interface IPayment extends BaseDocument {
   };
 }
 
+export enum PaymentRecurrenceFrequency {
+  MONTHLY = "monthly",
+  QUARTERLY = "quarterly",
+  ANNUALLY = "annually",
+  WEEKLY = "weekly",
+  DAILY = "daily",
+}
+
+export enum RecurringPaymentStatus {
+  ACTIVE = "active",
+  PAUSED = "paused",
+  CANCELLED = "cancelled",
+  COMPLETED = "completed",
+}
+
+export interface IRecurringPayment extends BaseDocument {
+  tenant: mongoose.Types.ObjectId;
+  landlord: mongoose.Types.ObjectId;
+  property: mongoose.Types.ObjectId;
+  contract: mongoose.Types.ObjectId;
+
+  // Payment details
+  amount: number;
+  currency: string;
+  paymentType: string;
+  description: string;
+
+  // Recurrence settings
+  frequency: PaymentRecurrenceFrequency;
+  startDate: Date;
+  endDate?: Date;
+  nextPaymentDate: Date;
+  dayOfMonth?: number; // For monthly payments (1-31)
+  dayOfWeek?: number; // For weekly payments (0-6, Sunday = 0)
+
+  // Status and tracking
+  status: RecurringPaymentStatus;
+  totalPayments: number;
+  successfulPayments: number;
+  failedPayments: number;
+  lastPaymentDate?: Date;
+  lastPaymentStatus?: string;
+
+  // Payment method
+  paymentMethod: mongoose.Types.ObjectId;
+  autoRetry: boolean;
+  maxRetries: number;
+  retryInterval: number; // hours
+
+  // Notifications
+  notifyBeforeDays: number;
+  notifyOnFailure: boolean;
+  notifyOnSuccess: boolean;
+
+  // Grace period and late fees
+  gracePeriodDays: number;
+  lateFeeAmount: number;
+  lateFeePercentage: number;
+  applyLateFeeAfterDays: number;
+
+  // Generated payments
+  generatedPayments: mongoose.Types.ObjectId[];
+
+  // Metadata
+  metadata?: Record<string, any>;
+  notes?: string;
+}
+
+export type PaymentFilters = {
+  status?: string | undefined;
+  limit?: string | undefined;
+  search?: string | undefined;
+  page?: string | undefined;
+  sortBy?: string | undefined;
+  sortOrder?: "asc" | "desc" | undefined;
+  startDate?: string | undefined;
+  endDate?: string | undefined;
+  propertyId?: string | undefined;
+  paymentType?: string | undefined;
+  includeSubscriptions?: boolean | undefined;
+};
+
 export interface IMpesaTransaction extends BaseDocument {
   memberId: mongoose.Types.ObjectId;
   payment: mongoose.Types.ObjectId;

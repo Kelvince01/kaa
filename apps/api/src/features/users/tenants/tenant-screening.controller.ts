@@ -3,7 +3,7 @@ import { TenantScreeningService } from "@kaa/services";
 import { Elysia, t } from "elysia";
 
 export const tenantScreeningController = new Elysia({
-  prefix: "/tenant-screening",
+  prefix: "/screening",
 })
   .post(
     "/",

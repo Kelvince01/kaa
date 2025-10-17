@@ -345,6 +345,11 @@ const virtualTourSchema = new Schema<IVirtualTour>(
       enum: Object.values(TourStatus),
       default: TourStatus.DRAFT,
     },
+    provider: {
+      type: String,
+      enum: ["matterport", "custom"],
+    },
+    embedCode: String,
     settings: {
       type: tourSettingsSchema,
       required: true,
@@ -393,9 +398,7 @@ virtualTourSchema.index({
   "metadata.constituency": "text",
 });
 
-const VirtualTour: Model<IVirtualTour> = mongoose.model<IVirtualTour>(
+export const VirtualTour: Model<IVirtualTour> = mongoose.model<IVirtualTour>(
   "VirtualTour",
   virtualTourSchema
 );
-
-export default VirtualTour;

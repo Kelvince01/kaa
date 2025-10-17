@@ -16,6 +16,7 @@ import {
 } from "@kaa/ui/components/tabs";
 import { Calendar, Clock, Phone, Plus, Video } from "lucide-react";
 import Link from "next/link";
+import { useWebSocket } from "@/hooks/use-websocket";
 import { useAuthStore } from "@/modules/auth/auth.store";
 import { useActiveCalls, useUserCalls } from "@/modules/comms/video-calling";
 import { CallStatsCards } from "./call-stats-cards";
@@ -28,6 +29,7 @@ export default function CallsDashboard() {
     user?.id || "",
     !!user?.id
   );
+  const { messages } = useWebSocket();
 
   const isLoading = isLoadingActive || isLoadingUser;
 
@@ -40,6 +42,7 @@ export default function CallsDashboard() {
           <p className="text-muted-foreground">
             Manage your video calls, property tours, and meetings
           </p>
+          {messages[0]}
         </div>
         <Link href="/dashboard/calls/new">
           <Button size="lg">

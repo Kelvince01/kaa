@@ -56,5 +56,5 @@ export default function CallRoom({ callId }: CallRoomProps) {
     );
   }
 
-  return <VideoCallRoom callId={callId} onLeave={handleLeave} />;
+  return <VideoCallRoom callId={callId} onLeaveAction={handleLeave} />;
 }

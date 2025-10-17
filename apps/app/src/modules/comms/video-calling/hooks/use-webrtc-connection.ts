@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useAuth } from "@/modules/auth";
 import { useVideoCallingStore } from "../video-calling.store";
 import {
   ConnectionState,
@@ -13,22 +14,23 @@ import {
 type UseWebRTCConnectionProps = {
   callId: string;
   token: WebRTCTokenResponse;
-  onParticipantJoined?: (participant: ICallParticipant) => void;
-  onParticipantLeft?: (participantId: string) => void;
-  onConnectionStateChange?: (state: ConnectionState) => void;
+  onParticipantJoinedAction?: (participant: ICallParticipant) => void;
+  onParticipantLeftAction?: (participantId: string) => void;
+  onConnectionStateChangeAction?: (state: ConnectionState) => void;
 };
 
 export const useWebRTCConnection = ({
   callId,
   token,
-  onParticipantJoined,
-  onParticipantLeft,
-  onConnectionStateChange,
+  onParticipantJoinedAction: onParticipantJoined,
+  onParticipantLeftAction: onParticipantLeft,
+  onConnectionStateChangeAction: onConnectionStateChange,
 }: UseWebRTCConnectionProps) => {
   const [isConnected, setIsConnected] = useState(false);
   const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(
     new Map()
   );
+  const { getAccessToken } = useAuth();
 
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -39,17 +41,38 @@ export const useWebRTCConnection = ({
   // Initialize WebSocket connection
   // biome-ignore lint/correctness/useExhaustiveDependencies: ignore
   const initializeWebSocket = useCallback(() => {
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:5000";
+    // Use the new Elysia WebSocket endpoint
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+    const wsProtocol = apiUrl.startsWith("https") ? "wss" : "ws";
+    // Remove protocol from URL
+    const wsHost = apiUrl.startsWith("http://")
+      ? apiUrl.slice(7)
+      : apiUrl.startsWith("https://")
+        ? apiUrl.slice(8)
+        : apiUrl;
+    const wsUrl = `${wsProtocol}://${wsHost}/video-calls/ws`;
+
+    console.log("🔌 Connecting to WebSocket:", wsUrl);
+
+    // Get auth token from localStorage or cookie
+    const authToken = getAccessToken() || "";
+
+    // Create WebSocket connection
+    // Note: WebSocket doesn't support custom headers, so we'll send auth in the first message
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
       console.log("✅ WebSocket connected");
-      // Send join message
+      // Send join message with auth
       const joinMessage: SignalingMessage = {
         type: "join",
         callId,
+        roomId: token.roomId,
         fromParticipant: token.userId,
-        data: {},
+        data: {
+          token: authToken, // Include auth token in first message
+        },
         timestamp: new Date(),
       };
       ws.send(JSON.stringify(joinMessage));
@@ -92,6 +115,7 @@ export const useWebRTCConnection = ({
         const message: SignalingMessage = {
           type: "ice-candidate",
           callId,
+          roomId: token.roomId,
           fromParticipant: token.userId,
           data: event.candidate,
           timestamp: new Date(),
@@ -147,6 +171,7 @@ export const useWebRTCConnection = ({
           const answerMessage: SignalingMessage = {
             type: "answer",
             callId,
+            roomId: token.roomId,
             fromParticipant: token.userId,
             toParticipant: message.fromParticipant,
             data: answer,
@@ -305,6 +330,7 @@ export const useWebRTCConnection = ({
       const leaveMessage: SignalingMessage = {
         type: "leave",
         callId,
+        roomId: token.roomId,
         fromParticipant: token.userId,
         data: {},
         timestamp: new Date(),
@@ -315,7 +341,7 @@ export const useWebRTCConnection = ({
 
     setIsConnected(false);
     setRemoteStreams(new Map());
-  }, [callId, token.userId]);
+  }, [callId, token.userId, token.roomId]);
 
   // Initialize on mount
   useEffect(() => {

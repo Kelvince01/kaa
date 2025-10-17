@@ -1,174 +1,264 @@
-# WebRTC Engine Suite
+# WebRTC Engine
 
-Complete WebRTC implementation for video calling, screen sharing, and recording.
+A complete native WebRTC implementation for video calling, recording, and real-time communication.
 
-## 📁 Directory Structure
+## 🎯 Overview
 
-```
-webrtc/
-├── README.md                          # This file
-├── index.ts                           # Main exports
-│
-├── Core Engines
-├── webrtc-peer.engine.ts             # Peer connection management
-├── webrtc-sfu.engine.ts              # Selective Forwarding Unit
-├── webrtc-media-server.engine.ts     # Media server orchestration
-├── webrtc-recording.engine.ts        # Recording system
-│
-├── Documentation
-├── MIGRATION_SUMMARY.md              # Agora to WebRTC migration
-├── CLIENT_EXAMPLE.tsx                # Client integration example
-│
-└── Recording Documentation
-    ├── RECORDING_IMPLEMENTATION.md   # Technical implementation
-    ├── RECORDING_COMPLETE.md         # Comprehensive guide
-    ├── RECORDING_QUICKSTART.md       # Quick start guide
-    ├── RECORDING_SUMMARY.md          # Implementation summary
-    ├── TRACK_CAPTURE_GUIDE.md        # Track capture guide
-    └── RECORDING_CHECKLIST.md        # Implementation checklist
+This WebRTC engine provides a full-featured video calling solution with:
+
+- **Native WebRTC** - No external dependencies (except STUN/TURN servers)
+- **Elysia WebSocket Integration** - Seamless integration with Elysia framework
+- **Recording System** - Multi-participant recording with cloud storage
+- **SFU Architecture** - Selective Forwarding Unit for scalable multi-party calls
+- **Real-time Signaling** - WebSocket-based signaling server
+
+## 🏗️ Architecture
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                         Client Layer                             │
+│  ┌────────────────────────────────────────────────────────┐     │
+│  │  WebRTC Client (Browser/React Native)                 │     │
+│  │  - Media capture (audio/video)                        │     │
+│  │  - Peer connection management                          │     │
+│  │  - Signaling via WebSocket                             │     │
+│  └────────────────────────────────────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                         API Layer                               │
+│  ┌────────────────────────────────────────────────────────┐     │
+│  │  Elysia WebSocket Controller                          │     │
+│  │  - Authentication (JWT)                               │     │
+│  │  - Message routing                                    │     │
+│  │  - Connection management                              │     │
+│  └────────────────────────────────────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Service Layer                              │
+│  ┌────────────────────────────────────────────────────────┐     │
+│  │  VideoCallingWebRTCService                             │     │
+│  │  - Business logic                                       │     │
+│  │  - Database integration                                 │     │
+│  │  - User management                                     │     │
+│  └────────────────────────────────────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Engine Layer                               │
+│  ┌────────────────────────────────────────────────────────┐     │
+│  │  VideoCallingWebRTCEngine                              │     │
+│  │  - Call management                                     │     │
+│  │  - Participant tracking                                │     │
+│  │  - Recording coordination                              │     │
+│  └────────────────────────────────────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Media Server Layer                           │
+│  ┌────────────────────────────────────────────────────────┐     │
+│  │  WebRTCMediaServerEngine                               │     │
+│  │  - Room management                                     │     │
+│  │  - SFU orchestration                                   │     │
+│  │  - Recording orchestration                             │     │
+│  └────────────────────────────────────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Core WebRTC Layer                            │
+│  ┌────────────────────────────────────────────────────────┐     │
+│  │  WebRTCSignalingEngine  │  WebRTCSFUEngine           │     │
+│  │  - WebSocket signaling  │  - Multi-peer management   │     │
+│  │  - Room management      │  - Track routing           │     │
+│  │  - Message routing      │  - Quality monitoring      │     │
+│  └────────────────────────────────────────────────────────┘     │
+│  ┌────────────────────────────────────────────────────────┐     │
+│  │  WebRTCPeerEngine      │  WebRTCRecordingEngine      │     │
+│  │  - Individual peers    │  - Media capture            │     │
+│  │  - ICE handling        │  - Chunk processing         │     │
+│  │  - Track management    │  - Cloud storage            │     │
+│  └────────────────────────────────────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## 🚀 Quick Start
 
-### Installation
-
-```bash
-bun install
-```
-
-### Basic Usage
+### 1. Initialize the Service
 
 ```typescript
-import {
-  WebRTCMediaServerEngine,
-  WebRTCRecordingEngine,
-  createDefaultWebRTCConfig
-} from '@kaa/services/engines/webrtc';
+import { videoCallingService } from './video-calling-webrtc.service';
 
-// Initialize media server
-const mediaServer = new WebRTCMediaServerEngine({
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' }
-  ],
-  maxParticipantsPerRoom: 50,
-  recordingEnabled: true
+// Initialize the service
+videoCallingService.initialize();
+```
+
+### 2. WebSocket Connection
+
+```typescript
+// Elysia WebSocket route
+.ws("/video-calls/ws", {
+  open(ws) {
+    const user = ws.data.user;
+    videoCallingService.handleWebSocketConnection(ws, user.id);
+  },
+  
+  message(ws, message) {
+    videoCallingService.handleWebSocketMessage(ws, message);
+  },
+  
+  close(ws) {
+    videoCallingService.handleWebSocketClose(ws);
+  }
+})
+```
+
+### 3. Client Connection
+
+```typescript
+// Connect to WebSocket
+const ws = new WebSocket('ws://localhost:3000/video-calls/ws', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
 });
 
-// Create a room
-await mediaServer.createRoom('room123');
+// Join a call
+ws.send(JSON.stringify({
+  type: 'join',
+  roomId: 'call_123',
+  userId: 'user_456'
+}));
+```
 
-// Join room
-await mediaServer.joinRoom('room123', 'user1');
+## 📡 Signaling Messages
 
-// Start recording
-const recordingId = await mediaServer.startRecording('room123');
+### Join Room
 
+```json
+{
+  "type": "join",
+  "roomId": "call_123",
+  "userId": "user_456",
+  "data": {
+    "metadata": "optional data"
+  }
+}
+```
+
+### WebRTC Offer
+
+```json
+{
+  "type": "offer",
+  "roomId": "call_123",
+  "userId": "user_456",
+  "targetUserId": "user_789",
+  "data": {
+    "sdp": "offer_sdp_string"
+  }
+}
+```
+
+### WebRTC Answer
+
+```json
+{
+  "type": "answer",
+  "roomId": "call_123",
+  "userId": "user_456",
+  "targetUserId": "user_789",
+  "data": {
+    "sdp": "answer_sdp_string"
+  }
+}
+```
+
+### ICE Candidate
+
+```json
+{
+  "type": "ice-candidate",
+  "roomId": "call_123",
+  "userId": "user_456",
+  "targetUserId": "user_789",
+  "data": {
+    "candidate": "ice_candidate_string"
+  }
+}
+```
+
+### Media Controls
+
+```json
+{
+  "type": "mute",
+  "roomId": "call_123",
+  "userId": "user_456"
+}
+```
+
+## 🎥 Recording System
+
+### Start Recording
+
+```typescript
+// Start recording a call
+const recordingId = await videoCallingService.startRecording('call_123');
+```
+
+### Stop Recording
+
+```typescript
 // Stop recording
-await mediaServer.stopRecording('room123');
+await videoCallingService.stopRecording('call_123');
 ```
 
-## 📚 Documentation
+### Get Recording Status
 
-### Getting Started
-- [Quick Start Guide](./RECORDING_QUICKSTART.md) - Get up and running quickly
-- [Client Example](./CLIENT_EXAMPLE.tsx) - React/React Native integration
-- [Migration Guide](./MIGRATION_SUMMARY.md) - Migrating from Agora
-
-### Core Features
-- [Recording System](./RECORDING_COMPLETE.md) - Complete recording documentation
-- [Track Capture](./TRACK_CAPTURE_GUIDE.md) - Implementing media capture
-- [Implementation Details](./RECORDING_IMPLEMENTATION.md) - Technical deep dive
-
-### Development
-- [Implementation Checklist](./RECORDING_CHECKLIST.md) - Track your progress
-- [Summary](./RECORDING_SUMMARY.md) - Overview of the system
-
-## 🏗️ Architecture
-
-### Components
-
-1. **WebRTCPeerEngine** - Manages individual peer connections
-   - ICE candidate handling
-   - SDP negotiation
-   - Connection state management
-
-2. **WebRTCSFUEngine** - Selective Forwarding Unit
-   - Multi-peer management
-   - Track forwarding
-   - Bandwidth optimization
-
-3. **WebRTCMediaServerEngine** - Main orchestrator
-   - Room management
-   - Participant coordination
-   - Recording orchestration
-   - Event handling
-
-4. **WebRTCRecordingEngine** - Recording system
-   - Chunk management
-   - Media processing
-   - Storage handling
-
-### Data Flow
-
-```
-Client
-  ↓ WebSocket
-Media Server
-  ↓ WebRTC
-SFU Engine
-  ↓ Tracks
-Recording Engine
-  ↓ Chunks
-Storage
+```typescript
+// Get recording status
+const status = await videoCallingService.getRecordingStatus(recordingId);
 ```
 
-## 🎯 Features
+### Delete Recording
 
-### Video Calling
-- ✅ Multi-participant calls
-- ✅ Audio/video streaming
-- ✅ Screen sharing
-- ✅ Quality adaptation
-- ✅ Network monitoring
-
-### Recording
-- ✅ Multi-participant recording
-- ✅ Real-time chunk capture
-- ✅ Automatic media mixing
-- ✅ Multiple output formats
-- ✅ Local and cloud storage
-
-### Quality Management
-- ✅ Adaptive bitrate
-- ✅ Network quality monitoring
-- ✅ Automatic quality adjustment
-- ✅ Bandwidth optimization
+```typescript
+// Delete recording
+await videoCallingService.deleteRecording(recordingId);
+```
 
 ## 🔧 Configuration
 
-### Media Server Config
+### WebRTC Configuration
 
 ```typescript
-const config = {
+const webrtcConfig = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
-    {
-      urls: 'turn:turn.example.com:3478',
-      username: 'user',
-      credential: 'pass'
-    }
+    { urls: 'stun:stun1.l.google.com:19302' }
   ],
-  maxParticipantsPerRoom: 50,
-  recordingEnabled: true,
-  qualityMonitoringInterval: 5000,
-  bandwidthLimits: {
-    audio: 128000,
-    video: 2500000
+  encodingOptions: {
+    audio: {
+      bitrate: 128000,
+      codec: 'opus'
+    },
+    video: {
+      bitrate: { min: 500000, max: 2000000 },
+      codec: 'vp8',
+      framerate: 30,
+      resolution: { width: 1280, height: 720 }
+    }
   }
 };
 ```
 
-### Recording Config
+### Recording Configuration
 
 ```typescript
 const recordingConfig = {
@@ -176,213 +266,281 @@ const recordingConfig = {
   format: 'webm',
   videoCodec: 'vp8',
   audioCodec: 'opus',
-  videoBitrate: 1000000,
+  videoBitrate: 2000000,
   audioBitrate: 128000,
+  framerate: 30,
+  resolution: { width: 1280, height: 720 },
   storage: {
-    type: 'local',
-    path: './recordings'
+    provider: 's3', // 'local' | 's3' | 'gcs' | 'vercel-blob'
+    s3: {
+      bucket: 'your-bucket',
+      region: 'us-east-1',
+      accessKeyId: 'your-key',
+      secretAccessKey: 'your-secret'
+    }
   }
 };
 ```
 
-## 📡 API Endpoints
+## 🌐 Environment Variables
 
-### Video Calling
+```bash
+# WebRTC Configuration
+WEBRTC_ICE_SERVERS=stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302
+WEBRTC_TURN_SERVER_URL=turn:your-turn-server.com:3478
+WEBRTC_TURN_USERNAME=username
+WEBRTC_TURN_PASSWORD=password
 
-```http
-POST   /video-calls                    # Create call
-POST   /video-calls/:id/join           # Join call
-POST   /video-calls/:id/leave          # Leave call
-POST   /video-calls/:id/end            # End call
-GET    /video-calls/:id                # Get call details
-GET    /video-calls/:id/stats          # Get call stats
+# Recording Configuration
+RECORDING_STORAGE_PROVIDER=local # local | s3 | gcs | vercel-blob
+RECORDING_OUTPUT_DIR=./recordings
+RECORDING_S3_BUCKET=your-bucket
+RECORDING_S3_REGION=us-east-1
+RECORDING_S3_ACCESS_KEY_ID=your-key
+RECORDING_S3_SECRET_ACCESS_KEY=your-secret
+
+# Cloud Storage (S3)
+AWS_ACCESS_KEY_ID=your-key
+AWS_SECRET_ACCESS_KEY=your-secret
+AWS_REGION=us-east-1
+
+# Cloud Storage (GCS)
+GOOGLE_APPLICATION_CREDENTIALS=path/to/credentials.json
 ```
 
-### Recording
+## 📊 API Endpoints
 
-```http
-POST   /video-calls/:id/recording/start              # Start recording
-POST   /video-calls/:id/recording/stop               # Stop recording
-GET    /video-calls/:id/recording/:recordingId       # Get status
-DELETE /video-calls/:id/recording/:recordingId       # Delete recording
-```
+### Video Call Management
 
-### Media Control
+- `POST /video-calls` - Create a new call
+- `GET /video-calls/:id` - Get call details
+- `PUT /video-calls/:id` - Update call
+- `DELETE /video-calls/:id` - End call
 
-```http
-POST   /video-calls/:id/audio          # Toggle audio
-POST   /video-calls/:id/video          # Toggle video
-POST   /video-calls/:id/screen-share/start  # Start screen share
-POST   /video-calls/:id/screen-share/stop   # Stop screen share
-```
+### Recording Management
 
-## 🔐 Security
+- `POST /video-calls/:callId/recording/start` - Start recording
+- `POST /video-calls/:callId/recording/stop` - Stop recording
+- `GET /video-calls/:callId/recording/:recordingId` - Get recording status
+- `DELETE /video-calls/:callId/recording/:recordingId` - Delete recording
 
-### Access Control
-- Host-only recording control
-- Participant-based permissions
-- Secure token generation
-- Encrypted connections
+### WebSocket Endpoint
 
-### Data Protection
-- TLS/DTLS encryption
-- Secure storage
-- Access logging
-- Data retention policies
+- `WS /video-calls/ws` - WebRTC signaling
 
 ## 🧪 Testing
 
-### Unit Tests
+### Test WebSocket Connection
 
 ```bash
-bun test webrtc-recording.engine.test.ts
-bun test webrtc-media-server.engine.test.ts
+# Connect to WebSocket
+wscat -c "ws://localhost:3000/video-calls/ws" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Send join message
+> {"type":"join","roomId":"call_123","userId":"user_456"}
+
+# Send offer
+> {"type":"offer","roomId":"call_123","userId":"user_456","targetUserId":"user_789","data":{"sdp":"offer_sdp"}}
 ```
 
-### Integration Tests
+### Test Recording
 
 ```bash
-bun test integration/recording.test.ts
+# Start recording
+curl -X POST "http://localhost:3000/video-calls/call_123/recording/start" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Stop recording
+curl -X POST "http://localhost:3000/video-calls/call_123/recording/stop" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-### Manual Testing
+## 🔒 Security
 
-```bash
-# Start server
-bun run dev
+### Authentication
 
-# Test recording
-curl -X POST http://localhost:3000/video-calls/room123/recording/start
-```
+- JWT-based authentication via Elysia middleware
+- Automatic user validation on WebSocket connection
+- Role-based access control
 
-## 📊 Monitoring
+### WebRTC Security
 
-### Metrics
+- Secure WebSocket connections (WSS)
+- TURN server support for NAT traversal
+- ICE candidate validation
+- Media encryption (DTLS/SRTP)
 
-- Active rooms
-- Total participants
-- Active recordings
-- CPU usage
-- Memory usage
-- Network bandwidth
+## 📈 Monitoring
 
-### Events
+### Server Statistics
 
 ```typescript
-mediaServer.on('userjoined', ({ roomId, userId }) => {
-  console.log(`User ${userId} joined room ${roomId}`);
-});
-
-mediaServer.on('recordingstarted', ({ roomId, recordingId }) => {
-  console.log(`Recording ${recordingId} started`);
-});
-
-mediaServer.on('recordingcompleted', ({ recordingId, outputPath }) => {
-  console.log(`Recording saved to ${outputPath}`);
+const stats = videoCallingService.getServerStats();
+console.log({
+  rooms: stats.rooms,
+  participants: stats.participants,
+  recordings: stats.recordings
 });
 ```
 
-## 🚧 Current Status
+### Room Statistics
 
-### ✅ Completed
-- Core WebRTC implementation
-- Recording system architecture
-- API endpoints
-- Documentation
-- Event system
-
-### 🔄 In Progress
-- Real track capture implementation
-- FFmpeg integration
-- Cloud storage
-- Comprehensive testing
-
-### 📋 Planned
-- Live streaming
-- Transcription
-- Analytics
-- Advanced features
-
-## 🤝 Contributing
-
-### Development Setup
-
-```bash
-# Install dependencies
-bun install
-
-# Run tests
-bun test
-
-# Build
-bun run build
-
-# Lint
-bun run lint
+```typescript
+const roomStats = await videoCallingService.getRoomStats('call_123');
+console.log({
+  participantCount: roomStats.participantCount,
+  participants: roomStats.participants,
+  recording: roomStats.recording
+});
 ```
 
-### Code Style
+## 🚀 Deployment
 
-- Follow TypeScript best practices
-- Use async/await for async operations
-- Add JSDoc comments
-- Write tests for new features
+### Production Checklist
 
-## 📖 Additional Resources
+- [ ] Configure TURN servers for NAT traversal
+- [ ] Set up cloud storage for recordings
+- [ ] Configure SSL/TLS certificates
+- [ ] Set up monitoring and logging
+- [ ] Configure rate limiting
+- [ ] Set up backup systems
 
-### External Documentation
-- [WebRTC API](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API)
-- [MediaRecorder API](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder)
-- [RTCPeerConnection](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection)
+### Docker Deployment
 
-### Related Projects
-- [node-webrtc](https://github.com/node-webrtc/node-webrtc)
-- [mediasoup](https://mediasoup.org/)
-- [Janus Gateway](https://janus.conf.meetecho.com/)
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["npm", "start"]
+```
 
-## 🐛 Troubleshooting
+## 🔧 Troubleshooting
 
 ### Common Issues
 
-**Recording doesn't start**
-- Check if recording is enabled in config
-- Verify user has host permissions
-- Review server logs
+#### WebSocket Connection Failed
 
-**Poor video quality**
-- Check network bandwidth
-- Adjust bitrate settings
-- Verify codec support
+- Check authentication token
+- Verify WebSocket URL
+- Check CORS settings
 
-**Connection failures**
-- Verify TURN server configuration
+#### WebRTC Connection Failed
+
+- Check ICE servers configuration
+- Verify TURN server credentials
 - Check firewall settings
-- Review ICE candidate gathering
+
+#### Recording Issues
+
+- Check storage permissions
+- Verify cloud storage credentials
+- Check disk space
 
 ### Debug Mode
 
 ```typescript
 // Enable debug logging
-const mediaServer = new WebRTCMediaServerEngine({
-  ...config,
-  debug: true
-});
+process.env.DEBUG = 'webrtc:*';
 ```
 
-## 📞 Support
+## 📚 Examples
 
-For issues or questions:
-1. Check the documentation
-2. Review the troubleshooting guide
-3. Check server logs
-4. Open an issue on GitHub
+### Complete Client Implementation
+
+```typescript
+class WebRTCClient {
+  private ws: WebSocket;
+  private pc: RTCPeerConnection;
+  
+  constructor(token: string) {
+    this.ws = new WebSocket('ws://localhost:3000/video-calls/ws', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    this.setupWebSocket();
+    this.setupPeerConnection();
+  }
+  
+  private setupWebSocket() {
+    this.ws.onopen = () => {
+      this.ws.send(JSON.stringify({
+        type: 'join',
+        roomId: 'call_123',
+        userId: 'user_456'
+      }));
+    };
+    
+    this.ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      this.handleSignalingMessage(message);
+    };
+  }
+  
+  private setupPeerConnection() {
+    this.pc = new RTCPeerConnection({
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    });
+    
+    this.pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        this.ws.send(JSON.stringify({
+          type: 'ice-candidate',
+          roomId: 'call_123',
+          userId: 'user_456',
+          targetUserId: 'user_789',
+          data: { candidate: event.candidate }
+        }));
+      }
+    };
+  }
+  
+  private async handleSignalingMessage(message: any) {
+    switch (message.type) {
+      case 'offer':
+        await this.pc.setRemoteDescription(message.data.sdp);
+        const answer = await this.pc.createAnswer();
+        await this.pc.setLocalDescription(answer);
+        this.ws.send(JSON.stringify({
+          type: 'answer',
+          roomId: 'call_123',
+          userId: 'user_456',
+          targetUserId: message.userId,
+          data: { sdp: answer }
+        }));
+        break;
+        
+      case 'answer':
+        await this.pc.setRemoteDescription(message.data.sdp);
+        break;
+        
+      case 'ice-candidate':
+        await this.pc.addIceCandidate(message.data.candidate);
+        break;
+    }
+  }
+}
+```
 
 ## 📄 License
 
-MIT License - See LICENSE file for details
+This WebRTC engine is part of the KAA project and follows the same licensing terms.
 
----
+## 🤝 Contributing
 
-**Version:** 1.0.0  
-**Last Updated:** 2025-10-10  
-**Status:** Production Ready (Core), MVP Ready (Recording)
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## 📞 Support
+
+For issues and questions:
+
+- Create an issue in the repository
+- Check the troubleshooting section
+- Review the examples and documentation

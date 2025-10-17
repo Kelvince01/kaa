@@ -67,6 +67,26 @@ const userPreferencesSchema = new Schema<UserPreferences>(
         default: false,
       },
     },
+    properties: {
+      propertyTypes: [String],
+      locations: [String],
+      budget: {
+        min: Number,
+        max: Number,
+      },
+      furnished: Boolean,
+      bedrooms: Number,
+      bathrooms: Number,
+      amenities: [String],
+      features: [String],
+      verified: Boolean,
+      featured: Boolean,
+      owner: Boolean,
+      agent: Boolean,
+      admin: Boolean,
+      tenant: Boolean,
+      landlord: Boolean,
+    },
   },
   { _id: false }
 );

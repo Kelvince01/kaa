@@ -1,3 +1,7 @@
+import type mongoose from "mongoose";
+import type { Document } from "mongoose";
+import type { BaseDocument } from "./base.type";
+
 // Security enums
 export enum AuthenticationMethod {
   PASSWORD = "password",
@@ -436,3 +440,65 @@ export type ComplianceFinding = {
   dueDate?: Date;
   status: "open" | "in_progress" | "resolved" | "accepted_risk";
 };
+
+// =========================== //
+
+// Security events
+export interface ISecurityEvent extends Document {
+  memberId: mongoose.Types.ObjectId;
+  userId?: mongoose.Types.ObjectId;
+  type:
+    | "login_attempt"
+    | "logout"
+    | "password_change"
+    | "email_change"
+    | "phone_change"
+    | "failed_login"
+    | "account_locked"
+    | "mfa_enabled"
+    | "suspicious_activity"
+    | "data_export"
+    | "permission_change";
+  severity: "low" | "medium" | "high" | "critical";
+  details: {
+    ipAddress?: string;
+    userAgent?: string;
+    location?: {
+      country?: string;
+      city?: string;
+      coordinates?: [number, number];
+    };
+    description?: string;
+    metadata?: Record<string, any>;
+  };
+  status: "detected" | "investigating" | "resolved" | "false_positive";
+  resolvedBy?: mongoose.Types.ObjectId;
+  resolvedAt?: Date;
+  createdAt: Date;
+}
+
+export interface IDataRetentionPolicy extends BaseDocument {
+  memberId: mongoose.Types.ObjectId;
+  dataType: "user_data" | "analytics" | "logs" | "files" | "backups";
+  retentionPeriod: number; // in days
+  isActive: boolean;
+  lastExecuted?: Date;
+  createdBy: mongoose.Types.ObjectId;
+}
+
+export interface IComplianceReport extends Document {
+  memberId: mongoose.Types.ObjectId;
+  type: "gdpr" | "ccpa" | "hipaa" | "sox" | "custom";
+  status: "pending" | "generating" | "completed" | "failed";
+  reportData?: {
+    userCount: number;
+    dataProcessingActivities: any[];
+    securityMeasures: any[];
+    dataBreaches: any[];
+    userRequests: any[];
+  };
+  generatedBy: mongoose.Types.ObjectId;
+  completedAt?: Date;
+  downloadUrl?: string;
+  createdAt: Date;
+}

@@ -1,9 +1,9 @@
 import { type Model, model, Schema, type Types } from "mongoose";
 import { addressSchema } from "./base.model";
 import {
-  ComplianceType,
   type ILandlord,
   KYCLevel,
+  LandlordComplianceType,
   LandlordDocumentType,
   LandlordStatus,
   LandlordType,
@@ -362,7 +362,7 @@ const landlordSchema: Schema<ILandlord> = new Schema<ILandlord>(
         {
           type: {
             type: String,
-            enum: Object.values(ComplianceType),
+            enum: Object.values(LandlordComplianceType),
             required: true,
           },
           status: {

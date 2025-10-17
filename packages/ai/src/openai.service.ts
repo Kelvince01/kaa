@@ -563,8 +563,8 @@ export class OpenAIService {
       prompt += `, ${propertyData.location.neighborhood}`;
     prompt += "\n";
 
-    if (propertyData.pricing?.rentAmount)
-      prompt += `- Rent: KES ${propertyData.pricing.rentAmount.toLocaleString()}\n`;
+    if (propertyData.pricing?.rent)
+      prompt += `- Rent: KES ${propertyData.pricing.rent.toLocaleString()}\n`;
     if (propertyData.amenities?.length)
       prompt += `- Amenities: ${propertyData.amenities.join(", ")}\n`;
 

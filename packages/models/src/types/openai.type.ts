@@ -16,7 +16,7 @@ export type PropertyData = {
     neighborhood?: string;
   };
   pricing?: {
-    rentAmount?: number;
+    rent?: number;
     deposit?: number;
   };
   amenities?: string[];

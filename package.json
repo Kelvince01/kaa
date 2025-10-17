@@ -124,6 +124,7 @@
     "@parcel/watcher",
     "@sentry/cli",
     "@tailwindcss/oxide",
+    "@tensorflow/tfjs-node",
     "@vercel/speed-insights",
     "canvas",
     "core-js",

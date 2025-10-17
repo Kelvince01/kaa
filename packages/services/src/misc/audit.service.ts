@@ -206,7 +206,7 @@ export class AuditService {
       endDate,
     } = query;
 
-    const filter: any = { memberId };
+    const filter: FilterQuery<IEvent> = { memberId };
 
     // Add filters
     if (userId) filter.userId = userId;

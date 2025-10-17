@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import type { IAmenity } from "./amenity.type";
 
 // Kenya-specific Location Types
 export enum KenyanCounty {
@@ -193,50 +194,14 @@ export type IDemographics = {
   source: string;
 };
 
-export type IAmenity = {
-  _id: Types.ObjectId;
-  name: string;
-  category: AmenityCategory;
-  type: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
-  distance?: number; // in meters
-  rating?: number;
-  isVerified: boolean;
-  contact?: {
-    phone?: string;
-    email?: string;
-    website?: string;
-  };
-  hours?: IBusinessHours;
-  metadata: Record<string, any>;
-};
-
-export enum AmenityCategory {
-  EDUCATION = "education",
-  HEALTHCARE = "healthcare",
-  SHOPPING = "shopping",
-  ENTERTAINMENT = "entertainment",
-  DINING = "dining",
-  TRANSPORT = "transport",
-  FINANCIAL = "financial",
-  GOVERNMENT = "government",
-  RELIGIOUS = "religious",
-  RECREATIONAL = "recreational",
-  UTILITIES = "utilities",
-  SECURITY = "security",
-}
-
 export type IBusinessHours = {
-  monday: ITimeSlot[];
-  tuesday: ITimeSlot[];
-  wednesday: ITimeSlot[];
-  thursday: ITimeSlot[];
-  friday: ITimeSlot[];
-  saturday: ITimeSlot[];
-  sunday: ITimeSlot[];
+  monday?: ITimeSlot[];
+  tuesday?: ITimeSlot[];
+  wednesday?: ITimeSlot[];
+  thursday?: ITimeSlot[];
+  friday?: ITimeSlot[];
+  saturday?: ITimeSlot[];
+  sunday?: ITimeSlot[];
 };
 
 export type ITimeSlot = {
@@ -251,8 +216,8 @@ export type ITransportation = {
   trainStations: ITransportHub[];
   busStations: ITransportHub[];
   matatu: {
-    routes: IMatutuRoute[];
-    stages: IMatutuStage[];
+    routes: IMatatuRoute[];
+    stages: IMatatuStage[];
   };
 };
 
@@ -284,7 +249,7 @@ export type ITransportHub = {
   };
 };
 
-export type IMatutuRoute = {
+export type IMatatuRoute = {
   name: string;
   from: string;
   to: string;
@@ -293,7 +258,7 @@ export type IMatutuRoute = {
   frequency: number; // per hour
 };
 
-export type IMatutuStage = {
+export type IMatatuStage = {
   name: string;
   coordinates: {
     latitude: number;

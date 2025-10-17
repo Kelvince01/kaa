@@ -87,21 +87,34 @@ export const aiController = new Elysia({
 
     .post(
       "/chat",
-      async ({ body }) => {
-        const uiMessages = body.messages || [];
-        console.log(uiMessages);
+      async ({ body, set }) => {
+        try {
+          const uiMessages = body.messages || [];
 
-        const result = await streamText({
-          model: google("gemini-2.0-flash"),
-          messages: convertToModelMessages(uiMessages as any),
-        });
+          const result = await streamText({
+            model: google("gemini-2.0-flash"),
+            messages: convertToModelMessages(uiMessages as any),
+          });
 
-        return result.toUIMessageStreamResponse();
+          set.status = 200;
+          return result.toUIMessageStreamResponse();
+        } catch (error: any) {
+          set.status = 500;
+          return {
+            status: "error",
+            message: error.message || "Failed to chat with AI",
+          };
+        }
       },
       {
         body: t.Object({
           messages: t.Array(t.String()),
         }),
+        detail: {
+          tags: ["ai"],
+          summary: "Chat with AI",
+          description: "Chat with AI",
+        },
       }
     )
 

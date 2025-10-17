@@ -6,9 +6,15 @@
     "baseUrl": ".",
     "jsx": "preserve",
     "paths": {
-      "@/*": ["./src/*"],
-      "@kaa/ui/*": ["../packages/ui/src/*"],
-      "~/*": ["../api/src/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@kaa/ui/*": [
+        "../packages/ui/src/*"
+      ],
+      "~/*": [
+        "../api/src/*"
+      ]
     },
     "plugins": [
       {
@@ -26,7 +32,11 @@
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "../../packages/services/src/engines/template.engine.ts",
-    "../../packages/services/src/template.service.ts"
+    "../../packages/services/src/template.service.ts",
+    "../../packages/models/src/analytics.model.ts"
   ],
-  "exclude": ["node_modules", "./.next"]
+  "exclude": [
+    "node_modules",
+    "./.next"
+  ]
 }

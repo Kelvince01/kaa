@@ -21,10 +21,13 @@ import { ParticipantGrid } from "./participant-grid";
 
 type VideoCallRoomProps = {
   callId: string;
-  onLeave?: () => void;
+  onLeaveAction?: () => void;
 };
 
-export const VideoCallRoom = ({ callId, onLeave }: VideoCallRoomProps) => {
+export const VideoCallRoom = ({
+  callId,
+  onLeaveAction: onLeave,
+}: VideoCallRoomProps) => {
   const {
     currentCall,
     localParticipant,
@@ -57,10 +60,10 @@ export const VideoCallRoom = ({ callId, onLeave }: VideoCallRoomProps) => {
     // biome-ignore lint/style/noNonNullAssertion: ignore
     // biome-ignore lint/nursery/noNonNullAssertedOptionalChain: ignore
     token: token?.data!,
-    onParticipantJoined: (participant) => {
+    onParticipantJoinedAction: (participant) => {
       setParticipants((prev) => [...prev, participant]);
     },
-    onParticipantLeft: (participantId) => {
+    onParticipantLeftAction: (participantId) => {
       setParticipants((prev) => prev.filter((p) => p.id !== participantId));
     },
   });

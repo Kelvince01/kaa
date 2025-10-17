@@ -3,9 +3,12 @@ import {
   type IMpesaTransaction,
   type IPayment,
   type IPaymentMethod,
+  type IRecurringPayment,
   type IWallet,
   type IWalletTransaction,
+  PaymentRecurrenceFrequency,
   PaymentStatus,
+  RecurringPaymentStatus,
   TransactionStatus,
   TransactionType,
   WalletStatus,
@@ -177,6 +180,178 @@ PaymentSchema.index({ status: 1 });
 PaymentSchema.index({ paymentType: 1 });
 
 const Payment = mongoose.model<IPayment>("Payment", PaymentSchema);
+
+const RecurringPaymentSchema = new Schema<IRecurringPayment>(
+  {
+    tenant: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    landlord: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    property: {
+      type: Schema.Types.ObjectId,
+      ref: "Property",
+      required: true,
+    },
+    contract: {
+      type: Schema.Types.ObjectId,
+      ref: "Contract",
+      required: true,
+    },
+
+    // Payment details
+    amount: {
+      type: Number,
+      required: true,
+    },
+    currency: {
+      type: String,
+      default: "KES",
+    },
+    paymentType: {
+      type: String,
+      enum: ["rent", "utilities", "service_charge", "maintenance"],
+      default: "rent",
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+
+    // Recurrence settings
+    frequency: {
+      type: String,
+      enum: Object.values(PaymentRecurrenceFrequency),
+      required: true,
+    },
+    startDate: {
+      type: Date,
+      required: true,
+    },
+    endDate: Date,
+    nextPaymentDate: {
+      type: Date,
+      required: true,
+    },
+    dayOfMonth: {
+      type: Number,
+      min: 1,
+      max: 31,
+    },
+    dayOfWeek: {
+      type: Number,
+      min: 0,
+      max: 6,
+    },
+
+    // Status and tracking
+    status: {
+      type: String,
+      enum: Object.values(RecurringPaymentStatus),
+      default: RecurringPaymentStatus.ACTIVE,
+    },
+    totalPayments: {
+      type: Number,
+      default: 0,
+    },
+    successfulPayments: {
+      type: Number,
+      default: 0,
+    },
+    failedPayments: {
+      type: Number,
+      default: 0,
+    },
+    lastPaymentDate: Date,
+    lastPaymentStatus: String,
+
+    // Payment method
+    paymentMethod: {
+      type: Schema.Types.ObjectId,
+      ref: "PaymentMethod",
+      required: true,
+    },
+    autoRetry: {
+      type: Boolean,
+      default: true,
+    },
+    maxRetries: {
+      type: Number,
+      default: 3,
+    },
+    retryInterval: {
+      type: Number,
+      default: 24, // hours
+    },
+
+    // Notifications
+    notifyBeforeDays: {
+      type: Number,
+      default: 3,
+    },
+    notifyOnFailure: {
+      type: Boolean,
+      default: true,
+    },
+    notifyOnSuccess: {
+      type: Boolean,
+      default: true,
+    },
+
+    // Grace period and late fees
+    gracePeriodDays: {
+      type: Number,
+      default: 5,
+    },
+    lateFeeAmount: {
+      type: Number,
+      default: 0,
+    },
+    lateFeePercentage: {
+      type: Number,
+      default: 0,
+    },
+    applyLateFeeAfterDays: {
+      type: Number,
+      default: 7,
+    },
+
+    // Generated payments
+    generatedPayments: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Payment",
+      },
+    ],
+
+    // Metadata
+    metadata: {
+      type: Map,
+      of: Schema.Types.Mixed,
+    },
+    notes: String,
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Indexes
+RecurringPaymentSchema.index({ tenant: 1, status: 1 });
+RecurringPaymentSchema.index({ landlord: 1, status: 1 });
+RecurringPaymentSchema.index({ property: 1, status: 1 });
+RecurringPaymentSchema.index({ nextPaymentDate: 1, status: 1 });
+RecurringPaymentSchema.index({ status: 1, nextPaymentDate: 1 });
+
+export const RecurringPayment = mongoose.model<IRecurringPayment>(
+  "RecurringPayment",
+  RecurringPaymentSchema
+);
 
 const mpesaTransactionSchema = new Schema<IMpesaTransaction>(
   {

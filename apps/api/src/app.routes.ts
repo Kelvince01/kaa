@@ -1,70 +1,92 @@
 import { Elysia } from "elysia";
 
 import { aiController } from "./features/ai/ai.controller";
+import { analyticsController } from "./features/analytics/analytics.controller";
+import { applicationController } from "./features/applications/application.controller";
+import { bookingController } from "./features/applications/booking.controller";
 import { authController } from "./features/auth/auth.controller";
 import { csrfController } from "./features/auth/csrf.controller";
 import { securityMonitoringController } from "./features/auth/security-monitoring.controller";
 import { videoCallingController } from "./features/comms";
-import { emailController } from "./features/comms/emails/email.controller";
-import { conversationController } from "./features/comms/messages/conversation.controller";
-import { notificationController } from "./features/comms/notifications/notification.controller";
-import { smsController } from "./features/comms/sms/sms.controller";
-import { ussdController } from "./features/comms/ussd.controller";
+import { commRoutes } from "./features/comms/comm.routes";
+import { contractController } from "./features/contracts/contract.controller";
+import { documentController } from "./features/documents/document.controller";
 import { legalDocumentController } from "./features/documents/legal-document.controller";
 import { fileController } from "./features/files/file.controller";
 import { fileV2Controller } from "./features/files/file-v2.controller";
+import { financialController } from "./features/financials/financial.controller";
+import { complianceController } from "./features/legal/compliance.controller";
 import { locationsController } from "./features/locations/location.controller";
+import { maintenanceController } from "./features/maintenance/maintenance.controller";
 import { monitoringController } from "./features/misc/monitoring/monitoring.controller";
 import { billingController } from "./features/org/billing.controller";
 import { memberController } from "./features/org/member.controller";
 import { organizationController } from "./features/org/org.controller";
 import { rentSubscriptionController } from "./features/org/rent-subscription.controller";
 import { subscriptionController } from "./features/org/subscription.controller";
-import { airtelMoneyController } from "./features/payments/airtel-money.controller";
-import { mpesaController } from "./features/payments/mpesa.controller";
-import { paymentMethodController } from "./features/payments/payment-method.controller";
-// import { stripeController } from "./features/payments/stripe.controller";
-import { walletController } from "./features/payments/wallet.controller";
+import { paymentRoutes } from "./features/payments/payment.routes";
+import {
+  propertyAIController,
+  propertyMonitoringController,
+} from "./features/properties";
+import { amenityController } from "./features/properties/amenities/amenity.controller";
+import { contractorController } from "./features/properties/contractor.controller";
+import { insuranceController } from "./features/properties/insurance.controller";
+import { propertyController } from "./features/properties/property.controller";
 import { reviewController } from "./features/properties/review.controller";
+import { scheduleController } from "./features/properties/schedule.controller";
+import { searchRouter } from "./features/properties/search/search.router";
+import { unitController } from "./features/properties/units/unit.controller";
+import { workOrderController } from "./features/properties/work-order.controller";
 import { rbacController } from "./features/rbac/rbac.controller";
+import { referenceController } from "./features/references/reference.controller";
+import { reportsController } from "./features/reports/reports.controller";
 import { templatesController } from "./features/templates/template.controller";
-import { landlordController } from "./features/users/landlords/landlord.controller";
-import { tenantController } from "./features/users/tenants/tenant.controller";
-import { tenantScreeningController } from "./features/users/tenants/tenant-screening.controller";
-import { usersController } from "./features/users/user.controller";
+import { accountRoutes } from "./features/users/account.routes";
+import { virtualToursController } from "./features/virtual-tours/virtual-tours.controller";
 
 const routes = new Elysia({ prefix: "api/v1" })
   .use(csrfController)
   .use(securityMonitoringController)
   .use(authController)
   .use(rbacController)
-  .use(usersController)
-  .use(landlordController)
-  .use(tenantController)
-  .use(tenantScreeningController)
-  .use(emailController)
-  .use(smsController)
-  .use(conversationController)
-  .use(notificationController)
-  .use(ussdController)
+  .use(accountRoutes)
+  .use(commRoutes)
   .use(organizationController)
   .use(memberController)
   .use(subscriptionController)
   .use(billingController)
   .use(rentSubscriptionController)
-  .use(walletController)
-  .use(mpesaController)
-  // .use(stripeController)
-  .use(paymentMethodController)
-  .use(airtelMoneyController)
+  .use(paymentRoutes)
+  .use(bookingController)
+  .use(applicationController)
+  .use(contractController)
+  .use(propertyController)
+  .use(searchRouter)
+  .use(unitController)
+  .use(contractorController)
+  .use(workOrderController)
+  .use(scheduleController)
+  .use(amenityController)
+  .use(propertyMonitoringController) // /properties/monitoring/*
+  .use(propertyAIController)
+  .use(maintenanceController)
+  .use(referenceController)
+  .use(reviewController)
   .use(locationsController)
   .use(aiController)
   .use(fileController)
   .use(fileV2Controller)
+  .use(documentController)
   .use(legalDocumentController)
   .use(templatesController)
   .use(monitoringController)
   .use(videoCallingController)
-  .use(reviewController);
+  .use(analyticsController)
+  .use(reportsController)
+  .use(insuranceController)
+  .use(virtualToursController)
+  .use(financialController)
+  .use(complianceController);
 
 export { routes as AppRoutes };

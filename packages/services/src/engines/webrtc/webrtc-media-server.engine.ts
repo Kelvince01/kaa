@@ -1,5 +1,4 @@
 import { EventEmitter } from "node:events";
-import type { WebSocket } from "ws";
 import { WebRTCRecordingEngine } from "./webrtc-recording.engine";
 import { WebRTCSFUEngine } from "./webrtc-sfu.engine";
 import { WebRTCSignalingEngine } from "./webrtc-signaling.engine";
@@ -256,9 +255,30 @@ export class WebRTCMediaServerEngine extends EventEmitter {
   /**
    * Handle WebSocket connection
    */
-  handleConnection(ws: WebSocket, userId: string): void {
+  handleConnection(ws: any, userId: string): void {
     this.signaling.handleConnection(ws, userId);
     this.emit("connection", { userId });
+  }
+
+  /**
+   * Handle WebSocket message (called by Elysia message handler)
+   */
+  handleMessage(ws: any, message: any): void {
+    this.signaling.handleMessage(ws, message);
+  }
+
+  /**
+   * Handle WebSocket close (called by Elysia close handler)
+   */
+  handleClose(ws: any): void {
+    this.signaling.handleClose(ws);
+  }
+
+  /**
+   * Handle WebSocket error (called by Elysia error handler)
+   */
+  handleError(ws: any, error: Error): void {
+    this.signaling.handleError(ws, error);
   }
 
   /**

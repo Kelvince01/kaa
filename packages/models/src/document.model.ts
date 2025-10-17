@@ -84,4 +84,89 @@ documentSchema.virtual("url").get(function () {
 });
 
 export const Document = mongoose.model("Document", documentSchema);
-export default Document;
+
+const verificationLogSchema = new mongoose.Schema<IVerificationLog>(
+  {
+    documentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Document",
+      required: true,
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+    result: {
+      isValid: {
+        type: Boolean,
+        required: true,
+      },
+      confidence: {
+        type: Number,
+        required: true,
+      },
+    },
+    processingTimeMs: {
+      type: Number,
+      required: true,
+    },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export const VerificationLog = mongoose.model<IVerificationLog>(
+  "VerificationLog",
+  verificationLogSchema
+);
+
+const verificationFeedbackSchema = new mongoose.Schema<IVerificationFeedback>(
+  {
+    documentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Document",
+      required: true,
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+    feedback: {
+      isCorrect: {
+        type: Boolean,
+        required: true,
+      },
+      actualStatus: {
+        type: String,
+        required: true,
+      },
+      comments: {
+        type: String,
+      },
+    },
+    reviewStatus: {
+      type: String,
+      enum: ["pending", "reviewed", "dismissed"],
+      default: "pending",
+    },
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    reviewedAt: {
+      type: Date,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export const VerificationFeedback = mongoose.model<IVerificationFeedback>(
+  "VerificationFeedback",
+  verificationFeedbackSchema
+);

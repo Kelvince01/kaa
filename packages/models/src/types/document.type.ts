@@ -124,3 +124,27 @@ export type ExtractedDocumentData = {
   };
   [key: string]: string | number | boolean | object | undefined;
 };
+
+export type IVerificationLog = {
+  documentId: mongoose.Types.ObjectId;
+  timestamp: Date;
+  result: {
+    isValid: boolean;
+    confidence: number;
+  };
+  processingTimeMs: number;
+  metadata?: Record<string, unknown>;
+};
+
+export type IVerificationFeedback = {
+  documentId: mongoose.Types.ObjectId;
+  timestamp: Date;
+  feedback: {
+    isCorrect: boolean;
+    actualStatus: string;
+    comments?: string;
+  };
+  reviewStatus?: string;
+  reviewedBy?: mongoose.Types.ObjectId;
+  reviewedAt?: Date;
+};

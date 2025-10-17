@@ -1,4 +1,4 @@
-import { geocodeAddress, geocodePostalCode } from "@kaa/utils";
+import { geocodeAddress, geocodePostalCode, slugify } from "@kaa/utils";
 import mongoose, { type Model, Schema } from "mongoose";
 import {
   type IProperty,
@@ -6,19 +6,6 @@ import {
   PropertyStatus,
   PropertyType,
 } from "./types/property.type";
-
-/**
- * Rent period type
- */
-export type RentPeriod = "week" | "month";
-
-/**
- * Furnished status type
- */
-export type FurnishedStatus =
-  | "unfurnished"
-  | "partially furnished"
-  | "furnished";
 
 /**
  * Property image interface
@@ -29,42 +16,341 @@ type IPropertyImage = {
   isPrimary: boolean;
 };
 
-/**
- * Property feature type
- */
-export type PropertyFeature =
-  | "garden"
-  | "parking"
-  | "garage"
-  | "balcony"
-  | "pets allowed"
-  | "smokers allowed"
-  | "students allowed"
-  | "families allowed"
-  | "bills included"
-  | "washing machine"
-  | "dishwasher"
-  | "dryer"
-  | "central heating"
-  | "double glazing"
-  | "broadband included"
-  | "tv"
-  | "fireplace"
-  | "disabled access"
-  | "alarm"
-  | "intercom";
+// Enhanced schema definitions for structured property data
 
 /**
- * Bill type
+ * Property Amenities Schema
  */
-export type BillType =
-  | "gas"
-  | "electricity"
-  | "water"
-  | "council tax"
-  | "tv license"
-  | "internet";
+const propertyAmenitiesSchema = new Schema(
+  {
+    // Basic amenities
+    water: { type: Boolean, default: false },
+    electricity: { type: Boolean, default: false },
+    parking: { type: Boolean, default: false },
+    security: { type: Boolean, default: false },
+    garden: { type: Boolean, default: false },
 
+    // Luxury amenities
+    swimmingPool: { type: Boolean, default: false },
+    gym: { type: Boolean, default: false },
+    lift: { type: Boolean, default: false },
+    generator: { type: Boolean, default: false },
+    solarPower: { type: Boolean, default: false },
+
+    // Connectivity
+    internet: { type: Boolean, default: false },
+    dstv: { type: Boolean, default: false },
+    cableTv: { type: Boolean, default: false },
+
+    // Storage & Extra Rooms
+    storeRoom: { type: Boolean, default: false },
+    servantQuarter: { type: Boolean, default: false },
+    studyRoom: { type: Boolean, default: false },
+    balcony: { type: Boolean, default: false },
+
+    // Outdoor features
+    compound: { type: Boolean, default: false },
+    gate: { type: Boolean, default: false },
+    perimeter: { type: Boolean, default: false },
+    borehole: { type: Boolean, default: false },
+
+    // Services
+    laundry: { type: Boolean, default: false },
+    cleaning: { type: Boolean, default: false },
+    caretaker: { type: Boolean, default: false },
+    cctv: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
+/**
+ * Property Pricing Schema
+ */
+const propertyPricingSchema = new Schema(
+  {
+    rent: { type: Number, required: true },
+    currency: { type: String, enum: ["KES", "USD"], default: "KES" },
+    deposit: { type: Number, required: true },
+    serviceFee: { type: Number, default: 0 },
+    agentFee: { type: Number },
+    legalFee: { type: Number },
+    lateFee: { type: Number },
+
+    // Payment terms
+    paymentFrequency: {
+      type: String,
+      enum: ["monthly", "quarterly", "annually", "daily", "weekly"],
+      default: "monthly",
+    },
+    advanceMonths: { type: Number, default: 1 },
+    depositMonths: { type: Number, default: 2 },
+
+    // Utilities
+    utilitiesIncluded: {
+      water: { type: Boolean, default: false },
+      electricity: { type: Boolean, default: false },
+      internet: { type: Boolean, default: false },
+      garbage: { type: Boolean, default: false },
+      security: { type: Boolean, default: false },
+    },
+
+    negotiable: { type: Boolean, default: false },
+
+    // Price history
+    priceHistory: [
+      {
+        price: Number,
+        changedAt: { type: Date, default: Date.now },
+        reason: String,
+      },
+    ],
+  },
+  { _id: false }
+);
+
+/**
+ * Property Location Schema (Enhanced)
+ */
+const propertyLocationSchema = new Schema(
+  {
+    // Administrative divisions
+    country: { type: String, required: true, default: "Kenya" },
+    county: { type: String, required: true },
+    constituency: { type: String, required: true },
+    ward: { type: String, required: true },
+    estate: { type: String, required: true },
+
+    // Address details
+    address: {
+      line1: { type: String, required: true },
+      line2: { type: String },
+      town: { type: String, required: true },
+      postalCode: { type: String, required: true },
+      directions: { type: String },
+    },
+
+    // Geographic coordinates
+    coordinates: {
+      latitude: { type: Number, required: true },
+      longitude: { type: Number, required: true },
+    },
+
+    // Enhanced location data
+    plotNumber: { type: String },
+    buildingName: { type: String },
+    floor: { type: Number },
+    unitNumber: { type: String },
+
+    // Transportation
+    nearbyTransport: [String],
+    walkingDistanceToRoad: { type: Number, default: 0 }, // meters
+    accessRoad: {
+      type: String,
+      enum: ["tarmac", "murram", "earth"],
+      default: "tarmac",
+    },
+
+    // Nearby facilities
+    nearbySchools: [String],
+    nearbyHospitals: [String],
+    nearbyShopping: [String],
+    nearbyChurches: [String],
+    nearbyAmenities: [String],
+
+    // Bounding box for searches
+    boundingBox: {
+      northeast: {
+        lat: Number,
+        lng: Number,
+      },
+      southwest: {
+        lat: Number,
+        lng: Number,
+      },
+    },
+  },
+  { _id: false }
+);
+
+/**
+ * Property Media Schema (Enhanced)
+ */
+const propertyMediaSchema = new Schema(
+  {
+    images: [
+      {
+        id: { type: String, required: true },
+        url: { type: String, required: true },
+        thumbnailUrl: String,
+        caption: String,
+        isPrimary: { type: Boolean, default: false },
+        order: { type: Number, default: 0 },
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
+
+    videos: [
+      {
+        id: { type: String, required: true },
+        url: { type: String, required: true },
+        thumbnailUrl: String,
+        duration: Number,
+        caption: String,
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
+
+    virtualTours: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "VirtualTour",
+      },
+    ],
+
+    floorPlans: [
+      {
+        id: { type: String, required: true },
+        url: { type: String, required: true },
+        name: String,
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
+  },
+  { _id: false }
+);
+
+/**
+ * Property Specifications Schema
+ */
+const propertySpecsSchema = new Schema(
+  {
+    // Basic specs
+    bedrooms: { type: Number, required: true },
+    bathrooms: { type: Number, required: true },
+    halfBaths: { type: Number, default: 0 },
+    kitchens: { type: Number, default: 1 },
+    livingRooms: { type: Number, default: 1 },
+    diningRooms: { type: Number, default: 0 },
+
+    // Measurements
+    totalArea: { type: Number }, // square meters
+    builtUpArea: { type: Number },
+    plotSize: { type: Number },
+
+    // Building details
+    floors: { type: Number, default: 1 },
+    floorLevel: { type: Number },
+    yearBuilt: { type: Number },
+    condition: {
+      type: String,
+      enum: ["new", "excellent", "good", "fair", "needs_renovation"],
+      default: "good",
+    },
+    furnished: {
+      type: String,
+      enum: ["unfurnished", "semi_furnished", "fully_furnished"],
+      default: "unfurnished",
+    },
+
+    // Construction details
+    roofType: {
+      type: String,
+      enum: ["iron_sheets", "tiles", "concrete", "thatch"],
+    },
+    wallType: {
+      type: String,
+      enum: ["stone", "brick", "block", "wood", "mixed"],
+    },
+    floorType: {
+      type: String,
+      enum: ["tiles", "concrete", "wood", "marble", "terrazzo"],
+    },
+  },
+  { _id: false }
+);
+
+/**
+ * Property Rules Schema
+ */
+const propertyRulesSchema = new Schema(
+  {
+    petsAllowed: { type: Boolean, default: false },
+    smokingAllowed: { type: Boolean, default: false },
+    partiesAllowed: { type: Boolean, default: false },
+    childrenAllowed: { type: Boolean, default: true },
+    sublettingAllowed: { type: Boolean, default: false },
+
+    // Specific restrictions
+    maxOccupants: { type: Number },
+    quietHours: {
+      start: String, // HH:mm format
+      end: String,
+    },
+
+    // Lease terms
+    minimumLease: { type: Number, default: 12 }, // months
+    maximumLease: { type: Number },
+    renewalTerms: String,
+
+    // Special requirements
+    creditCheckRequired: { type: Boolean, default: false },
+    employmentVerification: { type: Boolean, default: false },
+    previousLandlordReference: { type: Boolean, default: false },
+
+    customRules: [String],
+  },
+  { _id: false }
+);
+
+/**
+ * Property Availability Schema
+ */
+const propertyAvailabilitySchema = new Schema(
+  {
+    isAvailable: { type: Boolean, default: true },
+    availableFrom: { type: Date },
+    availableTo: { type: Date },
+
+    // Viewing schedule
+    viewingDays: [
+      {
+        day: {
+          type: String,
+          enum: [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+          ],
+        },
+        startTime: String, // HH:mm
+        endTime: String, // HH:mm
+      },
+    ],
+
+    // Contact for viewing
+    viewingContact: {
+      name: String,
+      phone: String,
+      alternativePhone: String,
+      preferredMethod: {
+        type: String,
+        enum: ["call", "whatsapp", "sms"],
+        default: "call",
+      },
+    },
+
+    // Booking requirements
+    viewingFee: { type: Number },
+    bookingDeposit: { type: Number },
+  },
+  { _id: false }
+);
+
+// Legacy amenity schema (kept for backward compatibility)
 const amenitySchema = new mongoose.Schema({
   name: { type: String, required: true },
   icon: { type: String },
@@ -108,25 +394,8 @@ const propertySchema = new Schema<IProperty>(
       default: PropertyStatus.DRAFT,
       required: true,
     },
-    location: {
-      country: { type: String, required: true, default: "Kenya" },
-      county: { type: String, required: true },
-      constituency: { type: String, required: true },
-      ward: { type: String, required: true },
-      estate: { type: String, required: true },
-      address: {
-        line1: { type: String, required: true },
-        line2: { type: String, required: false },
-        town: { type: String, required: true },
-        postalCode: { type: String, required: true },
-        directions: { type: String, required: false },
-      },
-      coordinates: {
-        latitude: { type: Number, required: true },
-        longitude: { type: Number, required: true },
-      },
-      nearbyAmenities: [String],
-    },
+    // Enhanced structured location
+    location: propertyLocationSchema,
     geolocation: {
       type: {
         type: String,
@@ -138,58 +407,13 @@ const propertySchema = new Schema<IProperty>(
         default: [0, 0],
       },
     },
-    details: {
-      rooms: Number,
-      bedrooms: Number,
-      bathrooms: Number,
-      size: { type: Number, required: true },
-      furnishedStatus: {
-        type: String,
-        enum: ["Furnished", "Unfurnished", "Semi-furnished"],
-      },
-      furnished: { type: Boolean, default: false },
-      parking: { type: Boolean, default: false },
-      garden: { type: Boolean, default: false },
-      security: { type: Boolean, default: false },
-      generator: { type: Boolean, default: false },
-      borehole: { type: Boolean, default: false },
-      water: { type: Boolean, default: false },
-      electricity: { type: Boolean, default: false },
-      internetReady: { type: Boolean, default: false },
-      petFriendly: { type: Boolean, default: false },
-      smokingAllowed: { type: Boolean, default: false },
-      sublettingAllowed: { type: Boolean, default: false },
-      yearBuilt: Number,
-      floorLevel: Number,
-      totalFloors: Number,
-      tags: [String],
-    },
 
-    pricing: {
-      rentAmount: { type: Number, required: true },
-      currency: { type: String, enum: ["KES", "USD"], default: "KES" },
-      paymentFrequency: {
-        type: String,
-        enum: ["monthly", "quarterly", "annually", "daily", "weekly"],
-        default: "monthly",
-      },
-      securityDeposit: { type: Number, required: true },
-      serviceCharge: { type: Number, default: 0 },
-      lateFee: { type: Number, default: 0 },
-      rentDueDate: { type: Number, min: 1, max: 31, default: 5 }, // Day of month
-      utilitiesIncluded: [String],
-      waterBill: {
-        type: String,
-        enum: ["Included", "Tenant pays", "Shared"],
-        default: "Tenant pays",
-      },
-      electricityBill: {
-        type: String,
-        enum: ["Included", "Tenant pays", "Shared"],
-        default: "Tenant pays",
-      },
-      negotiable: { type: Boolean, default: false },
-    },
+    // Structured fields
+    specifications: propertySpecsSchema,
+    amenities: propertyAmenitiesSchema,
+    rules: propertyRulesSchema,
+    availability: propertyAvailabilitySchema,
+    pricing: propertyPricingSchema,
 
     aiInsights: {
       marketValue: { type: Number, default: 0 },
@@ -204,32 +428,7 @@ const propertySchema = new Schema<IProperty>(
       lastUpdated: { type: Date, default: Date.now },
     },
 
-    media: {
-      photos: [
-        {
-          url: String,
-          caption: String,
-          isPrimary: { type: Boolean, default: false },
-        },
-      ],
-      virtualTours: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: "VirtualTour",
-        },
-      ],
-      virtualTour: String, // Deprecated - kept for backward compatibility
-      floorPlan: {
-        url: String,
-        caption: String,
-      },
-      epcImage: {
-        url: String,
-        caption: String,
-        rating: String,
-      },
-      videos: [String],
-    },
+    media: propertyMediaSchema,
 
     utilities: {
       electricity: {
@@ -262,58 +461,28 @@ const propertySchema = new Schema<IProperty>(
       lastInspection: Date,
     },
 
-    metrics: {
-      viewCount: { type: Number, default: 0 },
-      inquiryCount: { type: Number, default: 0 },
-      applicationCount: { type: Number, default: 0 },
-      averageOccupancyRate: { type: Number, default: 0 },
-      averageRentCollection: { type: Number, default: 0 },
-      maintenanceRequests: { type: Number, default: 0 },
-    },
-    available: {
-      type: Boolean,
-      default: true,
-    },
-    availableFrom: {
-      type: Date,
-      required: true,
-    },
-    availableTo: {
-      type: Date,
+    // Statistics
+    stats: {
+      views: { type: Number, default: 0 },
+      inquiries: { type: Number, default: 0 },
+      applications: { type: Number, default: 0 },
+      bookmarks: { type: Number, default: 0 },
+      averageRating: { type: Number },
+      totalReviews: { type: Number },
     },
 
     // Legal
     governingLaw: { type: String, default: "Laws of Kenya" },
     jurisdiction: { type: String, default: "Kenya" },
 
-    features: [String],
-    energyRating: String,
+    // SEO & Marketing
+    tags: [String],
     featured: {
       type: Boolean,
       default: false,
     },
 
-    minimumTenancy: {
-      type: Number, // in months
-      default: 12,
-    },
-    maxTenants: {
-      type: Number,
-      default: 1,
-    },
-    bills: [
-      {
-        type: String,
-        enum: [
-          "gas",
-          "electricity",
-          "water",
-          "council tax",
-          "tv license",
-          "internet",
-        ],
-      },
-    ],
+    // Verification
     verified: {
       type: Boolean,
       default: false,
@@ -321,18 +490,43 @@ const propertySchema = new Schema<IProperty>(
     verifiedAt: {
       type: Date,
     },
+
+    // Moderation
+    moderationStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected", "flagged"],
+      default: "pending",
+    },
+    moderationNotes: { type: String },
+    moderatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    moderatedAt: { type: Date },
+
+    // Timestamps
+    publishedAt: { type: Date },
+    lastUpdatedAt: { type: Date, default: Date.now },
+    expiresAt: { type: Date },
+
+    // Computed fields
+    pricePerSqm: { type: Number },
+    isPromoted: { type: Boolean, default: false },
+    distanceFromCenter: { type: Number }, // km from city center
+
+    energyRating: String,
     viewings: [
       {
         type: Schema.Types.ObjectId,
         ref: "Booking",
       },
     ],
-    applications: [
+    /*applications: [
       {
         type: Schema.Types.ObjectId,
         ref: "Application",
       },
-    ],
+    ],*/
     currentTenants: [
       [
         {
@@ -342,11 +536,6 @@ const propertySchema = new Schema<IProperty>(
       ],
     ],
 
-    favoriteCount: {
-      type: Number,
-      default: 0,
-    },
-    amenities: [amenitySchema],
     listingType: {
       type: String,
       enum: Object.values(ListingType),
@@ -371,16 +560,22 @@ propertySchema.index({ geolocation: "2dsphere" });
 propertySchema.index({ memberId: 1, status: 1 });
 propertySchema.index({ "location.county": 1, "location.constituency": 1 });
 propertySchema.index({ "location.coordinates": "2dsphere" });
-propertySchema.index({ "pricing.rentAmount": 1 });
+propertySchema.index({ "pricing.rent": 1 });
+propertySchema.index({
+  "specifications.bedrooms": 1,
+  "specifications.bathrooms": 1,
+});
 propertySchema.index({ type: 1 });
 propertySchema.index({ listingType: 1 });
 propertySchema.index({ featured: 1 });
+propertySchema.index({ verified: 1 });
+propertySchema.index({ moderationStatus: 1 });
+propertySchema.index({ tags: 1 });
 
 // Ensure regular indexes on non-geospatial fields
 propertySchema.index({ "location.address.line1": 1 });
 propertySchema.index({ "location.address.town": 1 });
 propertySchema.index({ "location.address.postalCode": 1 });
-propertySchema.index({ "amenities.name": 1 });
 
 // Create index for search queries (Full text search index)
 propertySchema.index({
@@ -389,13 +584,55 @@ propertySchema.index({
   "location.address.line1": "text",
   "location.address.town": "text",
   "location.address.postalCode": "text",
-  "amenities.name": "text",
 });
 
 /**
  * Pre-save hook to automatically convert location to coordinates
  */
 propertySchema.pre("save", async function (next) {
+  // Generate slug if not provided
+  if (!this.slug && this.title) {
+    this.slug = `${slugify(this.title)}-${this._id}`;
+  }
+
+  // Calculate price per square meter
+  if (this.specifications.totalArea && this.pricing.rent) {
+    this.pricePerSqm = Math.round(
+      this.pricing.rent / this.specifications.totalArea
+    );
+  }
+
+  // Update lastUpdatedAt
+  this.lastUpdatedAt = new Date();
+
+  // Ensure only one primary image
+  if (this.media.images && this.media.images.length > 0) {
+    let primaryCount = 0;
+    for (const img of this.media.images) {
+      if (img.isPrimary) {
+        primaryCount++;
+        if (primaryCount > 1) {
+          img.isPrimary = false;
+        }
+      }
+    }
+
+    // If no primary image, set the first one as primary
+    if (primaryCount === 0) {
+      // biome-ignore lint/style/noNonNullAssertion: ignore
+      this.media.images[0]!.isPrimary = true;
+    }
+  }
+
+  // Set published date when status changes to active
+  if (
+    this.isModified("status") &&
+    this.status === PropertyStatus.ACTIVE &&
+    !this.publishedAt
+  ) {
+    this.publishedAt = new Date();
+  }
+
   // Always ensure geolocation field is properly initialized
   if (!this.geolocation) {
     this.geolocation = {
@@ -503,19 +740,32 @@ propertySchema.virtual("virtualToursData", {
   justOne: false,
 });
 
+// Virtual fields
+propertySchema.virtual("primaryImage").get(function () {
+  const primaryImg = this.media.images.find((img: any) => img.isPrimary);
+  return primaryImg ? primaryImg.url : this.media.images[0]?.url || null;
+});
+
+propertySchema.virtual("imageCount").get(function () {
+  return this.media.images.length;
+});
+
+propertySchema.virtual("fullAddress").get(function () {
+  return `${this.location.address}, ${this.location.estate}, ${this.location.county}`;
+});
+
 /**
  * Method to get main image URL
  * @returns URL of the main image or first image or null
  */
 propertySchema.methods.getMainImage = function (): string | null {
-  if (this.media.photos && this.media.photos.length > 0) {
-    const mainImage = this.media.photos.find(
-      (img: IPropertyImage) => img.isPrimary
-    );
+  // Try new media.images first
+  if (this.media.images && this.media.images.length > 0) {
+    const mainImage = this.media.images.find((img: any) => img.isPrimary);
     return mainImage
       ? mainImage.url
-      : this.media.photos[0]
-        ? this.media.photos[0].url
+      : this.media.images[0]
+        ? this.media.images[0].url
         : null;
   }
 
@@ -527,10 +777,26 @@ propertySchema.methods.getMainImage = function (): string | null {
  * @returns Monthly rent amount
  */
 propertySchema.methods.getTotalMonthlyCost = function (): number {
-  if (this.pricing.paymentFrequency === "weekly") {
-    return ((this.pricing.rentAmount || this.pricing.rentAmount) * 52) / 4; // 12
+  const rent = this.pricing.rent || 0;
+  const frequency = this.pricing.paymentFrequency;
+
+  if (frequency === "weekly") {
+    return (rent * 52) / 12; // Convert weekly to monthly
   }
-  return this.pricing.rentAmount || this.pricing.rentAmount;
+
+  if (frequency === "daily") {
+    return (rent * 365) / 12; // Convert daily to monthly
+  }
+
+  if (frequency === "quarterly") {
+    return rent / 3; // Convert quarterly to monthly
+  }
+
+  if (frequency === "annually") {
+    return rent / 12; // Convert annually to monthly
+  }
+
+  return rent; // Already monthly
 };
 
 /**
@@ -557,35 +823,34 @@ propertySchema.methods.hasVirtualTours = function (): boolean {
 /**
  * Virtual for formatting the address
  */
-propertySchema.virtual("formattedAddress").get(function (): string {
-  const address = this.location.address;
-  let formatted = "";
+// propertySchema.virtual("formattedAddress").get(function (): string {
+//   const address = this.location.address;
+//   let formatted = "";
 
-  if (address.line1) {
-    formatted += address.line1;
-  }
+//   if (address.line1) {
+//     formatted += address.line1;
+//   }
 
-  if (address.line2) {
-    formatted += `, ${address.line2}`;
-  }
+//   if (address.line2) {
+//     formatted += `, ${address.line2}`;
+//   }
 
-  if (address.town) {
-    formatted += `, ${address.town}`;
-  }
+//   if (address.town) {
+//     formatted += `, ${address.town}`;
+//   }
 
-  if (address.postalCode) {
-    formatted += `, ${address.postalCode}`;
-  }
+//   if (address.postalCode) {
+//     formatted += `, ${address.postalCode}`;
+//   }
 
-  return formatted;
-});
+//   return formatted;
+// });
 
 // Static method to find available properties
 propertySchema.statics.findAvailable = function () {
   return this.find({
-    available: true,
+    "availability.isAvailable": true,
     status: PropertyStatus.ACTIVE,
-    // occupiedUnits: { $lt: "$totalUnits" },
   });
 };
 
@@ -604,10 +869,100 @@ propertySchema.statics.findByLocation = function (
   return this.find(query);
 };
 
+// Instance methods
+propertySchema.methods.incrementViews = function () {
+  this.stats.views += 1;
+  return this.save();
+};
+
+propertySchema.methods.incrementInquiries = function () {
+  this.stats.inquiries += 1;
+  return this.save();
+};
+
+propertySchema.methods.incrementApplications = function () {
+  this.stats.applications += 1;
+  return this.save();
+};
+
+propertySchema.methods.toggleBookmark = function () {
+  // This would be used with user bookmarks
+  // Implementation depends on bookmark system
+  return this;
+};
+
+propertySchema.methods.updateRating = function (
+  newRating: number,
+  reviewCount: number
+) {
+  this.stats.averageRating = newRating;
+  this.stats.totalReviews = reviewCount;
+  return this.save();
+};
+
+propertySchema.methods.isOwnedBy = function (userId: string) {
+  return this.owner.toString() === userId;
+};
+
+propertySchema.methods.canBeEditedBy = function (
+  userId: string,
+  userRole: string
+) {
+  return (
+    this.isOwnedBy(userId) ||
+    this.agent?.toString() === userId ||
+    ["admin", "super_admin"].includes(userRole)
+  );
+};
+
+// Static methods
+propertySchema.statics.findByOwner = function (ownerId: string) {
+  return this.find({ owner: ownerId }).sort({ createdAt: -1 });
+};
+
+propertySchema.statics.findAvailable = function (filters = {}) {
+  return this.find({
+    status: PropertyStatus.ACTIVE,
+    "availability.isAvailable": true,
+    moderationStatus: "approved",
+    ...filters,
+  });
+};
+
+propertySchema.statics.searchByLocation = function (
+  latitude: number,
+  longitude: number,
+  radius = 5
+) {
+  return this.find({
+    "location.coordinates": {
+      $near: {
+        $geometry: {
+          type: "Point",
+          coordinates: [longitude, latitude],
+        },
+        $maxDistance: radius * 1000, // Convert km to meters
+      },
+    },
+    status: PropertyStatus.ACTIVE,
+    "availability.isAvailable": true,
+    moderationStatus: "approved",
+  });
+};
+
+propertySchema.statics.getFeatured = function (limit = 10) {
+  return this.find({
+    featured: true,
+    status: PropertyStatus.ACTIVE,
+    "availability.isAvailable": true,
+    moderationStatus: "approved",
+  })
+    .sort({ publishedAt: -1 })
+    .limit(limit);
+};
+
 // Create and export the Property model
-const Property: Model<IProperty> = mongoose.model<IProperty>(
+export const Property: Model<IProperty> = mongoose.model<IProperty>(
   "Property",
   propertySchema
 );
-
-export { Property };

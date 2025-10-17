@@ -4,7 +4,7 @@ import { SessionStore } from "~/services/session-store";
 
 const sessionStore = new SessionStore(process.env.SESSION_STORAGE as any);
 
-export const wsRoutes = new Elysia()
+export const baseWsController = new Elysia()
   .derive(async ({ headers }) => {
     const cookieHeader = headers.cookie ?? "";
     const cookies = Object.fromEntries(

@@ -195,7 +195,7 @@ export type IAutomationRule = {
   conditions: IAutomationCondition[];
   actions: IAutomationAction[];
   enabled: boolean;
-  schedule?: ISchedule;
+  schedule?: IIotSchedule;
 };
 
 export enum AutomationTriggerType {
@@ -234,15 +234,15 @@ export type IAutomationAction = {
   delay?: number; // seconds
 };
 
-export enum ScheduleType {
+export enum IotScheduleType {
   ONCE = "once",
   DAILY = "daily",
   WEEKLY = "weekly",
   MONTHLY = "monthly",
 }
 
-export type ISchedule = {
-  type: ScheduleType;
+export type IIotSchedule = {
+  type: IotScheduleType;
   time?: string; // HH:MM
   days?: number[]; // 0-6 (Sunday-Saturday)
   dates?: number[]; // 1-31

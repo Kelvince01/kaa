@@ -4,6 +4,22 @@
 
 import axios from "axios";
 
+export type GeoPoint = {
+  lat: number;
+  lon: number;
+};
+
+export type GeoBounds = {
+  topLeft: GeoPoint;
+  bottomRight: GeoPoint;
+};
+
+export type GeoDistance = {
+  point: GeoPoint;
+  distance: string;
+  unit?: "km" | "m" | "mi" | "yd";
+};
+
 /**
  * Simple cache to avoid repeated API calls for the same location
  */
@@ -144,3 +160,223 @@ export async function reverseGeocodingAPI(lat: number, lon: number) {
   const data = jsonResp?.features[0]?.properties;
   return data;
 }
+
+/**
+ * Create a bounding box around a center point with given distance
+ */
+export function createBoundingBox(
+  center: GeoPoint,
+  distance: string
+): GeoBounds {
+  const distanceValue = parseDistance(distance);
+  const distanceInKm = convertToKm(distanceValue.value, distanceValue.unit);
+
+  // Approximate degrees per km (varies by latitude)
+  const latDegreePerKm = 1 / 111.32;
+  const lonDegreePerKm = 1 / (111.32 * Math.cos(toRadians(center.lat)));
+
+  const latOffset = distanceInKm * latDegreePerKm;
+  const lonOffset = distanceInKm * lonDegreePerKm;
+
+  return {
+    topLeft: {
+      lat: center.lat + latOffset,
+      lon: center.lon - lonOffset,
+    },
+    bottomRight: {
+      lat: center.lat - latOffset,
+      lon: center.lon + lonOffset,
+    },
+  };
+}
+
+/**
+ * Parse distance string (e.g., "10km", "5mi", "1000m")
+ */
+export function parseDistance(distance: string): {
+  value: number;
+  unit: string;
+} {
+  // biome-ignore lint/performance/useTopLevelRegex: ignore
+  const match = distance.match(/^(\d+(?:\.\d+)?)(km|m|mi|yd)?$/i);
+  if (!match) {
+    throw new Error(`Invalid distance format: ${distance}`);
+  }
+
+  return {
+    value: Number.parseFloat(match[1] || "0"),
+    unit: match[2]?.toLowerCase() || "km",
+  };
+}
+
+/**
+ * Convert distance to kilometers
+ */
+export function convertToKm(value: number, unit: string): number {
+  switch (unit.toLowerCase()) {
+    case "km":
+      return value;
+    case "m":
+      return value / 1000;
+    case "mi":
+      return value * 1.609_34;
+    case "yd":
+      return value * 0.000_914_4;
+    default:
+      return value; // assume km
+  }
+}
+
+/**
+ * Validate geo coordinates
+ */
+export function isValidGeoPoint(point: GeoPoint): boolean {
+  return (
+    typeof point.lat === "number" &&
+    typeof point.lon === "number" &&
+    point.lat >= -90 &&
+    point.lat <= 90 &&
+    point.lon >= -180 &&
+    point.lon <= 180
+  );
+}
+
+/**
+ * Create Elasticsearch geo-distance query
+ */
+export function createGeoDistanceQuery(
+  field: string,
+  center: GeoPoint,
+  distance: string
+) {
+  return {
+    geo_distance: {
+      distance,
+      [field]: {
+        lat: center.lat,
+        lon: center.lon,
+      },
+    },
+  };
+}
+
+/**
+ * Create Elasticsearch geo-bounding box query
+ */
+export function createGeoBoundingBoxQuery(field: string, bounds: GeoBounds) {
+  return {
+    geo_bounding_box: {
+      [field]: {
+        top_left: {
+          lat: bounds.topLeft.lat,
+          lon: bounds.topLeft.lon,
+        },
+        bottom_right: {
+          lat: bounds.bottomRight.lat,
+          lon: bounds.bottomRight.lon,
+        },
+      },
+    },
+  };
+}
+
+/**
+ * Create Elasticsearch geo-polygon query
+ */
+export function createGeoPolygonQuery(field: string, points: GeoPoint[]) {
+  return {
+    geo_polygon: {
+      [field]: {
+        points: points.map((p) => ({ lat: p.lat, lon: p.lon })),
+      },
+    },
+  };
+}
+
+/**
+ * Get nearby locations within a certain distance
+ */
+export function getNearbyQuery(
+  center: GeoPoint,
+  distance: string,
+  field = "geolocation"
+) {
+  return createGeoDistanceQuery(field, center, distance);
+}
+
+/**
+ * Sort by distance from a point
+ */
+export function createGeoDistanceSort(
+  field: string,
+  center: GeoPoint,
+  order: "asc" | "desc" = "asc"
+) {
+  return {
+    _geo_distance: {
+      [field]: {
+        lat: center.lat,
+        lon: center.lon,
+      },
+      order,
+      unit: "km",
+      mode: "min",
+      distance_type: "arc",
+      ignore_unmapped: true,
+    },
+  };
+}
+
+/**
+ * Kenya-specific location utilities
+ */
+export const KenyaGeo = {
+  // Major cities coordinates
+  cities: {
+    nairobi: { lat: -1.2921, lon: 36.8219 },
+    mombasa: { lat: -4.0435, lon: 39.6682 },
+    kisumu: { lat: -0.0917, lon: 34.768 },
+    nakuru: { lat: -0.3031, lon: 36.08 },
+    eldoret: { lat: 0.5143, lon: 35.2698 },
+    thika: { lat: -1.0332, lon: 37.0692 },
+    malindi: { lat: -3.2175, lon: 40.1167 },
+    kitale: { lat: 1.0157, lon: 35.0062 },
+    garissa: { lat: -0.4536, lon: 39.6401 },
+    kakamega: { lat: 0.2827, lon: 34.7519 },
+  },
+
+  // Kenya bounding box
+  bounds: {
+    topLeft: { lat: 5.019, lon: 33.908 },
+    bottomRight: { lat: -4.677, lon: 41.899 },
+  },
+
+  // Check if point is within Kenya
+  isWithinKenya(point: GeoPoint): boolean {
+    return (
+      point.lat >= this.bounds.bottomRight.lat &&
+      point.lat <= this.bounds.topLeft.lat &&
+      point.lon >= this.bounds.topLeft.lon &&
+      point.lon <= this.bounds.bottomRight.lon
+    );
+  },
+
+  // Get nearest major city
+  getNearestCity(point: GeoPoint): { name: string; distance: number } | null {
+    if (!this.isWithinKenya(point)) return null;
+
+    let nearest: { name: string; distance: number } | null = null;
+
+    for (const [name, cityPoint] of Object.entries(this.cities)) {
+      const distance = calculateDistance(
+        [point.lon, point.lat],
+        [cityPoint.lon, cityPoint.lat]
+      );
+      if (!nearest || distance < nearest.distance) {
+        nearest = { name, distance };
+      }
+    }
+
+    return nearest;
+  },
+};

@@ -230,22 +230,3 @@ export interface IApiKey extends BaseDocument {
     lastRequest?: Date;
   };
 }
-
-// Security events
-export type ISecurityEvent = {
-  userId: mongoose.Types.ObjectId;
-  type:
-    | "login"
-    | "logout"
-    | "password_change"
-    | "email_change"
-    | "phone_change"
-    | "failed_login"
-    | "account_locked"
-    | "suspicious_activity";
-  description: string;
-  ipAddress?: string;
-  userAgent?: string;
-  metadata?: Record<string, any>;
-  timestamp: Date;
-};

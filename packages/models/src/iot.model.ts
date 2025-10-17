@@ -31,15 +31,15 @@ import {
   type IEnvironmentalData,
   type IIoTAlert,
   type IIoTDevice,
+  type IIotSchedule,
   IotDeviceType,
+  IotScheduleType,
   type IPowerSavingConfig,
   type IPropertyDashboard,
   type IPropertyOverview,
-  type ISchedule,
   type ISecurityStatus,
   type ISensorReading,
   PowerSavingMode,
-  ScheduleType,
   SecurityLevel,
 } from "./types/iot.type";
 
@@ -152,9 +152,13 @@ const automationActionSchema = new Schema<IAutomationAction>(
   { _id: false }
 );
 
-const scheduleSchema = new Schema<ISchedule>(
+const scheduleSchema = new Schema<IIotSchedule>(
   {
-    type: { type: String, enum: Object.values(ScheduleType), required: true },
+    type: {
+      type: String,
+      enum: Object.values(IotScheduleType),
+      required: true,
+    },
     time: { type: String },
     days: { type: [Number] },
     dates: { type: [Number] },

@@ -1,6 +1,6 @@
 import { model, Schema } from "mongoose";
+import { amenitySchema } from "./amenity.model";
 import {
-  AmenityCategory,
   AreaUnit,
   GeocodingProvider,
   type ILocation,
@@ -218,115 +218,6 @@ const DemographicsSchema = new Schema(
   },
   { _id: false }
 );
-
-// Amenity Schema
-const AmenitySchema = new Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  category: {
-    type: String,
-    enum: Object.values(AmenityCategory),
-    required: true,
-  },
-  type: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  coordinates: {
-    latitude: {
-      type: Number,
-      min: -90,
-      max: 90,
-    },
-    longitude: {
-      type: Number,
-      min: -180,
-      max: 180,
-    },
-  },
-  distance: {
-    type: Number,
-    min: 0, // in meters
-  },
-  rating: {
-    type: Number,
-    min: 1,
-    max: 5,
-  },
-  isVerified: {
-    type: Boolean,
-    default: false,
-  },
-  contact: {
-    phone: {
-      type: String,
-      trim: true,
-      match: /^\+254[0-9]{9}$/, // Kenyan phone format
-    },
-    email: {
-      type: String,
-      trim: true,
-      lowercase: true,
-      match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    },
-    website: {
-      type: String,
-      trim: true,
-    },
-  },
-  hours: {
-    monday: [
-      {
-        open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-        close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-      },
-    ],
-    tuesday: [
-      {
-        open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-        close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-      },
-    ],
-    wednesday: [
-      {
-        open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-        close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-      },
-    ],
-    thursday: [
-      {
-        open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-        close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-      },
-    ],
-    friday: [
-      {
-        open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-        close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-      },
-    ],
-    saturday: [
-      {
-        open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-        close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-      },
-    ],
-    sunday: [
-      {
-        open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-        close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
-      },
-    ],
-  },
-  metadata: {
-    type: Schema.Types.Mixed,
-    default: {},
-  },
-});
 
 // Transportation Schemas
 const PublicTransportSchema = new Schema(
@@ -818,7 +709,7 @@ const LocationSchema = new Schema<ILocation>(
       required: true,
     },
     demographics: DemographicsSchema,
-    amenities: [AmenitySchema],
+    amenities: [amenitySchema],
     transportation: {
       type: TransportationSchema,
       default: {},
@@ -1129,7 +1020,6 @@ export {
   GeocodingCacheSchema,
   LocationEventSchema,
   LocationStatisticsSchema,
-  AmenitySchema,
   LocationAddressSchema,
   LocationMetadataSchema,
 };

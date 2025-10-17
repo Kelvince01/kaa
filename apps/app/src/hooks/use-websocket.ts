@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
+const wsUrl = process.env.NEXT_PUBLIC_WS_URL as string;
 const RECONNECT_DELAY = 5000;
 
 export function useWebSocket() {
@@ -9,7 +9,7 @@ export function useWebSocket() {
   let reconnectTimer: number | null = null;
 
   function connect() {
-    socket = new WebSocket(wsUrl);
+    socket = new WebSocket(`${wsUrl}/ws`);
 
     socket.onopen = () => {
       console.log("✅ WS connected");

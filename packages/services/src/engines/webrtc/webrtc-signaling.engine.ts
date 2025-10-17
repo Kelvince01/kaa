@@ -1,5 +1,4 @@
 import { EventEmitter } from "node:events";
-import type { WebSocket } from "ws";
 
 export type SignalingMessage = {
   type:
@@ -27,7 +26,7 @@ export type Room = {
 
 export type ParticipantInfo = {
   userId: string;
-  ws: WebSocket;
+  ws: any; // Changed from WebSocket to any for adapter compatibility
   joinedAt: Date;
   metadata?: any;
 };
@@ -35,44 +34,73 @@ export type ParticipantInfo = {
 /**
  * WebRTC Signaling Server
  * Handles signaling for WebRTC connections
+ * Now compatible with ElysiaWebSocketAdapter
  */
 export class WebRTCSignalingEngine extends EventEmitter {
   private readonly rooms: Map<string, Room> = new Map();
   private readonly userToRoom: Map<string, string> = new Map();
-  private readonly wsToUser: Map<WebSocket, string> = new Map();
+  private readonly wsToUser: Map<any, string> = new Map(); // Changed from WebSocket to any
 
   /**
    * Handle WebSocket connection
+   * Store the connection for later message handling
    */
-  handleConnection(ws: WebSocket, userId: string): void {
+  handleConnection(ws: any, userId: string): void {
     this.wsToUser.set(ws, userId);
-
-    ws.on("message", (data: Buffer) => {
-      try {
-        const message: SignalingMessage = JSON.parse(data.toString());
-        this.handleMessage(ws, message);
-      } catch (error) {
-        console.error("Error parsing signaling message:", error);
-        this.sendError(ws, "Invalid message format");
-      }
-    });
-
-    ws.on("close", () => {
-      this.handleDisconnection(ws);
-    });
-
-    ws.on("error", (error) => {
-      console.error("WebSocket error:", error);
-      this.handleDisconnection(ws);
-    });
-
     this.emit("connection", { userId, ws });
   }
 
   /**
-   * Handle signaling message
+   * Handle WebSocket message (called by Elysia message handler)
    */
-  private handleMessage(ws: WebSocket, message: SignalingMessage): void {
+  handleMessage(ws: any, message: any): void {
+    const userId = this.wsToUser.get(ws);
+    if (!userId) {
+      this.sendError(ws, "User not authenticated");
+      return;
+    }
+
+    try {
+      // Convert message to Buffer if needed
+      let data: Buffer;
+      if (typeof message === "string") {
+        data = Buffer.from(message);
+      } else if (Buffer.isBuffer(message)) {
+        data = message;
+      } else if (message instanceof ArrayBuffer) {
+        data = Buffer.from(message);
+      } else {
+        // Assume it's an object, stringify it
+        data = Buffer.from(JSON.stringify(message));
+      }
+
+      const signalingMessage: SignalingMessage = JSON.parse(data.toString());
+      this.processMessage(ws, signalingMessage);
+    } catch (error) {
+      console.error("Error parsing signaling message:", error);
+      this.sendError(ws, "Invalid message format");
+    }
+  }
+
+  /**
+   * Handle WebSocket close (called by Elysia close handler)
+   */
+  handleClose(ws: any): void {
+    this.handleDisconnection(ws);
+  }
+
+  /**
+   * Handle WebSocket error (called by Elysia error handler)
+   */
+  handleError(ws: any, error: Error): void {
+    console.error("WebSocket error:", error);
+    this.handleDisconnection(ws);
+  }
+
+  /**
+   * Process signaling message
+   */
+  private processMessage(ws: any, message: SignalingMessage): void {
     const userId = this.wsToUser.get(ws);
     if (!userId) {
       this.sendError(ws, "User not authenticated");
@@ -90,7 +118,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
         this.handleJoin(ws, userId, message);
         break;
       case "leave":
-        this.handleLeave(ws, userId, message);
+        this.handleLeave(userId, message);
         break;
       case "offer":
         this.handleOffer(ws, userId, message);
@@ -103,7 +131,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
         break;
       case "mute":
       case "unmute":
-        this.handleMediaToggle(ws, userId, message);
+        this.handleMediaToggle(userId, message);
         break;
       default:
         this.sendError(ws, `Unknown message type: ${message.type}`);
@@ -113,17 +141,13 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Handle join room
    */
-  private handleJoin(
-    ws: WebSocket,
-    userId: string,
-    message: SignalingMessage
-  ): void {
+  private handleJoin(ws: any, userId: string, message: SignalingMessage): void {
     const { roomId, data } = message;
 
     // Check if user is already in a room
     const currentRoom = this.userToRoom.get(userId);
     if (currentRoom) {
-      this.handleLeave(ws, userId, { ...message, roomId: currentRoom });
+      this.handleLeave(userId, { ...message, roomId: currentRoom });
     }
 
     // Get or create room
@@ -178,11 +202,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Handle leave room
    */
-  private handleLeave(
-    _ws: WebSocket,
-    userId: string,
-    message: SignalingMessage
-  ): void {
+  private handleLeave(userId: string, message: SignalingMessage): void {
     const { roomId } = message;
     const room = this.rooms.get(roomId);
 
@@ -215,7 +235,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
    * Handle WebRTC offer
    */
   private handleOffer(
-    ws: WebSocket,
+    ws: any,
     userId: string,
     message: SignalingMessage
   ): void {
@@ -259,7 +279,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
    * Handle WebRTC answer
    */
   private handleAnswer(
-    ws: WebSocket,
+    ws: any,
     userId: string,
     message: SignalingMessage
   ): void {
@@ -303,7 +323,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
    * Handle ICE candidate
    */
   private handleIceCandidate(
-    ws: WebSocket,
+    ws: any,
     userId: string,
     message: SignalingMessage
   ): void {
@@ -344,11 +364,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Handle media toggle (mute/unmute)
    */
-  private handleMediaToggle(
-    _ws: WebSocket,
-    userId: string,
-    message: SignalingMessage
-  ): void {
+  private handleMediaToggle(userId: string, message: SignalingMessage): void {
     const { roomId, type, data } = message;
 
     const room = this.rooms.get(roomId);
@@ -375,7 +391,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Handle WebSocket disconnection
    */
-  private handleDisconnection(ws: WebSocket): void {
+  private handleDisconnection(ws: any): void {
     const userId = this.wsToUser.get(ws);
     if (!userId) {
       return;
@@ -383,7 +399,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
 
     const roomId = this.userToRoom.get(userId);
     if (roomId) {
-      this.handleLeave(ws, userId, {
+      this.handleLeave(userId, {
         type: "leave",
         roomId,
         userId,
@@ -398,7 +414,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Send message to WebSocket
    */
-  private send(ws: WebSocket, message: any): void {
+  private send(ws: any, message: any): void {
     if (ws.readyState === ws.OPEN) {
       ws.send(JSON.stringify(message));
     }
@@ -407,7 +423,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Send error message
    */
-  private sendError(ws: WebSocket, error: string): void {
+  private sendError(ws: any, error: string): void {
     this.send(ws, {
       type: "error",
       error,
@@ -497,7 +513,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
     });
 
     // Remove user from room
-    this.handleLeave(participant.ws, userId, {
+    this.handleLeave(userId, {
       type: "leave",
       roomId,
       userId,

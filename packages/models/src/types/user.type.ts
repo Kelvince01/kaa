@@ -3,6 +3,7 @@
  */
 
 import type { BaseDocument } from "./base.type";
+import type { PropertyType } from "./property.type";
 
 export enum KYCStatus {
   PENDING = "pending",
@@ -132,6 +133,26 @@ export type UserPreferences = {
     prefersContrast: "no-preference" | "high" | "low" | "custom";
     prefersDarkMode: boolean;
     fontSize: "small" | "medium" | "large";
+  };
+  properties: {
+    propertyTypes: PropertyType[];
+    locations: string[];
+    budget: {
+      min: number;
+      max: number;
+    };
+    furnished: boolean;
+    bedrooms: number;
+    bathrooms: number;
+    amenities: string[];
+    features: string[];
+    verified: boolean;
+    featured: boolean;
+    owner: boolean;
+    agent: boolean;
+    admin: boolean;
+    tenant: boolean;
+    landlord: boolean;
   };
 };
 

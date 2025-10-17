@@ -23,7 +23,6 @@ import type {
   IPasskey,
   IRefreshToken,
   IResetToken,
-  ISecurityEvent,
   ISession,
   IVerificationToken,
 } from "./types/auth.type";
@@ -777,58 +776,3 @@ apiKeySchema.index({ memberId: 1, isActive: 1 });
 apiKeySchema.index({ userId: 1, isActive: 1 });
 
 export const ApiKey = mongoose.model<IApiKey>("ApiKey", apiKeySchema);
-
-// Security Event Schema
-const securityEventSchema = new Schema<ISecurityEvent>(
-  {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    type: {
-      type: String,
-      enum: [
-        "login",
-        "logout",
-        "password_change",
-        "email_change",
-        "phone_change",
-        "failed_login",
-        "account_locked",
-        "suspicious_activity",
-      ],
-      required: true,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
-    ipAddress: {
-      type: String,
-    },
-    userAgent: {
-      type: String,
-    },
-    metadata: {
-      type: Schema.Types.Mixed,
-    },
-    timestamp: {
-      type: Date,
-      default: Date.now,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-// Indexes for security events
-securityEventSchema.index({ userId: 1, timestamp: -1 });
-securityEventSchema.index({ type: 1, timestamp: -1 });
-securityEventSchema.index({ timestamp: -1 });
-
-export const SecurityEvent = mongoose.model<ISecurityEvent>(
-  "SecurityEvent",
-  securityEventSchema
-);

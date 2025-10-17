@@ -12,6 +12,7 @@ export * from "./helpers.util";
 export * from "./i18n.util";
 export * from "./image.util";
 export * from "./logger.util";
+export * from "./memory-cache.util";
 export * from "./storage.util";
 export * from "./stripe.util";
 export * from "./translation.util";

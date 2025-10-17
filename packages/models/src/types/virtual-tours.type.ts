@@ -256,6 +256,8 @@ export interface IVirtualTour extends Document {
   description: string;
   type: TourType;
   status: TourStatus;
+  provider: "matterport" | "custom";
+  embedCode?: string;
   settings: TourSettings;
   scenes: TourScene[];
   hotspots: Hotspot[];
