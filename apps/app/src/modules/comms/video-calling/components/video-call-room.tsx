@@ -57,9 +57,12 @@ export const VideoCallRoom = ({
     disconnect,
   } = useWebRTCConnection({
     callId,
-    // biome-ignore lint/style/noNonNullAssertion: ignore
-    // biome-ignore lint/nursery/noNonNullAssertedOptionalChain: ignore
-    token: token?.data!,
+    token: token?.data ?? {
+      roomId: "",
+      userId: "",
+      iceServers: [],
+      expiresAt: new Date(),
+    },
     onParticipantJoinedAction: (participant) => {
       setParticipants((prev) => [...prev, participant]);
     },

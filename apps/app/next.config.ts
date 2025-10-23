@@ -162,13 +162,6 @@ const nextConfig: NextConfig = {
     // dangerouslyAllowSVG: true,
     // contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  // Environment variables now go into .env files or use the runtime config
-  // https://nextjs.org/docs/app/api-reference/next-config-js/runtime-configuration
-  publicRuntimeConfig: {
-    API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1",
-    // MAPBOX_TOKEN: process.env.MAPBOX_TOKEN,
-    // STRIPE_PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY,
-  },
   compiler: {
     // Remove console logs in production
     removeConsole: process.env.NODE_ENV === "production",
@@ -178,7 +171,11 @@ const nextConfig: NextConfig = {
       canvas: "./empty-module.ts",
     },
   },
-  experimental: {},
+  experimental: {
+    turbopackFileSystemCacheForDev: true,
+  },
+  serverExternalPackages: ["require-in-the-middle", "import-in-the-middle"],
+  reactCompiler: true,
 };
 
 export default withSentryConfig(withNextIntl(nextConfig), {

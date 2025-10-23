@@ -66,8 +66,12 @@ export function ContractDetailsModal({
   const { data: tenants } = useTenants();
   const propertyQuery = useProperty(
     typeof contract?.property === "string"
-      ? contract?.property
-      : contract?.property._id || ""
+      ? (contract.property ?? "")
+      : contract?.property &&
+          typeof contract.property === "object" &&
+          "_id" in contract.property
+        ? ((contract.property as any)._id ?? "")
+        : ""
   );
   const property = propertyQuery.data;
 
@@ -226,19 +230,19 @@ export function ContractDetailsModal({
                         </div>
                         <div>
                           <span className="text-muted-foreground">Area:</span>
-                          <div>{property.details.size} m²</div>
+                          <div>{property.specifications.totalArea} m²</div>
                         </div>
                         <div>
                           <span className="text-muted-foreground">
                             Bedrooms:
                           </span>
-                          <div>{property.details.bedrooms}</div>
+                          <div>{property.specifications.bedrooms}</div>
                         </div>
                         <div>
                           <span className="text-muted-foreground">
                             Bathrooms:
                           </span>
-                          <div>{property.details.bathrooms}</div>
+                          <div>{property.specifications.bathrooms}</div>
                         </div>
                       </div>
                     </div>

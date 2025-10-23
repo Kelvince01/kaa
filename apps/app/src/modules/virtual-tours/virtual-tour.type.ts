@@ -283,14 +283,18 @@ export type MediaUploadRequest = {
 };
 
 export type TourListResponse = {
-  tours: VirtualTour[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
+  data: {
+    tours: VirtualTour[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
+    filters?: any;
   };
-  filters?: any;
+  status: "success" | "error";
+  message?: string;
 };
 
 export type TourEmbedOptions = {

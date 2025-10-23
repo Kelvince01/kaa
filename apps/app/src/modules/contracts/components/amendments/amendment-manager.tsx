@@ -497,7 +497,7 @@ export function AmendmentManager({
                                         {getFieldDisplayName(change.field)}
                                       </div>
                                       <div className="mt-1 flex items-center gap-2 text-sm">
-                                        <span className="ml-2 font-thin text-muted-foreground text-red-600 line-through">
+                                        <span className="ml-2 font-thin text-muted-foreground line-through">
                                           {formatValue(
                                             change.field,
                                             change.oldValue

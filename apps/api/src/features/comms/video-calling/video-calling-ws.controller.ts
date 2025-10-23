@@ -62,7 +62,31 @@ export const videoCallingWSController = new Elysia({
         // Notify engine of closure
         videoCallingService.handleWebSocketClose(ws);
       } catch (error) {
-        logger.error("Error handling WebSocket close:", error);
+        logger.error(
+          "Error handling WebSocket close:",
+          (error as Error).message
+        );
+        logger.error("Error handling WebSocket close:", (error as Error).stack);
+        logger.error(
+          "Error handling WebSocket close:",
+          (error as Error | any).code
+        );
+        logger.error(
+          "Error handling WebSocket close:",
+          (error as Error | any).reason
+        );
+        logger.error(
+          "Error handling WebSocket close:",
+          (error as Error | any).wasClean
+        );
+        logger.error(
+          "Error handling WebSocket close:",
+          (error as Error | any).protocol
+        );
+        logger.error(
+          "Error handling WebSocket close:",
+          (error as Error | any).url
+        );
       }
     },
   });

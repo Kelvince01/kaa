@@ -1,43 +1,25 @@
 import mongoose, { Schema } from "mongoose";
-import type {
+import {
   IComplianceReport,
   IDataRetentionPolicy,
   ISecurityEvent,
+  SecurityEventStatus,
+  SecurityEventType,
+  ThreatLevel,
 } from "./types/security.type";
 
 const securityEventSchema = new Schema<ISecurityEvent>(
   {
-    memberId: { type: Schema.Types.ObjectId, ref: "Member", required: true },
+    memberId: { type: Schema.Types.ObjectId, ref: "Member" },
     userId: { type: Schema.Types.ObjectId, ref: "User" },
     type: {
       type: String,
-      enum: [
-        "login_attempt",
-        "logout",
-        "email_change",
-        "phone_change",
-        "failed_login",
-        "account_locked",
-        "password_change",
-        "mfa_enabled",
-        // "data_breach_attempt",
-        // "fraud_attempt",
-        // "malware_detected",
-        // "phishing_attempt",
-        // "api_abuse",
-        // "rate_limit_exceeded",
-        // "unauthorized_access",
-        // "privilege_escalation",
-        // "data_exfiltration",
-        "suspicious_activity",
-        "data_export",
-        "permission_change",
-      ],
+      enum: Object.values(SecurityEventType),
       required: true,
     },
     severity: {
       type: String,
-      enum: ["low", "medium", "high", "critical"],
+      enum: Object.values(ThreatLevel),
       required: true,
     },
     details: {
@@ -53,8 +35,8 @@ const securityEventSchema = new Schema<ISecurityEvent>(
     },
     status: {
       type: String,
-      enum: ["detected", "investigating", "resolved", "false_positive"],
-      default: "detected",
+      enum: Object.values(SecurityEventStatus),
+      default: SecurityEventStatus.DETECTED,
     },
     resolvedBy: { type: Schema.Types.ObjectId, ref: "User" },
     resolvedAt: Date,

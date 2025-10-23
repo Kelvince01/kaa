@@ -52,12 +52,12 @@ export default function MapProvider({
   }, [initialViewState, mapContainerRef]);
 
   return (
-    <div className="z-[1000]">
+    <div className="z-1000">
       <MapContext.Provider value={{ map: map.current as mapboxgl.Map }}>
         {children}
       </MapContext.Provider>
       {!loaded && (
-        <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-background/80">
+        <div className="absolute inset-0 z-1000 flex items-center justify-center bg-background/80">
           <div className="font-medium text-lg">Loading map...</div>
         </div>
       )}

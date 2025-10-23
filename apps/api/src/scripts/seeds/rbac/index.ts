@@ -280,16 +280,16 @@ const adminUser = {
   contact: {
     email: "admin@kaapro.dev",
     phone: {
-      number: "+254712345678",
+      number: "712345678",
       countryCode: "+254",
       formatted: "+254712345678",
     },
     preferredContact: "email",
   },
   verification: {
-    emailVerified: true,
-    phoneVerified: true,
-    identityVerified: true,
+    emailVerifiedAt: new Date(),
+    phoneVerifiedAt: new Date(),
+    identityVerifiedAt: new Date(),
     kycStatus: KYCStatus.VERIFIED,
   },
   preferences: {

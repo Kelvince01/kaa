@@ -1,5 +1,6 @@
 import {
   Calendar,
+  Check,
   ClipboardCheck,
   DollarSign,
   FileText,
@@ -8,8 +9,8 @@ import {
   Home,
   Lock,
   MessageCircle,
+  MessageSquare,
   Settings,
-  SquareTerminal,
   UserIcon,
   Users,
   Video,
@@ -26,7 +27,7 @@ export const dashboardSidebarItems = (user: User) => ({
     },
   ],
   navMain: [
-    { title: "Dashboard", url: "/dashboard", icon: Home },
+    { title: "Dashboard", url: "/dashboard", icon: Home, isActive: true },
     ...(user?.role === "tenant"
       ? [
           {
@@ -56,24 +57,56 @@ export const dashboardSidebarItems = (user: User) => ({
     user.role === "admin"
       ? [
           {
-            title: "My Properties",
+            title: "Properties",
             url: "/dashboard/properties",
             icon: Home,
-          },
-          {
-            title: "My Units",
-            url: "/dashboard/units",
-            icon: Users,
-          },
-          {
-            title: "My Tenants",
-            url: "/dashboard/tenants",
-            icon: Users,
+            items: [
+              {
+                title: "My Properties",
+                url: "/dashboard/properties",
+                icon: Home,
+              },
+              {
+                title: "Units",
+                url: "/dashboard/units",
+                icon: Users,
+              },
+              {
+                title: "Tenants",
+                url: "/dashboard/tenants",
+                icon: Users,
+              },
+              {
+                title: "Bookings",
+                url: "/dashboard/bookings",
+                icon: Calendar,
+              },
+              {
+                title: "Virtual Tours",
+                url: "/dashboard/virtual-tours",
+                icon: Video,
+              },
+              {
+                title: "Inspections",
+                url: "/dashboard/inspections",
+                icon: Check,
+              },
+              {
+                title: "Conditions",
+                url: "/dashboard/conditions",
+                icon: Check,
+              },
+            ],
           },
           {
             title: "Maintenance",
             url: "/dashboard/maintenance",
             icon: Wrench,
+          },
+          {
+            title: "Reviews",
+            url: "/dashboard/reviews",
+            icon: MessageSquare,
           },
           {
             title: "References",
@@ -93,14 +126,21 @@ export const dashboardSidebarItems = (user: User) => ({
         ]
       : []),
     {
-      title: "Video Calls",
-      url: "/dashboard/calls",
-      icon: Video,
-    },
-    {
-      title: "Messages",
-      url: "/messages",
+      title: "Communication",
+      url: "/dashboard/communication",
       icon: MessageCircle,
+      items: [
+        {
+          title: "Messages",
+          url: "/messages",
+          icon: MessageCircle,
+        },
+        {
+          title: "Video Calls",
+          url: "/dashboard/calls",
+          icon: Video,
+        },
+      ],
     },
     {
       title: "Templates",
@@ -122,27 +162,6 @@ export const dashboardSidebarItems = (user: User) => ({
       url: "/dashboard/contracts",
       icon: FileText,
     },
-
     { title: "Settings", url: "/dashboard/settings", icon: Settings },
-    {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
-    },
   ],
 });

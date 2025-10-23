@@ -50,7 +50,7 @@ export const formatPropertyType = (type: Property["type"]): string => {
     Maisonette: "Maisonette",
   };
 
-  return typeLabels[type as keyof typeof typeLabels] || type;
+  return typeLabels[type as unknown as keyof typeof typeLabels] || type;
 };
 
 export const getPropertyStatusColor = (status: Property["status"]): string => {
@@ -95,18 +95,18 @@ export const formatPrice = (
 };
 
 export const formatRentAmount = (property: Property): string =>
-  formatPrice(property.pricing.rentAmount, property.pricing.currency);
+  formatPrice(property.pricing.rent, property.pricing.currency);
 
 export const formatDepositAmount = (property: Property): string =>
-  formatPrice(property.pricing.securityDeposit, property.pricing.currency);
+  formatPrice(property.pricing.deposit, property.pricing.currency);
 
 export const getTotalMonthlyCost = (property: Property): number => {
-  let total = property.pricing.rentAmount;
+  const total = property.pricing.rent;
 
   // Add utilities if not included
-  if (!property.pricing.electricityBill && property.pricing.electricityBill) {
-    total += property.pricing.electricityBill;
-  }
+  // if (!property.pricing.utilitiesIncluded.electricity && property.pricing.utilitiesIncluded.electricity) {
+  //   total += property.pricing.utilitiesIncluded.electricity.amount;
+  // }
   // if (!property.pricing.waterBill && property.pricing.waterBill) {
   // 	total += property.utilities.water.cost;
   // }
@@ -136,10 +136,10 @@ export const formatTotalMonthlyCost = (property: Property): string =>
 // Property details helpers
 export const getBedroomsBathroomsText = (property: Property): string => {
   const bedrooms =
-    property.details.bedrooms === 0
+    property.specifications.bedrooms === 0
       ? "Studio"
-      : `${property.details.bedrooms} bed`;
-  const bathrooms = `${property.details.bathrooms} bath`;
+      : `${property.specifications.bedrooms} bed`;
+  const bathrooms = `${property.specifications.bathrooms} bath`;
   return `${bedrooms}, ${bathrooms}`;
 };
 
@@ -346,11 +346,11 @@ export const getDistanceText = (distance?: number): string => {
 
 // Comparison helpers
 export const comparePropertiesByPrice = (a: Property, b: Property): number =>
-  a.pricing.rentAmount - b.pricing.rentAmount;
+  a.pricing.rent - b.pricing.rent;
 
 export const comparePropertiesBySize = (a: Property, b: Property): number => {
-  const sizeA = a.details.size || 0;
-  const sizeB = b.details.size || 0;
+  const sizeA = a.specifications.totalArea || 0;
+  const sizeB = b.specifications.totalArea || 0;
   return sizeB - sizeA;
 };
 
@@ -359,11 +359,11 @@ export const comparePropertiesBySize = (a: Property, b: Property): number => {
 // };
 
 export const comparePropertiesByDate = (a: Property, b: Property): number =>
-  new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  new Date(b.lastUpdatedAt).getTime() - new Date(a.lastUpdatedAt).getTime();
 
 // Availability helpers
 export const getAvailabilityText = (property: Property): string => {
-  const availableDate = new Date(property.availableFrom);
+  const availableDate = new Date(property.availability.availableFrom as Date);
   const today = new Date();
 
   if (availableDate <= today) {
@@ -387,7 +387,7 @@ export const getAvailabilityText = (property: Property): string => {
 };
 
 export const isAvailableNow = (property: Property): boolean =>
-  new Date(property.availableFrom) <= new Date();
+  new Date(property.availability.availableFrom as Date) <= new Date();
 
 // export const getLeaseTerm = (property: Property): string => {
 // 	return property.leaseTerm || "Negotiable";
@@ -395,8 +395,8 @@ export const isAvailableNow = (property: Property): boolean =>
 
 // Image and media helpers
 export const getPrimaryImage = (property: Property): string | undefined => {
-  const primaryImage = property.media.photos.find((img) => img.isPrimary);
-  return primaryImage?.url || property.media.photos[0]?.url;
+  const primaryImage = property.media.images.find((img) => img.isPrimary);
+  return primaryImage?.url || property.media.images[0]?.url;
 };
 
 // export const getThumbnailImage = (property: Property): string | undefined => {
@@ -407,7 +407,7 @@ export const getPrimaryImage = (property: Property): string | undefined => {
 // };
 
 export const getImageCount = (property: Property): number =>
-  property.media.photos.length;
+  property.media.images.length;
 
 export const hasVideo = (property: Property): boolean =>
   !!(property.media.videos && property.media.videos.length > 0);
@@ -415,15 +415,19 @@ export const hasVideo = (property: Property): boolean =>
 // Contact and owner helpers
 export const getOwnerName = (property: Property): string =>
   // biome-ignore lint/suspicious/noConstantBinaryExpressions: false positive
-  `${property.landlord.firstName} ${property.landlord.lastName}` || "Owner";
+  `${(property.landlord as any).profile.firstName} ${(property.landlord as any).profile.lastName}` ||
+  "Owner";
 
 export const getOwnerContact = (property: Property): string =>
-  property.landlord.phone ||
-  property.landlord.email ||
+  (property.landlord as any).contact.phone ||
+  (property.landlord as any).contact.email ||
   "Contact through platform";
 
 export const canContactOwnerDirectly = (property: Property): boolean =>
-  !!(property.landlord.phone || property.landlord.email);
+  !!(
+    (property.landlord as any).contact.phone ||
+    (property.landlord as any).contact.email
+  );
 
 // Utilities formatting helpers
 // export const formatUtilities = (utilities: PropertyUtilities): string[] => {
@@ -504,8 +508,8 @@ export const matchesSearchQuery = (
     property.location.county.toLowerCase().includes(searchText) ||
     property.location.estate?.toLowerCase().includes(searchText) ||
     property.type.toLowerCase().includes(searchText) ||
-    property.amenities.some((amenity) =>
-      amenity.name.toLowerCase().includes(searchText)
+    Object.values(property.amenities).some((amenity) =>
+      amenity ? amenity.toString().toLowerCase().includes(searchText) : false
     )
   );
 };
@@ -518,13 +522,14 @@ export const calculatePropertyQuality = (property: Property): number => {
   // Basic information completeness (30 points)
   if (property.title) score += 5;
   if (property.description.length >= 50) score += 10;
-  if (property.details.size) score += 5;
-  if (property.amenities.length >= 3) score += 10;
+  if (property.specifications.totalArea) score += 5;
+  if (Object.values(property.amenities).filter(Boolean).length >= 3)
+    score += 10;
 
   // Images and media (25 points)
-  if (property.media.photos.length >= 5) score += 15;
-  else if (property.media.photos.length >= 3) score += 10;
-  else if (property.media.photos.length >= 1) score += 5;
+  if (property.media.images.length >= 5) score += 15;
+  else if (property.media.images.length >= 3) score += 10;
+  else if (property.media.images.length >= 1) score += 5;
 
   if (property.media.videos && property.media.videos.length > 0) score += 10;
 
@@ -540,8 +545,8 @@ export const calculatePropertyQuality = (property: Property): number => {
   // if (property.kenyaSpecific.infrastructure.waterBackup) score += 5;
 
   // Contact and verification (10 points)
-  if (property.landlord.phone) score += 5;
-  if (property.landlord.avatar) score += 5;
+  if ((property.landlord as any).contact.phone) score += 5;
+  if ((property.landlord as any).profile.avatar) score += 5;
 
   return Math.round((score / maxScore) * 100);
 };

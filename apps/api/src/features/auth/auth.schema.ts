@@ -21,6 +21,21 @@ export const verificationStatusSchema = t.Object({
   rejectionReason: t.Optional(t.String()),
 });
 
+export const LoginUserRequestSchema = t.Object(
+  {
+    email: t.String({ default: "user@example.com" }),
+    password: t.String({ default: "Password123!" }),
+  },
+  {
+    title: "Login Request",
+    description: "Login request object",
+    default: {
+      email: "user@example.com",
+      password: "Password123!",
+    },
+  }
+);
+
 export const LoginUserResponseSchema = t.Object({
   user: t.Object({
     id: t.String(),

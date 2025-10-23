@@ -1,7 +1,8 @@
 import { Payment, Property, Tenant } from "@kaa/models";
 import type { PaymentType } from "@kaa/models/types";
-import { stripeService } from "@kaa/services";
-import { logger, stripeClient } from "@kaa/utils";
+import { stripeService } from "@kaa/services/stripe";
+import { logger } from "@kaa/utils";
+import { stripeClient } from "@kaa/utils/stripe";
 import Elysia, { t } from "elysia";
 import type mongoose from "mongoose";
 import type Stripe from "stripe";

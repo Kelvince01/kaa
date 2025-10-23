@@ -1,6 +1,7 @@
 import { openapi } from "@elysiajs/openapi";
 import config from "@kaa/config/api";
-import * as z from "zod";
+
+// import * as z from "zod";
 
 const openapiDocs = openapi({
   path: "/docs",
@@ -64,9 +65,9 @@ const openapiDocs = openapi({
   exclude: {
     paths: ["/", "/metrics", "/health", "/ws", "/stop", "/docs"] as string[],
   },
-  mapJsonSchema: {
+  /*mapJsonSchema: {
     zod: z.toJSONSchema,
-  },
+  },*/
 });
 
 export default openapiDocs;

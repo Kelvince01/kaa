@@ -1,4 +1,5 @@
 import { ApiKey, User } from "@kaa/models";
+import mongoose from "mongoose";
 import { randomUUIDv7 } from "bun";
 import { Elysia } from "elysia";
 import { SECURITY_CONFIG } from "~/config/security.config";
@@ -37,7 +38,35 @@ export function sessionPlugin() {
       // If there is no valid session — create a new guest session
       if (!session) {
         session = sessionStore.createNew();
-        await sessionStore.set(session);
+        await sessionStore.set({
+          id: session.id,
+          userId: session.userId ?? new mongoose.Types.ObjectId("000000000000000000000000").toString(),
+          csrfToken: session.csrfToken,
+          createdAt: session.createdAt,
+          expiresAt: session.expiresAt,
+          sessionId: session.sessionId ?? randomUUIDv7(),
+          token: session.token ?? "token",
+          authType: session.authType ?? "regular",
+          authStrategy: session.authStrategy ?? "password",
+          deviceInfo: session.deviceInfo ?? {
+            userAgent: "Unknown",
+            ip: "Unknown",
+            os: "Unknown",
+            browser: "Unknown",
+            deviceType: "unknown" as "desktop" | "mobile" | "tablet" | "unknown",
+            deviceHash: "Unknown",
+          },
+          location: session.location ?? {
+            city: "Unknown",
+            region: "Unknown",
+            country: "Unknown",
+            latitude: 0,
+            longitude: 0,
+          },
+          lastActive: session.lastActive ?? new Date(),
+          valid: session.valid ?? true,
+          isRevoked: session.isRevoked ?? false,
+        });
 
         cookie[SECURITY_CONFIG.sessionCookieName].set({
           value: session.id,

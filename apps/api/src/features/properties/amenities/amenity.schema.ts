@@ -48,6 +48,7 @@ export const operatingHoursSchema = t.Optional(
         t.Object({
           open: t.String(),
           close: t.String(),
+          closed: t.Optional(t.Boolean()),
         })
       )
     ),
@@ -56,6 +57,7 @@ export const operatingHoursSchema = t.Optional(
         t.Object({
           open: t.String(),
           close: t.String(),
+          closed: t.Optional(t.Boolean()),
         })
       )
     ),
@@ -64,6 +66,7 @@ export const operatingHoursSchema = t.Optional(
         t.Object({
           open: t.String(),
           close: t.String(),
+          closed: t.Optional(t.Boolean()),
         })
       )
     ),
@@ -72,6 +75,7 @@ export const operatingHoursSchema = t.Optional(
         t.Object({
           open: t.String(),
           close: t.String(),
+          closed: t.Optional(t.Boolean()),
         })
       )
     ),
@@ -80,6 +84,7 @@ export const operatingHoursSchema = t.Optional(
         t.Object({
           open: t.String(),
           close: t.String(),
+          closed: t.Optional(t.Boolean()),
         })
       )
     ),
@@ -88,6 +93,7 @@ export const operatingHoursSchema = t.Optional(
         t.Object({
           open: t.String(),
           close: t.String(),
+          closed: t.Optional(t.Boolean()),
         })
       )
     ),
@@ -96,11 +102,20 @@ export const operatingHoursSchema = t.Optional(
         t.Object({
           open: t.String(),
           close: t.String(),
+          closed: t.Optional(t.Boolean()),
         })
       )
     ),
   })
 );
+
+/**
+ * Schema for geolocation
+ */
+export const geolocationSchema = t.Object({
+  type: t.String(),
+  coordinates: t.Array(t.Number()),
+});
 
 /**
  * Schema for creating a new amenity
@@ -113,6 +128,7 @@ export const createAmenitySchema = t.Object({
   location: locationSchema,
   contact: contactSchema,
   operatingHours: operatingHoursSchema,
+  geolocation: geolocationSchema,
   tags: t.Optional(t.Array(t.String())),
 });
 
@@ -196,6 +212,7 @@ export const amenityResponseSchema = t.Object({
   location: locationSchema,
   contact: contactSchema,
   operatingHours: operatingHoursSchema,
+  geolocation: geolocationSchema,
   rating: t.Number(),
   reviewCount: t.Number(),
   verified: t.Boolean(),

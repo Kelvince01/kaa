@@ -322,15 +322,15 @@ export function AdvancedFilterPanel({
                   {properties?.properties?.map((property) => (
                     <div
                       className="flex items-center space-x-2"
-                      key={property._id}
+                      key={(property._id as any).toString()}
                     >
                       <Checkbox
                         checked={tempFilters.propertyFilter.includes(
-                          property._id
+                          property._id as any
                         )}
-                        id={`property-${property._id}`}
+                        id={`property-${property._id as any}`}
                         onCheckedChange={() =>
-                          togglePropertyFilter(property._id)
+                          togglePropertyFilter(property._id as any)
                         }
                       />
                       <Label

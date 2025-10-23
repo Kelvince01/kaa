@@ -17,7 +17,7 @@ export * from "./location.service";
 export * from "./misc";
 export * from "./org/billing.service";
 export * as memberService from "./org/member.service";
-export * from "./org/subscription.service";
+// export * from "./org/subscription.service";
 export * from "./payments";
 export * from "./properties/amenity.service";
 export * from "./properties/amenity-cron.service";

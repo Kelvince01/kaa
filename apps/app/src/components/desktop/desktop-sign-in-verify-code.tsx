@@ -37,7 +37,7 @@ export function DesktopSignInVerifyCode({
         />
         <p>Signing in...</p>
         <p className="mb-4">
-          If Kaa dosen't open in a few seconds,{" "}
+          If Kaa doesn't open in a few seconds,{" "}
           <a
             className="underline"
             href={`kaa://api/auth/callback?code=${code}`}

@@ -7,7 +7,7 @@ export * as paymentMethodService from "./payment-method.service";
 export * from "./payment-scheduler.service";
 export * from "./provider.service";
 export * from "./recurring-payments.service";
-export * from "./stripe.service";
+// export * from "./stripe.service";
 
 // export * from "./tkash.service";
 // export * from "./equitel.service";

@@ -33,9 +33,17 @@ export enum SecurityEventType {
   LOGIN_ATTEMPT = "login_attempt",
   LOGIN_SUCCESS = "login_success",
   LOGIN_FAILURE = "login_failure",
+  LOGOUT = "logout",
+  EMAIL_CHANGE = "email_change",
+  PHONE_CHANGE = "phone_change",
+  FAILED_LOGIN = "failed_login",
+  ACCOUNT_LOCKED = "account_locked",
+  MFA_ENABLED = "mfa_enabled",
+  SUSPICIOUS_ACTIVITY = "suspicious_activity",
+  DATA_EXPORT = "data_export",
+  PERMISSION_CHANGE = "permission_change",
   PASSWORD_CHANGE = "password_change",
   ACCOUNT_LOCKOUT = "account_lockout",
-  SUSPICIOUS_ACTIVITY = "suspicious_activity",
   DATA_BREACH_ATTEMPT = "data_breach_attempt",
   FRAUD_ATTEMPT = "fraud_attempt",
   MALWARE_DETECTED = "malware_detected",
@@ -443,23 +451,19 @@ export type ComplianceFinding = {
 
 // =========================== //
 
+export enum SecurityEventStatus {
+  DETECTED = "detected",
+  INVESTIGATING = "investigating",
+  RESOLVED = "resolved",
+  FALSE_POSITIVE = "false_positive",
+}
+
 // Security events
 export interface ISecurityEvent extends Document {
-  memberId: mongoose.Types.ObjectId;
+  memberId?: mongoose.Types.ObjectId;
   userId?: mongoose.Types.ObjectId;
-  type:
-    | "login_attempt"
-    | "logout"
-    | "password_change"
-    | "email_change"
-    | "phone_change"
-    | "failed_login"
-    | "account_locked"
-    | "mfa_enabled"
-    | "suspicious_activity"
-    | "data_export"
-    | "permission_change";
-  severity: "low" | "medium" | "high" | "critical";
+  type: SecurityEventType;
+  severity: ThreatLevel;
   details: {
     ipAddress?: string;
     userAgent?: string;
@@ -471,7 +475,7 @@ export interface ISecurityEvent extends Document {
     description?: string;
     metadata?: Record<string, any>;
   };
-  status: "detected" | "investigating" | "resolved" | "false_positive";
+  status: SecurityEventStatus;
   resolvedBy?: mongoose.Types.ObjectId;
   resolvedAt?: Date;
   createdAt: Date;

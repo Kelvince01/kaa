@@ -12,6 +12,29 @@ export type SessionData = {
   csrfToken: string | null;
   createdAt: Date;
   expiresAt: Date;
+
+  sessionId?: string;
+  token?: string;
+  authType?: "regular" | "impersonation";
+  authStrategy?: "password" | "otp" | "oauth";
+  deviceInfo?: {
+    userAgent: string;
+    ip: string;
+    os: string;
+    browser: string;
+    deviceType: "desktop" | "mobile" | "tablet" | "unknown";
+    deviceHash: string;
+  };
+  location?: {
+    city: string;
+    region: string;
+    country: string;
+    latitude: number;
+    longitude: number;
+  };
+  lastActive?: Date;
+  valid?: boolean;
+  isRevoked?: boolean;
 };
 
 type SessionStorageType = "memory" | "redis" | "db";
@@ -99,7 +122,9 @@ export class SessionStore {
         `session:${session.id}`,
         this.ttl / 1000,
         JSON.stringify({
-          ...session,
+          id: session.id,
+          userId: session.userId,
+          csrfToken: session.csrfToken,
           createdAt: session.createdAt.toISOString(),
           expiresAt: session.expiresAt.toISOString(),
         })

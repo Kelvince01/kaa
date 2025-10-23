@@ -13,6 +13,8 @@ import Elysia, { t } from "elysia";
 import { ip } from "elysia-ip";
 import { accessPlugin } from "~/features/rbac/rbac.plugin";
 import { tenantPlugin } from "~/features/users/tenants/tenant.plugin";
+import { authPlugin } from "../auth/auth.plugin";
+import { rolePlugin } from "../rbac/rbac.plugin";
 import {
   contractCreateSchema,
   contractDocumentSchema,
@@ -37,8 +39,10 @@ export const contractController = new Elysia({
   .use(ip())
   .group("/contracts", (app) =>
     app
-      .use(accessPlugin("contracts", "create"))
+      // .use(accessPlugin("contracts", "create"))
       // .use(tenantPlugin)
+      .use(authPlugin)
+      .use(rolePlugin)
 
       // Create new contract
       .post(
@@ -88,7 +92,7 @@ export const contractController = new Elysia({
       )
 
       // Get contract by ID
-      .use(accessPlugin("contracts", "read"))
+      // .use(accessPlugin("contracts", "read"))
       .get(
         "/:contractId",
         async ({ params, set, user, role, ip: clientIp, headers }) => {
@@ -134,7 +138,7 @@ export const contractController = new Elysia({
       )
 
       // Update contract
-      .use(accessPlugin("contracts", "update"))
+      // .use(accessPlugin("contracts", "update"))
       .patch(
         "/:contractId",
         async ({ params, body, set, user, role, ip: clientIp, headers }) => {
@@ -184,7 +188,7 @@ export const contractController = new Elysia({
       )
 
       // List contracts with filtering
-      .use(accessPlugin("contracts", "read"))
+      // .use(accessPlugin("contracts", "read"))
       .get(
         "/",
         async ({ query, set, user, role, ip: clientIp, headers }) => {
@@ -280,50 +284,54 @@ export const contractController = new Elysia({
 
       // Get contracts by user
       .use(accessPlugin("contracts", "read"))
-      .use(tenantPlugin)
-      .get(
-        "/user",
-        async ({ params, set, user, tenant, ip: clientIp, headers }) => {
-          const context: ErrorContext = {
-            userId: user.id,
-            action: "get_user_contracts",
-            ipAddress: clientIp,
-            userAgent: headers["user-agent"],
-            additionalData: { propertyId: params.propertyId },
-          };
-
-          try {
-            const contracts = await contractService.getContractsByUser(
-              tenant.id
-            );
-
-            return {
-              status: "success",
-              contracts,
+      .group("/", (app) =>
+        app.use(tenantPlugin).get(
+          "/user",
+          async ({ params, set, user, tenant, ip: clientIp, headers }) => {
+            const context: ErrorContext = {
+              userId: user.id,
+              action: "get_user_contracts",
+              ipAddress: clientIp,
+              userAgent: headers["user-agent"],
+              additionalData: { propertyId: params.propertyId },
             };
-          } catch (error) {
-            const errorResponse = handleContractError(error as Error, context);
-            set.status = errorResponse.status;
-            return errorResponse.body;
+
+            try {
+              const contracts = await contractService.getContractsByUser(
+                tenant.id
+              );
+
+              return {
+                status: "success",
+                contracts,
+              };
+            } catch (error) {
+              const errorResponse = handleContractError(
+                error as Error,
+                context
+              );
+              set.status = errorResponse.status;
+              return errorResponse.body;
+            }
+          },
+          {
+            params: paramSchemas.propertyId,
+            response: {
+              200: t.Object({
+                status: t.Literal("success"),
+                contracts: t.Array(t.Any()),
+              }),
+              403: responseSchemas.error,
+              404: responseSchemas.error,
+              500: responseSchemas.error,
+            },
+            detail: {
+              summary: "Get contracts by user",
+              description: "Get all contracts for a specific user",
+              tags: ["contracts"],
+            },
           }
-        },
-        {
-          params: paramSchemas.propertyId,
-          response: {
-            200: t.Object({
-              status: t.Literal("success"),
-              contracts: t.Array(t.Any()),
-            }),
-            403: responseSchemas.error,
-            404: responseSchemas.error,
-            500: responseSchemas.error,
-          },
-          detail: {
-            summary: "Get contracts by user",
-            description: "Get all contracts for a specific user",
-            tags: ["contracts"],
-          },
-        }
+        )
       )
 
       // Sign contract

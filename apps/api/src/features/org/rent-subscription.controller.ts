@@ -2,11 +2,13 @@ import {
   Payment,
   Property,
   AppSubscription as Subscription,
+  Tenant,
   User,
 } from "@kaa/models";
 import type { IAppSubscription } from "@kaa/models/types";
-import { subscriptionService } from "@kaa/services";
-import { logger, stripeClient } from "@kaa/utils";
+import { subscriptionService } from "@kaa/services/subscriptions";
+import { logger } from "@kaa/utils";
+import { stripeClient } from "@kaa/utils/stripe";
 import Elysia, { t } from "elysia";
 import type { FilterQuery } from "mongoose";
 import mongoose from "mongoose";
@@ -51,7 +53,7 @@ export const rentSubscriptionController = new Elysia().group(
             }
 
             // Find the tenant (current user)
-            const tenant = await User.findById(user.id);
+            const tenant = await Tenant.findById(user.id);
 
             if (!tenant) {
               set.status = 404;
@@ -78,8 +80,8 @@ export const rentSubscriptionController = new Elysia().group(
             let customerId = subscription.stripeCustomerId as string;
             if (!customerId) {
               const stripeCustomer = await stripeClient.customers.create({
-                email: tenant.contact.email,
-                name: `${tenant.profile.firstName} ${tenant.profile.lastName}`,
+                email: tenant.personalInfo.email,
+                name: `${tenant.personalInfo.firstName} ${tenant.personalInfo.lastName}`,
               });
 
               customerId = stripeCustomer.id;
@@ -103,9 +105,7 @@ export const rentSubscriptionController = new Elysia().group(
             });
 
             // Calculate price in smallest currency unit (pence/cents)
-            const priceInSmallestUnit = Math.round(
-              property.pricing.rentAmount * 100
-            );
+            const priceInSmallestUnit = Math.round(property.pricing.rent * 100);
 
             // Create a product for this property
             const product = await stripeClient.products.create({
@@ -489,7 +489,7 @@ export const rentSubscriptionController = new Elysia().group(
 
             // Update payment method if provided
             if (paymentMethodId && subscription.tenant.toString() === user.id) {
-              const tenant = await User.findById(user.id);
+              const tenant = await Tenant.findById(user.id);
               if (!tenant) {
                 set.status = 404;
                 return {

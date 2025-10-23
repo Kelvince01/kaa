@@ -19,27 +19,27 @@ export type ISignature = {
  * Contract status enumeration
  */
 export enum ContractStatus {
-  DRAFT = "DRAFT",
-  PENDING = "PENDING",
-  ACTIVE = "ACTIVE",
-  SIGNED = "SIGNED",
-  TERMINATED = "TERMINATED",
-  EXPIRED = "EXPIRED",
-  CANCELLED = "CANCELLED",
+  DRAFT = "draft",
+  PENDING = "pending",
+  ACTIVE = "active",
+  SIGNED = "signed",
+  TERMINATED = "terminated",
+  EXPIRED = "expired",
+  CANCELLED = "cancelled",
 }
 
 /**
  * Contract type enumeration
  */
 export enum ContractType {
-  ASSURED_SHORTHAND_TENANCY = "ASSURED_SHORTHAND_TENANCY",
-  ASSURED_TENANCY = "ASSURED_TENANCY",
-  COMMERCIAL_LEASE = "COMMERCIAL_LEASE",
-  STUDENT_ACCOMMODATION = "STUDENT_ACCOMMODATION",
-  HOLIDAY_LET = "HOLIDAY_LET",
-  ROOM_RENTAL = "ROOM_RENTAL",
-  COMPANY_LET = "COMPANY_LET",
-  CUSTOM = "CUSTOM",
+  ASSURED_SHORTHAND_TENANCY = "assured_shorthand_tenancy",
+  ASSURED_TENANCY = "assured_tenancy",
+  COMMERCIAL_LEASE = "commercial_lease",
+  STUDENT_ACCOMMODATION = "student_accommodation",
+  HOLIDAY_LET = "holiday_let",
+  ROOM_RENTAL = "room_rental",
+  COMPANY_LET = "company_let",
+  CUSTOM = "custom",
 }
 
 /**

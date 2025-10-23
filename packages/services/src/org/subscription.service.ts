@@ -14,8 +14,8 @@ import {
   InternalServerError,
   logger,
   NotFoundError,
-  stripeClient,
 } from "@kaa/utils";
+import { stripeClient } from "@kaa/utils/stripe";
 import mongoose, { type Types } from "mongoose";
 
 // Plan definitions

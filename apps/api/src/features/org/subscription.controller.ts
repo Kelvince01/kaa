@@ -1,5 +1,5 @@
 import config from "@kaa/config/api";
-import { subscriptionService } from "@kaa/services";
+import { subscriptionService } from "@kaa/services/subscriptions";
 import { logger } from "@kaa/utils";
 import { Elysia, t } from "elysia";
 import type mongoose from "mongoose";

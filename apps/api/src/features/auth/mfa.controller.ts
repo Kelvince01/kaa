@@ -814,7 +814,7 @@ export const accountRecoveryController = new Elysia({
           const message = `Your Kaa Rental Platform recovery code is: ${code}. Valid for 1 hour.`;
 
           await smsService.sendSms({
-            to: phoneNumber,
+            to: [{ phoneNumber }],
             message,
             type: "notification",
           });

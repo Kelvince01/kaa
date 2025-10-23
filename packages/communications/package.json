@@ -24,7 +24,7 @@
     "@kaa/utils": "workspace:*",
     "@kaa/email": "workspace:*",
     "@kaa/services": "workspace:*",
-    "bullmq": "^5.1.2",
+    "bullmq": "^5.58.5",
     "handlebars": "^4.7.8",
     "mjml": "^4.15.3",
     "resend": "^6.0.3",

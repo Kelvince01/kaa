@@ -1,4 +1,6 @@
 import { SecurityEvent, Session } from "@kaa/models";
+import { SecurityEventType, ThreatLevel, SecurityEventStatus } from "@kaa/models/types";
+import mongoose from "mongoose";
 import { nanoid } from "nanoid";
 
 export class AuthService {
@@ -33,21 +35,27 @@ export class AuthService {
    */
   async logSecurityEvent(
     userId: string,
-    type: string,
+    type: SecurityEventType,
+    severity: ThreatLevel,
     description: string,
+    memberId?: string,
     ipAddress?: string,
     userAgent?: string,
-    metadata?: any
+    metadata?: any,
   ): Promise<void> {
     try {
       const event = new SecurityEvent({
-        userId,
+        memberId: memberId ? new mongoose.Types.ObjectId(memberId) : undefined,
+        userId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
         type,
-        description,
-        ipAddress,
-        userAgent,
-        metadata,
-        timestamp: new Date(),
+        severity,
+        details: {
+          ipAddress,
+          userAgent,
+          metadata,
+        },
+        status: SecurityEventStatus.DETECTED,
+        createdAt: new Date(),
       });
       await event.save();
     } catch (error) {

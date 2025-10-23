@@ -8,6 +8,8 @@
   },
   "scripts": {
     "lint": "bun biome check .",
+    "format": "bun biome format --write .",
+    "lint:fix": "bun biome check --write .",
     "check-types": "tsc --noEmit",
     "mjml:build": "mjml src/templates/*.mjml -o dist/templates",
     "mjml:watch": "mjml src/templates/*.mjml -o dist/templates --watch",
@@ -16,6 +18,9 @@
     "templates:preview": "bun src/scripts/email-preview.ts"
   },
   "dependencies": {
+    "@kaa/config": "workspace:*",
+    "@kaa/utils": "workspace:*",
+    "@kaa/models": "workspace:*",
     "@elysiajs/cors": "^1.4.0",
     "@elysiajs/html": "^1.4.0",
     "elysia": "catalog:",
@@ -25,8 +30,7 @@
     "resend": "^6.0.3"
   },
   "devDependencies": {
-    "@kaa/config": "workspace:*",
-    "@kaa/utils": "workspace:*",
+    "@kaa/tsconfig": "workspace:*",
     "@types/mjml": "^4.7.4",
     "mjml-cli": "^4.15.3",
     "nodemon": "^3.1.10",

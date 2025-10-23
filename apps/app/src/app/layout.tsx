@@ -1,10 +1,11 @@
-import type { Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import type React from "react";
 import { DesktopHeader } from "@/components/desktop/desktop-header";
 import { Providers } from "@/components/providers";
 import { getMetadata } from "@/config/metadata";
@@ -32,7 +33,7 @@ async function getMessages(locale: (typeof locales)[number]) {
   }
 }
 
-export async function generateMetadata() {
+export async function generateMetadata(): Promise<Metadata> {
   return await getMetadata();
 }
 

@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 // import { authRateLimit } from "~/plugins/rate-limit.plugin";
 import config from "@kaa/config/api";
 import { RefreshToken, ResetToken, User, VerificationToken } from "@kaa/models";
-import { type IUser, UserStatus } from "@kaa/models/types";
+import { type IUser, SecurityEventType, ThreatLevel, UserStatus } from "@kaa/models/types";
 import {
   ForgotPasswordRequestSchema,
   LoginUserRequestSchema,
@@ -168,11 +168,15 @@ export const authController = new Elysia()
             // Log security event
             await authService.logSecurityEvent(
               user.id,
-              "login",
+              SecurityEventType.LOGIN_SUCCESS,
+              ThreatLevel.LOW,
               "User registered and logged in",
-              ip,
-              userAgent,
-              { registrationMethod: "email" }
+              "",
+              ip || "",
+              userAgent || "",
+              {
+                userId: user.id,
+              }
             );
 
             set.status = 201;
@@ -591,10 +595,15 @@ export const authController = new Elysia()
               if (user) {
                 await authService.logSecurityEvent(
                   ((user as IUser)._id as mongoose.Types.ObjectId).toString(),
-                  "failed_login",
+                  SecurityEventType.LOGIN_FAILURE,
+                  ThreatLevel.MEDIUM,
                   "Invalid credentials",
-                  ip,
-                  userAgent
+                  "",
+                  ip || "",
+                  userAgent || "",
+                  {
+                    userId: (user as IUser)._id as mongoose.Types.ObjectId,
+                  }
                 );
               }
 
@@ -639,7 +648,7 @@ export const authController = new Elysia()
               };
             }
 
-            if (!user.verification.emailVerifiedAt) {
+            if (user.verification.emailVerifiedAt === null) {
               authMetrics.recordLogin(false, Date.now() - startTime, {
                 email,
                 ip,
@@ -786,11 +795,33 @@ export const authController = new Elysia()
             )
               .then(async (data) => {
                 await ctx.sessionStore.set({
-                  id: data.sessionId,
+                  id: data.sessionId, // randomUUIDv7()
                   userId: (user._id as mongoose.Types.ObjectId).toString(),
                   csrfToken,
                   createdAt: new Date(),
                   expiresAt: data.expiresAt,
+                  sessionId: data.sessionId,
+                  token: accessToken,
+                  authType: "regular",
+                  authStrategy: "password",
+                  deviceInfo: {
+                    userAgent,
+                    ip,
+                    os: ctx.headers.os || "Unknown",
+                    browser: ctx.headers.browser || "Unknown",
+                    deviceType: ctx.headers.device_type as "desktop" | "mobile" | "tablet" | "unknown" | undefined || "unknown",
+                    deviceHash: crypto.createHash("sha256").update(ctx.headers.device || "Unknown").digest("hex"),
+                  },
+                  location: {
+                    city: "Unknown",
+                    region: "Unknown",
+                    country: "Unknown",
+                    latitude: 0,
+                    longitude: 0,
+                  },
+                  lastActive: new Date(),
+                  valid: true,
+                  isRevoked: false,
                 });
 
                 ctx.headers["x-session-id"] = data.sessionId;
@@ -885,10 +916,15 @@ export const authController = new Elysia()
 
             await authService.logSecurityEvent(
               (user._id as mongoose.Types.ObjectId).toString(),
-              "login",
+              SecurityEventType.LOGIN_SUCCESS,
+              ThreatLevel.LOW,
               "User logged in successfully",
-              ip,
-              userAgent
+              (member?._id as mongoose.Types.ObjectId)?.toString() || "",
+              ip || "",
+              userAgent || "",
+              {
+                userId: user._id as mongoose.Types.ObjectId,
+              }
             );
 
             logger.info("User logged in", {

@@ -176,42 +176,49 @@ export const amenitySchema = new Schema<IAmenity>(
           {
             open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
             close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+            closed: { type: Boolean, default: false },
           },
         ],
         tuesday: [
           {
             open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
             close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+            closed: { type: Boolean, default: false },
           },
         ],
         wednesday: [
           {
             open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
             close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+            closed: { type: Boolean, default: false },
           },
         ],
         thursday: [
           {
             open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
             close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+            closed: { type: Boolean, default: false },
           },
         ],
         friday: [
           {
             open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
             close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+            closed: { type: Boolean, default: false },
           },
         ],
         saturday: [
           {
             open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
             close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+            closed: { type: Boolean, default: false },
           },
         ],
         sunday: [
           {
             open: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
             close: { type: String, match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/ },
+            closed: { type: Boolean, default: false },
           },
         ],
       },

@@ -60,7 +60,6 @@ import {
   Users,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { Property } from "@/modules/properties";
 import { useContractStore } from "../../contract.store";
 import { type Contract, ContractStatus } from "../../contract.type";
 
@@ -125,7 +124,7 @@ export function ContractsTable({
           (contract) =>
             // Check if any of the searchable fields contain the global filter
             contract._id.toLowerCase().includes(globalFilter.toLowerCase()) ||
-            getPropertyName((contract.property as Property)._id)
+            getPropertyName((contract.property as any)._id as string)
               .toLowerCase()
               .includes(globalFilter.toLowerCase()) ||
             getTenantNames(contract.tenants as string[])

@@ -552,7 +552,7 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
                   key={message.id}
                 >
                   {message.type !== "system" && (
-                    <Avatar className="h-6 w-6 flex-shrink-0">
+                    <Avatar className="h-6 w-6 shrink-0">
                       <AvatarFallback className="text-xs">
                         {message.userId.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
@@ -605,7 +605,7 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
                           key={annotation.id}
                         >
                           <div className="flex items-start gap-2">
-                            <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-yellow-500" />
+                            <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-yellow-500" />
                             <div className="min-w-0 flex-1">
                               <p className="font-medium text-xs">
                                 {annotation.userId}

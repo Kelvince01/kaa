@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GBrowserService"><![CDATA[{
+  "history": [
+    {
+      "name": "GBrowser - IntelliJ IDEs Plugin | Marketplace",
+      "url": "https://plugins.jetbrains.com/plugin/14458-gbrowser"
+    },
+    {
+      "name": "Find Rental Properties | Kaa",
+      "url": "http://localhost:3000/"
+    },
+    {
+      "name": "Sign In | Kaa - Rental Property Platform",
+      "url": "http://localhost:3000/auth/login"
+    },
+    {
+      "name": "Kaa - Rental Property Platform",
+      "url": "http://localhost:3000/account/applications"
+    },
+    {
+      "name": "Kaa - Rental Property Platform",
+      "url": "http://localhost:3000/properties"
+    },
+    {
+      "name": "Kaa - Rental Property Platform",
+      "url": "http://localhost:3000/messages"
+    }
+  ]
+}]]></component>
+</project>

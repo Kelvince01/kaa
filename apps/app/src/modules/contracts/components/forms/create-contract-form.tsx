@@ -224,8 +224,8 @@ export function CreateContractForm({ open, onClose }: CreateContractFormProps) {
                           <SelectContent>
                             {properties?.properties?.map((property) => (
                               <SelectItem
-                                key={property._id}
-                                value={property._id}
+                                key={(property._id as any).toString()}
+                                value={(property._id as any).toString()}
                               >
                                 <div>
                                   <div className="font-medium">

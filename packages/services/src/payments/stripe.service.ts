@@ -2,7 +2,8 @@ import config from "@kaa/config/api";
 // import { handleSubscriptionEvent } from "~/features/subscriptions/subscription.controller";
 import { Property, Tenant } from "@kaa/models";
 import type { IProperty, ITenant, PaymentType } from "@kaa/models/types";
-import { logger, stripeClient } from "@kaa/utils";
+import { logger } from "@kaa/utils";
+import { stripeClient } from "@kaa/utils/stripe";
 import type mongoose from "mongoose";
 import type Stripe from "stripe";
 

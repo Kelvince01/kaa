@@ -95,7 +95,7 @@ export class MpesaService {
         this.accessToken = null;
         this.tokenExpiry = 0;
       }
-      return Promise.reject(error);
+      return Promise.reject(error.response?.data?.errorMessage || error.message);
     };
 
     this.primaryClient.interceptors.request.use(requestInterceptor);

@@ -12,6 +12,7 @@
   "dependencies": {
     "@ai-sdk/google": "catalog:",
     "@ai-sdk/openai": "catalog:",
+    "@kaa/config": "workspace:*",
     "@kaa/models": "workspace:*",
     "@kaa/utils": "workspace:*",
     "ai": "catalog:",

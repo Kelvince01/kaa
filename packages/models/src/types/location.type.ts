@@ -207,6 +207,7 @@ export type IBusinessHours = {
 export type ITimeSlot = {
   open: string; // HH:MM format
   close: string; // HH:MM format
+  closed?: boolean;
 };
 
 export type ITransportation = {

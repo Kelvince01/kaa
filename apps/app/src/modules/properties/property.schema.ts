@@ -199,7 +199,7 @@ const basicInfoSchema = z
       .refine((desc) => desc.split(" ").length >= 10, {
         message: "Description should contain at least 10 words",
       }),
-    propertyType: z.enum([
+    type: z.enum([
       "apartment",
       "house",
       "condo",
@@ -222,6 +222,7 @@ const basicInfoSchema = z
     petPolicy: z.enum(["allowed", "not_allowed", "negotiable"]),
     smokingPolicy: z.enum(["allowed", "not_allowed", "outside_only"]),
     tags: z.array(z.string()).max(10, "Maximum 10 tags allowed"),
+    reference: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -460,13 +461,14 @@ export const defaultPropertyFormValues: Partial<PropertyFormData> = {
   basic: {
     title: "",
     description: "",
-    propertyType: "apartment" as const,
+    type: "apartment" as any,
     listingType: "rent" as const,
     availableFrom: new Date(),
     furnished: "unfurnished" as const,
     petPolicy: "not_allowed" as const,
     smokingPolicy: "not_allowed" as const,
     tags: [],
+    reference: "",
   },
   features: {
     amenities: [],

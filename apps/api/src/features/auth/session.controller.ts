@@ -243,6 +243,23 @@ export const createOrUpdateSession = async (
         csrfToken: null, // DB sessions don't need CSRF
         createdAt: new Date(),
         expiresAt,
+
+        sessionId,
+        token,
+        authType,
+        authStrategy,
+        deviceInfo: {
+          userAgent,
+          ip,
+          os: os as unknown as string || "Unknown",
+          browser: browser as unknown as string || "Unknown",
+          deviceType: ctx.headers.device_type as "desktop" | "mobile" | "tablet" | "unknown" | undefined || "unknown",
+          deviceHash: crypto.createHash("sha256").update(device as string).digest("hex"),
+        },
+        location,
+        lastActive: new Date(),
+        valid: true,
+        isRevoked: false,
       });
     }
 

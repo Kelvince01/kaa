@@ -229,6 +229,7 @@ export type PropertyLocation = {
   constituency: string;
   ward: string;
   estate: string;
+  neighborhood?: string;
 
   // Address details
   address: {

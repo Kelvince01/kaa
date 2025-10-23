@@ -9,6 +9,11 @@
       },
       "suspicious": {
         "noUnknownAtRules": "off"
+      },
+      "a11y": {
+        "noStaticElementInteractions": "off",
+        "noNoninteractiveElementInteractions": "off",
+        "useKeyWithClickEvents": "off"
       }
     }
   }

@@ -575,7 +575,13 @@ export const amenityController = new Elysia({ prefix: "/amenities" })
         set.status = StatusCodes.CREATED;
         return {
           status: "success",
-          data: amenity,
+          data: {
+            ...amenity,
+            _id: (amenity._id as Types.ObjectId).toString(),
+            rating: amenity.rating || 0,
+            reviewCount: amenity.reviewCount || 0,
+            operatingHours: amenity.operatingHours || {},
+          },
           message: "Amenity created successfully",
         };
       } catch (error) {

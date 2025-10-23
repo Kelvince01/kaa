@@ -4,13 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "echo 'Add dev script here'",
-    "build": "echo 'Add build script here'",
-    "test": "echo 'Add test script here'",
-    "lint": "echo 'Add lint script here'"
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "lint:fix": "biome check --write .",
+    "check-types": "tsc --noEmit"
   },
   "devDependencies": {
-    "@kaa/tsconfig": "workspace:*"
+    "@kaa/tsconfig": "workspace:*",
+    "typescript": "catalog:"
   },
   "exports": {
     ".": "./index.ts",

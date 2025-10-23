@@ -1,0 +1,332 @@
+[
+    {
+        "name": "Property Rental Price Predictor",
+        "slug": "property-rental-price-predictor",
+        "type": "regression",
+        "description": "AI model that predicts rental prices for properties based on key features including bedrooms, bathrooms, size, and location. Trained on historical rental data to provide accurate price estimates for property managers and landlords.",
+        "version": "1.2.0",
+        "status": "ready",
+        "configuration": {
+            "algorithm": "neural_network_regression",
+            "parameters": {
+                "layers": [
+                    {
+                        "type": "dense",
+                        "units": 128,
+                        "activation": "relu",
+                        "inputShape": [
+                            4
+                        ]
+                    },
+                    {
+                        "type": "dropout",
+                        "rate": 0.2
+                    },
+                    {
+                        "type": "dense",
+                        "units": 64,
+                        "activation": "relu"
+                    },
+                    {
+                        "type": "dropout",
+                        "rate": 0.15
+                    },
+                    {
+                        "type": "dense",
+                        "units": 32,
+                        "activation": "relu"
+                    },
+                    {
+                        "type": "dense",
+                        "units": 1,
+                        "activation": "linear"
+                    }
+                ],
+                "optimizer": {
+                    "type": "adam",
+                    "learningRate": 0.001,
+                    "beta1": 0.9,
+                    "beta2": 0.999
+                },
+                "loss": "meanSquaredError",
+                "metrics": [
+                    "meanAbsoluteError",
+                    "meanSquaredError"
+                ],
+                "epochs": 150,
+                "batchSize": 32,
+                "validationSplit": 0.2,
+                "earlyStoppingPatience": 15,
+                "featureScaling": {
+                    "method": "standardization",
+                    "bedrooms": {
+                        "mean": 2.8,
+                        "std": 1.2
+                    },
+                    "bathrooms": {
+                        "mean": 2.1,
+                        "std": 0.8
+                    },
+                    "size": {
+                        "mean": 1250,
+                        "std": 450
+                    },
+                    "townEncoded": {
+                        "mean": 0.5,
+                        "std": 0.3
+                    }
+                },
+                "targetScaling": {
+                    "method": "minmax",
+                    "min": 800,
+                    "max": 4500
+                }
+            },
+            "features": [
+                "bedrooms",
+                "bathrooms",
+                "size",
+                "location.address.town"
+            ],
+            "target": "rentAmount",
+            "useEmbeddings": true
+        },
+        "lifecycle": {
+            "stage": "production",
+            "currentVersion": "1.2.0",
+            "lastUpdated": "2025-01-15T10:30:00.000Z"
+        },
+        "performance": {
+            "mse": 12500.75,
+            "rmse": 111.8,
+            "mae": 85.2,
+            "r2Score": 0.847,
+            "customMetrics": {
+                "mape": 8.5,
+                "withinRange10Percent": 0.78,
+                "withinRange20Percent": 0.92,
+                "medianAbsoluteError": 72.3,
+                "maxError": 425.8,
+                "explainedVariance": 0.851
+            }
+        },
+        "trainingData": {
+            "source": "property_rental_dataset_2024",
+            "recordCount": 15847,
+            "lastTrained": "2025-01-15T08:45:00.000Z",
+            "epochs": 150,
+            "seed": 42,
+            "datasetHash": "sha256:a7f8d9e2b4c6f1a3e5d7b9c2f4e6a8d1c3e5f7b9d2a4c6e8f1a3d5b7c9e2f4a6"
+        },
+        "versions": [
+            {
+                "version": "1.0.0",
+                "stage": "staging",
+                "performance": {
+                    "mse": 18750.25,
+                    "rmse": 136.9,
+                    "mae": 102.8,
+                    "r2Score": 0.782
+                },
+                "savedAt": "2024-11-20T14:20:00.000Z",
+                "storagePath": "models/property-rental-price-predictor/1.0.0"
+            },
+            {
+                "version": "1.1.0",
+                "stage": "production",
+                "performance": {
+                    "mse": 14200.50,
+                    "rmse": 119.2,
+                    "mae": 91.5,
+                    "r2Score": 0.821
+                },
+                "savedAt": "2024-12-10T16:45:00.000Z",
+                "storagePath": "models/property-rental-price-predictor/1.1.0"
+            },
+            {
+                "version": "1.2.0",
+                "stage": "production",
+                "performance": {
+                    "mse": 12500.75,
+                    "rmse": 111.8,
+                    "mae": 85.2,
+                    "r2Score": 0.847
+                },
+                "savedAt": "2025-01-15T10:30:00.000Z",
+                "storagePath": "models/property-rental-price-predictor/1.2.0"
+            }
+        ],
+        "usage": {
+            "totalPredictions": 2847,
+            "lastUsed": "2025-01-16T09:15:00.000Z"
+        },
+        "feedback": [
+            {
+                "actualValue": 1850,
+                "isCorrect": true,
+                "providedBy": "507f1f77bcf86cd799439011",
+                "providedAt": "2025-01-14T15:30:00.000Z"
+            },
+            {
+                "actualValue": 2200,
+                "isCorrect": false,
+                "providedBy": "507f1f77bcf86cd799439012",
+                "providedAt": "2025-01-13T11:20:00.000Z"
+            },
+            {
+                "actualValue": 1650,
+                "isCorrect": true,
+                "providedBy": "507f1f77bcf86cd799439013",
+                "providedAt": "2025-01-12T14:45:00.000Z"
+            }
+        ],
+        "createdBy": "507f1f77bcf86cd799439010",
+        "createdAt": "2024-11-20T14:20:00.000Z",
+        "updatedAt": "2025-01-15T10:30:00.000Z"
+    },
+    {
+        "_id": {
+            "$oid": "685a3c9e89610c5dd0fd22da"
+        },
+        "memberId": {
+            "$oid": "684445794d67fa9803cb571a"
+        },
+        "name": "Rental Price Predictor",
+        "type": "regression",
+        "description": "Predicts rental prices based on property features",
+        "version": "1.0.0",
+        "status": "ready",
+        "configuration": {
+            "algorithm": "neural_network",
+            "features": [
+                "bedrooms",
+                "bathrooms",
+                "squareFootage",
+                "location",
+                "amenities",
+                "yearBuilt"
+            ],
+            "target": "rentalPrice"
+        },
+        "trainingData": {
+            "source": "rental_history",
+            "recordCount": 1000,
+            "lastTrained": {
+                "$date": "2025-06-24T05:50:22.117Z"
+            }
+        },
+        "usage": {
+            "totalPredictions": 0
+        },
+        "createdBy": {
+            "$oid": "6811a471e48458e8b0c455a8"
+        },
+        "createdAt": {
+            "$date": "2025-06-24T05:50:22.137Z"
+        },
+        "updatedAt": {
+            "$date": "2025-06-24T05:50:26.702Z"
+        },
+        "__v": 0,
+        "performance": {
+            "accuracy": 0.9117633119277759,
+            "precision": 0.9047335251304465,
+            "recall": 0.941949980197845,
+            "f1Score": 0.889942528722174
+        }
+    },
+    {
+        "name": "Property Rental Price Predictor",
+        "type": "regression",
+        "description": "AI model that predicts rental prices for properties based on key features including bedrooms, bathrooms, size, and location. Trained on historical rental data to provide accurate price estimates for property managers and landlords.",
+        "configuration": {
+            "algorithm": "dense_nn",
+            "parameters": {
+                "layers": [
+                    {
+                        "type": "dense",
+                        "units": 128,
+                        "activation": "relu",
+                        "inputShape": [
+                            4
+                        ]
+                    },
+                    {
+                        "type": "dropout",
+                        "rate": 0.2
+                    },
+                    {
+                        "type": "dense",
+                        "units": 64,
+                        "activation": "relu"
+                    },
+                    {
+                        "type": "dropout",
+                        "rate": 0.15
+                    },
+                    {
+                        "type": "dense",
+                        "units": 32,
+                        "activation": "relu"
+                    },
+                    {
+                        "type": "dense",
+                        "units": 1,
+                        "activation": "linear"
+                    }
+                ],
+                "optimizer": {
+                    "type": "adam",
+                    "learningRate": 0.001,
+                    "beta1": 0.9,
+                    "beta2": 0.999
+                },
+                "loss": "meanSquaredError",
+                "metrics": [
+                    "meanAbsoluteError",
+                    "meanSquaredError"
+                ],
+                "epochs": 150,
+                "batchSize": 32,
+                "validationSplit": 0.2,
+                "earlyStoppingPatience": 15,
+                "featureScaling": {
+                    "method": "standardization",
+                    "bedrooms": {
+                        "mean": 2.8,
+                        "std": 1.2
+                    },
+                    "bathrooms": {
+                        "mean": 2.1,
+                        "std": 0.8
+                    },
+                    "size": {
+                        "mean": 1250,
+                        "std": 450
+                    },
+                    "townEncoded": {
+                        "mean": 0.5,
+                        "std": 0.3
+                    }
+                },
+                "targetScaling": {
+                    "method": "minmax",
+                    "min": 800,
+                    "max": 4500
+                }
+            },
+            "features": [
+                "details.bedrooms",
+                "details.bathrooms",
+                "details.size",
+                "details.yearBuilt"
+            ],
+            "target": "pricing.rentAmount",
+            "textFeatures": [
+                "location.address.town"
+            ],
+            "useEmbeddings": true,
+            "incrementalLearning": true
+        }
+    }
+]
