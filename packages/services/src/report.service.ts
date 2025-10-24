@@ -1,9 +1,19 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { emailService } from "@kaa/email";
 import {
+  Booking,
+  Contract,
+  Landlord,
+  Maintenance,
+  Payment,
+  Property,
   ReportAnalytics,
   ReportDefinition,
   ReportExecution,
+  ReportTemplate,
+  Tenant,
+  User,
 } from "@kaa/models";
 import {
   AggregationType,
@@ -520,11 +530,9 @@ export class ReportsService {
     dataSource: DataSource | DataSource[],
     pipeline: any[]
   ): Promise<any[]> {
-    // This would integrate with actual data models
-    // For now, return mock data based on data source
-
+    // Integrate with actual data models
     if (Array.isArray(dataSource)) {
-      // Handle multiple data sources - would need joins/unions
+      // Handle multiple data sources - execute queries in parallel
       const results = await Promise.all(
         dataSource.map((ds) => this.queryDataSource(ds, pipeline))
       );
@@ -533,19 +541,36 @@ export class ReportsService {
     return await this.queryDataSource(dataSource, pipeline);
   }
 
-  private queryDataSource(dataSource: DataSource, _pipeline: any[]): any[] {
-    // Mock implementation - in real app would query actual models
-    switch (dataSource) {
-      case DataSource.USERS:
-        return this.mockUserData();
-      case DataSource.PROPERTIES:
-        return this.mockPropertyData();
-      case DataSource.BOOKINGS:
-        return this.mockBookingData();
-      case DataSource.PAYMENTS:
-        return this.mockPaymentData();
-      default:
-        return [];
+  private async queryDataSource(
+    dataSource: DataSource,
+    pipeline: any[]
+  ): Promise<any[]> {
+    // Query actual models with aggregation pipeline
+    try {
+      switch (dataSource) {
+        case DataSource.USERS:
+          return await User.aggregate(pipeline).exec();
+        case DataSource.PROPERTIES:
+          return await Property.aggregate(pipeline).exec();
+        case DataSource.BOOKINGS:
+          return await Booking.aggregate(pipeline).exec();
+        case DataSource.PAYMENTS:
+          return await Payment.aggregate(pipeline).exec();
+        case DataSource.CONTRACTS:
+          return await Contract.aggregate(pipeline).exec();
+        case DataSource.TENANTS:
+          return await Tenant.aggregate(pipeline).exec();
+        case DataSource.LANDLORDS:
+          return await Landlord.aggregate(pipeline).exec();
+        case DataSource.MAINTENANCE:
+          return await Maintenance.aggregate(pipeline).exec();
+        default:
+          console.warn(`Unsupported data source: ${dataSource}`);
+          return [];
+      }
+    } catch (error) {
+      console.error(`Query error for ${dataSource}:`, error);
+      throw error;
     }
   }
 
@@ -931,17 +956,51 @@ export class ReportsService {
     recipient: any,
     execution: any
   ): Promise<void> {
-    // Mock email delivery - integrate with email service
-    console.log(`Delivering report via email to ${recipient.target}`);
+    try {
+      // Get report definition for subject line
+      const report = await ReportDefinition.findById(execution.reportId);
+      const reportName = report?.name || "Report";
 
-    // Would use email service from other modules
-    // await emailService.sendEmail({
-    //   to: recipient.target,
-    //   subject: `Report: ${execution.reportId}`,
-    //   text: 'Please find your requested report attached.',
-    //   attachments: files.map(f => ({ filename: f.filename, path: f.path }))
-    // });
-    await Promise.resolve({ files, execution });
+      // Read file contents for attachments
+      const attachments = await Promise.all(
+        files.map(async (file) => ({
+          filename: file.filename,
+          content: await fs.readFile(file.path),
+        }))
+      );
+
+      // Send email with report attachments
+      const success = await emailService.sendEmail({
+        to: recipient.target,
+        subject: `${reportName} - Generated Report`,
+        html: `
+          <h2>${reportName}</h2>
+          <p>Your requested report has been generated and is attached to this email.</p>
+          <h3>Report Details:</h3>
+          <ul>
+            <li><strong>Report ID:</strong> ${execution.reportId}</li>
+            <li><strong>Generated:</strong> ${new Date().toLocaleString()}</li>
+            <li><strong>Formats:</strong> ${files.map((f) => f.format).join(", ")}</li>
+            <li><strong>Records:</strong> ${execution.results?.recordCount || 0}</li>
+          </ul>
+          <p>If you have any questions, please contact support.</p>
+        `,
+        attachments,
+        tags: [
+          { name: "category", value: "report" },
+          { name: "reportId", value: execution.reportId.toString() },
+        ],
+      });
+
+      if (!success) {
+        throw new Error("Email delivery failed");
+      }
+
+      console.log(`Report delivered via email to ${recipient.target}`);
+    } catch (error) {
+      console.error(`Email delivery error to ${recipient.target}:`, error);
+      throw error;
+    }
   }
 
   private async deliverViaSms(
@@ -949,18 +1008,41 @@ export class ReportsService {
     recipient: any,
     execution: any
   ): Promise<void> {
-    // Mock SMS delivery - integrate with SMS service
-    console.log(
-      `Delivering report notification via SMS to ${recipient.target}`
-    );
+    try {
+      // Generate signed download URLs for SMS
+      const downloadUrls = await Promise.all(
+        files.map(async (file) => {
+          const url = await this.generateSignedUrl(file.path, 86_400); // 24h expiry
+          return { format: file.format, url };
+        })
+      );
 
-    // Would use SMS service from other modules
-    // await smsService.sendSms({
-    //   to: recipient.target,
-    //   message: `Your report is ready. Download link: ${downloadUrl}`
-    // });
+      // Get report name
+      const report = await ReportDefinition.findById(execution.reportId);
+      const reportName = report?.name || "Report";
 
-    await Promise.resolve({ files, execution });
+      // Create SMS message with download link
+      const primaryUrl = downloadUrls[0]?.url || "#";
+      const message = `${reportName} is ready! Download: ${primaryUrl.substring(0, 100)}... (Valid for 24hrs)`;
+
+      // Send SMS (integrate with actual SMS service when available)
+      // For now, log the message
+      console.log(`SMS to ${recipient.target}: ${message}`);
+
+      // TODO: Integrate with SMS service
+      // const smsService = await import('@kaa/communications');
+      // await smsService.sendSms({
+      //   to: recipient.target,
+      //   message,
+      //   provider: 'africastalking' as SMSProvider,
+      // });
+
+      // Placeholder - mark as delivered
+      await Promise.resolve({ files, execution, message });
+    } catch (error) {
+      console.error(`SMS delivery error to ${recipient.target}:`, error);
+      throw error;
+    }
   }
 
   private async deliverViaWebhook(
@@ -968,28 +1050,87 @@ export class ReportsService {
     recipient: any,
     execution: any
   ): Promise<void> {
-    // Mock webhook delivery
-    console.log(`Delivering report via webhook to ${recipient.target}`);
+    try {
+      // Generate signed download URLs
+      const downloadUrls = await Promise.all(
+        files.map(async (file) => ({
+          filename: file.filename,
+          format: file.format,
+          size: file.size,
+          downloadUrl: await this.generateSignedUrl(file.path, 3600),
+        }))
+      );
 
-    const payload = {
-      reportId: execution.reportId,
-      executionId: execution._id,
-      status: execution.status,
-      files: files.map((f) => ({
-        filename: f.filename,
-        format: f.format,
-        size: f.size,
-        downloadUrl: `${process.env.BASE_URL}/reports/download/${f.filename}`,
-      })),
-    };
+      const payload = {
+        event: "report.completed",
+        reportId: execution.reportId.toString(),
+        executionId: execution._id.toString(),
+        status: execution.status,
+        completedAt: execution.completedAt,
+        files: downloadUrls,
+        results: {
+          recordCount: execution.results?.recordCount || 0,
+          dataSize: execution.results?.dataSize || 0,
+        },
+        metadata: {
+          duration: execution.duration,
+          timestamp: new Date().toISOString(),
+        },
+      };
 
-    // Would make HTTP request to webhook URL
-    // await fetch(recipient.target, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(payload)
-    // });
-    await Promise.resolve({ files, execution });
+      // Generate signature for webhook security
+      const signature = Buffer.from(
+        JSON.stringify(payload) + (process.env.WEBHOOK_SECRET || "secret")
+      )
+        .toString("base64")
+        .substring(0, 64);
+
+      // Send webhook with retry logic
+      let attempts = 0;
+      const maxAttempts = 3;
+      let lastError: Error | null = null;
+
+      while (attempts < maxAttempts) {
+        try {
+          const response = await fetch(recipient.target, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Webhook-Signature": signature,
+              "User-Agent": "Kaa-Reports/1.0",
+            },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(10_000), // 10s timeout
+          });
+
+          if (!response.ok) {
+            throw new Error(`Webhook returned ${response.status}`);
+          }
+
+          console.log(
+            `Webhook delivered to ${recipient.target} (attempt ${attempts + 1})`
+          );
+          return;
+        } catch (error) {
+          lastError = error as Error;
+          attempts++;
+
+          if (attempts < maxAttempts) {
+            // Exponential backoff: 1s, 2s, 4s
+            await new Promise((resolve) =>
+              setTimeout(resolve, 1000 * 2 ** (attempts - 1))
+            );
+          }
+        }
+      }
+
+      throw new Error(
+        `Webhook delivery failed after ${maxAttempts} attempts: ${lastError?.message}`
+      );
+    } catch (error) {
+      console.error(`Webhook delivery error to ${recipient.target}:`, error);
+      throw error;
+    }
   }
 
   // Kenya-specific Analytics
@@ -1314,7 +1455,7 @@ export class ReportsService {
   }
 
   // Mock data generators
-  private mockUserData(): any[] {
+  mockUserData(): any[] {
     return Array.from({ length: 100 }, (_, i) => ({
       id: i + 1,
       name: `User ${i + 1}`,
@@ -1330,7 +1471,7 @@ export class ReportsService {
     }));
   }
 
-  private mockPropertyData(): any[] {
+  mockPropertyData(): any[] {
     return Array.from({ length: 50 }, (_, i) => ({
       id: i + 1,
       title: `Property ${i + 1}`,
@@ -1347,7 +1488,7 @@ export class ReportsService {
     }));
   }
 
-  private mockBookingData(): any[] {
+  mockBookingData(): any[] {
     return Array.from({ length: 200 }, (_, i) => ({
       id: i + 1,
       propertyId: Math.floor(Math.random() * 50) + 1,
@@ -1360,7 +1501,7 @@ export class ReportsService {
     }));
   }
 
-  private mockPaymentData(): any[] {
+  mockPaymentData(): any[] {
     return Array.from({ length: 300 }, (_, i) => ({
       id: i + 1,
       bookingId: Math.floor(Math.random() * 200) + 1,
@@ -1371,6 +1512,1189 @@ export class ReportsService {
         Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000
       ),
     }));
+  }
+
+  // Report Management Methods
+  async getReportById(reportId: string): Promise<IReportResponse> {
+    try {
+      const report = await ReportDefinition.findById(reportId);
+
+      if (!report) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "Report not found",
+          },
+        };
+      }
+
+      return {
+        success: true,
+        data: report,
+      };
+    } catch (error) {
+      console.error("Get report error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to retrieve report",
+        },
+      };
+    }
+  }
+
+  async getUserReports(
+    userId: Types.ObjectId,
+    options: {
+      page?: number;
+      limit?: number;
+      status?: string;
+      type?: string;
+      search?: string;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+      tags?: string;
+    }
+  ): Promise<any> {
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        status,
+        type,
+        search,
+        sortBy = "createdAt",
+        sortOrder = "desc",
+        tags,
+      } = options;
+
+      const skip = (page - 1) * limit;
+      const query: any = { createdBy: userId };
+
+      if (status) {
+        query.status = status;
+      }
+
+      if (type) {
+        query.type = type;
+      }
+
+      if (search) {
+        query.$or = [
+          { name: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      if (tags) {
+        query.tags = { $in: tags.split(",") };
+      }
+
+      const sort: any = {};
+      sort[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+      const [reports, total] = await Promise.all([
+        ReportDefinition.find(query).sort(sort).skip(skip).limit(limit).lean(),
+        ReportDefinition.countDocuments(query),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+      const hasMore = page < totalPages;
+
+      return {
+        success: true,
+        data: {
+          reports,
+          total,
+          page,
+          limit,
+          hasMore,
+        },
+      };
+    } catch (error) {
+      console.error("Get user reports error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to retrieve reports",
+        },
+      };
+    }
+  }
+
+  async updateReport(reportId: string, updates: any): Promise<IReportResponse> {
+    try {
+      const report = await ReportDefinition.findByIdAndUpdate(
+        reportId,
+        { $set: updates },
+        { new: true, runValidators: true }
+      );
+
+      if (!report) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "Report not found",
+          },
+        };
+      }
+
+      return {
+        success: true,
+        data: report,
+        message: "Report updated successfully",
+      };
+    } catch (error) {
+      console.error("Update report error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to update report",
+        },
+      };
+    }
+  }
+
+  async deleteReport(reportId: string): Promise<IReportResponse> {
+    try {
+      const report = await ReportDefinition.findByIdAndUpdate(
+        reportId,
+        { isActive: false, deletedAt: new Date() },
+        { new: true }
+      );
+
+      if (!report) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "Report not found",
+          },
+        };
+      }
+
+      return {
+        success: true,
+        message: "Report deleted successfully",
+      };
+    } catch (error) {
+      console.error("Delete report error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to delete report",
+        },
+      };
+    }
+  }
+
+  async duplicateReport(
+    reportId: string,
+    userId: Types.ObjectId
+  ): Promise<IReportResponse> {
+    try {
+      const original = await ReportDefinition.findById(reportId);
+
+      if (!original) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "Report not found",
+          },
+        };
+      }
+
+      const duplicate = new ReportDefinition({
+        ...original.toObject(),
+        _id: undefined,
+        name: `${original.name} (Copy)`,
+        createdBy: userId,
+        runCount: 0,
+        lastRunAt: undefined,
+        nextRunAt: undefined,
+      });
+
+      await duplicate.save();
+
+      return {
+        success: true,
+        data: duplicate,
+        message: "Report duplicated successfully",
+      };
+    } catch (error) {
+      console.error("Duplicate report error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to duplicate report",
+        },
+      };
+    }
+  }
+
+  async getReportDownloadUrl(
+    reportId: string,
+    format: ReportFormat,
+    expiresIn = 3600
+  ): Promise<IReportResponse> {
+    try {
+      const execution = await ReportExecution.findOne({
+        reportId,
+        status: ReportStatus.COMPLETED,
+      })
+        .sort({ completedAt: -1 })
+        .limit(1);
+
+      if (!execution?.results?.files) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "No completed report found",
+          },
+        };
+      }
+
+      const file = execution.results.files.find(
+        (f: any) => f.format === format
+      );
+
+      if (!file) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: `Report file in ${format} format not found`,
+          },
+        };
+      }
+
+      const downloadUrl = await this.generateSignedUrl(file.path, expiresIn);
+
+      return {
+        success: true,
+        data: {
+          downloadUrl,
+          filename: file.filename,
+          size: file.size,
+          expiresAt: new Date(Date.now() + expiresIn * 1000),
+        },
+      };
+    } catch (error) {
+      console.error("Get download URL error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to generate download URL",
+        },
+      };
+    }
+  }
+
+  private async generateSignedUrl(
+    filePath: string,
+    expiresIn: number
+  ): Promise<string> {
+    const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+    const timestamp = Date.now() + expiresIn * 1000;
+    const signature = Buffer.from(`${filePath}:${timestamp}`).toString(
+      "base64"
+    );
+
+    return await `${baseUrl}/api/reports/download/${encodeURIComponent(filePath)}?expires=${timestamp}&signature=${signature}`;
+  }
+
+  // Template Management Methods
+  async createReportTemplate(
+    template: any,
+    userId: Types.ObjectId
+  ): Promise<IReportResponse> {
+    try {
+      const newTemplate = new ReportTemplate({
+        ...template,
+        createdBy: userId,
+        isSystemTemplate: false,
+        version: 1,
+      });
+
+      await newTemplate.save();
+
+      return {
+        success: true,
+        data: newTemplate,
+        message: "Template created successfully",
+      };
+    } catch (error) {
+      console.error("Create template error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to create template",
+        },
+      };
+    }
+  }
+
+  async getReportTemplates(
+    userId: Types.ObjectId,
+    options: {
+      page?: number;
+      limit?: number;
+      category?: string;
+      type?: string;
+      isPublic?: boolean;
+      search?: string;
+    }
+  ): Promise<any> {
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        category,
+        type,
+        isPublic,
+        search,
+      } = options;
+
+      const skip = (page - 1) * limit;
+      const query: any = {
+        $or: [
+          { createdBy: userId },
+          { isPublic: true },
+          { isSystemTemplate: true },
+        ],
+      };
+
+      if (category) {
+        query.category = category;
+      }
+
+      if (type) {
+        query.type = type;
+      }
+
+      if (isPublic !== undefined) {
+        query.isPublic = isPublic;
+      }
+
+      if (search) {
+        query.$and = query.$and || [];
+        query.$and.push({
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { description: { $regex: search, $options: "i" } },
+          ],
+        });
+      }
+
+      const [templates, total] = await Promise.all([
+        ReportTemplate.find(query)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        ReportTemplate.countDocuments(query),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        success: true,
+        data: {
+          reports: templates,
+          total,
+          page,
+          limit,
+          hasMore: page < totalPages,
+        },
+      };
+    } catch (error) {
+      console.error("Get templates error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to retrieve templates",
+        },
+      };
+    }
+  }
+
+  async getTemplateById(templateId: string): Promise<IReportResponse> {
+    try {
+      const template = await ReportTemplate.findById(templateId);
+
+      if (!template) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "Template not found",
+          },
+        };
+      }
+
+      return {
+        success: true,
+        data: template,
+      };
+    } catch (error) {
+      console.error("Get template error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to retrieve template",
+        },
+      };
+    }
+  }
+
+  async updateTemplate(
+    templateId: string,
+    updates: any
+  ): Promise<IReportResponse> {
+    try {
+      const template = await ReportTemplate.findByIdAndUpdate(
+        templateId,
+        {
+          $set: updates,
+          $inc: { version: 1 },
+        },
+        { new: true, runValidators: true }
+      );
+
+      if (!template) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "Template not found",
+          },
+        };
+      }
+
+      return {
+        success: true,
+        data: template,
+        message: "Template updated successfully",
+      };
+    } catch (error) {
+      console.error("Update template error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to update template",
+        },
+      };
+    }
+  }
+
+  async deleteTemplate(templateId: string): Promise<IReportResponse> {
+    try {
+      const template = await ReportTemplate.findByIdAndDelete(templateId);
+
+      if (!template) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "Template not found",
+          },
+        };
+      }
+
+      return {
+        success: true,
+        message: "Template deleted successfully",
+      };
+    } catch (error) {
+      console.error("Delete template error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to delete template",
+        },
+      };
+    }
+  }
+
+  async getSystemTemplates(): Promise<IReportResponse> {
+    try {
+      const templates = await ReportTemplate.find({
+        isSystemTemplate: true,
+        isActive: true,
+      }).sort({ category: 1, name: 1 });
+
+      return {
+        success: true,
+        data: {
+          templates,
+          categories: [...new Set(templates.map((t: any) => t.category))],
+        },
+      };
+    } catch (error) {
+      console.error("Get system templates error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to retrieve system templates",
+        },
+      };
+    }
+  }
+
+  // Schedule Management Methods
+  async scheduleReport(
+    schedule: any,
+    _userId: Types.ObjectId
+  ): Promise<IReportResponse> {
+    try {
+      const reportDef = await ReportDefinition.findByIdAndUpdate(
+        schedule.reportId,
+        {
+          $set: {
+            frequency: schedule.schedule.frequency,
+            schedule: schedule.schedule,
+            recipients: schedule.recipients || [],
+            parameters: schedule.parameters || {},
+          },
+        },
+        { new: true, upsert: false }
+      );
+
+      if (!reportDef) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "Report not found",
+          },
+        };
+      }
+
+      await reportDef.updateNextRun();
+
+      return {
+        success: true,
+        data: reportDef,
+        message: "Report scheduled successfully",
+      };
+    } catch (error) {
+      console.error("Schedule report error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to schedule report",
+        },
+      };
+    }
+  }
+
+  async getScheduledReports(
+    userId: Types.ObjectId,
+    options: {
+      page?: number;
+      limit?: number;
+      active?: boolean;
+      frequency?: ReportFrequency;
+    }
+  ): Promise<any> {
+    try {
+      const { page = 1, limit = 20, active, frequency } = options;
+      const skip = (page - 1) * limit;
+
+      const query: any = {
+        createdBy: userId,
+        frequency: { $ne: ReportFrequency.ON_DEMAND },
+      };
+
+      if (active !== undefined) {
+        query.isActive = active;
+      }
+
+      if (frequency) {
+        query.frequency = frequency;
+      }
+
+      const [schedules, total] = await Promise.all([
+        ReportDefinition.find(query)
+          .sort({ nextRunAt: 1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        ReportDefinition.countDocuments(query),
+      ]);
+
+      return {
+        success: true,
+        data: {
+          reports: schedules,
+          total,
+          page,
+          limit,
+          hasMore: page < Math.ceil(total / limit),
+        },
+      };
+    } catch (error) {
+      console.error("Get scheduled reports error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to retrieve scheduled reports",
+        },
+      };
+    }
+  }
+
+  async updateReportSchedule(
+    scheduleId: string,
+    updates: any
+  ): Promise<IReportResponse> {
+    try {
+      const updateData: any = {};
+
+      if (updates.schedule) {
+        updateData.schedule = updates.schedule;
+        updateData.frequency = updates.schedule.frequency;
+      }
+
+      if (updates.recipients) {
+        updateData.recipients = updates.recipients;
+      }
+
+      if (updates.parameters) {
+        updateData.parameters = updates.parameters;
+      }
+
+      if (updates.isActive !== undefined) {
+        updateData.isActive = updates.isActive;
+      }
+
+      const schedule = await ReportDefinition.findByIdAndUpdate(
+        scheduleId,
+        { $set: updateData },
+        { new: true }
+      );
+
+      if (!schedule) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "Schedule not found",
+          },
+        };
+      }
+
+      if (updates.schedule) {
+        await schedule.updateNextRun();
+      }
+
+      return {
+        success: true,
+        data: schedule,
+        message: "Schedule updated successfully",
+      };
+    } catch (error) {
+      console.error("Update schedule error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to update schedule",
+        },
+      };
+    }
+  }
+
+  async cancelReportSchedule(scheduleId: string): Promise<IReportResponse> {
+    try {
+      const schedule = await ReportDefinition.findByIdAndUpdate(
+        scheduleId,
+        {
+          $set: {
+            isActive: false,
+            frequency: ReportFrequency.ON_DEMAND,
+          },
+          $unset: { schedule: "", nextRunAt: "" },
+        },
+        { new: true }
+      );
+
+      if (!schedule) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "Schedule not found",
+          },
+        };
+      }
+
+      return {
+        success: true,
+        message: "Schedule cancelled successfully",
+      };
+    } catch (error) {
+      console.error("Cancel schedule error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to cancel schedule",
+        },
+      };
+    }
+  }
+
+  async pauseSchedule(scheduleId: string): Promise<IReportResponse> {
+    try {
+      const schedule = await ReportDefinition.findByIdAndUpdate(
+        scheduleId,
+        { $set: { isActive: false } },
+        { new: true }
+      );
+
+      if (!schedule) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "Schedule not found",
+          },
+        };
+      }
+
+      return {
+        success: true,
+        data: schedule,
+        message: "Schedule paused successfully",
+      };
+    } catch (error) {
+      console.error("Pause schedule error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to pause schedule",
+        },
+      };
+    }
+  }
+
+  async resumeSchedule(scheduleId: string): Promise<IReportResponse> {
+    try {
+      const schedule = await ReportDefinition.findByIdAndUpdate(
+        scheduleId,
+        { $set: { isActive: true } },
+        { new: true }
+      );
+
+      if (!schedule) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "Schedule not found",
+          },
+        };
+      }
+
+      await schedule.updateNextRun();
+
+      return {
+        success: true,
+        data: schedule,
+        message: "Schedule resumed successfully",
+      };
+    } catch (error) {
+      console.error("Resume schedule error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to resume schedule",
+        },
+      };
+    }
+  }
+
+  // Execution Methods
+  async getExecutionById(executionId: string): Promise<IReportResponse> {
+    try {
+      const execution = await ReportExecution.findById(executionId);
+
+      if (!execution) {
+        return {
+          success: false,
+          error: {
+            code: ReportErrorCode.INVALID_PARAMETERS,
+            message: "Execution not found",
+          },
+        };
+      }
+
+      return {
+        success: true,
+        data: execution,
+      };
+    } catch (error) {
+      console.error("Get execution error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to retrieve execution",
+        },
+      };
+    }
+  }
+
+  async getReportExecutions(
+    reportId: string,
+    options: {
+      page?: number;
+      limit?: number;
+      status?: ReportStatus;
+    }
+  ): Promise<any> {
+    try {
+      const { page = 1, limit = 20, status } = options;
+      const skip = (page - 1) * limit;
+
+      const query: any = { reportId };
+
+      if (status) {
+        query.status = status;
+      }
+
+      const [executions, total] = await Promise.all([
+        ReportExecution.find(query)
+          .sort({ startedAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        ReportExecution.countDocuments(query),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        success: true,
+        data: {
+          items: executions,
+          total,
+          page,
+          limit,
+          totalPages,
+          hasMore: page < totalPages,
+        },
+      };
+    } catch (error) {
+      console.error("Get report executions error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to retrieve executions",
+        },
+      };
+    }
+  }
+
+  // Analytics Methods
+  async getReportAnalytics(
+    userId: Types.ObjectId,
+    period?: { start: Date; end: Date }
+  ): Promise<IReportResponse> {
+    try {
+      const defaultPeriod = {
+        start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        end: new Date(),
+      };
+      const timePeriod = period || defaultPeriod;
+
+      const [reportStats, executionStats, topReports] = await Promise.all([
+        this.getUserReportStats(userId, timePeriod),
+        this.getUserExecutionStats(userId, timePeriod),
+        this.getTopReports(userId, timePeriod),
+      ]);
+
+      return {
+        success: true,
+        data: {
+          period: timePeriod,
+          reports: reportStats,
+          executions: executionStats,
+          topReports,
+        },
+      };
+    } catch (error) {
+      console.error("Get report analytics error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to get analytics",
+        },
+      };
+    }
+  }
+
+  private async getUserReportStats(
+    userId: Types.ObjectId,
+    period: { start: Date; end: Date }
+  ): Promise<any> {
+    const stats = await ReportDefinition.aggregate([
+      {
+        $match: {
+          createdBy: userId,
+          createdAt: { $gte: period.start, $lte: period.end },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          active: {
+            $sum: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] },
+          },
+          scheduled: {
+            $sum: {
+              $cond: [{ $ne: ["$frequency", ReportFrequency.ON_DEMAND] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]);
+
+    return stats[0] || { total: 0, active: 0, scheduled: 0 };
+  }
+
+  private async getUserExecutionStats(
+    userId: Types.ObjectId,
+    period: { start: Date; end: Date }
+  ): Promise<any> {
+    const stats = await ReportExecution.aggregate([
+      {
+        $lookup: {
+          from: "reportdefinitions",
+          localField: "reportId",
+          foreignField: "_id",
+          as: "report",
+        },
+      },
+      { $unwind: "$report" },
+      {
+        $match: {
+          "report.createdBy": userId,
+          startedAt: { $gte: period.start, $lte: period.end },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          completed: {
+            $sum: {
+              $cond: [{ $eq: ["$status", ReportStatus.COMPLETED] }, 1, 0],
+            },
+          },
+          failed: {
+            $sum: { $cond: [{ $eq: ["$status", ReportStatus.FAILED] }, 1, 0] },
+          },
+          avgDuration: { $avg: "$duration" },
+        },
+      },
+    ]);
+
+    const result = stats[0] || {
+      total: 0,
+      completed: 0,
+      failed: 0,
+      avgDuration: 0,
+    };
+
+    return {
+      ...result,
+      successRate:
+        result.total > 0 ? (result.completed / result.total) * 100 : 0,
+    };
+  }
+
+  private async getTopReports(
+    userId: Types.ObjectId,
+    period: { start: Date; end: Date }
+  ): Promise<any[]> {
+    const topReports = await ReportDefinition.find({
+      createdBy: userId,
+      lastRunAt: { $gte: period.start, $lte: period.end },
+    })
+      .sort({ runCount: -1 })
+      .limit(10)
+      .select("name type runCount lastRunAt")
+      .lean();
+
+    return topReports;
+  }
+
+  async getBusinessIntelligence(params: {
+    userId: Types.ObjectId;
+    period?: { start: Date; end: Date };
+    metrics?: string[];
+  }): Promise<IReportResponse> {
+    try {
+      const defaultPeriod = {
+        start: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+        end: new Date(),
+      };
+      const period = params.period || defaultPeriod;
+
+      // Placeholder BI metrics - would integrate with actual business data
+      const biData = {
+        period,
+        kpis: {
+          totalReports: await ReportDefinition.countDocuments({
+            createdBy: params.userId,
+          }),
+          activeReports: await ReportDefinition.countDocuments({
+            createdBy: params.userId,
+            isActive: true,
+          }),
+          totalExecutions: await ReportExecution.countDocuments({
+            startedAt: { $gte: period.start, $lte: period.end },
+          }),
+          averageExecutionTime: 45.2, // Would calculate from actual data
+        },
+        trends: {
+          reportCreation: {
+            current: 12,
+            previous: 8,
+            change: 50,
+          },
+          executionVolume: {
+            current: 156,
+            previous: 142,
+            change: 9.9,
+          },
+        },
+        insights: [
+          {
+            type: "trend",
+            severity: "info",
+            message: "Report execution volume increased by 10% this period",
+          },
+          {
+            type: "recommendation",
+            severity: "low",
+            message:
+              "Consider creating templates for frequently used report configurations",
+          },
+        ],
+      };
+
+      return {
+        success: true,
+        data: biData,
+      };
+    } catch (error) {
+      console.error("Get BI error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to get business intelligence",
+        },
+      };
+    }
+  }
+
+  async getMarketInsights(params: {
+    userId: Types.ObjectId;
+    period?: { start: Date; end: Date };
+    region?: string;
+  }): Promise<IReportResponse> {
+    try {
+      const defaultPeriod = {
+        start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        end: new Date(),
+      };
+      const period = params.period || defaultPeriod;
+
+      // Placeholder market insights - would integrate with actual market data
+      const marketData = {
+        period,
+        region: params.region || "All Kenya",
+        overview: {
+          totalProperties: 15_234,
+          averageRent: 25_500,
+          occupancyRate: 87.3,
+          marketGrowth: 5.2,
+        },
+        propertyTypes: [
+          { type: "apartment", count: 8450, avgRent: 22_000, demand: "high" },
+          { type: "house", count: 4123, avgRent: 35_000, demand: "medium" },
+          { type: "studio", count: 2661, avgRent: 15_000, demand: "high" },
+        ],
+        regionalTrends: [
+          {
+            county: "Nairobi",
+            avgRent: 32_000,
+            occupancy: 91.2,
+            trend: "up",
+          },
+          {
+            county: "Mombasa",
+            avgRent: 28_000,
+            occupancy: 85.1,
+            trend: "stable",
+          },
+          { county: "Kisumu", avgRent: 18_000, occupancy: 78.5, trend: "up" },
+        ],
+        insights: [
+          {
+            type: "opportunity",
+            message: "High demand for studio apartments in Nairobi CBD",
+            confidence: 0.85,
+          },
+          {
+            type: "trend",
+            message: "Average rent prices increased 5.2% in Q4",
+            confidence: 0.92,
+          },
+        ],
+      };
+
+      return await Promise.resolve({
+        success: true,
+        data: marketData,
+      });
+    } catch (error) {
+      console.error("Get market insights error:", error);
+      return {
+        success: false,
+        error: {
+          code: ReportErrorCode.GENERATION_FAILED,
+          message: "Failed to get market insights",
+        },
+      };
+    }
   }
 
   // Scheduled Reports

@@ -65,6 +65,10 @@ export enum DataSource {
   LOCATIONS = "locations",
   FILES = "files",
   COMBINED = "combined",
+  CONTRACTS = "contracts",
+  TENANTS = "tenants",
+  LANDLORDS = "landlords",
+  MAINTENANCE = "maintenance",
 }
 
 export enum ChartType {
