@@ -1,14 +1,29 @@
 import { openapi } from "@elysiajs/openapi";
 import { Elysia } from "elysia";
+import logixlysia from "logixlysia";
+
 import { MongooseSetup } from "~/database/mongoose.setup";
 import { routes } from "./app.routes";
 import setupBullBoard from "./common/plugins/bull-board.plugin";
-import { createLogger } from "./shared/utils/consola-logger";
 
 // import "./features/ai/ai.queue"; // initialize AI training worker
 
 const app = new Elysia()
-  .use(createLogger())
+  .use(
+    logixlysia({
+      config: {
+        showStartupMessage: false,
+        startupMessageFormat: "banner",
+        timestamp: {
+          translateTime: "yyyy-mm-dd HH:MM:ss.SSS",
+        },
+        logFilePath: "./logs/example.log",
+        ip: true,
+        customLogFormat:
+          "🦊 {now} {level} {duration} {method} {pathname} {status} {message} {ip}",
+      },
+    }),
+  )
   .use(
     openapi({
       documentation: {
@@ -38,11 +53,11 @@ const app = new Elysia()
         theme: "kepler", // alternate, default, moon, purple, solarized, bluePlanet, saturn, kepler, mars, deepSpace, laserwave, none
         customCss: "body { background-color: #BADA55;}",
       },
-    })
+    }),
   )
-  .onStart(async () => {
+  .onStart(() => {
     // Setup database
-    await new MongooseSetup();
+    new MongooseSetup();
   })
   .get("/", () => "Hello TFML")
   .use(routes)
