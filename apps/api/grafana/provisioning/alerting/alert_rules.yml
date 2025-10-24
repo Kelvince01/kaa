@@ -1,0 +1,196 @@
+apiVersion: 1
+
+groups:
+  - name: api_alerts
+    folder: API Alerts
+    interval: 1m
+    rules:
+      - name: High Error Rate
+        condition: B
+        data:
+          - refId: A
+            datasourceUid: "Prometheus"
+            model:
+              expr: sum(rate(api_errors_total[5m])) / sum(rate(http_requests_total[5m])) * 100
+              intervalMs: 60000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 5
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: avg
+                  type: query
+              refId: B
+              type: threshold
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: High API error rate
+          description: "Error rate is {{ $values.A }}%, which is above the threshold of 5%"
+        labels:
+          severity: warning
+          service: api
+
+      - name: High Response Time
+        condition: B
+        data:
+          - refId: A
+            datasourceUid: "Prometheus"
+            model:
+              expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))
+              intervalMs: 60000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 2
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: avg
+                  type: query
+              refId: B
+              type: threshold
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: High API response time
+          description: "95th percentile response time is {{ $values.A }}s, which is above the threshold of 2s"
+        labels:
+          severity: warning
+          service: api
+
+      - name: High CPU Usage
+        condition: B
+        data:
+          - refId: A
+            datasourceUid: "Prometheus"
+            model:
+              expr: avg(rate(process_cpu_seconds_total[5m]) * 100)
+              intervalMs: 60000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 80
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: avg
+                  type: query
+              refId: B
+              type: threshold
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: High CPU usage
+          description: "CPU usage is {{ $values.A }}%, which is above the threshold of 80%"
+        labels:
+          severity: warning
+          service: api
+
+      - name: High Memory Usage
+        condition: B
+        data:
+          - refId: A
+            datasourceUid: "Prometheus"
+            model:
+              expr: (sum(process_resident_memory_bytes) / sum(node_memory_MemTotal_bytes)) * 100
+              intervalMs: 60000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 80
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: avg
+                  type: query
+              refId: B
+              type: threshold
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: High memory usage
+          description: "Memory usage is {{ $values.A }}%, which is above the threshold of 80%"
+        labels:
+          severity: warning
+          service: api
+
+      - name: Database Connection Issues
+        condition: B
+        data:
+          - refId: A
+            datasourceUid: "Prometheus"
+            model:
+              expr: histogram_quantile(0.95, sum(rate(db_operation_duration_seconds_bucket[5m])) by (le))
+              intervalMs: 60000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: avg
+                  type: query
+              refId: B
+              type: threshold
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: Database connection issues
+          description: "95th percentile database operation time is {{ $values.A }}s, which is above the threshold of 1s"
+        labels:
+          severity: warning
+          service: database
