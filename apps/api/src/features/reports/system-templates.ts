@@ -1,13 +1,12 @@
-import type { Types } from "mongoose";
 import { ReportTemplate } from "@kaa/models";
 import {
-  ReportType,
-  DataSource,
-  ReportFormat,
   AggregationType,
-  TimeGranularity,
   ChartType,
+  DataSource,
+  ReportType,
+  TimeGranularity,
 } from "@kaa/models/types";
+import type { Types } from "mongoose";
 
 /**
  * System Report Templates
@@ -20,7 +19,7 @@ export const SYSTEM_TEMPLATES = [
     name: "Property Occupancy Rate",
     description:
       "Track occupancy rates across all properties with trend analysis",
-    type: ReportType.OPERATIONAL,
+    type: ReportType.OPERATIONAL_METRICS,
     category: "occupancy",
     isSystemTemplate: true,
     isPublic: true,
@@ -63,6 +62,7 @@ export const SYSTEM_TEMPLATES = [
         label: "Start Date",
         type: "date",
         required: true,
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: intended use
         defaultValue: "${today - 90 days}",
       },
       {
@@ -70,6 +70,7 @@ export const SYSTEM_TEMPLATES = [
         label: "End Date",
         type: "date",
         required: true,
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: intended use
         defaultValue: "${today}",
       },
     ],
@@ -80,7 +81,7 @@ export const SYSTEM_TEMPLATES = [
   {
     name: "Monthly Revenue Summary",
     description: "Comprehensive revenue breakdown by property and payment type",
-    type: ReportType.FINANCIAL,
+    type: ReportType.FINANCIAL_SUMMARY,
     category: "revenue",
     isSystemTemplate: true,
     isPublic: true,
@@ -94,7 +95,11 @@ export const SYSTEM_TEMPLATES = [
       ],
       aggregations: [
         { field: "amount", type: AggregationType.SUM, alias: "totalRevenue" },
-        { field: "_id", type: AggregationType.COUNT, alias: "transactionCount" },
+        {
+          field: "_id",
+          type: AggregationType.COUNT,
+          alias: "transactionCount",
+        },
         { field: "amount", type: AggregationType.AVG, alias: "averageAmount" },
       ],
       timeGranularity: TimeGranularity.MONTH,
@@ -106,7 +111,11 @@ export const SYSTEM_TEMPLATES = [
         type: ChartType.BAR,
         title: "Revenue by Payment Method",
         xAxis: { field: "paymentMethod", label: "Method" },
-        yAxis: { field: "totalRevenue", label: "Revenue (KES)", format: "currency" },
+        yAxis: {
+          field: "totalRevenue",
+          label: "Revenue (KES)",
+          format: "currency",
+        },
       },
       {
         type: ChartType.PIE,
@@ -120,6 +129,7 @@ export const SYSTEM_TEMPLATES = [
         label: "Month",
         type: "date",
         required: true,
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: intended use
         defaultValue: "${currentMonth}",
       },
     ],
@@ -129,8 +139,9 @@ export const SYSTEM_TEMPLATES = [
   // ==================== TENANT REPORTS ====================
   {
     name: "Tenant Behavior Analysis",
-    description: "Analyze tenant payment patterns, renewal rates, and satisfaction",
-    type: ReportType.ANALYTICAL,
+    description:
+      "Analyze tenant payment patterns, renewal rates, and satisfaction",
+    type: ReportType.USER_ANALYTICS,
     category: "tenants",
     isSystemTemplate: true,
     isPublic: true,
@@ -186,7 +197,7 @@ export const SYSTEM_TEMPLATES = [
     name: "Maintenance Request Tracking",
     description:
       "Track maintenance requests, response times, and completion rates",
-    type: ReportType.OPERATIONAL,
+    type: ReportType.OPERATIONAL_METRICS,
     category: "maintenance",
     isSystemTemplate: true,
     isPublic: true,
@@ -241,6 +252,7 @@ export const SYSTEM_TEMPLATES = [
         label: "Start Date",
         type: "date",
         required: true,
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: intended use
         defaultValue: "${today - 30 days}",
       },
     ],
@@ -252,7 +264,7 @@ export const SYSTEM_TEMPLATES = [
     name: "Regulatory Compliance Report",
     description:
       "Track compliance with Kenyan rental regulations and documentation",
-    type: ReportType.COMPLIANCE,
+    type: ReportType.COMPLIANCE_AUDIT,
     category: "compliance",
     isSystemTemplate: true,
     isPublic: true,
@@ -316,7 +328,7 @@ export const SYSTEM_TEMPLATES = [
   {
     name: "Booking Performance Report",
     description: "Analyze booking trends, conversion rates, and cancellations",
-    type: ReportType.ANALYTICAL,
+    type: ReportType.BOOKING_ANALYTICS,
     category: "bookings",
     isSystemTemplate: true,
     isPublic: true,
@@ -355,6 +367,7 @@ export const SYSTEM_TEMPLATES = [
         label: "Date Range",
         type: "dateRange",
         required: true,
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: intended use
         defaultValue: "${last_30_days}",
       },
     ],
@@ -366,7 +379,7 @@ export const SYSTEM_TEMPLATES = [
     name: "M-Pesa Transaction Analytics",
     description:
       "Detailed M-Pesa payment analysis for Kenyan rental transactions",
-    type: ReportType.FINANCIAL,
+    type: ReportType.FINANCIAL_SUMMARY,
     category: "kenya",
     isSystemTemplate: true,
     isPublic: true,
@@ -415,6 +428,7 @@ export const SYSTEM_TEMPLATES = [
         label: "Date",
         type: "date",
         required: true,
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: intended use
         defaultValue: "${today}",
       },
     ],
@@ -433,7 +447,9 @@ export async function seedSystemTemplates(
 
     // Remove existing system templates
     const deleted = await ReportTemplate.deleteMany({ isSystemTemplate: true });
-    console.log(`[System Templates] Removed ${deleted.deletedCount} existing templates`);
+    console.log(
+      `[System Templates] Removed ${deleted.deletedCount} existing templates`
+    );
 
     // Create new system templates
     const templates = SYSTEM_TEMPLATES.map((template) => ({

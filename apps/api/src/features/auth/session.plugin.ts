@@ -1,7 +1,7 @@
 import { ApiKey, User } from "@kaa/models";
-import mongoose from "mongoose";
 import { randomUUIDv7 } from "bun";
 import { Elysia } from "elysia";
+import mongoose from "mongoose";
 import { SECURITY_CONFIG } from "~/config/security.config";
 import { SessionStore } from "~/services/session-store";
 import { parseCookies } from "~/shared/utils/parse-cookies";
@@ -40,7 +40,9 @@ export function sessionPlugin() {
         session = sessionStore.createNew();
         await sessionStore.set({
           id: session.id,
-          userId: session.userId ?? new mongoose.Types.ObjectId("000000000000000000000000").toString(),
+          userId:
+            session.userId ??
+            new mongoose.Types.ObjectId("000000000000000000000000").toString(),
           csrfToken: session.csrfToken,
           createdAt: session.createdAt,
           expiresAt: session.expiresAt,
@@ -53,7 +55,11 @@ export function sessionPlugin() {
             ip: "Unknown",
             os: "Unknown",
             browser: "Unknown",
-            deviceType: "unknown" as "desktop" | "mobile" | "tablet" | "unknown",
+            deviceType: "unknown" as
+              | "desktop"
+              | "mobile"
+              | "tablet"
+              | "unknown",
             deviceHash: "Unknown",
           },
           location: session.location ?? {

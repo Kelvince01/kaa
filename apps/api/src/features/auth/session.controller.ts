@@ -250,11 +250,20 @@ export const createOrUpdateSession = async (
         authStrategy,
         deviceInfo: {
           userAgent,
-          ip,
-          os: os as unknown as string || "Unknown",
-          browser: browser as unknown as string || "Unknown",
-          deviceType: ctx.headers.device_type as "desktop" | "mobile" | "tablet" | "unknown" | undefined || "unknown",
-          deviceHash: crypto.createHash("sha256").update(device as string).digest("hex"),
+          ip: ip ?? "Unknown",
+          os: (os as unknown as string) || "Unknown",
+          browser: (browser as unknown as string) || "Unknown",
+          deviceType:
+            (ctx.headers.device_type as
+              | "desktop"
+              | "mobile"
+              | "tablet"
+              | "unknown"
+              | undefined) || "unknown",
+          deviceHash: crypto
+            .createHash("sha256")
+            .update(device as string)
+            .digest("hex"),
         },
         location,
         lastActive: new Date(),

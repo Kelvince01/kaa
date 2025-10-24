@@ -1,10 +1,20 @@
 import { ITemplate } from "@kaa/models/types";
 
-const defaultTemplates: Pick<ITemplate, "name" | "description" | "content" | "variables" | "engine" | "format" | "version" | "isActive">[] = [
-    {
-        name: "Standard Apartment Lease",
-        description: "Basic residential lease agreement for apartments",
-        content: `RESIDENTIAL LEASE AGREEMENT
+const defaultTemplates: Pick<
+  ITemplate,
+  | "name"
+  | "description"
+  | "content"
+  | "variables"
+  | "engine"
+  | "format"
+  | "version"
+  | "isActive"
+>[] = [
+  {
+    name: "Standard Apartment Lease",
+    description: "Basic residential lease agreement for apartments",
+    content: `RESIDENTIAL LEASE AGREEMENT
 
 This Lease Agreement ("Agreement") is entered into on {{start_date}} between {{landlord_name}} ("Landlord") and {{tenant_name}} ("Tenant").
 
@@ -29,71 +39,71 @@ TERMS AND CONDITIONS:
 SIGNATURES:
 Landlord: _________________ Date: _______
 Tenant: _________________ Date: _______`,
-        variables: [
-            {
-                name: "start_date",
-                type: "date",
-                description: "The date the lease agreement was signed",
-                required: true,
-            },
-            {
-                name: "landlord_name",
-                type: "string",
-                description: "The name of the landlord",
-                required: true,
-            },
-            {
-                name: "tenant_name",
-                type: "string",
-                description: "The name of the tenant",
-                required: true,
-            },
-            {
-                name: "property_address",
-                type: "string",
-                description: "The address of the property",
-                required: true,
-            },
-            {
-                name: "property_type",
-                type: "string",
-                description: "The type of the property",
-                required: true,
-            },
-            {
-                name: "unit_number",
-                type: "string",
-                description: "The number of the unit",
-                required: true,
-            },
-            {
-                name: "end_date",
-                type: "date",
-                description: "The date the lease agreement ends",
-                required: true,
-            },
-            {
-                name: "rent_amount",
-                type: "number",
-                description: "The amount of rent per month",
-                required: true,
-            },
-            {
-                name: "deposit_amount",
-                type: "number",
-                description: "The amount of deposit",
-                required: true,
-            },
-            {
-                name: "payment_due_date",
-                type: "date",
-                description: "The date the rent is due",
-                required: true,
-            },
-        ],
-        engine: "handlebars",
-        format: "html",
-        version: 1,
-        isActive: true,
-    },
-] 
+    variables: [
+      {
+        name: "start_date",
+        type: "date",
+        description: "The date the lease agreement was signed",
+        required: true,
+      },
+      {
+        name: "landlord_name",
+        type: "string",
+        description: "The name of the landlord",
+        required: true,
+      },
+      {
+        name: "tenant_name",
+        type: "string",
+        description: "The name of the tenant",
+        required: true,
+      },
+      {
+        name: "property_address",
+        type: "string",
+        description: "The address of the property",
+        required: true,
+      },
+      {
+        name: "property_type",
+        type: "string",
+        description: "The type of the property",
+        required: true,
+      },
+      {
+        name: "unit_number",
+        type: "string",
+        description: "The number of the unit",
+        required: true,
+      },
+      {
+        name: "end_date",
+        type: "date",
+        description: "The date the lease agreement ends",
+        required: true,
+      },
+      {
+        name: "rent_amount",
+        type: "number",
+        description: "The amount of rent per month",
+        required: true,
+      },
+      {
+        name: "deposit_amount",
+        type: "number",
+        description: "The amount of deposit",
+        required: true,
+      },
+      {
+        name: "payment_due_date",
+        type: "date",
+        description: "The date the rent is due",
+        required: true,
+      },
+    ],
+    engine: "handlebars",
+    format: "html",
+    version: 1,
+    isActive: true,
+  },
+];

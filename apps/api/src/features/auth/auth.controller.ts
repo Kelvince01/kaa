@@ -2,7 +2,12 @@ import crypto from "node:crypto";
 // import { authRateLimit } from "~/plugins/rate-limit.plugin";
 import config from "@kaa/config/api";
 import { RefreshToken, ResetToken, User, VerificationToken } from "@kaa/models";
-import { type IUser, SecurityEventType, ThreatLevel, UserStatus } from "@kaa/models/types";
+import {
+  type IUser,
+  SecurityEventType,
+  ThreatLevel,
+  UserStatus,
+} from "@kaa/models/types";
 import {
   ForgotPasswordRequestSchema,
   LoginUserRequestSchema,
@@ -806,11 +811,20 @@ export const authController = new Elysia()
                   authStrategy: "password",
                   deviceInfo: {
                     userAgent,
-                    ip,
+                    ip: ip || "Unknown",
                     os: ctx.headers.os || "Unknown",
                     browser: ctx.headers.browser || "Unknown",
-                    deviceType: ctx.headers.device_type as "desktop" | "mobile" | "tablet" | "unknown" | undefined || "unknown",
-                    deviceHash: crypto.createHash("sha256").update(ctx.headers.device || "Unknown").digest("hex"),
+                    deviceType:
+                      (ctx.headers.device_type as
+                        | "desktop"
+                        | "mobile"
+                        | "tablet"
+                        | "unknown"
+                        | undefined) || "unknown",
+                    deviceHash: crypto
+                      .createHash("sha256")
+                      .update(ctx.headers.device || "Unknown")
+                      .digest("hex"),
                   },
                   location: {
                     city: "Unknown",

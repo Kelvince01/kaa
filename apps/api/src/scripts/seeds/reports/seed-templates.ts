@@ -1,10 +1,10 @@
-import mongoose from "mongoose";
 import { User } from "@kaa/models";
+import mongoose from "mongoose";
 import { seedSystemTemplates } from "../../../features/reports/system-templates";
 
 /**
  * Seed System Report Templates
- * 
+ *
  * Run with: bun run seed:templates
  */
 
@@ -21,9 +21,13 @@ async function main() {
     console.log("✅ Connected to MongoDB\n");
 
     // Find admin user (or create one if needed)
-    let adminUser = await User.findOne({ role: "admin" }).sort({ createdAt: 1 });
+    let adminUser = await User.findOne({ role: "admin" }).sort({
+      createdAt: 1,
+    });
 
-    if (!adminUser) {
+    if (adminUser) {
+      console.log(`✅ Using admin user: ${adminUser.contact.email}\n`);
+    } else {
       console.log("⚠️  No admin user found, creating system admin...");
       adminUser = await User.create({
         email: "admin@kaapro.dev",
@@ -33,12 +37,10 @@ async function main() {
         isActive: true,
       });
       console.log("✅ Admin user created\n");
-    } else {
-      console.log(`✅ Using admin user: ${adminUser.email}\n`);
     }
 
     // Seed templates
-    await seedSystemTemplates(adminUser._id);
+    await seedSystemTemplates(adminUser._id as mongoose.Types.ObjectId);
 
     console.log("\n✨ Seeding completed successfully!");
   } catch (error) {

@@ -6,15 +6,9 @@
     "baseUrl": ".",
     "jsx": "preserve",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@kaa/ui/*": [
-        "../packages/ui/src/*"
-      ],
-      "~/*": [
-        "../api/src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@kaa/ui/*": ["../packages/ui/src/*"],
+      "~/*": ["../api/src/*"]
     },
     "plugins": [
       {
@@ -35,8 +29,5 @@
     "../../packages/services/src/template.service.ts",
     "../../packages/models/src/analytics.model.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "./.next"
-  ]
+  "exclude": ["node_modules", "./.next"]
 }

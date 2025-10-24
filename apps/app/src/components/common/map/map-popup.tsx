@@ -1,71 +1,72 @@
 "use client";
 
-import { useMap } from "@/contexts/map-context";
 import mapboxgl from "mapbox-gl";
 import { useCallback, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { useMap } from "@/contexts/map-context";
 
 type PopupProps = {
-	children: React.ReactNode;
-	latitude?: number;
-	longitude?: number;
-	onClose?: () => void;
-	marker?: mapboxgl.Marker;
+  children: React.ReactNode;
+  latitude?: number;
+  longitude?: number;
+  onClose?: () => void;
+  marker?: mapboxgl.Marker;
 } & mapboxgl.PopupOptions;
 
 export default function Popup({
-	latitude,
-	longitude,
-	children,
-	marker,
-	onClose,
-	className,
-	...props
+  latitude,
+  longitude,
+  children,
+  marker,
+  onClose,
+  className,
+  ...props
 }: PopupProps) {
-	const { map } = useMap();
+  const { map } = useMap();
 
-	const container = useMemo(() => {
-		return document.createElement("div");
-	}, []);
+  const container = useMemo(() => document.createElement("div"), []);
 
-	const handleClose = useCallback(() => {
-		onClose?.();
-	}, [onClose]);
+  const handleClose = useCallback(() => {
+    onClose?.();
+  }, [onClose]);
 
-	useEffect(() => {
-		if (!map) return;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: popup lifecycle
+  useEffect(() => {
+    if (!map) return;
 
-		const popupOptions: mapboxgl.PopupOptions = {
-			...props,
-			className: `mapboxgl-custom-popup ${className ?? ""}`,
-		};
+    const popupOptions: mapboxgl.PopupOptions = {
+      ...props,
+      className: `mapboxgl-custom-popup ${className ?? ""}`,
+    };
 
-		const popup = new mapboxgl.Popup(popupOptions).setDOMContent(container).setMaxWidth("none");
+    const popup = new mapboxgl.Popup(popupOptions)
+      .setDOMContent(container)
+      .setMaxWidth("none");
 
-		popup.on("close", handleClose);
+    popup.on("close", handleClose);
 
-		if (marker) {
-			const currentPopup = marker.getPopup();
-			if (currentPopup) {
-				currentPopup.remove();
-			}
+    if (marker) {
+      const currentPopup = marker.getPopup();
+      if (currentPopup) {
+        currentPopup.remove();
+      }
 
-			marker.setPopup(popup);
+      marker.setPopup(popup);
 
-			marker.togglePopup();
-		} else if (latitude !== undefined && longitude !== undefined) {
-			popup.setLngLat([longitude, latitude]).addTo(map);
-		}
+      marker.togglePopup();
+    } else if (latitude !== undefined && longitude !== undefined) {
+      popup.setLngLat([longitude, latitude]).addTo(map);
+    }
 
-		return () => {
-			popup.off("close", handleClose);
-			popup.remove();
+    return () => {
+      popup.off("close", handleClose);
+      popup.remove();
 
-			if (marker?.getPopup()) {
-				marker.setPopup(null);
-			}
-		};
-	}, [map, marker, latitude, longitude, props, className, container, handleClose]);
+      if (marker?.getPopup()) {
+        marker.setPopup(null);
+      }
+    };
+  }, [map, marker, latitude, longitude, className, container, handleClose]);
 
-	return createPortal(children, container);
+  return createPortal(children, container);
 }
