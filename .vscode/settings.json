@@ -215,5 +215,6 @@
     ],
     "[markdown]": {
         "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
-    }
+    },
+    "compile-hero.disable-compile-files-on-did-save-code": false
 }
