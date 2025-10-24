@@ -1,6 +1,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
-import { useProperties, useUpdatePropertyStatus } from "../property.queries";
+import { useUpdatePropertyStatus } from "../property.mutations";
+import { useProperties } from "../property.queries";
 import { usePropertyStore } from "../property.store";
 import type { Property, PropertySearchParams } from "../property.type";
 import { propertyStatusOptions } from "../table";

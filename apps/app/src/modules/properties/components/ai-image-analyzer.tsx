@@ -20,8 +20,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useAnalyzePropertyImages } from "../property.queries";
-import type { ImageAnalysisResult } from "../property.type";
+import type { ImageAnalysisResult } from "@/modules/ai";
+import { useAnalyzePropertyImages } from "@/modules/ai/ai.mutations";
 
 type AIImageAnalyzerProps = {
   images: File[];

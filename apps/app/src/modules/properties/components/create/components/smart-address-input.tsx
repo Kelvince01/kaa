@@ -28,12 +28,12 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useDebounce from "@/hooks/use-debounce";
-import {
-  type Address,
-  type AddressSuggestion,
-  type Coordinates,
-  locationService,
-} from "../hooks/services/location.service";
+import { locationService } from "@/modules/location/location.service";
+import type {
+  Address,
+  AddressSuggestion,
+  Coordinates,
+} from "@/modules/location/location.type";
 
 // Category icons for different place types
 const categoryIcons = {

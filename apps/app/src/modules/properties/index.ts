@@ -14,23 +14,24 @@ export * from "./amenities";
 export {
   useCreateProperty,
   useDeleteProperty,
+  useDeleteSavedSearch,
+  useSaveSearch,
   useSubmitPropertyInquiry,
+  useSubscribeToPropertyAlerts,
   useUpdateProperty,
   useUploadPropertyImages,
+  useUploadVirtualTour,
+  useValidateAddress,
 } from "./property.mutations";
 // Export existing property queries
 export {
-  useAIPricingSuggestions,
   // New AI-Powered Queries
   useAIRecommendations,
-  useAnalyzePropertyImages,
   // New Comparison Queries
   useCompareProperties,
   useComparisonTemplate,
-  useDeleteSavedSearch,
   useFavoriteProperties,
   useFeaturedProperties,
-  useGeneratePropertyDescription,
   // New Market Analysis Queries
   useInvestmentAnalysis,
   useLocationMarketInsights,
@@ -50,25 +51,18 @@ export {
   useRentalYieldAnalysis,
   // New Search Queries
   useSavedSearches,
-  useSaveSearch,
   useSearchProperties,
   useSearchSuggestions,
-  useSubscribeToPropertyAlerts,
-  useUploadVirtualTour,
-  useValidateAddress,
   // New Virtual Tour Queries
   useVirtualTour_v1,
 } from "./property.queries";
 // Export existing property services
 export {
-  analyzePropertyImages,
   // New Comparison Services
   compareProperties,
   createProperty,
   deleteProperty,
   deleteSavedSearch,
-  generatePropertyDescription,
-  getAIPricingSuggestions,
   // New AI-Powered Services
   getAIRecommendations,
   getComparisonTemplate,
@@ -115,7 +109,6 @@ export type {
   Amenity,
   FavoritesResponse,
   GeoLocation,
-  ImageAnalysisResult,
   MarketInsights,
   NearbyAmenity,
   Property,

@@ -13,7 +13,7 @@ import { Textarea } from "@kaa/ui/components/textarea";
 import { Check, Copy, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useGeneratePropertyDescription } from "../property.queries";
+import { useGeneratePropertyDescription } from "@/modules/ai/ai.mutations";
 import type { Property } from "../property.type";
 
 type AIDescriptionGeneratorProps = {
@@ -34,7 +34,10 @@ export function AIDescriptionGenerator({
 
   const handleGenerate = async () => {
     try {
-      const description = await generateDescription.mutateAsync(propertyData);
+      const description = await generateDescription.mutateAsync({
+        propertyData,
+        options: {},
+      });
       setGeneratedDescription(description);
       onDescriptionGenerated(description);
       toast.success("AI description generated successfully!");

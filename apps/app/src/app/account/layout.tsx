@@ -5,7 +5,7 @@ import AccountLayoutContainer from "@/routes/account/layout";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <AuthGuard requiredRole="tenant">
+    <AuthGuard requiredRole={["tenant", "landlord", "admin"]}>
       <AccountLayoutContainer>
         {/* <GlobalSheets /> */}
         {children}

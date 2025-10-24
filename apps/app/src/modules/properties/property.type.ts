@@ -438,25 +438,6 @@ export type AIRecommendation = {
   confidence: number;
 };
 
-export type ImageAnalysisResult = {
-  images: Array<{
-    url: string;
-    tags: string[];
-    quality: "excellent" | "good" | "fair" | "poor";
-    roomType?:
-      | "bedroom"
-      | "bathroom"
-      | "kitchen"
-      | "living"
-      | "exterior"
-      | "other";
-    issues?: string[];
-    suggestions?: string[];
-  }>;
-  overallQuality: number;
-  recommendations: string[];
-};
-
 export type AddressValidationResult = {
   isValid: boolean;
   formattedAddress: string;

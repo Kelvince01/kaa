@@ -15,7 +15,7 @@ import type mongoose from "mongoose";
 import type { FilterQuery } from "mongoose";
 // import { authPlugin } from "~/features/auth/auth.plugin";
 import { accessPlugin } from "~/features/rbac/rbac.plugin";
-import { encryptionPlugin } from "~/plugins/encryption.plugin";
+// import { encryptionPlugin } from "~/plugins/encryption.plugin";
 import {
   type PaymentResponse,
   paymentFiltersSchema,
@@ -25,19 +25,24 @@ import {
 
 export const paymentController = new Elysia()
   .use(accessPlugin("payments", "create"))
-  .use(encryptionPlugin)
+  // .use(encryptionPlugin)
   .post(
     "/manual",
-    async ({ set, body, role, getDecryptedData }) => {
+    async ({
+      set,
+      body,
+      role,
+      // getDecryptedData
+    }) => {
       try {
         const { bookingId, amount, paymentMethod, transactionId, paymentDate } =
           body;
 
-        const decrypted = getDecryptedData();
+        // const decrypted = getDecryptedData();
 
-        if (!decrypted) {
-          throw new Error("Decrypted data is not available");
-        }
+        // if (!decrypted) {
+        //   throw new Error("Decrypted data is not available");
+        // }
 
         // Check if booking exists
         const booking = await Booking.findById(bookingId);

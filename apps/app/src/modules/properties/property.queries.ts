@@ -1,20 +1,8 @@
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { queryClient } from "@/query/query-client";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import * as propertyService from "./property.service";
 import {
-  analyzePropertyImages,
   // New comparison services
   compareProperties,
-  createProperty,
-  deleteProperty,
-  deleteSavedSearch,
-  generatePropertyDescription,
-  getAIPricingSuggestions,
   // New AI services
   getAIRecommendations,
   getComparisonTemplate,
@@ -41,19 +29,9 @@ import {
   getSearchSuggestions,
   getUserProperties,
   getVirtualTour_v1,
-  // New search services
-  saveSearch,
   searchProperties,
-  submitPropertyInquiry,
-  // New notification services
-  subscribeToPropertyAlerts,
-  updateProperty,
-  uploadPropertyImages,
-  // New virtual tour services
-  uploadVirtualTour,
-  validateAddress,
 } from "./property.service";
-import type { Property, PropertySearchParams } from "./property.type";
+import type { PropertySearchParams } from "./property.type";
 
 // Get all properties with filters
 export const useProperties = (
@@ -181,127 +159,6 @@ export const useNearbyProperties = (
     enabled: !!lat && !!lng && extra.enabled,
   });
 
-// Create property mutation
-export const useCreateProperty = () => {
-  return useMutation({
-    mutationFn: createProperty,
-    onSuccess: () => {
-      // Invalidate and refetch properties
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
-      queryClient.invalidateQueries({ queryKey: ["properties", "user"] });
-      queryClient.invalidateQueries({ queryKey: ["properties", "featured"] });
-    },
-  });
-};
-
-// Update property mutation
-export const useUpdateProperty = () => {
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Property> }) =>
-      updateProperty(id, data),
-    onSuccess: (_, variables) => {
-      // Invalidate and refetch properties
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
-      queryClient.invalidateQueries({ queryKey: ["properties", variables.id] });
-      queryClient.invalidateQueries({ queryKey: ["properties", "user"] });
-      queryClient.invalidateQueries({ queryKey: ["properties", "featured"] });
-    },
-  });
-};
-
-// Delete property mutation
-export const useDeleteProperty = () => {
-  return useMutation({
-    mutationFn: deleteProperty,
-    onSuccess: () => {
-      // Invalidate and refetch properties
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
-      queryClient.invalidateQueries({ queryKey: ["properties", "user"] });
-      queryClient.invalidateQueries({ queryKey: ["properties", "featured"] });
-    },
-  });
-};
-
-// Upload property images mutation
-export const useUploadPropertyImages = () => {
-  return useMutation({
-    mutationFn: ({
-      id,
-      imageUrls,
-      mainImageIndex,
-    }: {
-      id: string;
-      imageUrls: string[];
-      mainImageIndex?: number;
-    }) => uploadPropertyImages(id, imageUrls, mainImageIndex || 0),
-    onSuccess: (_, variables) => {
-      // Invalidate and refetch property
-      queryClient.invalidateQueries({ queryKey: ["properties", variables.id] });
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
-    },
-  });
-};
-
-// Update property status mutation
-export const useUpdatePropertyStatus = () => {
-  return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) =>
-      propertyService.updatePropertyStatus(id, status),
-    onSuccess: (_, variables) => {
-      // Invalidate and refetch properties
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
-      queryClient.invalidateQueries({ queryKey: ["properties", variables.id] });
-      queryClient.invalidateQueries({ queryKey: ["properties", "user"] });
-    },
-  });
-};
-
-// Toggle property featured mutation
-export const useTogglePropertyFeatured = () => {
-  return useMutation({
-    mutationFn: ({ id, featured }: { id: string; featured: boolean }) =>
-      propertyService.togglePropertyFeatured(id, featured),
-    onSuccess: (_, variables) => {
-      // Invalidate and refetch properties
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
-      queryClient.invalidateQueries({ queryKey: ["properties", variables.id] });
-      queryClient.invalidateQueries({ queryKey: ["properties", "featured"] });
-    },
-  });
-};
-
-// Toggle property verification mutation
-export const useTogglePropertyVerification = () => {
-  return useMutation({
-    mutationFn: ({ id, verified }: { id: string; verified: boolean }) =>
-      propertyService.togglePropertyVerification(id, verified),
-    onSuccess: (_, variables) => {
-      // Invalidate and refetch properties
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
-      queryClient.invalidateQueries({ queryKey: ["properties", variables.id] });
-      queryClient.invalidateQueries({ queryKey: ["properties", "user"] });
-    },
-  });
-};
-
-// Toggle property favorite mutation
-export const useTogglePropertyFavorite = () => {
-  return useMutation({
-    mutationFn: propertyService.togglePropertyFavorite,
-    onSuccess: () => {
-      // Invalidate and refetch favorites and properties
-      queryClient.invalidateQueries({ queryKey: ["properties", "favorites"] });
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
-    },
-  });
-};
-
-// Submit property inquiry mutation
-export const useSubmitPropertyInquiry = () =>
-  useMutation({
-    mutationFn: submitPropertyInquiry,
-  });
-
 // =============================================================================
 // AI-POWERED QUERIES
 // =============================================================================
@@ -315,24 +172,6 @@ export const useAIRecommendations = (userId: string, limit = 10) => {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
-
-// Generate property description
-export const useGeneratePropertyDescription = () =>
-  useMutation({
-    mutationFn: generatePropertyDescription,
-  });
-
-// Analyze property images
-export const useAnalyzePropertyImages = () =>
-  useMutation({
-    mutationFn: analyzePropertyImages,
-  });
-
-// Get AI pricing suggestions
-export const useAIPricingSuggestions = () =>
-  useMutation({
-    mutationFn: getAIPricingSuggestions,
-  });
 
 // =============================================================================
 // ENHANCED LOCATION QUERIES
@@ -352,12 +191,6 @@ export const useNearbyAmenities = (
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 };
-
-// Validate address
-export const useValidateAddress = () =>
-  useMutation({
-    mutationFn: validateAddress,
-  });
 
 // Get location market insights
 export const useLocationMarketInsights = (
@@ -421,36 +254,6 @@ export const useSavedSearches = () => {
   });
 };
 
-// Save search
-export const useSaveSearch = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      name,
-      filters,
-      notifications,
-    }: {
-      name: string;
-      filters: PropertySearchParams;
-      notifications: boolean;
-    }) => saveSearch(name, filters, notifications),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["saved-searches"] });
-    },
-  });
-};
-
-// Delete saved search
-export const useDeleteSavedSearch = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: deleteSavedSearch,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["saved-searches"] });
-    },
-  });
-};
-
 // Get search suggestions
 export const useSearchSuggestions = (query: string, enabled = true) => {
   return useQuery({
@@ -498,23 +301,6 @@ export const useVirtualTour_v1 = (propertyId: string, enabled = true) => {
   });
 };
 
-// Upload virtual tour
-export const useUploadVirtualTour = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      propertyId,
-      tourData,
-    }: {
-      propertyId: string;
-      tourData: any;
-    }) => uploadVirtualTour(propertyId, tourData),
-    onSuccess: (_, { propertyId }) => {
-      queryClient.invalidateQueries({ queryKey: ["virtual-tour", propertyId] });
-    },
-  });
-};
-
 // =============================================================================
 // NOTIFICATION QUERIES
 // =============================================================================
@@ -526,25 +312,6 @@ export const usePropertyAlerts = (propertyId: string, enabled = true) => {
     queryFn: () => getPropertyAlerts(propertyId),
     enabled: enabled && !!propertyId,
     staleTime: 2 * 60 * 1000, // 2 minutes
-  });
-};
-
-// Subscribe to property alerts
-export const useSubscribeToPropertyAlerts = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      propertyId,
-      alertTypes,
-    }: {
-      propertyId: string;
-      alertTypes: string[];
-    }) => subscribeToPropertyAlerts(propertyId, alertTypes),
-    onSuccess: (_, { propertyId }) => {
-      queryClient.invalidateQueries({
-        queryKey: ["property-alerts", propertyId],
-      });
-    },
   });
 };
 

@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/query/query-client";
 import * as propertyService from "./property.service";
-import type { Property } from "./property.type";
+import type { Property, PropertySearchParams } from "./property.type";
 
 // Create property mutation
 export const useCreateProperty = () => {
@@ -125,4 +125,68 @@ export const useTogglePropertyFavorite = () => {
 export const useSubmitPropertyInquiry = () =>
   useMutation({
     mutationFn: propertyService.submitPropertyInquiry,
+  });
+
+// Validate address
+export const useValidateAddress = () =>
+  useMutation({
+    mutationFn: propertyService.validateAddress,
+  });
+
+// Save search
+export const useSaveSearch = () =>
+  useMutation({
+    mutationFn: ({
+      name,
+      filters,
+      notifications,
+    }: {
+      name: string;
+      filters: PropertySearchParams;
+      notifications: boolean;
+    }) => propertyService.saveSearch(name, filters, notifications),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["saved-searches"] });
+    },
+  });
+
+// Delete saved search
+export const useDeleteSavedSearch = () =>
+  useMutation({
+    mutationFn: propertyService.deleteSavedSearch,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["saved-searches"] });
+    },
+  });
+
+// Upload virtual tour
+export const useUploadVirtualTour = () =>
+  useMutation({
+    mutationFn: ({
+      propertyId,
+      tourData,
+    }: {
+      propertyId: string;
+      tourData: any;
+    }) => propertyService.uploadVirtualTour(propertyId, tourData),
+    onSuccess: (_, { propertyId }) => {
+      queryClient.invalidateQueries({ queryKey: ["virtual-tour", propertyId] });
+    },
+  });
+
+// Subscribe to property alerts
+export const useSubscribeToPropertyAlerts = () =>
+  useMutation({
+    mutationFn: ({
+      propertyId,
+      alertTypes,
+    }: {
+      propertyId: string;
+      alertTypes: string[];
+    }) => propertyService.subscribeToPropertyAlerts(propertyId, alertTypes),
+    onSuccess: (_, { propertyId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["property-alerts", propertyId],
+      });
+    },
   });

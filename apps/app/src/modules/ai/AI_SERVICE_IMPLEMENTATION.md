@@ -5,6 +5,7 @@ This document describes the implementation of real AI services for the property 
 ## Overview
 
 The AI service integration provides intelligent property management capabilities including:
+
 - **Description Generation**: AI-powered property descriptions
 - **Content Analysis**: Quality analysis and suggestions
 - **Pricing Recommendations**: Market-based pricing suggestions
@@ -16,11 +17,12 @@ The AI service integration provides intelligent property management capabilities
 ## Architecture
 
 ### Service Layer (`services/ai.service.ts`)
+
 The `AIService` class provides a clean interface to interact with backend AI endpoints:
 
 ```typescript
 // Singleton pattern ensures consistent instance
-export const aiService = AIService.getInstance();
+import * as aiService from "./ai.service.ts"
 
 // Core functionalities
 await aiService.generateDescription(propertyData, options);
@@ -30,7 +32,9 @@ await aiService.optimizeForSEO(content, propertyType);
 ```
 
 ### Hook Layer (`use-ai-assistant.ts`)
+
 The `useAIAssistant` hook provides React integration with:
+
 - **Mutations**: Using React Query for state management
 - **Loading States**: Real-time status tracking
 - **Error Handling**: Comprehensive error management
@@ -40,6 +44,7 @@ The `useAIAssistant` hook provides React integration with:
 ## Features
 
 ### 1. Description Generation
+
 Generate compelling property descriptions using AI:
 
 ```typescript
@@ -54,6 +59,7 @@ const description = await generateDescription(propertyData, {
 ```
 
 ### 2. Content Analysis
+
 Analyze content quality and get improvement suggestions:
 
 ```typescript
@@ -64,6 +70,7 @@ const analysisResult = await analyzeContent(description);
 ```
 
 ### 3. Pricing Suggestions
+
 Get AI-powered pricing recommendations:
 
 ```typescript
@@ -74,6 +81,7 @@ const pricing = await suggestPricing(propertyData);
 ```
 
 ### 4. SEO Optimization
+
 Optimize content for search engines:
 
 ```typescript
@@ -84,6 +92,7 @@ const seoResult = await optimizeForSEO(content, propertyType);
 ```
 
 ### 5. Market Analysis
+
 Get comprehensive market insights:
 
 ```typescript
@@ -93,6 +102,7 @@ const analysis = await getMarketAnalysis("Nairobi");
 ```
 
 ### 6. Property Recommendations
+
 Get personalized property recommendations:
 
 ```typescript
@@ -107,6 +117,7 @@ const recommendations = await getPropertyRecommendations({
 ```
 
 ### 7. AI Query Processing
+
 Process general AI queries:
 
 ```typescript
@@ -123,12 +134,14 @@ const response = await processAIQuery(
 The implementation includes comprehensive error handling:
 
 ### Retry Logic
+
 - Automatic retries for network failures
 - Exponential backoff with configurable delays
 - Maximum retry attempts: 2
 - Maximum delay: 30 seconds
 
 ### Error States
+
 Each operation provides error information:
 
 ```typescript
@@ -144,6 +157,7 @@ const {
 ```
 
 ### Reset Functions
+
 Clear errors and reset states:
 
 ```typescript
@@ -164,6 +178,7 @@ const {
 The service integrates with backend AI endpoints:
 
 ### Endpoints
+
 - `POST /ai/property/generate-description`
 - `POST /ai/property/analyze-content`  
 - `POST /ai/property/suggest-pricing`
@@ -173,10 +188,13 @@ The service integrates with backend AI endpoints:
 - `POST /ai/query`
 
 ### Authentication
+
 Automatic authentication via HTTP client interceptors using Bearer tokens.
 
 ### Request/Response Format
+
 Standard API response format:
+
 ```json
 {
   "status": "success",
@@ -187,6 +205,7 @@ Standard API response format:
 ## Configuration
 
 ### Environment Variables
+
 The AI service uses the existing HTTP client configuration. Ensure these are set:
 
 ```env
@@ -203,7 +222,9 @@ NEXT_PUBLIC_REQUEST_SIGNING_KEY=your-signing-key
 ```
 
 ### Backend Requirements
+
 Ensure the backend has:
+
 1. OpenAI API integration configured
 2. AI endpoints implemented
 3. Proper authentication middleware
@@ -212,6 +233,7 @@ Ensure the backend has:
 ## Usage Examples
 
 ### Basic Property Description Generation
+
 ```typescript
 import { useAIAssistant } from "./hooks/use-ai-assistant";
 
@@ -250,6 +272,7 @@ function PropertyForm() {
 ```
 
 ### Advanced Usage with Analysis
+
 ```typescript
 function AdvancedPropertyForm() {
   const {
@@ -309,16 +332,19 @@ function AdvancedPropertyForm() {
 ## Performance Considerations
 
 ### Caching
+
 - HTTP client automatically caches responses
 - Analysis results are stored in component state
 - Mutations are cached by React Query
 
 ### Rate Limiting
+
 - Backend implements rate limiting
 - Client respects rate limit responses
 - Automatic retry with backoff
 
 ### Loading States
+
 - Granular loading states for each operation
 - Prevents multiple simultaneous requests
 - User feedback during processing
@@ -326,11 +352,13 @@ function AdvancedPropertyForm() {
 ## Security
 
 ### Data Validation
+
 - Input sanitization at service layer
 - Type-safe interfaces
 - Error boundary protection
 
 ### API Security
+
 - Bearer token authentication
 - Request signing (configurable)
 - CSRF protection
@@ -355,7 +383,9 @@ The new implementation maintains the same interface as the mock service, ensurin
 4. **Timeout Errors**: Increase API_TIMEOUT value
 
 ### Debug Mode
+
 Enable debug logging:
+
 ```typescript
 // Add to service calls for debugging
 console.log("AI Service Request:", { propertyData, options });

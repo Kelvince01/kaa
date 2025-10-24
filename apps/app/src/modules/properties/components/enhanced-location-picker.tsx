@@ -29,7 +29,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useNearbyAmenities, useValidateAddress } from "../property.queries";
+import { useValidateAddress } from "../property.mutations";
+import { useNearbyAmenities } from "../property.queries";
 import type { AddressValidationResult, NearbyAmenity } from "../property.type";
 
 type EnhancedLocationPickerProps = {

@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
-import type { PropertyFormData } from "../schema";
 import {
   type AIAnalysis,
   type AIGenerationOptions,
   aiService,
   conversationMemory,
-} from "./services/ai.service";
+} from "@/modules/ai";
+import type { PropertyFormData } from "../schema";
 
 type AIServiceError = {
   message: string;
@@ -50,7 +50,10 @@ export function useAIAssistant(propertyData?: Partial<PropertyFormData>) {
       options?: AIGenerationOptions;
     }) => {
       try {
-        return await aiService.generateDescription(propertyData, options);
+        return await aiService.generatePropertyDescription(
+          propertyData as any,
+          options
+        );
       } catch (error) {
         throw new Error(
           error instanceof Error
@@ -94,7 +97,7 @@ export function useAIAssistant(propertyData?: Partial<PropertyFormData>) {
   const suggestPricingMutation = useMutation({
     mutationFn: async (propertyData: Partial<PropertyFormData>) => {
       try {
-        return await aiService.suggestPricing(propertyData);
+        return await aiService.suggestPricing(propertyData as any);
       } catch (error) {
         throw new Error(
           error instanceof Error
@@ -386,7 +389,7 @@ export function useAIAssistant(propertyData?: Partial<PropertyFormData>) {
 
         try {
           const suggestions = await aiService.getSmartSuggestions(
-            propertyData,
+            propertyData as any,
             fieldName
           );
 
@@ -421,8 +424,9 @@ export function useAIAssistant(propertyData?: Partial<PropertyFormData>) {
         }
 
         try {
-          const validation =
-            await aiService.validatePropertyData(dataToValidate);
+          const validation = await aiService.validatePropertyData(
+            dataToValidate as any
+          );
 
           // Cache for 2 minutes
           queryClient.setQueryData(cacheKey, validation, {

@@ -58,8 +58,8 @@ app
       optimizations.compression,
       optimizations.cache,
       optimizations.pagination,
-      optimizations.chunking
-    )
+      optimizations.chunking,
+    ),
   )
   .onStart(() => {
     // Setup database
@@ -87,7 +87,7 @@ app
         includeSubDomains: true,
         preload: true,
       },
-    })
+    }),
   )
   .use(cookie())
   .use(serverTiming())
@@ -97,9 +97,9 @@ app
       prefix: "/",
       assets: publicPath,
       indexHTML: true,
-      noCache: true,
+      // noCache: true,
       alwaysStatic: true,
-    })
+    }),
   )
   .use(telemetryConfig)
   .use(sitePlugin)
@@ -123,7 +123,7 @@ app
       dynamicLabels: {
         userAgent: (ctx) => ctx.request.headers.get("user-agent") ?? "unknown",
       },
-    })
+    }),
   )
   .use(monitoringPlugin("api"));
 
@@ -131,7 +131,7 @@ if (!idDev)
   app.use(
     rateLimit({
       max: 100,
-    })
+    }),
   );
 
 app.use(elysiaXSS({}));

@@ -3,7 +3,6 @@ import type {
   AddressValidationResult,
   AIRecommendation,
   FavoritesResponse,
-  ImageAnalysisResult,
   MarketInsights,
   NearbyAmenity,
   Property,
@@ -233,48 +232,6 @@ export const getAIRecommendations = async (
     }
   );
   return response.data.recommendations;
-};
-
-// Generate AI-powered property description
-export const generatePropertyDescription = async (
-  propertyData: Partial<Property>
-): Promise<string> => {
-  const response = await httpClient.api.post(
-    "/ai/property/generate/description",
-    { propertyData }
-  );
-  return response.data.data.description;
-};
-
-// Analyze property images with AI
-export const analyzePropertyImages = async (
-  images: File[]
-): Promise<ImageAnalysisResult> => {
-  const formData = new FormData();
-  for (const img of images) {
-    formData.append("images", img);
-  }
-  const response = await httpClient.api.post(
-    "/ai/property/analyze/images",
-    formData
-  );
-  return response.data.analysis;
-};
-
-// Get AI-powered pricing suggestions
-export const getAIPricingSuggestions = async (
-  propertyData: Partial<Property>
-): Promise<{
-  suggestedPrice: number;
-  confidence: number;
-  factors: string[];
-  marketComparison: any[];
-}> => {
-  const response = await httpClient.api.post(
-    "/ai/pricing/suggest",
-    propertyData
-  );
-  return response.data;
 };
 
 // =============================================================================
