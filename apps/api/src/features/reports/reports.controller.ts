@@ -345,7 +345,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       body: ExecuteReportRequestSchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Execution"],
+        tags: ["reports"],
         summary: "Execute report",
         description: "Generate report (async processing)",
       },
@@ -386,7 +386,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       params: ExecutionIdParamSchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Execution"],
+        tags: ["reports"],
         summary: "Get execution status",
         description: "Get report execution status and results",
       },
@@ -429,7 +429,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       query: ListExecutionsQuerySchema,
       response: PaginatedResponseSchema,
       detail: {
-        tags: ["reports", "Execution"],
+        tags: ["reports"],
         summary: "List executions",
         description: "Get report execution history",
       },
@@ -475,7 +475,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       query: DownloadReportQuerySchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Download"],
+        tags: ["reports"],
         summary: "Download report",
         description: "Get signed download URL for report file",
       },
@@ -521,7 +521,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       body: CreateScheduleRequestSchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Schedules"],
+        tags: ["reports"],
         summary: "Create schedule",
         description: "Schedule a report for automatic generation",
       },
@@ -564,7 +564,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       query: ListSchedulesQuerySchema,
       response: PaginatedResponseSchema,
       detail: {
-        tags: ["reports", "Schedules"],
+        tags: ["reports"],
         summary: "List schedules",
         description: "Get all scheduled reports",
       },
@@ -607,7 +607,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       body: UpdateScheduleRequestSchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Schedules"],
+        tags: ["reports"],
         summary: "Update schedule",
         description: "Update an existing report schedule",
       },
@@ -648,7 +648,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       params: ScheduleIdParamSchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Schedules"],
+        tags: ["reports"],
         summary: "Cancel schedule",
         description: "Cancel a scheduled report",
       },
@@ -689,7 +689,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       params: ScheduleIdParamSchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Schedules"],
+        tags: ["reports"],
         summary: "Pause schedule",
         description: "Temporarily pause a report schedule",
       },
@@ -730,7 +730,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       params: ScheduleIdParamSchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Schedules"],
+        tags: ["reports"],
         summary: "Resume schedule",
         description: "Resume a paused report schedule",
       },
@@ -776,7 +776,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       body: ReportTemplateSchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Templates"],
+        tags: ["reports"],
         summary: "Create template",
         description: "Create a new report template",
       },
@@ -819,7 +819,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       query: ListTemplatesQuerySchema,
       response: PaginatedResponseSchema,
       detail: {
-        tags: ["reports", "Templates"],
+        tags: ["reports"],
         summary: "List templates",
         description: "Get available report templates",
       },
@@ -857,7 +857,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
     {
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Templates"],
+        tags: ["reports"],
         summary: "Get system templates",
         description: "Get pre-built system templates",
       },
@@ -898,7 +898,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       params: TemplateIdParamSchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Templates"],
+        tags: ["reports"],
         summary: "Get template",
         description: "Get template details by ID",
       },
@@ -941,7 +941,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       body: UpdateTemplateRequestSchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Templates"],
+        tags: ["reports"],
         summary: "Update template",
         description: "Update a report template",
       },
@@ -982,7 +982,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       params: TemplateIdParamSchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Templates"],
+        tags: ["reports"],
         summary: "Delete template",
         description: "Delete a report template",
       },
@@ -1031,7 +1031,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       query: ReportAnalyticsQuerySchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Analytics"],
+        tags: ["reports"],
         summary: "Get report analytics",
         description: "Get analytics on report usage and performance",
       },
@@ -1094,7 +1094,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       query: BusinessIntelligenceQuerySchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "BI"],
+        tags: ["reports"],
         summary: "Get business intelligence",
         description: "Get business intelligence dashboard and metrics",
       },
@@ -1157,7 +1157,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
       query: MarketInsightsQuerySchema,
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Market"],
+        tags: ["reports"],
         summary: "Get market insights",
         description: "Get market insights and rental market analysis",
       },
@@ -1204,7 +1204,7 @@ export const reportsController = new Elysia({ prefix: "/reports" })
     {
       response: ReportResponseSchema,
       detail: {
-        tags: ["reports", "Kenya"],
+        tags: ["reports"],
         summary: "Get Kenya metrics",
         description:
           "Get Kenya-specific metrics (counties, M-Pesa, SMS, business hours)",

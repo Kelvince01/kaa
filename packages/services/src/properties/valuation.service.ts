@@ -742,10 +742,12 @@ export class PropertyValuationService {
     const property = await Property.findById(propertyId).lean();
     if (!property) throw new Error("Property not found");
 
-    const marketAnalysis =
-      await PropertyValuationService.performMarketAnalysis(property);
-    const incomeAnalysis =
-      await PropertyValuationService.performIncomeAnalysis(property);
+    const marketAnalysis = await PropertyValuationService.performMarketAnalysis(
+      property as any
+    );
+    const incomeAnalysis = await PropertyValuationService.performIncomeAnalysis(
+      property as any
+    );
     const totalArea = property?.specifications?.totalArea
       ? property?.specifications?.totalArea
       : 0;

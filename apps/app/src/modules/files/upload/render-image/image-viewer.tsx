@@ -119,9 +119,6 @@ export default class ImageViewer extends React.PureComponent<
 
   render() {
     return (
-      // biome-ignore lint/a11y/useKeyWithClickEvents: by author
-      // biome-ignore lint/a11y/noStaticElementInteractions: by author
-      // biome-ignore lint/a11y/noNoninteractiveElementInteractions: by author
       <div
         className={`pan-container ${this.props.className || ""}`}
         onClick={this.onClick}
@@ -225,6 +222,7 @@ export default class ImageViewer extends React.PureComponent<
   };
 
   private onWheel = (e: React.WheelEvent<EventTarget>) => {
+    // biome-ignore lint/nursery/noUnusedExpressions: ignore
     Math.sign(e.deltaY) < 0
       ? this.props.setZoom((this.props.zoom || 0) + 0.1)
       : (this.props.zoom || 0) > 1 &&

@@ -90,6 +90,15 @@ export type PropertyImageAnalysis = {
   aiConfidence: number;
 };
 
+export type PropertyImageAnalysisResult = {
+  quality: "poor" | "fair" | "good" | "excellent";
+  issues: string[];
+  suggestions: string[];
+  features: string[];
+  aestheticScore: number;
+  technicalScore: number;
+};
+
 export type DocumentAnalysis = {
   documentType: string;
   extractedInfo: Record<string, any>;

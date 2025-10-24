@@ -25,7 +25,7 @@ import { propertyEndpointLimits } from "./property-rate-limit.config";
 // ==================== MONITORING ENDPOINTS ====================
 
 export const propertyMonitoringController = new Elysia({
-  prefix: "/properties/monitoring",
+  prefix: "/monitoring",
 })
   .use(authPlugin)
   /**
@@ -372,71 +372,8 @@ export const getRateLimitForEndpoint = (endpoint: string) =>
 
 // ==================== AI-POWERED ENDPOINTS ====================
 
-export const propertyAIController = new Elysia({ prefix: "/properties/ai" })
+export const propertyAIController = new Elysia({ prefix: "/ai" })
   .use(authPlugin)
-  /**
-   * Generate AI property description
-   * @requires Authentication
-   */
-  .post(
-    "/generate-description",
-    async ({ set, body, user }) => {
-      try {
-        if (!user?.id) {
-          set.status = 401;
-          return { success: false, error: "Unauthorized" };
-        }
-
-        const description = await propertyAI.generatePropertyDescription(
-          body.property,
-          body.options
-        );
-
-        return {
-          success: true,
-          data: { description },
-        };
-      } catch (error) {
-        set.status = 500;
-        return {
-          success: false,
-          error: "Failed to generate description",
-        };
-      }
-    },
-    {
-      body: t.Object({
-        property: t.Any(),
-        options: t.Optional(
-          t.Object({
-            tone: t.Optional(
-              t.Union([
-                t.Literal("professional"),
-                t.Literal("casual"),
-                t.Literal("luxury"),
-                t.Literal("friendly"),
-              ])
-            ),
-            length: t.Optional(
-              t.Union([
-                t.Literal("short"),
-                t.Literal("medium"),
-                t.Literal("long"),
-              ])
-            ),
-            targetAudience: t.Optional(
-              t.Union([
-                t.Literal("general"),
-                t.Literal("families"),
-                t.Literal("students"),
-                t.Literal("professionals"),
-              ])
-            ),
-          })
-        ),
-      }),
-    }
-  )
   /**
    * Get AI property valuation
    * @requires Authentication
@@ -509,39 +446,7 @@ export const propertyAIController = new Elysia({ prefix: "/properties/ai" })
       }),
     }
   )
-  /**
-   * Analyze property images
-   * @requires Authentication
-   */
-  .post(
-    "/analyze-images",
-    ({ set, body, user }) => {
-      try {
-        if (!user?.id) {
-          set.status = 401;
-          return { success: false, error: "Unauthorized" };
-        }
 
-        const analysis = propertyAI.analyzePropertyImages(body.imageUrls);
-
-        return {
-          success: true,
-          data: analysis,
-        };
-      } catch (error) {
-        set.status = 500;
-        return {
-          success: false,
-          error: "Failed to analyze images",
-        };
-      }
-    },
-    {
-      body: t.Object({
-        imageUrls: t.Array(t.String()),
-      }),
-    }
-  )
   /**
    * Generate SEO content
    * @requires Authentication

@@ -19,7 +19,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import {
-  type Parser,
+  type SingleParser as Parser,
   parseAsArrayOf,
   parseAsInteger,
   parseAsString,

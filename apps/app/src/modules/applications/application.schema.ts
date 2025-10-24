@@ -31,9 +31,13 @@ export const searchParamsCache = createSearchParamsCache({
 });
 
 export const createApplicationSchema = z.object({
-  title: z.string(),
+  property: z.string(),
+  moveInDate: z.string(),
+  offerAmount: z.number().optional(),
+  notes: z.string().optional(),
+  documents: z.array(z.string()).optional(),
   status: z.enum(Object.values(ApplicationStatus) as [string, ...string[]]),
-  estimatedHours: z.coerce.number().optional(),
+  // estimatedHours: z.coerce.number().optional(),
 });
 
 export const updateApplicationSchema = z.object({

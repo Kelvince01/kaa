@@ -68,47 +68,6 @@ export type PropertyImageAnalysisResult = {
 // ==================== AI SERVICES ====================
 
 /**
- * Generate AI property description
- */
-export const generatePropertyDescription = async (
-  property: IProperty,
-  options: PropertyDescriptionOptions = {}
-): Promise<string> => {
-  try {
-    const propertyData = {
-      type: property.type,
-      title: property.title,
-      location: {
-        county: property.location.county,
-        estate: property.location.estate,
-        address: property.location.address.line1,
-      },
-      specifications: {
-        bedrooms: property.specifications.bedrooms,
-        bathrooms: property.specifications.bathrooms,
-        area: property.specifications.totalArea,
-        furnished: property.specifications.furnished,
-      },
-      amenities: Object.entries(property.amenities || {})
-        .filter(([, value]) => value === true)
-        .map(([key]) => key),
-      pricing: {
-        rent: property.pricing.rent,
-        currency: property.pricing.currency || "KES",
-      },
-      nearbyAmenities: property.location.nearbyAmenities || [],
-    };
-
-    const description = await openai.generateDescription(propertyData, options);
-
-    return description;
-  } catch (error) {
-    console.error("Error generating property description:", error);
-    throw new Error("Failed to generate property description");
-  }
-};
-
-/**
  * Get AI-powered property valuation
  */
 export const getPropertyValuation = async (
@@ -232,45 +191,6 @@ export const getMarketInsights = async (
   } catch (error) {
     console.error("Error getting market insights:", error);
     throw new Error("Failed to get market insights");
-  }
-};
-
-/**
- * Analyze property images for quality and features
- */
-export const analyzePropertyImages = (
-  imageUrls: string[]
-): PropertyImageAnalysisResult => {
-  try {
-    // TODO: Implement image fetching and conversion to Buffer
-    // For now, return basic analysis based on image count
-    if (!imageUrls || imageUrls.length === 0) {
-      throw new Error("No images provided");
-    }
-
-    // Placeholder analysis until image URL to Buffer conversion is implemented
-    const quality =
-      imageUrls.length >= 5
-        ? ("excellent" as const)
-        : imageUrls.length >= 3
-          ? ("good" as const)
-          : ("fair" as const);
-
-    return {
-      quality,
-      issues: imageUrls.length < 3 ? ["Consider adding more images"] : [],
-      suggestions: [
-        "Add images from different angles",
-        "Include both interior and exterior shots",
-        "Ensure good lighting in photos",
-      ],
-      features: ["Property images available"],
-      aestheticScore: imageUrls.length >= 5 ? 8 : imageUrls.length >= 3 ? 6 : 4,
-      technicalScore: 7,
-    };
-  } catch (error) {
-    console.error("Error analyzing property images:", error);
-    throw new Error("Failed to analyze property images");
   }
 };
 
@@ -595,10 +515,8 @@ export const generateComparisonReport = (
 // ==================== EXPORT ====================
 
 export const propertyAI = {
-  generateDescription: generatePropertyDescription,
   getValuation: getPropertyValuation,
   getMarketInsights,
-  analyzeImages: analyzePropertyImages,
   generateSEOContent,
   getPricingSuggestions,
   generateTags: generatePropertyTags,

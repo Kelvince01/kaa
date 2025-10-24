@@ -18,7 +18,6 @@ import mongoose from "mongoose";
 import * as prom from "prom-client";
 // import { authPlugin } from "~/features/auth/auth.plugin";
 import { accessPlugin } from "../rbac/rbac.plugin";
-import { propertyFavoriteController } from "./favorite.controller";
 // import { rateLimitMiddleware } from "~/plugins/rate-limit.plugin";
 // import { getRateLimitForEndpoint } from "./property.integration";
 // import { accessPlugin } from "~/features/rbac/rbac.plugin";
@@ -32,9 +31,6 @@ import {
   updatePricingSchema,
   updatePropertySchema,
 } from "./property.schema";
-import { propertyConditionController } from "./property-condition.controller";
-import { propertyInspectionController } from "./property-inspection.controller";
-import { searchController } from "./search/search.controller";
 
 // ==================== METRICS ====================
 
@@ -56,7 +52,7 @@ const propertyOperationsCounter = new prom.Counter({
 
 // ==================== CONTROLLER ====================
 
-export const propertyController = new Elysia({ prefix: "/properties" })
+export const propertyController = new Elysia()
   // ==================== PUBLIC ENDPOINTS ====================
 
   /**
@@ -1769,8 +1765,4 @@ export const propertyController = new Elysia({ prefix: "/properties" })
           "Get property details enhanced with nearby amenities and amenity score",
       },
     }
-  )
-  .use(propertyInspectionController)
-  .use(propertyConditionController)
-  .use(propertyFavoriteController)
-  .use(searchController);
+  );

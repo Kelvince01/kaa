@@ -9,6 +9,7 @@ import type {
   PricingSuggestion,
   PropertyData,
   PropertyImageAnalysis,
+  PropertyImageAnalysisResult,
   PropertyValuation,
   SEOOptimization,
 } from "@kaa/models/types";
@@ -84,6 +85,30 @@ export class OpenAIService {
         targetAudience = "general",
         includeKeywords = [],
       } = options;
+
+      /*const propertyData = {
+        type: property.type,
+        title: property.title,
+        location: {
+          county: property.location.county,
+          estate: property.location.estate,
+          address: property.location.address.line1,
+        },
+        specifications: {
+          bedrooms: property.specifications.bedrooms,
+          bathrooms: property.specifications.bathrooms,
+          area: property.specifications.totalArea,
+          furnished: property.specifications.furnished,
+        },
+        amenities: Object.entries(property.amenities || {})
+          .filter(([, value]) => value === true)
+          .map(([key]) => key),
+        pricing: {
+          rent: property.pricing.rent,
+          currency: property.pricing.currency || "KES",
+        },
+        nearbyAmenities: property.location.nearbyAmenities || [],
+      };*/
 
       const prompt = this.buildDescriptionPrompt(
         propertyData,
@@ -703,6 +728,46 @@ export class OpenAIService {
       throw new Error("Failed to analyze property image");
     }
   }
+
+  /**
+   * Analyze property images for quality and features
+   */
+  analyzePropertyImages = (
+    imageUrls: string[]
+  ): PropertyImageAnalysisResult => {
+    try {
+      // TODO: Implement image fetching and conversion to Buffer
+      // For now, return basic analysis based on image count
+      if (!imageUrls || imageUrls.length === 0) {
+        throw new Error("No images provided");
+      }
+
+      // Placeholder analysis until image URL to Buffer conversion is implemented
+      const quality =
+        imageUrls.length >= 5
+          ? ("excellent" as const)
+          : imageUrls.length >= 3
+            ? ("good" as const)
+            : ("fair" as const);
+
+      return {
+        quality,
+        issues: imageUrls.length < 3 ? ["Consider adding more images"] : [],
+        suggestions: [
+          "Add images from different angles",
+          "Include both interior and exterior shots",
+          "Ensure good lighting in photos",
+        ],
+        features: ["Property images available"],
+        aestheticScore:
+          imageUrls.length >= 5 ? 8 : imageUrls.length >= 3 ? 6 : 4,
+        technicalScore: 7,
+      };
+    } catch (error) {
+      console.error("Error analyzing property images:", error);
+      throw new Error("Failed to analyze property images");
+    }
+  };
 
   /**
    * Process and analyze documents (leases, contracts, etc.)

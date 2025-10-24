@@ -152,7 +152,7 @@ export const useAuth = () => {
     getAccessToken,
     getRefreshToken,
     user,
-    refreshTokenMutation.mutateAsync,
+    refreshTokenMutation,
   ]); // Run only once on mount
 
   // Auto-refresh token when it's about to expire
@@ -188,8 +188,8 @@ export const useAuth = () => {
     status,
     getAccessToken,
     isRefreshing,
-    refreshTokenMutation.mutateAsync,
     storeLogout,
+    refreshTokenMutation,
   ]);
 
   return {

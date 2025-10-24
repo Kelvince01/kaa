@@ -116,7 +116,7 @@ const useSearchParams = <
       }
     }
     router.replace(`?${params.toString()}`);
-  }, [defaultValues, router.replace]);
+  }, [defaultValues, router]);
 
   // Update current search state when URL search changes
   useEffect(() => {

@@ -73,6 +73,7 @@
     "@types/bcryptjs": "^3.0.0",
     "@types/clamscan": "^2.4.1",
     "@types/fluent-ffmpeg": "^2.1.27",
+    "@types/luxon": "^3.7.1",
     "@types/mjml": "^4.7.4",
     "@types/pdfkit": "^0.17.3",
     "mjml-cli": "^4.15.3",

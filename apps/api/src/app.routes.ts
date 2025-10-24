@@ -25,14 +25,10 @@ import { organizationController } from "./features/org/org.controller";
 import { rentSubscriptionController } from "./features/org/rent-subscription.controller";
 import { subscriptionController } from "./features/org/subscription.controller";
 import { paymentRoutes } from "./features/payments/payment.routes";
-import {
-  propertyAIController,
-  propertyMonitoringController,
-} from "./features/properties";
 import { amenityController } from "./features/properties/amenities/amenity.controller";
 import { contractorController } from "./features/properties/contractor.controller";
 import { insuranceController } from "./features/properties/insurance.controller";
-import { propertyController } from "./features/properties/property.controller";
+import { propertyRoutes } from "./features/properties/property.routes";
 import { reviewController } from "./features/properties/review.controller";
 import { scheduleController } from "./features/properties/schedule.controller";
 import { searchRouter } from "./features/properties/search/search.router";
@@ -61,15 +57,13 @@ const routes = new Elysia({ prefix: "api/v1" })
   .use(bookingController)
   .use(applicationController)
   .use(contractController)
-  .use(propertyController)
+  .use(propertyRoutes)
   .use(searchRouter)
   .use(unitController)
   .use(contractorController)
   .use(workOrderController)
   .use(scheduleController)
   .use(amenityController)
-  .use(propertyMonitoringController) // /properties/monitoring/*
-  .use(propertyAIController)
   .use(maintenanceController)
   .use(referenceController)
   .use(reviewController)

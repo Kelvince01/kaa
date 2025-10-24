@@ -21,6 +21,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         purpose: t.Optional(t.String()),
         notes: t.Optional(t.String()),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Create a new property valuation",
+        description: "Create a new property valuation",
+      },
     }
   )
 
@@ -33,9 +38,17 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         body.requestedBy
       ),
     {
+      params: t.Object({
+        propertyId: t.String(),
+      }),
       body: t.Object({
         requestedBy: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Generate automated valuation",
+        description: "Generate automated valuation",
+      },
     }
   )
 
@@ -63,6 +76,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         limit: t.Optional(t.Number()),
         search: t.Optional(t.String()),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Get valuations",
+        description: "Get valuations",
+      },
     }
   )
 
@@ -75,6 +93,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
       params: t.Object({
         id: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Get valuation by ID",
+        description: "Get valuation by ID",
+      },
     }
   )
 
@@ -89,6 +112,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         method: t.String(),
         requestedBy: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Get valuation statistics",
+        description: "Get valuation statistics",
+      },
     }
   )
 
@@ -101,6 +129,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
       params: t.Object({
         propertyId: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Get valuation by ID",
+        description: "Get valuation by ID",
+      },
     }
   )
 
@@ -113,12 +146,17 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
       params: t.Object({
         propertyId: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Get latest property valuation",
+        description: "Get latest property valuation",
+      },
     }
   )
 
   // Get comparable properties
   .get(
-    "/:propertyId/comparables",
+    "/property/:propertyId/comparables",
     async ({ params, query }) =>
       await PropertyValuationService.getComparableProperties(
         params.propertyId,
@@ -133,12 +171,17 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         radius: t.Optional(t.Number()),
         limit: t.Optional(t.Number()),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Get comparable properties",
+        description: "Get comparable properties",
+      },
     }
   )
 
   // Get market analysis
   .get(
-    "/:propertyId/market-analysis",
+    "/property/:propertyId/market-analysis",
     async ({ params, query }) =>
       await PropertyValuationService.getMarketAnalysis(
         params.propertyId,
@@ -151,6 +194,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
       query: t.Object({
         radius: t.Optional(t.Number()),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Get market analysis",
+        description: "Get market analysis",
+      },
     }
   )
 
@@ -163,18 +211,28 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
       params: t.Object({
         propertyId: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Generate market analysis",
+        description: "Generate market analysis",
+      },
     }
   )
 
   // Get rental estimate
   .get(
-    "/:propertyId/rental-estimate",
+    "/property/:propertyId/rental-estimate",
     async ({ params }) =>
       await PropertyValuationService.getRentalEstimate(params.propertyId),
     {
       params: t.Object({
         propertyId: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Get rental estimate",
+        description: "Get rental estimate",
+      },
     }
   )
 
@@ -187,6 +245,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
       params: t.Object({
         propertyId: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Generate rental estimate",
+        description: "Generate rental estimate",
+      },
     }
   )
 
@@ -203,6 +266,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         propertyId: t.Optional(t.String()),
         period: t.Optional(t.String()),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Get valuation trends",
+        description: "Get valuation trends",
+      },
     }
   )
 
@@ -215,6 +283,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
       params: t.Object({
         portfolioId: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Get portfolio valuation",
+        description: "Get portfolio valuation",
+      },
     }
   )
 
@@ -227,6 +300,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
       query: t.Object({
         days: t.Optional(t.Number()),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Get valuation alerts",
+        description: "Get valuation alerts",
+      },
     }
   )
 
@@ -239,6 +317,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
       query: t.Object({
         propertyId: t.Optional(t.String()),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Get valuation alerts",
+        description: "Get valuation alerts",
+      },
     }
   )
 
@@ -258,6 +341,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         method: t.String(),
         requestedBy: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Bulk request valuations",
+        description: "Bulk request valuations",
+      },
     }
   )
 
@@ -296,12 +384,17 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
           requestedBy: t.String(),
         }),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Validate valuation",
+        description: "Validate valuation",
+      },
     }
   )
 
   // Validate valuation
   .post(
-    "/:id/validate",
+    "/property/:id/validate",
     async ({ params, body }) =>
       await PropertyValuationService.validateValuation(
         params.id,
@@ -314,6 +407,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
       body: t.Object({
         validationNotes: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Create valuation alert",
+        description: "Create valuation alert",
+      },
     }
   )
 
@@ -332,6 +430,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         alertType: t.String(),
         threshold: t.Number(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Update valuation alert",
+        description: "Update valuation alert",
+      },
     }
   )
 
@@ -349,6 +452,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         threshold: t.Optional(t.Number()),
         isActive: t.Optional(t.Boolean()),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Update valuation alert",
+        description: "Update valuation alert",
+      },
     }
   )
 
@@ -369,6 +477,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         frequency: t.String(),
         nextRunDate: t.Date(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Schedule automated valuation",
+        description: "Schedule automated valuation",
+      },
     }
   )
 
@@ -383,6 +496,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
       params: t.Object({
         id: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Schedule automated valuation",
+        description: "Schedule automated valuation",
+      },
     }
   )
 
@@ -395,6 +513,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
       params: t.Object({
         id: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Delete valuation alert",
+        description: "Delete valuation alert",
+      },
     }
   )
 
@@ -417,6 +540,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         ),
         format: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Export valuations",
+        description: "Export valuations",
+      },
     }
   )
 
@@ -434,6 +562,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
           requestedBy: t.String(),
         }),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Import valuations",
+        description: "Import valuations",
+      },
     }
   )
 
@@ -452,6 +585,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         format: t.String(),
         includeComparables: t.Boolean(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Generate valuation report",
+        description: "Generate valuation report",
+      },
     }
   )
 
@@ -472,5 +610,10 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         format: t.String(),
         includeDetails: t.Boolean(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Generate portfolio report",
+        description: "Generate portfolio report",
+      },
     }
   );
