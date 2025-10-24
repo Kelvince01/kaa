@@ -8,7 +8,7 @@ FROM oven/bun:1.1.38-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package.json bun.lockb ./
+COPY package.json bun.lock ./
 
 # Install dependencies (production only in final stage)
 RUN bun install --frozen-lockfile
@@ -41,7 +41,7 @@ WORKDIR /app
 COPY --from=builder --chown=kaaapi:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=kaaapi:nodejs /app/package.json ./
 COPY --from=builder --chown=kaaapi:nodejs /app/src ./src
-COPY --from=builder --chown=kaaapi:nodejs /app/bun.lockb ./
+COPY --from=builder --chown=kaaapi:nodejs /app/bun.lock ./
 
 # Create logs directory
 RUN mkdir -p /app/logs && chown kaaapi:nodejs /app/logs
@@ -50,11 +50,11 @@ RUN mkdir -p /app/logs && chown kaaapi:nodejs /app/logs
 USER kaaapi
 
 # Expose port
-EXPOSE 3000
+EXPOSE 5000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD bun --version > /dev/null && curl -f http://localhost:3000/health || exit 1
+    CMD bun --version > /dev/null && curl -f http://localhost:5000/health || exit 1
 
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
@@ -64,8 +64,8 @@ CMD ["bun", "run", "src/index.ts"]
 
 # Labels for better container management
 LABEL maintainer="Kaa Rental Platform Team" \
-      version="1.0.0" \
-      description="Kaa Rental Platform API - Kenya-specific rental management system" \
-      org.opencontainers.image.source="https://github.com/your-org/kaa-saas-mvp" \
-      org.opencontainers.image.title="Kaa Rental API" \
-      org.opencontainers.image.description="Production-ready rental platform API for Kenya market"
+    version="1.0.0" \
+    description="Kaa Rental Platform API - Kenya-specific rental management system" \
+    org.opencontainers.image.source="https://github.com/Kelvince01/kaa" \
+    org.opencontainers.image.title="Kaa Rental API" \
+    org.opencontainers.image.description="Production-ready rental platform API for Kenya market"
