@@ -37,6 +37,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { useFormWithDraft } from "@/hooks/use-draft-form";
 import type { Amenity, Property } from "@/modules/properties/property.type";
 import { useDraftStore } from "@/shared/stores/draft.store";
+import { useCreateProperty } from "../../property.mutations";
 import { useNewPropertyStore } from "../../property.store";
 import type { PropertyFormData } from "./schema";
 
@@ -58,6 +59,7 @@ export const ReviewInfo = ({
   const { nextStep } = useStepper();
   const { forms } = useDraftStore();
   const { setFinishedCreating } = useNewPropertyStore();
+  const createPropertyMutation = useCreateProperty();
 
   // Get draft data from all sections
   const basicData = forms["property-basic-info"] as PropertyFormData["basic"];
