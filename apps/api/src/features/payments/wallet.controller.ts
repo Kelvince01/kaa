@@ -1,9 +1,13 @@
 import config from "@kaa/config/api";
 import { User, Wallet, WalletTransaction } from "@kaa/models";
-import { TransactionStatus, TransactionType } from "@kaa/models/types";
+import {
+  type IWalletTransaction,
+  TransactionStatus,
+  TransactionType,
+} from "@kaa/models/types";
 import { mpesaService } from "@kaa/services";
 import { Elysia, t } from "elysia";
-import mongoose from "mongoose";
+import mongoose, { type FilterQuery } from "mongoose";
 import { authPlugin } from "../auth/auth.plugin";
 import { generateReference } from "./wallet.util";
 
@@ -12,13 +16,15 @@ export const walletController = new Elysia({ prefix: "/wallets" })
   // Get wallet balance
   .get(
     "/",
-    async ({ user }) => {
+    async ({ set, user }) => {
       const wallet = await Wallet.findOne({ userId: user.id });
 
       if (!wallet) {
-        throw new Error("Wallet not found");
+        set.status = 404;
+        return { status: "error", message: "Wallet not found" };
       }
 
+      set.status = 200;
       return {
         balance: wallet.balance,
         status: wallet.status,
@@ -368,15 +374,16 @@ export const walletController = new Elysia({ prefix: "/wallets" })
   // Get transaction history
   .get(
     "/transactions",
-    async ({ user, query }) => {
+    async ({ set, user, query }) => {
       const { page = 1, limit = 20, type, status } = query;
 
       const wallet = await Wallet.findOne({ userId: user.id });
       if (!wallet) {
-        throw new Error("Wallet not found");
+        set.status = 404;
+        return { status: "error", message: "Wallet not found" };
       }
 
-      const filter: any = { walletId: wallet._id };
+      const filter: FilterQuery<IWalletTransaction> = { walletId: wallet._id };
       if (type) filter.type = type;
       if (status) filter.status = status;
 
@@ -388,6 +395,7 @@ export const walletController = new Elysia({ prefix: "/wallets" })
 
       const total = await WalletTransaction.countDocuments(filter);
 
+      set.status = 200;
       return {
         transactions,
         pagination: {
@@ -400,10 +408,10 @@ export const walletController = new Elysia({ prefix: "/wallets" })
     },
     {
       query: t.Object({
-        page: t.Number({ minimum: 1 }),
-        limit: t.Number({ minimum: 1 }),
-        type: t.String(),
-        status: t.String(),
+        page: t.Optional(t.Number({ minimum: 1 })),
+        limit: t.Optional(t.Number({ minimum: 1 })),
+        type: t.Optional(t.String()),
+        status: t.Optional(t.String()),
       }),
       detail: {
         tags: ["wallets"],
