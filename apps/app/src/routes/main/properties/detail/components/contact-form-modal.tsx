@@ -178,34 +178,34 @@ export function ContactFormModal({
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
                 <AvatarImage
-                  alt={(landlord as any).profile.firstName}
-                  src={(landlord as any).profile.avatar}
+                  alt={(landlord as any).personalInfo.firstName}
+                  src={(landlord as any).personalInfo.avatar}
                 />
                 <AvatarFallback>
                   {getLandlordInitials(
-                    `${(landlord as any).profile.firstName} ${(landlord as any).profile.lastName}`
+                    `${(landlord as any).personalInfo.firstName} ${(landlord as any).personalInfo.lastName}`
                   )}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <h4 className="font-semibold text-sm">
-                  {(landlord as any).profile.firstName}
+                  {(landlord as any).personalInfo.firstName}
                 </h4>
-                {(landlord as any).profile.title && (
+                {(landlord as any)?.personalInfo.title && (
                   <p className="text-muted-foreground text-xs">
-                    {(landlord as any).profile.title}
+                    {(landlord as any).personalInfo.title}
                   </p>
                 )}
-                {(landlord as any).profile.responseTime && (
+                {(landlord as any)?.responseTime && (
                   <div className="mt-1 flex items-center gap-1">
                     <Clock className="h-3 w-3 text-primary" />
                     <span className="text-muted-foreground text-xs">
-                      Responds in {(landlord as any).profile.responseTime}
+                      Responds in {(landlord as any).responseTime}
                     </span>
                   </div>
                 )}
               </div>
-              {(landlord as any).status === "verified" && (
+              {(landlord as any)?.status === "verified" && (
                 <Badge
                   className="border-green-200 bg-green-50 text-green-700 text-xs"
                   variant="outline"

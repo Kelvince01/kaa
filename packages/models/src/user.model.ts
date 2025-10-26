@@ -473,9 +473,9 @@ userSchema.index({ createdAt: -1 });
 userSchema.index({ "activity.lastLogin": -1 });
 
 // Virtual fields
-userSchema.virtual("fullName").get(function (this: IUser) {
-  return `${this.profile.firstName} ${this.profile.lastName}`;
-});
+// userSchema.virtual("fullName").get(function (this: IUser) {
+//   return `${this.profile.firstName} ${this.profile.lastName}`;
+// });
 
 userSchema.virtual("displayName").get(function (this: IUser) {
   return this.profile.firstName;

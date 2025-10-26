@@ -50,10 +50,11 @@ export type RentPeriod = "week" | "month";
 /**
  * Furnished status type
  */
-export type FurnishedStatus =
-  | "unfurnished"
-  | "semi_furnished"
-  | "fully_furnished";
+export enum FurnishedStatus {
+  FULLY_FURNISHED = "fully_furnished",
+  UNFURNISHED = "unfurnished",
+  SEMI_FURNISHED = "semi_furnished",
+}
 
 /**
  * Property image interface
@@ -114,12 +115,13 @@ export enum PropertyStatus {
 /**
  * Property condition
  */
-export type PropertyCondition =
-  | "new"
-  | "excellent"
-  | "good"
-  | "fair"
-  | "needs_renovation";
+export enum PropertyCondition {
+  NEW = "new",
+  EXCELLENT = "excellent",
+  GOOD = "good",
+  FAIR = "fair",
+  NEEDS_RENOVATION = "needs_renovation",
+}
 
 /**
  * Road access type

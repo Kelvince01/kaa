@@ -176,7 +176,9 @@ export function PropertyPricingSidebar({
                 <span className="font-medium">Available From</span>
               </div>
               <p className="text-muted-foreground text-sm">
-                {formatDate(property.availability.availableFrom.toISOString())}
+                {formatDate(
+                  new Date(property.availability.availableFrom).toISOString()
+                )}
               </p>
               {/* {property.availability.leaseTerms && (
 								<p className="mt-1 text-muted-foreground text-xs">
@@ -214,39 +216,37 @@ export function PropertyPricingSidebar({
             <div className="mb-4 flex items-start gap-4">
               <Avatar className="h-12 w-12">
                 <AvatarImage
-                  alt={(landlord as any).profile.firstName}
-                  src={(landlord as any).profile.avatar}
+                  alt={(landlord as any).personalInfo.firstName}
+                  src={(landlord as any).personalInfo.avatar}
                 />
                 <AvatarFallback>
                   {getLandlordInitials(
-                    `${(landlord as any).profile.firstName} ${(landlord as any).profile.lastName}`
+                    `${(landlord as any).personalInfo.firstName} ${(landlord as any).personalInfo.lastName}`
                   )}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
                 <h3 className="truncate font-semibold">
-                  {(landlord as any).profile.firstName}
+                  {(landlord as any).personalInfo.firstName}
                 </h3>
-                {(landlord as any).profile.title && (
+                {(landlord as any).personalInfo.title && (
                   <p className="text-muted-foreground text-sm">
-                    {(landlord as any).profile.title}
+                    {(landlord as any).personalInfo.title}
                   </p>
                 )}
 
                 {/* Rating */}
-                {(landlord as any).profile.rating && (
+                {(landlord as any)?.rating && (
                   <div className="mt-2 flex items-center gap-2">
                     <div className="flex items-center">
-                      {getLandlordRatingDisplay(
-                        (landlord as any).profile.rating
-                      )}
+                      {getLandlordRatingDisplay((landlord as any).rating)}
                     </div>
                     <span className="text-muted-foreground text-sm">
-                      {(landlord as any).profile.rating.toFixed(1)}
+                      {(landlord as any).rating.toFixed(1)}
                     </span>
-                    {(landlord as any).profile.reviewCount && (
+                    {(landlord as any).reviewCount && (
                       <span className="text-muted-foreground text-xs">
-                        ({(landlord as any).profile.reviewCount} reviews)
+                        ({(landlord as any).reviewCount} reviews)
                       </span>
                     )}
                   </div>
@@ -255,17 +255,17 @@ export function PropertyPricingSidebar({
             </div>
 
             {/* Landlord Stats */}
-            {((landlord as any).responseTime ||
-              (landlord as any).profile.propertiesCount ||
-              (landlord as any).profile.yearsExperience) && (
+            {((landlord as any)?.responseTime ||
+              (landlord as any)?.propertiesCount ||
+              (landlord as any)?.yearsExperience) && (
               <div className="mb-4 grid grid-cols-2 gap-4 rounded-lg bg-muted/30 p-3">
-                {(landlord as any).profile.responseTime && (
+                {(landlord as any)?.responseTime && (
                   <div className="text-center">
                     <div className="mb-1 flex items-center justify-center">
                       <Clock className="mr-1 h-3 w-3 text-primary" />
                     </div>
                     <p className="font-medium text-xs">
-                      {(landlord as any).profile.responseTime}
+                      {(landlord as any).responseTime}
                     </p>
                     <p className="text-muted-foreground text-xs">
                       Response Time
@@ -273,7 +273,7 @@ export function PropertyPricingSidebar({
                   </div>
                 )}
 
-                {(landlord as any).profile.propertiesCount && (
+                {(landlord as any)?.propertiesCount && (
                   <div className="text-center">
                     <p className="font-medium text-xs">
                       {(landlord as any).profile.propertiesCount}
@@ -282,10 +282,10 @@ export function PropertyPricingSidebar({
                   </div>
                 )}
 
-                {(landlord as any).profile.yearsExperience && (
+                {(landlord as any)?.yearsExperience && (
                   <div className="col-span-2 text-center">
                     <p className="font-medium text-xs">
-                      {(landlord as any).profile.yearsExperience} years
+                      {(landlord as any).yearsExperience} years
                     </p>
                     <p className="text-muted-foreground text-xs">Experience</p>
                   </div>
@@ -294,36 +294,36 @@ export function PropertyPricingSidebar({
             )}
 
             {/* Landlord Bio */}
-            {(landlord as any).profile.bio && (
+            {(landlord as any)?.personalInfo.bio && (
               <div className="mb-4">
                 <h4 className="mb-2 font-medium">About</h4>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  {(landlord as any).profile.bio}
+                  {(landlord as any).personalInfo.bio}
                 </p>
               </div>
             )}
 
             {/* Contact Methods */}
             <div className="space-y-2">
-              {(landlord as any).profile.phone && (
+              {(landlord as any)?.personalInfo.phone && (
                 <div className="flex items-center gap-2 text-sm">
                   <Phone className="h-4 w-4 text-primary" />
-                  <span>{(landlord as any).profile.phone}</span>
+                  <span>{(landlord as any).personalInfo.phone}</span>
                 </div>
               )}
 
-              {(landlord as any).profile.email && (
+              {(landlord as any)?.personalInfo.email && (
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="h-4 w-4 text-primary" />
                   <span className="truncate">
-                    {(landlord as any).profile.email}
+                    {(landlord as any).personalInfo.email}
                   </span>
                 </div>
               )}
             </div>
 
             {/* Verification Badges */}
-            {(landlord as any).profile.isVerified && (
+            {(landlord as any)?.isVerified && (
               <div className="mt-4 border-t pt-4">
                 <div className="flex items-center gap-2">
                   <Badge
@@ -361,7 +361,7 @@ export function PropertyPricingSidebar({
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-sm">Listed:</span>
                 <span className="font-medium text-sm">
-                  {formatDate(property.createdAt.toISOString())}
+                  {formatDate(new Date(property.createdAt).toISOString())}
                 </span>
               </div>
             )}
@@ -373,7 +373,7 @@ export function PropertyPricingSidebar({
                     Updated:
                   </span>
                   <span className="font-medium text-sm">
-                    {formatDate(property.updatedAt.toISOString())}
+                    {formatDate(new Date(property.updatedAt).toISOString())}
                   </span>
                 </div>
               )}

@@ -709,7 +709,7 @@ landlordSchema.virtual("verificationProgress").get(function () {
 
 // Virtual for active violations count
 landlordSchema.virtual("activeViolationsCount").get(function () {
-  return this.performanceMetrics.violations.filter((v) => !v.resolved).length;
+  return this.performanceMetrics?.violations?.filter((v) => !v.resolved).length;
 });
 
 // Virtual for expiring documents count
@@ -717,7 +717,7 @@ landlordSchema.virtual("expiringDocumentsCount").get(function () {
   const thirtyDaysFromNow = new Date();
   thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-  return this.documents.filter(
+  return this.documents?.filter(
     (doc) =>
       doc.expiryDate && doc.expiryDate <= thirtyDaysFromNow && !doc.isExpired
   ).length;
@@ -728,7 +728,7 @@ landlordSchema.pre<ILandlord>("save", function (next) {
   const now = new Date();
 
   // Update document expiry status
-  for (const doc of this.documents) {
+  for (const doc of this.documents ?? []) {
     doc.isExpired = (doc.expiryDate && doc.expiryDate < now) as boolean;
   }
 

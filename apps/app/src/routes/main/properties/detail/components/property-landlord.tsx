@@ -90,12 +90,12 @@ export function PropertyLandlord({
         <div className="flex items-start gap-4">
           <Avatar className="h-16 w-16">
             <AvatarImage
-              alt={`${(landlord as any).profile.firstName} ${(landlord as any).profile.lastName}`}
-              src={(landlord as any).profile.avatar}
+              alt={`${(landlord as any).personalInfo.firstName} ${(landlord as any).personalInfo.lastName}`}
+              src={(landlord as any).personalInfo.avatar}
             />
             <AvatarFallback className="bg-primary text-lg text-primary-foreground">
               {getInitials(
-                `${(landlord as any).profile.firstName} ${(landlord as any).profile.lastName}`
+                `${(landlord as any).personalInfo.firstName} ${(landlord as any).personalInfo.lastName}`
               )}
             </AvatarFallback>
           </Avatar>
@@ -103,8 +103,8 @@ export function PropertyLandlord({
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-lg">
-                {(landlord as any).profile.firstName}{" "}
-                {(landlord as any).profile.lastName}
+                {(landlord as any).personalInfo.firstName}{" "}
+                {(landlord as any).personalInfo.lastName}
               </h3>
               {landlordExtras.verificationStatus === "verified" && (
                 <div className="flex items-center gap-1">
@@ -170,11 +170,11 @@ export function PropertyLandlord({
 
           <div className="grid grid-cols-2 gap-2">
             <Button
-              disabled={!(landlord as any).contact.phone}
+              disabled={!(landlord as any).personalInfo.phone}
               onClick={() => {
-                if ((landlord as any).contact.phone) {
+                if ((landlord as any).personalInfo.phone) {
                   window.open(
-                    `tel:${(landlord as any).contact.phone}`,
+                    `tel:${(landlord as any).personalInfo.phone}`,
                     "_self"
                   );
                 }
@@ -187,11 +187,11 @@ export function PropertyLandlord({
             </Button>
 
             <Button
-              disabled={!(landlord as any).contact.phone}
+              disabled={!(landlord as any).personalInfo.phone}
               onClick={() => {
-                if ((landlord as any).contact.phone) {
+                if ((landlord as any).personalInfo.phone) {
                   window.open(
-                    `https://wa.me/${(landlord as any).contact.phone?.replace(/[^0-9]/g, "")}`,
+                    `https://wa.me/${(landlord as any).personalInfo.phone?.replace(/[^0-9]/g, "")}`,
                     "_blank"
                   );
                 }
@@ -258,10 +258,12 @@ export function PropertyLandlord({
               )}
 
               {/* Location */}
-              {(landlord as any).contact.primaryAddress && (
+              {(landlord as any)?.contactInfo.primaryAddress && (
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <MapPin className="h-4 w-4" />
-                  <span>{(landlord as any).contact.primaryAddress.line1}</span>
+                  <span>
+                    {(landlord as any).contactInfo.primaryAddress.line1}
+                  </span>
                 </div>
               )}
             </div>

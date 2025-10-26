@@ -296,16 +296,16 @@ export function PropertyCard({
                 <div className="flex items-center gap-2">
                   <Avatar className="h-6 w-6">
                     <AvatarImage
-                      src={(property.landlord as any).profile.avatar}
+                      src={(property.landlord as any).personalInfo.avatar}
                     />
                     <AvatarFallback className="text-xs">
-                      {(property.landlord as any).profile.firstName?.[0]}
-                      {(property.landlord as any).profile.lastName?.[0]}
+                      {(property.landlord as any).personalInfo.firstName?.[0]}
+                      {(property.landlord as any).personalInfo.lastName?.[0]}
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-muted-foreground text-sm">
-                    {(property.landlord as any).profile.firstName}{" "}
-                    {(property.landlord as any).profile.lastName}
+                    {(property.landlord as any).personalInfo.firstName}{" "}
+                    {(property.landlord as any).personalInfo.lastName}
                   </span>
                 </div>
 
@@ -491,15 +491,17 @@ export function PropertyCard({
           <div className="flex items-center justify-between border-t pt-2">
             <div className="flex items-center gap-2">
               <Avatar className="h-6 w-6">
-                <AvatarImage src={(property.landlord as any).profile.avatar} />
+                <AvatarImage
+                  src={(property.landlord as any).personalInfo.avatar}
+                />
                 <AvatarFallback className="text-xs">
-                  {(property.landlord as any).profile.firstName?.[0]}
-                  {(property.landlord as any).profile.lastName?.[0]}
+                  {(property.landlord as any).personalInfo.firstName?.[0]}
+                  {(property.landlord as any).personalInfo.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
               <span className="text-muted-foreground text-xs">
-                {(property.landlord as any).profile.firstName}{" "}
-                {(property.landlord as any).profile.lastName}
+                {(property.landlord as any).personalInfo.firstName}{" "}
+                {(property.landlord as any).personalInfo.lastName}
               </span>
             </div>
 

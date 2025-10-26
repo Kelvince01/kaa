@@ -831,45 +831,48 @@ export const reviewController = new Elysia().group("reviews", (app) =>
 
     // ==================== MODERATION ENDPOINTS (ADMIN/MODERATOR) ====================
 
-    .use(accessPlugin("reviews", "*")) // manage
+    .group("/", (app) =>
+      app
+        .use(accessPlugin("reviews", "read")) // manage
 
-    /**
-     * Get pending reviews for moderation
-     */
-    .get(
-      "/moderation/pending",
-      async ({ set, query }) => {
-        try {
-          const result = await reviewsService.getPendingReviews(
-            query.page ? Number.parseInt(query.page, 10) : 1,
-            query.limit ? Number.parseInt(query.limit, 10) : 20
-          );
+        /**
+         * Get pending reviews for moderation
+         */
+        .get(
+          "/moderation/pending",
+          async ({ set, query }) => {
+            try {
+              const result = await reviewsService.getPendingReviews(
+                query.page ? Number.parseInt(query.page, 10) : 1,
+                query.limit ? Number.parseInt(query.limit, 10) : 20
+              );
 
-          set.status = 200;
-          return {
-            status: "success",
-            data: result,
-          };
-        } catch (error) {
-          set.status = 500;
-          return {
-            status: "error",
-            message: (error as Error).message,
-          };
-        }
-      },
-      {
-        query: t.Object({
-          page: t.Optional(t.String()),
-          limit: t.Optional(t.String()),
-        }),
-        detail: {
-          tags: ["reviews", "moderation"],
-          summary: "Get pending reviews",
-          description:
-            "Get reviews pending moderation. Requires moderation permission.",
-        },
-      }
+              set.status = 200;
+              return {
+                status: "success",
+                data: result,
+              };
+            } catch (error) {
+              set.status = 500;
+              return {
+                status: "error",
+                message: (error as Error).message,
+              };
+            }
+          },
+          {
+            query: t.Object({
+              page: t.Optional(t.String()),
+              limit: t.Optional(t.String()),
+            }),
+            detail: {
+              tags: ["reviews", "moderation"],
+              summary: "Get pending reviews",
+              description:
+                "Get reviews pending moderation. Requires moderation permission.",
+            },
+          }
+        )
     )
 
     /**

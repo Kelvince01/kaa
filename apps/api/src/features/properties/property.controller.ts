@@ -223,7 +223,7 @@ export const propertyController = new Elysia()
         set.status = 200;
         return {
           status: "success",
-          data: property,
+          property,
         };
       } catch (error) {
         const err = error as Error;

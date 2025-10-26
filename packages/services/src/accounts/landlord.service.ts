@@ -21,8 +21,8 @@ export const getLandlordById = async (id: string, populate: string[] = []) => {
     let query = Landlord.findById(id);
 
     const defaultPopulates = [
-      "user:firstName lastName email phone",
-      "properties:title location totalUnits",
+      "user:profile contact",
+      "properties:title location", // totalUnits
       "organizationId:name",
     ];
 
@@ -311,7 +311,7 @@ export const getLandlords = async (params: LandlordQueryParams) => {
 
     // Build populate array
     const defaultPopulates = [
-      "user:firstName lastName email phone",
+      "user:profile contact",
       "properties:title location",
       "organizationId:name",
     ];
@@ -356,7 +356,7 @@ export const createLandlord = async (
 ): Promise<ILandlord> => {
   try {
     // Check for existing landlord with same email or registration number
-    const existingQuery: any = {};
+    const existingQuery: FilterQuery<ILandlord> = {};
 
     if (landlordData.personalInfo?.email) {
       existingQuery["personalInfo.email"] = landlordData.personalInfo.email;
@@ -498,7 +498,11 @@ export const createLandlord = async (
     await newLandlord.save();
 
     await newLandlord.populate([
-      { path: "user", select: "firstName lastName email phone" },
+      {
+        path: "user",
+        select:
+          "profile.firstName profile.lastName contact.email contact.phone",
+      },
       { path: "properties", select: "title location" },
       { path: "organizationId", select: "name" },
     ]);

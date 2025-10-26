@@ -1,4 +1,10 @@
-import { ListingType, PropertyStatus, PropertyType } from "@kaa/models/types";
+import {
+  FurnishedStatus,
+  ListingType,
+  PropertyCondition,
+  PropertyStatus,
+  PropertyType,
+} from "@kaa/models/types";
 import { t } from "elysia";
 
 // ==================== REUSABLE SCHEMAS ====================
@@ -294,19 +300,9 @@ export const createPropertySchema = t.Object({
 
   bedrooms: t.Number(),
   bathrooms: t.Number(),
-  furnished: t.Enum({
-    unfurnished: "unfurnished",
-    semi_furnished: "semi_furnished",
-    fully_furnished: "fully_furnished",
-  }),
+  furnished: t.Enum(FurnishedStatus),
   totalArea: t.Optional(t.Number()),
-  condition: t.Enum({
-    new: "new",
-    excellent: "excellent",
-    good: "good",
-    fair: "fair",
-    needs_renovation: "needs_renovation",
-  }),
+  condition: t.Enum(PropertyCondition),
 
   rent: t.Number(),
   deposit: t.Number(),

@@ -3,7 +3,7 @@ import {
   LandlordType,
   VerificationStatus,
 } from "@kaa/models/types";
-import { landlordService } from "@kaa/services";
+import { landlordService, memberService } from "@kaa/services";
 // import { triggerWebhooks } from "~/features/misc/webhooks/webhooks.service";
 import { clearCache } from "@kaa/utils";
 import Elysia, { t } from "elysia";
@@ -30,6 +30,7 @@ const landlordOperationsCounter = new prom.Counter({
 
 // Define schemas for validation
 const createLandlordSchema = t.Object({
+  userId: t.Optional(t.String()),
   landlordType: t.Union([
     t.Literal(LandlordType.INDIVIDUAL),
     t.Literal(LandlordType.COMPANY),
@@ -596,11 +597,23 @@ export const landlordController = new Elysia().group("landlords", (app) =>
         try {
           const landlordData = body;
 
+          let memberId = "";
+          if (body.userId) {
+            const member = await memberService.getMemberBy({
+              user: body.userId,
+            });
+            memberId = (member?._id as mongoose.Types.ObjectId).toString();
+          }
+
           // Add memberId from authenticated user
           const createData = {
             ...landlordData,
-            user: new mongoose.Types.ObjectId(user.id),
-            memberId: new mongoose.Types.ObjectId(user.memberId),
+            user: body.userId
+              ? body.userId
+              : new mongoose.Types.ObjectId(user.id),
+            memberId: memberId
+              ? new mongoose.Types.ObjectId(memberId)
+              : undefined,
             personalInfo: {
               ...landlordData.personalInfo,
               dateOfBirth: new Date(
@@ -647,7 +660,10 @@ export const landlordController = new Elysia().group("landlords", (app) =>
           set.status = 201;
           return {
             status: "success",
-            data: newLandlord,
+            data: {
+              _id: (newLandlord?._id as mongoose.Types.ObjectId).toString(),
+              personalInfo: newLandlord.personalInfo,
+            },
             message: "Landlord created successfully",
           };
         } catch (error: any) {
@@ -772,7 +788,10 @@ export const landlordController = new Elysia().group("landlords", (app) =>
 
           return {
             status: "success",
-            data: updatedLandlord,
+            data: {
+              ...updatedLandlord,
+              _id: (updatedLandlord?._id as mongoose.Types.ObjectId).toString(),
+            },
             message: "Landlord updated successfully",
           };
         } catch (error: any) {

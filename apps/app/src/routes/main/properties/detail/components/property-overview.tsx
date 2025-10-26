@@ -301,7 +301,9 @@ export function PropertyOverview({
                   <span className="text-muted-foreground">Available From:</span>
                   <p className="font-medium">
                     {formatDate(
-                      property.availability.availableFrom.toISOString()
+                      new Date(
+                        property.availability.availableFrom
+                      ).toISOString()
                     )}
                   </p>
                 </div>
@@ -313,7 +315,7 @@ export function PropertyOverview({
                   </span>
                   <p className="font-medium">
                     {formatDate(
-                      property.availability.availableTo.toISOString()
+                      new Date(property.availability.availableTo).toISOString()
                     )}
                   </p>
                 </div>

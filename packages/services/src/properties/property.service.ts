@@ -137,8 +137,8 @@ export const getPropertyById = async (
     let query = Property.findById(id);
 
     const defaultPopulates = [
-      "landlord:firstName lastName email phone avatar createdAt",
-      "agent:firstName lastName email phone",
+      "landlord:personalInfo contactInfo createdAt",
+      "agent:user",
       "memberId:email phone",
       "organizationId:name",
       "media.virtualTours:title description type status scenes analytics metadata publishedAt",
@@ -403,7 +403,7 @@ export const getProperties = async (params: PropertyQueryParams) => {
 
     // Build populate array
     const defaultPopulates = [
-      "landlord:personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone", // verified
+      "landlord:personalInfo", // verified
       "agent:user",
       "memberId:email phone",
     ];

@@ -1,8 +1,17 @@
 import { Button } from "@kaa/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@kaa/ui/components/dropdown-menu";
 import { Input } from "@kaa/ui/components/input";
 // import { DataTableToolbarActions } from "@/components/ui/data-table/data-table-toolbar-actions";
 import type { Table } from "@tanstack/react-table";
-import { Plus, Search } from "lucide-react";
+import { ChevronDown, Plus, Search, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { DataTableExportButton } from "@/components/ui/data-table/data-table-export-button";
 import { DataTableFilterToggle } from "@/components/ui/data-table/data-table-filter-toggle";
@@ -26,6 +35,7 @@ export function PropertiesTableActionBar<TData>({
   onSearch,
   searchPlaceholder = "Search properties...",
 }: PropertiesTableActionBarProps<TData>) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = React.useState("");
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,10 +66,39 @@ export function PropertiesTableActionBar<TData>({
       <div className="flex items-center space-x-2">
         <DataTableViewOptions table={table} />
         <DataTableExportButton onExport={onExport} />
-        <Button className="h-8" onClick={onAddProperty} size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Property
-        </Button>
+        
+        {/* Add Property Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="h-8" size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Property
+              <ChevronDown className="ml-2 h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Choose Form Version</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onAddProperty}>
+              <Plus className="mr-2 h-4 w-4" />
+              <div className="flex flex-col">
+                <span className="font-medium">Quick Form (Sheet)</span>
+                <span className="text-muted-foreground text-xs">
+                  Inline quick entry
+                </span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/dashboard/properties/new-v4")}>
+              <Sparkles className="mr-2 h-4 w-4 text-primary" />
+              <div className="flex flex-col">
+                <span className="font-medium">Enhanced Form (V4)</span>
+                <span className="text-muted-foreground text-xs">
+                  Full wizard with validation
+                </span>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
