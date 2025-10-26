@@ -103,8 +103,9 @@ export function ViewingScheduler({ property }: ViewingSchedulerProps) {
       <CardContent className="space-y-6">
         {/* Calendar */}
         <div>
-          {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
-          <label className="font-medium text-sm">Select a Date</label>
+          <label className="font-medium text-sm" htmlFor="date">
+            Select a Date
+          </label>
           <CalendarComponent
             className="mt-1 rounded-md border"
             disabled={{ before: new Date() }}
@@ -116,8 +117,9 @@ export function ViewingScheduler({ property }: ViewingSchedulerProps) {
 
         {/* Time Slot Picker */}
         <div>
-          {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
-          <label className="font-medium text-sm">Select a Time Slot</label>
+          <label className="font-medium text-sm" htmlFor="time-slot">
+            Select a Time Slot
+          </label>
           <div className="mt-1 grid grid-cols-3 gap-2">
             {availableTimeSlots.map((time) => (
               <Button
@@ -134,8 +136,9 @@ export function ViewingScheduler({ property }: ViewingSchedulerProps) {
 
         {/* Viewing Type */}
         <div>
-          {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
-          <label className="font-medium text-sm">Viewing Type</label>
+          <label className="font-medium text-sm" htmlFor="viewing-type">
+            Viewing Type
+          </label>
           <Select
             onValueChange={(value: any) => setViewingType(value)}
             value={viewingType}
@@ -152,8 +155,9 @@ export function ViewingScheduler({ property }: ViewingSchedulerProps) {
 
         {/* Additional Notes */}
         <div>
-          {/* biome-ignore lint/a11y/noLabelWithoutControl: ignore */}
-          <label className="font-medium text-sm">Additional Notes</label>
+          <label className="font-medium text-sm" htmlFor="additional-notes">
+            Additional Notes
+          </label>
           <Textarea
             className="mt-1"
             onChange={(e) => setAdditionalNotes(e.target.value)}

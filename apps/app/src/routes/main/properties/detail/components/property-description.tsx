@@ -269,7 +269,7 @@ export function PropertyDescription({
         <div>
           <h3 className="mb-4 font-semibold">Building Amenities</h3>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-            {Object.values(property.amenities)?.map((amenity, index) => (
+            {Object.keys(property.amenities)?.map((amenity, index) => (
               // <div key={index.toString()} className="flex items-center gap-2 rounded bg-muted/30 p-2">
               // 	{amenity.icon && <span className="text-sm">{amenity.icon}</span>}
               // 	<span className="text-sm">{amenity.name}</span>
@@ -325,7 +325,7 @@ export function PropertyDescription({
             <div className="space-y-3">
               <DetailRow
                 label="Utilities Included"
-                value={Object.values(property.pricing.utilitiesIncluded)?.join(
+                value={Object.keys(property.pricing.utilitiesIncluded)?.join(
                   ", "
                 )}
               />
@@ -501,7 +501,15 @@ function DetailRow({ label, value, className }: DetailRowProps) {
   return (
     <div className="flex items-center justify-between py-1">
       <span className="text-muted-foreground text-sm">{label}</span>
-      <span className={cn("font-medium text-sm", className)}>{value}</span>
+      <span className={cn("font-medium text-sm", className)}>
+        {value
+          .split(",")
+          .map((v) => v.trim())
+          .map((v) =>
+            v.length > 0 ? v.charAt(0).toUpperCase() + v.slice(1) : ""
+          )
+          .join(", ")}
+      </span>
     </div>
   );
 }
