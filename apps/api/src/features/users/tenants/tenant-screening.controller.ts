@@ -17,6 +17,11 @@ export const tenantScreeningController = new Elysia({
         screeningType: t.Enum(ScreeningType),
         requestedBy: t.String(),
       }),
+      detail: {
+        tags: ["tenant-screening"],
+        summary: "Initiate tenant screening",
+        description: "Initiate a tenant screening process",
+      },
     }
   )
 
@@ -26,6 +31,11 @@ export const tenantScreeningController = new Elysia({
       await TenantScreeningService.getScreeningById(params.id),
     {
       params: t.Object({ id: t.String() }),
+      detail: {
+        tags: ["tenant-screening"],
+        summary: "Get tenant screening by ID",
+        description: "Get a tenant screening by ID",
+      },
     }
   )
 
@@ -35,6 +45,11 @@ export const tenantScreeningController = new Elysia({
       await TenantScreeningService.getScreeningsByTenant(params.tenantId),
     {
       params: t.Object({ tenantId: t.String() }),
+      detail: {
+        tags: ["tenant-screening"],
+        summary: "Get tenant screenings by tenant ID",
+        description: "Get tenant screenings by tenant ID",
+      },
     }
   )
 
@@ -44,5 +59,10 @@ export const tenantScreeningController = new Elysia({
       await TenantScreeningService.getScreeningsByLandlord(params.landlordId),
     {
       params: t.Object({ landlordId: t.String() }),
+      detail: {
+        tags: ["tenant-screening"],
+        summary: "Get tenant screenings by landlord ID",
+        description: "Get tenant screenings by landlord ID",
+      },
     }
   );

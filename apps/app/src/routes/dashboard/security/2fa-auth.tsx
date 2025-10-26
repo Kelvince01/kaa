@@ -23,9 +23,8 @@ import {
   Shield,
   Smartphone,
 } from "lucide-react";
-import Image from "next/image";
 import type React from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -48,10 +47,22 @@ type VerificationFormData = z.infer<typeof verificationSchema>;
 const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ onSuccess }) => {
   const [setupStep, setSetupStep] = useState(0); // 0: status, 1: setup, 2: verify, 3: backup codes
   const [setupData, setSetupData] = useState<{
-    qrCodeUrl: string;
+    qrCode: string;
     secret: string;
   } | null>(null);
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
+
+  const qrCode = useMemo(() => {
+    if (!setupData?.qrCode) return null;
+    if (setupData.qrCode.startsWith("image/png;base64,")) {
+      return setupData.qrCode.replace(
+        "image/png;base64,",
+        "data:image/png;base64,"
+      );
+    }
+
+    return setupData.qrCode;
+  }, [setupData]);
 
   const {
     twoFactorStatus,
@@ -73,7 +84,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ onSuccess }) => {
     try {
       const result = await setup2FAMutation.mutateAsync();
       if (result) {
-        setSetupData(result);
+        setSetupData(result.data);
         setSetupStep(1);
       }
     } catch (error) {
@@ -269,14 +280,12 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ onSuccess }) => {
                 </p>
                 <div className="ml-8 flex justify-center">
                   <div className="rounded-lg border border-gray-200 bg-white p-4">
-                    <Image
+                    {/** biome-ignore lint/nursery/useImageSize: ignore */}
+                    {/** biome-ignore lint/performance/noImgElement: ignore */}
+                    <img
                       alt="QR Code for 2FA"
                       className="h-48 w-48"
-                      src={setupData.qrCodeUrl}
-                      style={{
-                        maxWidth: "100%",
-                        height: "auto",
-                      }}
+                      src={qrCode ?? ""}
                     />
                   </div>
                 </div>

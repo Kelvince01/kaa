@@ -1,16 +1,18 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { CreatePropertyData, PropertyType } from "@kaa/models/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type UseFormReturn, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useBeforeUnload } from "@/hooks/use-before-unload";
 import { useDraftStore } from "@/shared/stores/draft.store";
+import { useCreateProperty } from "../../../property.mutations";
+import type { Property } from "../../../property.type";
 import {
   defaultPropertyFormValues,
   type PropertyFormData,
   propertyFormSchema,
 } from "../schema";
-import type { Property } from "../types/property.type";
 
 type UseEnhancedFormOptions = {
   propertyId?: string;
@@ -29,6 +31,157 @@ type FormState = {
   connectionStatus: "online" | "offline" | "unstable";
 };
 
+// Transform PropertyFormData to CreatePropertyData format
+function transformPropertyFormData(
+  formData: PropertyFormData
+): CreatePropertyData {
+  // Create a basic structure that matches the expected API format
+  // This will need to be refined based on the actual CreatePropertyData interface
+  const transformedData: any = {
+    // Basic property info
+    title: formData.basic.title,
+    description: formData.basic.description,
+    type: formData.basic.type,
+    listingType: formData.basic.listingType,
+
+    // Location - flatten the nested structure
+    county: formData.location.county,
+    constituency: formData.location.constituency,
+    country: formData.location.country || "Kenya",
+    address: formData.location.address.line1,
+    town: formData.location.address.town,
+    postalCode: formData.location.address.postalCode,
+    neighborhood: formData.location.neighborhood,
+    landmark: formData.location.landmark,
+
+    // Coordinates
+    coordinates: formData.location.coordinates
+      ? [formData.location.coordinates.lng, formData.location.coordinates.lat]
+      : undefined,
+
+    // Property details
+    bedrooms: formData.details.bedrooms,
+    bathrooms: formData.details.bathrooms,
+    size: formData.details.size,
+    floor: formData.details.floor,
+    totalFloors: formData.details.totalFloors,
+    yearBuilt: formData.details.yearBuilt,
+    condition: formData.details.condition,
+    orientation: formData.details.orientation,
+    view: formData.details.view,
+
+    // Pricing
+    rentAmount: formData.pricing.rentAmount,
+    currency: formData.pricing.currency,
+    paymentFrequency: formData.pricing.paymentFrequency,
+    securityDeposit: formData.pricing.securityDeposit,
+    serviceCharge: formData.pricing.serviceCharge,
+    utilitiesIncluded: formData.pricing.utilitiesIncluded,
+    negotiable: formData.pricing.negotiable,
+    minimumStay: formData.pricing.minimumStay,
+    maximumStay: formData.pricing.maximumStay,
+    advancePayment: formData.pricing.advancePayment,
+
+    // Features and amenities
+    amenities: formData.features.amenities,
+    accessibility: formData.features.accessibility,
+    safety: formData.features.safety,
+    appliances: formData.features.appliances,
+    utilities: formData.features.utilities,
+    features: formData.features.features,
+    furnished: formData.basic.furnished,
+    petPolicy: formData.basic.petPolicy,
+    smokingPolicy: formData.basic.smokingPolicy,
+
+    // Availability
+    status: formData.availability.status,
+    availableFrom: formData.availability.availableFrom?.toISOString(),
+    availableTo: formData.availability.availableTo?.toISOString(),
+    noticePeriod: formData.availability.noticePeriod,
+    instantBooking: formData.availability.instantBooking,
+    minimumNotice: formData.availability.minimumNotice,
+    maximumBookingsPerDay: formData.availability.maximumBookingsPerDay,
+
+    // Media
+    images: formData.media.photos.map((photo, index) => ({
+      url: photo.url,
+      caption: photo.caption,
+      isPrimary: photo.isPrimary || index === 0,
+    })),
+    videos: formData.media.videos?.map((video) => ({
+      url: video.url,
+      thumbnail: video.thumbnail,
+      duration: video.duration,
+      caption: video.caption,
+    })),
+    virtualTour: formData.media.virtualTour,
+
+    // Contact
+    ...(formData.contact && {
+      preferredContact: formData.contact.preferredContact,
+      phoneNumber: formData.contact.phoneNumber,
+      whatsappNumber: formData.contact.whatsappNumber,
+      showingInstructions: formData.contact.showingInstructions,
+      responseTime: formData.contact.responseTime,
+      languages: formData.contact.languages,
+    }),
+
+    // Tags
+    tags: formData.basic.tags,
+
+    // Metadata
+    source: formData.metadata?.source || "manual",
+    version: formData.metadata?.version || 1,
+    draft: formData.metadata?.draft ?? true,
+  };
+
+  const transformedCreateData: CreatePropertyData = {
+    title: formData.basic.title,
+    description: formData.basic.description,
+    type: formData.basic.type as PropertyType,
+    county: formData.location.county,
+    estate: formData.location.neighborhood || "",
+    address: formData.location.address.line1,
+    coordinates: formData.location.coordinates
+      ? {
+          latitude: formData.location.coordinates.lat,
+          longitude: formData.location.coordinates.lng,
+        }
+      : { latitude: 0, longitude: 0 },
+    bedrooms: formData.details.bedrooms,
+    bathrooms: formData.details.bathrooms,
+    furnished: formData.basic.furnished,
+    totalArea: formData.details.size,
+    condition: formData.details.condition,
+    rent: formData.pricing.rentAmount,
+    deposit: formData.pricing.securityDeposit || 0,
+    paymentFrequency: formData.pricing.paymentFrequency as any,
+    advanceMonths: formData.pricing.advancePayment,
+    depositMonths: formData.pricing.securityDeposit || 0,
+    amenities: formData.features.amenities ?? [
+      "wifi",
+      "water",
+      "electricity",
+      "internet",
+    ],
+    images: formData.media.photos.map((photo) => photo.url),
+    availableFrom: formData.availability.availableFrom
+      ? new Date(formData.availability.availableFrom).toISOString()
+      : new Date().toISOString(),
+    viewingContact: formData.contact?.preferredContact
+      ? {
+          name: formData.contact.preferredContact,
+          phone: formData.contact.phoneNumber,
+        }
+      : { name: "John Doe", phone: "+254712345678" },
+    petsAllowed: formData.basic.petPolicy === "allowed",
+    minimumLease: formData.pricing.minimumStay || 0,
+    tags: formData.basic.tags,
+  };
+
+  return transformedCreateData;
+}
+
 export function useEnhancedForm({
   propertyId,
   autoSaveInterval = 30_000, // 30 seconds
@@ -38,6 +191,7 @@ export function useEnhancedForm({
 }: UseEnhancedFormOptions = {}) {
   const queryClient = useQueryClient();
   const { forms, setForm, resetForm } = useDraftStore();
+  const createPropertyMutation = useCreateProperty();
   const [formState, setFormState] = useState<FormState>({
     isDirty: false,
     isSaving: false,
@@ -135,19 +289,9 @@ export function useEnhancedForm({
 
   // Manual save mutation for explicit saves
   const saveMutation = useMutation({
-    mutationFn: async (data: PropertyFormData) => {
-      // Replace with actual API call
-      const response = await fetch(
-        `/api/properties${propertyId ? `/${propertyId}` : ""}`,
-        {
-          method: propertyId ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to save property");
-      return response.json();
+    mutationFn: (data: PropertyFormData) => {
+      const transformedData = transformPropertyFormData(data);
+      return createPropertyMutation.mutateAsync(transformedData);
     },
     onSuccess: (property: Property) => {
       setFormState((prev) => ({
@@ -250,12 +394,21 @@ export function useEnhancedForm({
   // Manual save function
   const save = useCallback(async () => {
     const isValid = await form.trigger();
-    if (!isValid) {
-      toast.error("Please fix validation errors before saving");
-      return;
-    }
+
+    console.log("isValid", isValid);
+    console.log("form.formState.errors", form.formState.errors);
+    console.log("form.formState.isDirty", form.formState.isDirty);
+    console.log("form.formState.isValid", form.formState.isValid);
+
+    // if (!isValid) {
+    //   toast.error("Please fix validation errors before saving");
+    //   return;
+    // }
 
     const data = form.getValues();
+
+    console.log("data", data);
+
     return saveMutation.mutateAsync(data);
   }, [form, saveMutation]);
 

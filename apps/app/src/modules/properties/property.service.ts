@@ -1,3 +1,4 @@
+import type { CreatePropertyData, UpdatePropertyData } from "@kaa/models/types";
 import { httpClient } from "@/lib/axios";
 import type {
   AddressValidationResult,
@@ -73,7 +74,7 @@ export const getPropertiesByOrganization = async (
 
 // Create property
 export const createProperty = async (
-  propertyData: Partial<Property>
+  propertyData: CreatePropertyData
 ): Promise<Property> => {
   const response = await httpClient.api.post("/properties", propertyData);
   return response.data.property;
@@ -82,7 +83,7 @@ export const createProperty = async (
 // Update property
 export const updateProperty = async (
   id: string,
-  propertyData: Partial<Property>
+  propertyData: UpdatePropertyData
 ): Promise<Property> => {
   const response = await httpClient.api.patch(
     `/properties/${id}`,
@@ -148,8 +149,9 @@ export const getUserProperties = async (
   userId: string,
   filters: PropertySearchParams = {}
 ): Promise<PropertyListResponse> => {
-  const response = await httpClient.api.get(`/users/${userId}/properties`, {
-    params: filters,
+  // const response = await httpClient.api.get(`/users/${userId}/properties`, {
+  const response = await httpClient.api.get("/properties", {
+    params: { ...filters, landlordId: userId },
   });
   return response.data;
 };

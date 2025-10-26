@@ -483,7 +483,7 @@ export const defaultPropertyFormValues: Partial<PropertyFormData> = {
     },
   },
   pricing: {
-    rentAmount: 0,
+    rentAmount: 50_000,
     currency: "KES" as const,
     paymentFrequency: "monthly" as const,
     negotiable: false,

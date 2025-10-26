@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/performance/useTopLevelRegex: <explanation> */
+/** biome-ignore-all lint/performance/useTopLevelRegex: ignore */
 import type { VerificationResult } from "@kaa/models/types";
 import axios from "axios";
 import {

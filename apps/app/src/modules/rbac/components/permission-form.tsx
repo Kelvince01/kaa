@@ -71,8 +71,22 @@ export function PermissionForm({
   const resource = form.watch("resource");
   const action = form.watch("action");
 
-  const formatDescription = (action: PermissionAction, resource: string) =>
-    `Ability to ${action === PermissionAction.CREATE ? "create new" : action} ${action === PermissionAction.READ ? "view" : action} ${action === PermissionAction.UPDATE ? "edit" : action} ${resource}.`;
+  const actionDescriptions: Record<PermissionAction, string> = {
+    [PermissionAction.CREATE]: "create new",
+    [PermissionAction.READ]: "view",
+    [PermissionAction.UPDATE]: "edit",
+    [PermissionAction.DELETE]: "delete",
+    [PermissionAction.APPROVE]: "approve",
+    [PermissionAction.REJECT]: "reject",
+    [PermissionAction.MANAGE]: "manage",
+    [PermissionAction.EXPORT]: "export",
+    [PermissionAction.IMPORT]: "import",
+  };
+
+  const formatDescription = (action: PermissionAction, resource: string) => {
+    const actionText = actionDescriptions[action] || action.toLowerCase();
+    return `Ability to ${actionText} ${resource}.`;
+  };
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: ignore
   useEffect(() => {

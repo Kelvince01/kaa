@@ -28,7 +28,7 @@ export const RoleSchema = new mongoose.Schema<IRole>(
 
 export const PermissionSchema = new mongoose.Schema<IPermission>(
   {
-    name: { type: String, required: true },
+    name: { type: String, required: true, unique: true },
     description: String,
     resource: { type: String, required: true },
     action: { type: String, required: true, enum: PermissionAction },
@@ -49,6 +49,7 @@ export const PermissionSchema = new mongoose.Schema<IPermission>(
       },
     ],
     isSystem: { type: Number, required: true, default: 0 },
+    category: { type: String, required: true, default: "custom" },
   },
   { timestamps: true }
 );
@@ -103,7 +104,6 @@ export const UserRoleSchema = new mongoose.Schema<IUserRole>(
     assignedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
     assignedAt: { type: Date, default: Date.now },
     expiresAt: Date,

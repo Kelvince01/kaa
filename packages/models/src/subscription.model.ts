@@ -242,7 +242,7 @@ subscriptionSchema.index({ userId: 1 }, { unique: true });
 subscriptionSchema.index({ memberId: 1 });
 subscriptionSchema.index({ status: 1 });
 subscriptionSchema.index({ endDate: 1 });
-subscriptionSchema.index({ stripeSubscriptionId: 1 }, { unique: true });
+// subscriptionSchema.index({ stripeSubscriptionId: 1 }, { unique: true });
 
 // Virtual for days remaining
 subscriptionSchema.virtual("daysRemaining").get(function (this: ISubscription) {

@@ -82,6 +82,22 @@ export const financialController = new Elysia({
                 _id: (report._id as mongoose.Types.ObjectId).toString(),
                 property: report.property?.toString(),
                 landlord: report.landlord.toString(),
+                data: {
+                  ...report.data,
+                  expenses: {
+                    ...report.data.expenses,
+                    depreciation: {
+                      ...report.data.expenses.depreciation,
+                      assets: report.data.expenses.depreciation.assets.map(
+                        (asset) => ({
+                          assetId: asset.assetId.toString(),
+                          assetName: asset.assetName,
+                          depreciationAmount: asset.depreciationAmount,
+                        })
+                      ),
+                    },
+                  },
+                },
               })),
               pagination: {
                 total: reports.length,
@@ -142,10 +158,16 @@ export const financialController = new Elysia({
             propertyId
           );
 
+          const reportObj = report.toObject();
+
           set.status = 201;
           return {
             status: "success",
-            data: report,
+            data: {
+              ...reportObj,
+              _id: (reportObj._id as mongoose.Types.ObjectId).toString(),
+              landlord: reportObj.landlord.toString(),
+            },
           };
         } catch (error) {
           logger.error("Error generating financial report:", error);
@@ -168,6 +190,104 @@ export const financialController = new Elysia({
           summary: "Generate financial report",
           description:
             "Generate a new financial report (profit/loss, tax summary, etc.)",
+        },
+      }
+    )
+
+    .use(accessPlugin("financial", "read"))
+    .get(
+      "/reports/:id",
+      async ({ set, user, params }) => {
+        try {
+          const { id } = params;
+          const report = await financialService.getFinancialReport(id, user.id);
+
+          if (!report) {
+            set.status = 404;
+            return {
+              status: "error",
+              message: "Financial report not found",
+            };
+          }
+
+          set.status = 200;
+          return {
+            status: "success",
+            data: {
+              ...report.toObject(),
+              _id: (report._id as mongoose.Types.ObjectId).toString(),
+              property: report.property?.toString(),
+              landlord: report.landlord.toString(),
+              createdAt: report.createdAt.toString(),
+              updatedAt: report.updatedAt.toString(),
+            },
+          };
+        } catch (error) {
+          logger.error("Error fetching financial report:", error);
+          set.status = 500;
+          return {
+            status: "error",
+            message: "Failed to fetch financial report",
+          };
+        }
+      },
+      {
+        params: t.Object({ id: t.String() }),
+        response: {
+          200: t.Object({
+            status: t.Literal("success"),
+            data: financialReportSchema,
+          }),
+          404: t.Object({
+            status: t.Literal("error"),
+            message: t.String(),
+          }),
+          500: t.Object({
+            status: t.Literal("error"),
+            message: t.String(),
+          }),
+        },
+        detail: {
+          summary: "Get financial report",
+          description:
+            "Retrieve a financial report for the authenticated landlord",
+        },
+      }
+    )
+
+    // Download financial report
+    .use(accessPlugin("financial", "read"))
+    .get(
+      "/reports/:id/download",
+      async ({ set, user, params }) => {
+        try {
+          const { id } = params;
+          const reportBuffer = await financialService.downloadFinancialReport(
+            id,
+            user.id
+          );
+          // Return as a Response with PDF headers
+          return new Response(reportBuffer, {
+            headers: {
+              "Content-Type": "application/pdf",
+              "Content-Disposition": `attachment; filename="financial-report-${id}.pdf"`, // Triggers download
+            },
+          });
+        } catch (error) {
+          logger.error("Error downloading financial report:", error);
+          set.status = 500;
+          return {
+            status: "error",
+            message: "Failed to download financial report",
+          };
+        }
+      },
+      {
+        params: t.Object({ id: t.String() }),
+        detail: {
+          summary: "Download financial report",
+          description:
+            "Download a financial report for the authenticated landlord",
         },
       }
     )
@@ -253,12 +373,15 @@ export const financialController = new Elysia({
             Number(taxYear)
           );
 
+          const reportObj = report.toObject();
+
           set.status = 201;
           return {
             status: "success",
             data: {
-              ...report,
-              _id: (report._id as mongoose.Types.ObjectId).toString(),
+              ...reportObj,
+              _id: (reportObj._id as mongoose.Types.ObjectId).toString(),
+              landlord: reportObj.landlord.toString(),
             },
           };
         } catch (error) {
@@ -395,7 +518,38 @@ export const financialController = new Elysia({
           set.status = 201;
           return {
             status: "success",
-            data: expense,
+            data: {
+              ...expense.toObject(),
+              _id: (expense._id as mongoose.Types.ObjectId).toString(),
+              property: expense.property?.toString(),
+              landlord: expense.landlord.toString(),
+              createdAt: expense.createdAt.toString(),
+              updatedAt: expense.updatedAt.toString(),
+              status: expense.status,
+              taxDeductible: expense.taxDeductible,
+              category: expense.category,
+              subcategory: expense.subcategory,
+              description: expense.description,
+              amount: expense.amount,
+              currency: expense.currency,
+              date: expense.date.toString(),
+              receipt: expense.receipt
+                ? {
+                    url: expense.receipt.url,
+                    filename: expense.receipt.filename,
+                    uploadedAt: expense.receipt.uploadedAt.toString(),
+                  }
+                : undefined,
+              vendor: expense.vendor,
+              recurring: expense.recurring
+                ? {
+                    isRecurring: expense.recurring.isRecurring,
+                    frequency: expense.recurring.frequency,
+                    nextDue: expense.recurring.nextDue?.toString(),
+                    endDate: expense.recurring.endDate?.toString(),
+                  }
+                : undefined,
+            },
           };
         } catch (error) {
           logger.error("Error creating expense:", error);
@@ -692,7 +846,14 @@ export const financialController = new Elysia({
           set.status = 201;
           return {
             status: "success",
-            data: asset,
+            data: {
+              ...asset.toObject(),
+              _id: (asset._id as mongoose.Types.ObjectId).toString(),
+              property: asset.property?.toString(),
+              landlord: asset.landlord.toString(),
+              createdAt: asset.createdAt.toString(),
+              updatedAt: asset.updatedAt.toString(),
+            },
           };
         } catch (error) {
           logger.error("Error creating asset:", error);

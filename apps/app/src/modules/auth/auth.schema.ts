@@ -5,6 +5,7 @@ export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   rememberMe: z.boolean().optional(),
+  recaptchaToken: z.string().optional(),
 });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
@@ -38,9 +39,15 @@ export const registerSchema = z
     role: z.enum(["tenant", "landlord"], {
       message: "Please select whether you are a tenant or landlord",
     }),
-    agreeToTerms: z.boolean().refine((val) => val === true, {
+    acceptTerms: z.boolean().refine((val) => val === true, {
       message: "You must agree to the terms and conditions",
     }),
+    // acceptPrivacyPolicy: z.boolean().refine((val) => val === true, {
+    //   message: "You must agree to the privacy policy",
+    // }),
+    // acceptMarketingEmails: z.boolean().refine((val) => val === true, {
+    //   message: "You must agree to receive marketing emails",
+    // }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",

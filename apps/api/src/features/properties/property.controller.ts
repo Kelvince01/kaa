@@ -10,9 +10,13 @@
  * - Recommendations and insights
  */
 
-import type { IProperty } from "@kaa/models/types";
+import {
+  type IBaseProperty,
+  ListingType,
+  PropertyStatus,
+} from "@kaa/models/types";
 import { AmenityService, propertyService } from "@kaa/services";
-import { clearCache, logger } from "@kaa/utils";
+import { clearCache, logger, slugify } from "@kaa/utils";
 import Elysia, { t } from "elysia";
 import mongoose from "mongoose";
 import * as prom from "prom-client";
@@ -467,7 +471,7 @@ export const propertyController = new Elysia()
         propertyOperationsCounter.inc({ operation: "create" });
 
         // Ensure landlord is set to current user if not provided
-        const propertyData = {
+        /*const propertyData_ = {
           ...body,
           landlord: new mongoose.Types.ObjectId(body.landlord || user.id),
           agent: body.agent
@@ -488,11 +492,197 @@ export const propertyController = new Elysia()
             ...body.pricing,
             paymentFrequency: body.pricing?.paymentFrequency || "monthly",
           },
+        };*/
+
+        const propertyData: IBaseProperty = {
+          title: body.title,
+          description: body.description,
+          type: body.type,
+          slug: slugify(body.title),
+          landlord: new mongoose.Types.ObjectId(user.id),
+          status: PropertyStatus.DRAFT,
+          aiInsights: {
+            marketValue: 0,
+            rentPrediction: 0,
+            occupancyScore: 0,
+            investmentScore: 0,
+            maintenanceRisk: "low",
+            lastUpdated: new Date(),
+          },
+          utilities: {
+            electricity: {
+              provider: "KPLC",
+              meterNumber: "1234567890",
+              averageMonthlyBill: 0,
+            },
+            water: {
+              provider: "Nairobi Water",
+              meterNumber: "1234567890",
+              averageMonthlyBill: 0,
+            },
+            internet: {
+              available: true,
+              providers: ["Safaricom", "Airtel", "Vodafone"],
+            },
+            waste: {
+              collectionDay: "Monday",
+              provider: "Kahawa Waste Management",
+            },
+            // garbage: {
+            //   collectionDay: "",
+            //   provider: "",
+            // },
+          },
+          compliance: {
+            titleDeed: false,
+            occupancyCertificate: false,
+            fireCompliance: false,
+            environmentalCompliance: false,
+            countyApprovals: ["Building Permit", "Occupancy Certificate"],
+            insurancePolicy: "KPLC Insurance",
+            lastInspection: new Date("2025-01-01"),
+          },
+          listingType: ListingType.RENT,
+          specifications: {
+            bedrooms: body.bedrooms,
+            bathrooms: body.bathrooms,
+            furnished: body.furnished,
+            totalArea: body.totalArea,
+            condition: body.condition,
+            halfBaths: 0, //  body.halfBaths,
+            kitchens: 1, //  body.kitchens,
+            livingRooms: 1, //  body.livingRooms,
+            diningRooms: 0, //  body.diningRooms,
+            floors: 1, //  body.floors,
+          },
+          location: {
+            country: "Kenya",
+            county: body.county,
+            constituency: "Westlands",
+            ward: "Westlands",
+            estate: body.estate,
+            address: {
+              line1: body.address,
+              town: "Nairobi",
+              postalCode: "00100",
+            },
+            coordinates: {
+              latitude: body.coordinates.latitude,
+              longitude: body.coordinates.longitude,
+            },
+            nearbyTransport: ["matatu", "bus", "train"],
+            walkingDistanceToRoad: 0,
+            accessRoad: "tarmac",
+            nearbyAmenities: ["school", "hospital", "shopping", "church"],
+          },
+          geolocation: {
+            type: "Point",
+            coordinates: [
+              body.coordinates.longitude,
+              body.coordinates.latitude,
+            ],
+          },
+          amenities: {
+            water: true,
+            electricity: true,
+            parking: true,
+            security: true,
+            generator: true,
+            internet: true,
+            lift: true,
+            compound: true,
+            gate: true,
+            perimeter: true,
+            cctv: true,
+            garden: true,
+            swimmingPool: true,
+            gym: true,
+            solarPower: true,
+            dstv: true,
+            cableTv: true,
+            storeRoom: true,
+            servantQuarter: true,
+            studyRoom: true,
+            balcony: true,
+            laundry: true,
+            cleaning: true,
+            caretaker: true,
+            borehole: true,
+          },
+          pricing: {
+            rent: body.rent,
+            deposit: body.deposit,
+            serviceFee: body.serviceFee,
+            currency: "KES",
+            paymentFrequency: body.paymentFrequency || "monthly",
+            advanceMonths: body.advanceMonths || 1,
+            depositMonths: body.depositMonths || 2,
+            utilitiesIncluded: {
+              water: true,
+              electricity: true,
+              internet: true,
+              garbage: true,
+              security: true,
+            },
+            negotiable: false,
+          },
+          rules: {
+            petsAllowed: body.petsAllowed,
+            minimumLease: body.minimumLease,
+            smokingAllowed: false,
+            partiesAllowed: false,
+            childrenAllowed: true,
+            creditCheckRequired: false,
+            employmentVerification: false,
+            previousLandlordReference: false,
+            customRules: [],
+          },
+          availability: {
+            isAvailable: true,
+            viewingDays: [
+              {
+                day: "monday",
+                startTime: "09:00",
+                endTime: "17:00",
+              },
+            ],
+            viewingContact: {
+              name: body.viewingContact.name,
+              phone: body.viewingContact.phone,
+              preferredMethod: "call",
+            },
+            availableFrom: body.availableFrom
+              ? new Date(body.availableFrom)
+              : undefined,
+          },
+          media: {
+            images: body.images.map((image) => ({
+              id: image,
+              url: image,
+              thumbnailUrl: image,
+              caption: image,
+              isPrimary: true,
+              order: 0,
+              uploadedAt: new Date(),
+            })),
+          },
+          tags: body.tags || [],
+          featured: false,
+          verified: false,
+          governingLaw: "Laws of Kenya",
+          jurisdiction: "Kenya",
+          moderationStatus: "pending",
+          lastUpdatedAt: new Date(),
+          isPromoted: false,
+          stats: {
+            views: 0,
+            inquiries: 0,
+            applications: 0,
+            bookmarks: 0,
+          },
         };
 
-        const property = await propertyService.createProperty(
-          propertyData as Partial<IProperty>
-        );
+        const property = await propertyService.createProperty(propertyData);
 
         // Clear cache
         await clearCache("properties:*");

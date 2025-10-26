@@ -203,8 +203,9 @@ export function LocationForm({
 
       // Mock reverse geocoding - in real app, use actual service
       try {
+        const apiKey = process.env.OPENCAGE_API_KEY;
         const response = await fetch(
-          `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=YOUR_API_KEY&language=en&pretty=1`
+          `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${apiKey}&language=en&pretty=1`
         );
 
         if (response.ok) {

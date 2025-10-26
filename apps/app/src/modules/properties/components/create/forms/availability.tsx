@@ -221,6 +221,18 @@ export function AvailabilityForm({
   const watchedValues = form.watch();
 
   const handleSubmit = (data: AvailabilityFormData) => {
+    console.log("data", data);
+    console.log("watchedValues", watchedValues);
+    console.log("form.formState.errors", form.formState.errors);
+    console.log("form.formState.isSubmitting", form.formState.isSubmitting);
+    console.log("form.formState.isDirty", form.formState.isDirty);
+    console.log("form.formState.isValid", form.formState.isValid);
+    console.log("form.formState.isValidating", form.formState.isValidating);
+    console.log("form.formState.isSubmitted", form.formState.isSubmitted);
+    console.log(
+      "form.formState.isSubmitSuccessful",
+      form.formState.isSubmitSuccessful
+    );
     onSubmit(data);
     onNext();
   };

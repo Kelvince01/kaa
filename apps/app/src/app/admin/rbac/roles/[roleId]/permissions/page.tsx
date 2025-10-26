@@ -60,13 +60,14 @@ const RESOURCE_CATEGORIES: Record<string, string[]> = {
   ],
   Applications: ["applications", "tenants", "savedSearches"],
   Contracts: ["contracts", "leases"],
-  Payments: [
+  Financials: [
     "payments",
     "mpesaPayments",
     "paymentMethods",
     "transactions",
     "wallets",
     "subscriptions",
+    "financial",
   ],
   Bookings: ["bookings", "viewings"],
   Communication: [

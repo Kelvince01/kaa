@@ -258,34 +258,14 @@ const mediaSchema = t.Object({
 
 // ==================== REQUEST SCHEMAS ====================
 
-export const createPropertySchema = t.Object({
+export const createPropertySchema_v1 = t.Object({
   title: t.String({ minLength: 10 }),
   description: t.String({ minLength: 50 }),
-  type: t.Union([
-    t.Literal(PropertyType.HOUSE),
-    t.Literal(PropertyType.FLAT),
-    t.Literal(PropertyType.APARTMENT),
-    t.Literal(PropertyType.STUDIO),
-    t.Literal(PropertyType.BEDSITTER),
-    t.Literal(PropertyType.MAISONETTE),
-    t.Literal(PropertyType.PENTHOUSE),
-    t.Literal(PropertyType.VILLA),
-    t.Literal(PropertyType.LAND),
-    t.Literal(PropertyType.SHOP),
-    t.Literal(PropertyType.OFFICE),
-    t.Literal(PropertyType.WAREHOUSE),
-    t.Literal(PropertyType.COMMERCIAL),
-    t.Literal(PropertyType.OTHER),
-  ]),
-  listingType: t.Union([
-    t.Literal(ListingType.RENT),
-    t.Literal(ListingType.SALE),
-    t.Literal(ListingType.AUCTION),
-    t.Literal(ListingType.EXCHANGE),
-  ]),
+  type: t.Enum(PropertyType),
+  listingType: t.Enum(ListingType),
   landlord: t.String(),
   agent: t.Optional(t.String()),
-  memberId: t.String(),
+  memberId: t.Optional(t.String()),
   organizationId: t.Optional(t.String()),
   location: locationSchema,
   pricing: pricingSchema,
@@ -294,6 +274,65 @@ export const createPropertySchema = t.Object({
   rules: t.Optional(rulesSchema),
   availability: t.Optional(availabilitySchema),
   media: t.Optional(mediaSchema),
+  tags: t.Optional(t.Array(t.String())),
+});
+
+export const createPropertySchema = t.Object({
+  title: t.String({ minLength: 10 }),
+  description: t.String({ minLength: 50 }),
+  type: t.Enum(PropertyType),
+  county: t.String(),
+  estate: t.String(),
+  address: t.String(),
+  coordinates: t.Object({
+    latitude: t.Number(),
+    longitude: t.Number(),
+  }),
+  nearbyAmenities: t.Optional(t.Array(t.String())),
+  plotNumber: t.Optional(t.String()),
+  buildingName: t.Optional(t.String()),
+
+  bedrooms: t.Number(),
+  bathrooms: t.Number(),
+  furnished: t.Enum({
+    unfurnished: "unfurnished",
+    semi_furnished: "semi_furnished",
+    fully_furnished: "fully_furnished",
+  }),
+  totalArea: t.Optional(t.Number()),
+  condition: t.Enum({
+    new: "new",
+    excellent: "excellent",
+    good: "good",
+    fair: "fair",
+    needs_renovation: "needs_renovation",
+  }),
+
+  rent: t.Number(),
+  deposit: t.Number(),
+  serviceFee: t.Optional(t.Number()),
+  paymentFrequency: t.Enum({
+    monthly: "monthly",
+    quarterly: "quarterly",
+    annually: "annually",
+  }),
+  advanceMonths: t.Number(),
+  depositMonths: t.Number(),
+
+  amenities: t.Array(t.String()),
+
+  images: t.Array(t.String()),
+
+  availableFrom: t.Optional(t.String()),
+
+  viewingContact: t.Object({
+    name: t.String(),
+    phone: t.String(),
+  }),
+
+  petsAllowed: t.Boolean(),
+  minimumLease: t.Number(),
+
   tags: t.Optional(t.Array(t.String())),
 });
 

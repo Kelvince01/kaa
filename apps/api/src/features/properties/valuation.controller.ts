@@ -364,6 +364,11 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
         valuationType: t.String(),
         priority: t.String(),
       }),
+      detail: {
+        tags: ["valuations"],
+        summary: "Bulk request valuations",
+        description: "Bulk request valuations",
+      },
     }
   )
 
@@ -386,8 +391,8 @@ export const valuationController = new Elysia({ prefix: "/valuations" })
       }),
       detail: {
         tags: ["valuations"],
-        summary: "Validate valuation",
-        description: "Validate valuation",
+        summary: "Bulk update valuations",
+        description: "Bulk update valuations",
       },
     }
   )

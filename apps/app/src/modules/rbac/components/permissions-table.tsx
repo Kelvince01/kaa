@@ -423,7 +423,11 @@ export const getPermissionsTableColumns = ({
       <DataTableColumnHeader column={column} title="Created" />
     ),
     cell: ({ row }) => (
-      <span>{format(new Date(row.original.createdAt), "PP")}</span>
+      <span>
+        {row.original.createdAt
+          ? format(new Date(row.original.createdAt), "PP")
+          : "-"}
+      </span>
     ),
   },
   {

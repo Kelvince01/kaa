@@ -89,6 +89,7 @@ const ContactForm = ({ dialog: isDialog }: { dialog?: boolean }) => {
 
   const cancel = () => {
     form.reset();
+    // biome-ignore lint/nursery/noUnusedExpressions: we need to remove the dialog if it is open
     isDialog && dialog.remove();
   };
 

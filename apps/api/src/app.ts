@@ -1,7 +1,6 @@
 import "../instrument"; // Must be the first import
 
 import { etag } from "@bogeychan/elysia-etag";
-import { logger } from "@chneau/elysia-logger";
 import cookie from "@elysiajs/cookie";
 import { serverTiming } from "@elysiajs/server-timing";
 import staticPlugin from "@elysiajs/static";
@@ -44,10 +43,10 @@ import { geoIP } from "./shared/utils/geo-ip.util";
 import { WSRoutes } from "./ws.routes";
 
 const idDev = config.env !== "production";
-const app = new Elysia();
+const app = new Elysia({ name: "Kaa API" });
 
 app
-  .use(logger())
+  .use(Logestic.preset("common"))
   // Add correlation ID middleware (replaces request ID)
   .use(correlationPlugin)
   // Add error handling middleware
@@ -91,7 +90,6 @@ app
   )
   .use(cookie())
   .use(serverTiming())
-  .use(Logestic.preset("common"))
   .use(
     staticPlugin({
       prefix: "/",

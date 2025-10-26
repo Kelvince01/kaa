@@ -27,6 +27,10 @@ export const roleSchema = t.Object({
   name: t.String({ minLength: 1, maxLength: 50 }),
   description: t.Optional(t.String()),
   isSystem: t.Optional(t.Boolean()),
+  createdAt: t.Optional(t.String()),
+  updatedAt: t.Optional(t.String()),
+  level: t.Optional(t.Numeric()),
+  permissionCount: t.Optional(t.Numeric()),
 });
 
 export const conditionSchema = t.Object({
@@ -50,6 +54,9 @@ export const permissionSchema = t.Object({
   resource: t.String({ minLength: 1 }),
   description: t.Optional(t.String()),
   conditions: t.Optional(t.Array(conditionSchema)),
+  isSystem: t.Optional(t.Numeric()),
+  createdAt: t.Optional(t.String()),
+  updatedAt: t.Optional(t.String()),
 });
 
 export const notificationPreferenceSchema = t.Object({

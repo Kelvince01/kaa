@@ -165,6 +165,7 @@ export function useFormWithDraft<
   }, []);
 
   // Create a subscription to form changes using watch with callback
+  // biome-ignore lint/correctness/useExhaustiveDependencies: form object is stable and should not trigger re-subscription
   useEffect(() => {
     if (loading) {
       return;
@@ -194,15 +195,17 @@ export function useFormWithDraft<
     });
 
     return () => subscription.unsubscribe();
-  }, [loading, form, formId, cleanValues, setForm]);
+  }, [loading, formId]);
 
   // Separate effect for handling unsaved changes cleanup
+  // This runs when unsavedChanges is set and checks current isDirty state
+  // biome-ignore lint/correctness/useExhaustiveDependencies: accessing form.formState.isDirty, resetForm from Zustand is stable
   useEffect(() => {
     if (!loading && unsavedChanges && !form.formState.isDirty) {
       setUnsavedChanges(false);
       resetForm(formId);
     }
-  }, [loading, unsavedChanges, form.formState.isDirty, resetForm, formId]);
+  }, [loading, unsavedChanges, formId]);
 
   return {
     ...form,

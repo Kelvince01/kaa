@@ -106,8 +106,11 @@ const NewProperty = ({ newProperty = "stepper" }: NewPropertyProps) => {
                         </AvailabilityInfoForm>
                       )}
                       {id === "review" && (
-                        <ReviewInfo property={property as Property}>
-                          <StepperFooter />
+                        <ReviewInfo
+                          callback={onCreateProperty}
+                          property={property as Property}
+                        >
+                          <StepperFooter property={property} />
                         </ReviewInfo>
                       )}
                     </CardContent>

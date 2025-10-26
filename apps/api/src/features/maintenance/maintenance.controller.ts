@@ -607,47 +607,50 @@ export const maintenanceController = new Elysia().group("maintenance", (app) =>
         },
       }
     )
-    .use(accessPlugin("maintenance", "delete"))
-    .use(tenantPlugin)
-    .delete(
-      "/:requestId",
-      async ({ params, set }) => {
-        try {
-          const { requestId } = params;
+    .group("/", (app) =>
+      app
+        .use(accessPlugin("maintenance", "delete"))
+        .use(tenantPlugin)
+        .delete(
+          "/:requestId",
+          async ({ params, set }) => {
+            try {
+              const { requestId } = params;
 
-          const maintenanceRequest = await Maintenance.findById(requestId);
+              const maintenanceRequest = await Maintenance.findById(requestId);
 
-          if (!maintenanceRequest) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Maintenance request not found",
-            };
+              if (!maintenanceRequest) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Maintenance request not found",
+                };
+              }
+
+              await maintenanceRequest.deleteOne();
+
+              return {
+                status: "success",
+                data: null,
+                message: "Maintenance request deleted successfully",
+              };
+            } catch (error) {
+              set.status = 500;
+              return {
+                status: "error",
+                message: "Failed to delete maintenance request",
+              };
+            }
+          },
+          {
+            params: t.Object({
+              requestId: t.String(),
+            }),
+            detail: {
+              tags: ["maintenance"],
+              summary: "Delete a maintenance request",
+            },
           }
-
-          await maintenanceRequest.deleteOne();
-
-          return {
-            status: "success",
-            data: null,
-            message: "Maintenance request deleted successfully",
-          };
-        } catch (error) {
-          set.status = 500;
-          return {
-            status: "error",
-            message: "Failed to delete maintenance request",
-          };
-        }
-      },
-      {
-        params: t.Object({
-          requestId: t.String(),
-        }),
-        detail: {
-          tags: ["maintenance"],
-          summary: "Delete a maintenance request",
-        },
-      }
+        )
     )
 );

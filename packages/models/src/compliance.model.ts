@@ -6,6 +6,7 @@ import {
   type IComplianceRecord,
   type ILegalTemplate,
   type IRegulatoryReport,
+  LegalTemplateType,
 } from "./types/compliance.type";
 
 const complianceRecordSchema = new Schema<IComplianceRecord>(
@@ -175,7 +176,7 @@ const legalTemplateSchema = new Schema<ILegalTemplate>(
     },
     type: {
       type: String,
-      enum: ["lease_agreement", "notice", "contract", "form", "letter"],
+      enum: Object.values(LegalTemplateType),
       required: true,
     },
     category: {

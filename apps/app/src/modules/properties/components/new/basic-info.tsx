@@ -67,19 +67,25 @@ export const BasicInfoForm = ({
   const [showTemplates, setShowTemplates] = useState(false);
 
   const isPending = false;
-  const initialFormValues: PropertyFormData["basic"] = property
-    ? {
-        title: property.title,
-        description: property.description,
-        type: property.type,
-        listingType: property.listingType ?? ("rent" as any),
-      }
-    : {
-        title: "",
-        description: "",
-        type: "",
-        listingType: "rent" as any,
-      };
+
+  // Memoize initial form values to prevent unnecessary re-renders
+  const initialFormValues: PropertyFormData["basic"] = useMemo(
+    () =>
+      property
+        ? {
+            title: property.title,
+            description: property.description,
+            type: property.type,
+            listingType: property.listingType ?? ("rent" as any),
+          }
+        : {
+            title: "",
+            description: "",
+            type: "",
+            listingType: "rent" as any,
+          },
+    [property]
+  );
 
   // Hide fields if requested
   if (hiddenFields) {
@@ -249,10 +255,13 @@ export const BasicInfoForm = ({
   }, [watchedValues.type]);
 
   // Generate suggestions when property type changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: functions are stable via useCallback with correct deps
   useEffect(() => {
-    generateTitleSuggestions();
-    generateDescriptionTemplates();
-  }, [generateTitleSuggestions, generateDescriptionTemplates]);
+    if (watchedValues.type) {
+      generateTitleSuggestions();
+      generateDescriptionTemplates();
+    }
+  }, [watchedValues.type]);
 
   // Prevent data loss
   useBeforeUnload({

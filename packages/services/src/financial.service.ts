@@ -8,6 +8,7 @@ import {
   TaxReport,
 } from "@kaa/models";
 import type {
+  IExpense,
   IExpenseData,
   IFinancialReport,
   IFinancialSummary,
@@ -15,9 +16,11 @@ import type {
   ITaxReport,
 } from "@kaa/models/types";
 import { logger } from "@kaa/utils";
+import { getStreamAsBuffer } from "get-stream";
 import { DateTime } from "luxon";
 import type mongoose from "mongoose";
 import type { FilterQuery } from "mongoose";
+import PDFDocument from "pdfkit";
 
 export class FinancialService {
   /**
@@ -88,6 +91,473 @@ export class FinancialService {
       logger.error("Error generating financial report:", error);
       throw new Error("Failed to generate financial report");
     }
+  }
+
+  async getFinancialReport(
+    id: string,
+    userId: string
+  ): Promise<IFinancialReport | null> {
+    const report = await FinancialReport.findOne({
+      _id: id,
+      landlord: userId,
+    });
+    if (!report) {
+      return null;
+    }
+
+    return report.toObject();
+  }
+
+  async downloadFinancialReport(id: string, userId: string): Promise<Buffer> {
+    const report = await this.getFinancialReport(id, userId);
+    if (!report) {
+      throw new Error("Financial report not found");
+    }
+
+    const pdfBuffer = await this.generatePDF(report);
+    return pdfBuffer;
+  }
+
+  private async generatePDF(report: IFinancialReport): Promise<Buffer> {
+    // Create a new PDF document with professional settings
+    const doc = new PDFDocument({
+      size: "A4",
+      margins: {
+        top: 50,
+        bottom: 50,
+        left: 50,
+        right: 50,
+      },
+      info: {
+        Title: `Financial Report - ${report.reportType}`,
+        Author: "Kaa Platform",
+        Subject: `${report.reportType} Report`,
+        CreationDate: new Date(),
+        Creator: "Kaa Platform",
+        Keywords:
+          "financial report, property management, rental income, expenses, net income, cash flow",
+      },
+    });
+
+    // Define colors
+    const colors = {
+      primary: "#2563eb", // Blue
+      secondary: "#64748b", // Slate
+      success: "#16a34a", // Green
+      danger: "#dc2626", // Red
+      background: "#f8fafc",
+      text: "#1e293b",
+      lightText: "#64748b",
+      border: "#e2e8f0",
+    };
+
+    let currentY = 50;
+    let pageNumber = 1;
+
+    // Helper function to add footer (called for current page only)
+    const addFooter = () => {
+      const footerY = doc.page.height - 50;
+      doc
+        .fontSize(9)
+        .fillColor(colors.lightText)
+        .font("Helvetica")
+        .text(`Page ${pageNumber}`, 50, footerY, {
+          align: "center",
+          width: doc.page.width - 100,
+        });
+    };
+
+    // Helper function to add header
+    const addHeader = () => {
+      doc
+        .fontSize(24)
+        .fillColor(colors.primary)
+        .font("Helvetica-Bold")
+        .text("FINANCIAL REPORT", 50, currentY);
+
+      currentY += 35;
+
+      // Report metadata
+      doc
+        .fontSize(10)
+        .fillColor(colors.lightText)
+        .font("Helvetica")
+        .text(
+          `Report Type: ${this.formatReportType(report.reportType)}`,
+          50,
+          currentY
+        );
+      doc.text(
+        `Period: ${this.formatDate(report.period.startDate)} - ${this.formatDate(report.period.endDate)}`,
+        50,
+        currentY + 15
+      );
+      doc.text(
+        `Generated: ${this.formatDate(report.generatedAt)}`,
+        50,
+        currentY + 30
+      );
+
+      currentY += 60;
+
+      // Horizontal line
+      doc
+        .strokeColor(colors.border)
+        .lineWidth(1)
+        .moveTo(50, currentY)
+        .lineTo(545, currentY)
+        .stroke();
+
+      currentY += 20;
+    };
+
+    // Helper function to check if we need a new page
+    const checkPageBreak = (requiredSpace: number) => {
+      if (currentY + requiredSpace > doc.page.height - 80) {
+        addFooter(); // Add footer to current page before creating new one
+        doc.addPage();
+        pageNumber++;
+        currentY = 50;
+      }
+    };
+
+    // Helper function to add section header
+    const addSectionHeader = (title: string) => {
+      checkPageBreak(40);
+      doc
+        .fontSize(16)
+        .fillColor(colors.primary)
+        .font("Helvetica-Bold")
+        .text(title, 50, currentY);
+      currentY += 30;
+    };
+
+    // Helper function to add key metric box
+    const addMetricBox = (
+      label: string,
+      value: string,
+      x: number,
+      y: number,
+      isPositive?: boolean
+    ) => {
+      const boxWidth = 160;
+      const boxHeight = 70;
+
+      // Background
+      doc.rect(x, y, boxWidth, boxHeight).fillColor(colors.background).fill();
+
+      // Border
+      doc
+        .rect(x, y, boxWidth, boxHeight)
+        .strokeColor(colors.border)
+        .lineWidth(1)
+        .stroke();
+
+      // Label
+      doc
+        .fontSize(9)
+        .fillColor(colors.lightText)
+        .font("Helvetica")
+        .text(label, x + 10, y + 12, {
+          width: boxWidth - 20,
+        });
+
+      // Value
+      const valueColor =
+        isPositive !== undefined
+          ? isPositive
+            ? colors.success
+            : colors.danger
+          : colors.text;
+      doc
+        .fontSize(18)
+        .fillColor(valueColor)
+        .font("Helvetica-Bold")
+        .text(value, x + 10, y + 35, {
+          width: boxWidth - 20,
+        });
+    };
+
+    // Helper function to add table
+    const addTable = (
+      headers: string[],
+      rows: string[][],
+      columnWidths: number[]
+    ) => {
+      const tableTop = currentY;
+      const rowHeight = 25;
+      const cellPadding = 8;
+
+      // Check if we need a new page
+      checkPageBreak(rowHeight * (rows.length + 2));
+
+      // Draw header
+      let xOffset = 50;
+      headers.forEach((header, i) => {
+        // Header background
+        doc
+          .rect(xOffset, tableTop, columnWidths[i] || 0, rowHeight)
+          .fillColor(colors.primary)
+          .fill();
+
+        // Header text
+        doc
+          .fontSize(9)
+          .fillColor("#ffffff")
+          .font("Helvetica-Bold")
+          .text(header, xOffset + cellPadding, tableTop + 8, {
+            width: columnWidths[i] || 0 - cellPadding * 2,
+            align: i === 0 ? "left" : "right",
+          });
+
+        xOffset += columnWidths[i] || 0;
+      });
+
+      currentY += rowHeight;
+
+      // Draw rows
+      rows.forEach((row, rowIndex) => {
+        xOffset = 50;
+        const isAlternate = rowIndex % 2 === 1;
+
+        row.forEach((cell, cellIndex) => {
+          // Cell background
+          if (isAlternate) {
+            doc
+              .rect(xOffset, currentY, columnWidths[cellIndex] || 0, rowHeight)
+              .fillColor(colors.background)
+              .fill();
+          }
+
+          // Cell border
+          doc
+            .rect(xOffset, currentY, columnWidths[cellIndex] || 0, rowHeight)
+            .strokeColor(colors.border)
+            .lineWidth(0.5)
+            .stroke();
+
+          // Cell text
+          doc
+            .fontSize(9)
+            .fillColor(colors.text)
+            .font("Helvetica")
+            .text(cell, xOffset + cellPadding, currentY + 8, {
+              width: columnWidths[cellIndex] || 0 - cellPadding * 2,
+              align: cellIndex === 0 ? "left" : "right",
+            });
+
+          xOffset += columnWidths[cellIndex] || 0;
+        });
+
+        currentY += rowHeight;
+      });
+
+      currentY += 10;
+    };
+
+    // Add header
+    addHeader();
+
+    // Executive Summary
+    addSectionHeader("Executive Summary");
+
+    const summary = report.data.summary;
+    const boxY = currentY;
+
+    // Key metrics boxes
+    addMetricBox(
+      "Gross Income",
+      this.formatCurrency(summary.grossIncome),
+      50,
+      boxY
+    );
+    addMetricBox(
+      "Total Expenses",
+      this.formatCurrency(summary.totalExpenses),
+      220,
+      boxY
+    );
+    addMetricBox(
+      "Net Income",
+      this.formatCurrency(summary.netIncome),
+      390,
+      boxY,
+      summary.netIncome >= 0
+    );
+
+    currentY += 80;
+
+    addMetricBox(
+      "Profit Margin",
+      `${summary.profitMargin.toFixed(2)}%`,
+      50,
+      currentY,
+      summary.profitMargin >= 0
+    );
+    addMetricBox(
+      "Estimated Tax",
+      this.formatCurrency(summary.estimatedTax),
+      220,
+      currentY
+    );
+    addMetricBox(
+      "Cash Flow",
+      this.formatCurrency(summary.cashFlow),
+      390,
+      currentY,
+      summary.cashFlow >= 0
+    );
+
+    currentY += 100;
+
+    // Income Breakdown
+    addSectionHeader("Income Breakdown");
+
+    const incomeData = report.data.income;
+    const incomeRows: string[][] = [
+      ["Rental Income", this.formatCurrency(incomeData.rental.amount)],
+      ["Deposits", this.formatCurrency(incomeData.deposits.amount)],
+      ["Fees", this.formatCurrency(incomeData.fees.amount)],
+      ["Other Income", this.formatCurrency(incomeData.other.amount)],
+    ];
+
+    addTable(["Category", "Amount"], incomeRows, [300, 195]);
+
+    // Property Income Breakdown (if available)
+    if (incomeData.rental.properties.length > 0) {
+      currentY += 10;
+      doc
+        .fontSize(12)
+        .fillColor(colors.text)
+        .font("Helvetica-Bold")
+        .text("Rental Income by Property", 50, currentY);
+      currentY += 20;
+
+      const propertyRows = incomeData.rental.properties.map((prop) => [
+        prop.propertyName,
+        prop.payments.toString(),
+        this.formatCurrency(prop.amount),
+      ]);
+
+      addTable(
+        ["Property", "Payments", "Amount"],
+        propertyRows,
+        [250, 120, 125]
+      );
+    }
+
+    // Expense Breakdown
+    addSectionHeader("Expense Breakdown");
+
+    const expenseData = report.data.expenses;
+    const expenseRows: string[][] = [
+      ["Maintenance", this.formatCurrency(expenseData.maintenance.amount)],
+      ["Utilities", this.formatCurrency(expenseData.utilities.amount)],
+      ["Insurance", this.formatCurrency(expenseData.insurance.amount)],
+      ["Taxes", this.formatCurrency(expenseData.taxes.amount)],
+      ["Management", this.formatCurrency(expenseData.management.amount)],
+      ["Marketing", this.formatCurrency(expenseData.marketing.amount)],
+      ["Depreciation", this.formatCurrency(expenseData.depreciation.amount)],
+      ["Other", this.formatCurrency(expenseData.other.amount)],
+    ];
+
+    addTable(["Category", "Amount"], expenseRows, [300, 195]);
+
+    // Utilities Breakdown
+    currentY += 10;
+    doc
+      .fontSize(12)
+      .fillColor(colors.text)
+      .font("Helvetica-Bold")
+      .text("Utilities Breakdown", 50, currentY);
+    currentY += 20;
+
+    const utilitiesRows: string[][] = [
+      [
+        "Electricity",
+        this.formatCurrency(expenseData.utilities.breakdown.electricity),
+      ],
+      ["Water", this.formatCurrency(expenseData.utilities.breakdown.water)],
+      ["Gas", this.formatCurrency(expenseData.utilities.breakdown.gas)],
+      [
+        "Internet",
+        this.formatCurrency(expenseData.utilities.breakdown.internet),
+      ],
+      ["Other", this.formatCurrency(expenseData.utilities.breakdown.other)],
+    ];
+
+    addTable(["Utility Type", "Amount"], utilitiesRows, [300, 195]);
+
+    // Financial Summary
+    addSectionHeader("Financial Summary");
+
+    const summaryRows: string[][] = [
+      ["Gross Income", this.formatCurrency(summary.grossIncome)],
+      [
+        "Less: Total Expenses",
+        `(${this.formatCurrency(summary.totalExpenses)})`,
+      ],
+      ["Net Income", this.formatCurrency(summary.netIncome)],
+      ["", ""],
+      ["Taxable Income", this.formatCurrency(summary.taxableIncome)],
+      ["Estimated Tax", this.formatCurrency(summary.estimatedTax)],
+      ["", ""],
+      ["Cash Flow", this.formatCurrency(summary.cashFlow)],
+    ];
+
+    addTable(["Description", "Amount"], summaryRows, [300, 195]);
+
+    // Notes section
+    currentY += 20;
+    checkPageBreak(80);
+    doc
+      .fontSize(8)
+      .fillColor(colors.lightText)
+      .font("Helvetica")
+      .text(
+        "Note: This report is generated automatically based on recorded transactions. Please verify all amounts and consult with a tax professional for tax-related decisions.",
+        50,
+        currentY,
+        {
+          width: 495,
+          align: "justify",
+        }
+      );
+
+    // Add footer to the last page
+    addFooter();
+
+    // End the document
+    doc.end();
+
+    // Buffer the stream
+    const pdfBuffer = await getStreamAsBuffer(doc);
+    return pdfBuffer;
+  }
+
+  // Helper methods for PDF generation
+  private formatReportType(type: string): string {
+    const types: Record<string, string> = {
+      profit_loss: "Profit & Loss Statement",
+      tax_summary: "Tax Summary Report",
+      cash_flow: "Cash Flow Statement",
+      balance_sheet: "Balance Sheet",
+    };
+    return types[type] || type;
+  }
+
+  private formatDate(date: Date): string {
+    return DateTime.fromJSDate(date).toFormat("MMM dd, yyyy");
+  }
+
+  private formatCurrency(amount: number, currency = "KES"): string {
+    const formatted = new Intl.NumberFormat("en-KE", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+    return formatted;
   }
 
   /**

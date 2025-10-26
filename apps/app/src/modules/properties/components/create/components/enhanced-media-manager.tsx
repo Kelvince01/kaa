@@ -402,7 +402,9 @@ export function EnhancedMediaManager({
                     <Image
                       alt={item.caption || `Media ${index + 1}`}
                       className="h-full w-full object-cover"
+                      height={100}
                       src={item.url}
+                      width={100}
                     />
                   ) : (
                     <div className="flex flex-col items-center">
@@ -556,7 +558,9 @@ export function EnhancedMediaManager({
                       <Image
                         alt="Preview"
                         className="h-full w-full object-cover"
+                        height={100}
                         src={editingItem.url}
+                        width={100}
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
@@ -657,7 +661,9 @@ export function EnhancedMediaManager({
                   alt="Full size preview"
                   className="max-h-[80vh] w-full object-contain"
                   fill
+                  height={100}
                   src={items[lightboxIndex].url}
+                  width={100}
                 />
               ) : (
                 // biome-ignore lint/a11y/useMediaCaption: ignore

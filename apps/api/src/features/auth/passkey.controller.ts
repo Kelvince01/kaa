@@ -1,7 +1,11 @@
 import config from "@kaa/config/api";
 import { Passkey, User } from "@kaa/models";
 import type { IOTP, IUser } from "@kaa/models/types";
-import { base64ToUint8Array, getPasskeyRpId } from "@kaa/utils";
+import {
+  base64ToUint8Array,
+  getPasskeyRpId,
+  uint8ArrayToBase64,
+} from "@kaa/utils";
 import {
   // AuthenticationResponseJSON,
   // RegistrationResponseJSON,
@@ -54,11 +58,15 @@ export const passkeyController = new Elysia().group("passkey", (app) =>
       async ({ set, body }) => {
         const { userId, credentialId, publicKey, counter } = body;
 
+        const publicKeyUint8Array = Uint8Array.from(Object.values(publicKey));
+
+        const publicKeyBase64 = uint8ArrayToBase64(publicKeyUint8Array);
+
         try {
           await Passkey.create({
             userId,
             credentialId,
-            publicKey,
+            publicKey: publicKeyBase64,
             counter,
             credentialDeviceType: "singleDevice",
             credentialBackedUp: false,
@@ -83,7 +91,7 @@ export const passkeyController = new Elysia().group("passkey", (app) =>
         body: t.Object({
           userId: t.String(),
           credentialId: t.String(),
-          publicKey: t.String(),
+          publicKey: t.Union([t.Uint8Array(), t.Any()]),
           counter: t.Number(),
         }),
         detail: {
@@ -354,6 +362,8 @@ export const passkeyController = new Elysia().group("passkey", (app) =>
         const options = await generateAuthenticationOptions({
           rpID: getPasskeyRpId(),
           allowCredentials: [{ id: passkey.credentialId }],
+          userVerification: "preferred",
+          timeout: 60_000,
         });
 
         return {
@@ -388,7 +398,7 @@ export const passkeyController = new Elysia().group("passkey", (app) =>
           };
         }
 
-        const authServerUrl = config.app.url;
+        const authServerUrl = config.clientUrl; // config.app.url;
         if (!authServerUrl) {
           set.status = 500;
           return {
@@ -402,13 +412,26 @@ export const passkeyController = new Elysia().group("passkey", (app) =>
         >;
         try {
           verification = await verifyRegistrationResponse({
-            // TODO: Fix this
-            response: enrollInfo as any,
-            expectedChallenge: challenge,
+            response: {
+              id: enrollInfo.id,
+              rawId: enrollInfo.rawId,
+              type: enrollInfo.type as "public-key",
+              response: {
+                clientDataJSON: enrollInfo.clientDataJSON,
+                attestationObject: enrollInfo.attestationObject,
+              },
+              clientExtensionResults: {},
+            },
+            expectedChallenge: challenge ?? "",
             expectedOrigin: authServerUrl,
             expectedRPID: getPasskeyRpId(),
+            requireUserVerification: false,
+            requireUserPresence: false,
+            // supportedAlgorithmIDs: [-7, -257],
+            // attestationSafetyNetEnforceCTSCheck: true,
           });
         } catch (error) {
+          console.error("Error verifying registration response:", error);
           set.status = 401;
           return {
             status: "error",
@@ -503,7 +526,7 @@ export const passkeyController = new Elysia().group("passkey", (app) =>
           };
         }
 
-        const authServerUrl = config.app.url;
+        const authServerUrl = config.clientUrl;
         if (!authServerUrl) {
           set.status = 500;
           return {

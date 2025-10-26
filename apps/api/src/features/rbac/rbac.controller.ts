@@ -352,6 +352,8 @@ export const rbacController = new Elysia()
               })
             ),
             createdAt: permission.createdAt.toString(),
+            updatedAt: permission.updatedAt.toString(),
+            isSystem: permission.isSystem,
           }));
 
           set.status = 200;
@@ -567,6 +569,16 @@ export const rbacController = new Elysia()
             status: "success",
             permission: {
               id: (result._id as mongoose.Types.ObjectId).toString(),
+              name: result.name,
+              description: result.description,
+              resource: result.resource,
+              action: result.action,
+              conditions: (result.conditions as any)?.map((condition: any) => ({
+                ...condition,
+                field: condition.field.toString(),
+              })),
+              createdAt: result.createdAt.toString(),
+              updatedAt: result.updatedAt.toString(),
             },
           };
         },

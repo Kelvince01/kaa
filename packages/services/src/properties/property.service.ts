@@ -14,6 +14,7 @@
 
 import { Property, User } from "@kaa/models";
 import {
+  type IBaseProperty,
   type IProperty,
   type ListingType,
   type PropertySearchFilters,
@@ -402,8 +403,8 @@ export const getProperties = async (params: PropertyQueryParams) => {
 
     // Build populate array
     const defaultPopulates = [
-      "landlord:firstName lastName email phone verified",
-      "agent:firstName lastName email phone",
+      "landlord:personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone", // verified
+      "agent:user",
       "memberId:email phone",
     ];
     const populateFields = populate.length > 0 ? populate : defaultPopulates;
@@ -470,7 +471,7 @@ export const getProperties = async (params: PropertyQueryParams) => {
  * Create a new property
  */
 export const createProperty = async (
-  propertyData: Partial<IProperty>
+  propertyData: IBaseProperty
 ): Promise<IProperty> => {
   try {
     // Validate required fields
@@ -480,20 +481,20 @@ export const createProperty = async (
     if (!propertyData.landlord) {
       throw new BadRequestError("Landlord is required");
     }
-    if (!propertyData.memberId) {
-      throw new BadRequestError("Member ID is required");
-    }
+    // if (!propertyData.memberId) {
+    //   throw new BadRequestError("Member ID is required");
+    // }
     if (!propertyData.type) {
       throw new BadRequestError("Property type is required");
     }
-    if (!propertyData.listingType) {
-      throw new BadRequestError("Listing type is required");
-    }
+    // if (!propertyData.listingType) {
+    //   throw new BadRequestError("Listing type is required");
+    // }
 
     // Generate slug if not provided
-    if (!propertyData.slug) {
-      propertyData.slug = await generateUniqueSlug(propertyData.title);
-    }
+    // if (!propertyData.slug) {
+    //   propertyData.slug = await generateUniqueSlug(propertyData.title);
+    // }
 
     // Set defaults
     const defaults = {
@@ -535,8 +536,12 @@ export const createProperty = async (
     await clearCache("api:/api/v1/properties*");
 
     await newProperty.populate([
-      { path: "landlord", select: "firstName lastName email phone" },
-      { path: "agent", select: "firstName lastName email phone" },
+      {
+        path: "landlord",
+        select:
+          "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone",
+      },
+      { path: "agent", select: "user" },
       { path: "memberId", select: "email phone" },
       { path: "organizationId", select: "name" },
     ]);
@@ -2785,13 +2790,13 @@ export const getPropertyWithAmenities = async (
       ]);
 
       return {
-        ...property,
+        ...property.toObject(),
         nearbyAmenities,
         amenityScore,
-      };
+      } as any;
     }
 
-    return property;
+    return property.toObject() as any;
   } catch (error) {
     logger.error("Error getting property with amenities:", error);
     throw new Error("Failed to get property with amenities");

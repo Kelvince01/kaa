@@ -304,7 +304,7 @@ export class ResponseInterceptor {
         details: {
           warning: "Unexpected content type",
           contentType,
-          expected: "application/json",
+          expected: "application/json, application/pdf, or other valid types",
         },
         endpoint: response.config.url,
         correlationId,
@@ -322,6 +322,10 @@ export class ResponseInterceptor {
       "text/html",
       "multipart/form-data",
       "application/x-www-form-urlencoded",
+      "application/pdf",
+      "image/",
+      "video/",
+      "audio/",
     ];
 
     return validTypes.some((type) => contentType.includes(type));

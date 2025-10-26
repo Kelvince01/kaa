@@ -267,15 +267,12 @@ const userVerificationSchema = new Schema<UserVerification>(
   {
     emailVerifiedAt: {
       type: Date,
-      default: null,
     },
     phoneVerifiedAt: {
       type: Date,
-      default: null,
     },
     identityVerifiedAt: {
       type: Date,
-      default: null,
     },
     kycStatus: {
       type: String,

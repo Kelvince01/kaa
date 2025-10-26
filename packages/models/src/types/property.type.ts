@@ -399,7 +399,7 @@ export type PropertyAvailability = {
 /**
  * Property document interface
  */
-export type IProperty = BaseDocument & {
+export type IBaseProperty = {
   title: string;
   description: string;
   type: PropertyType;
@@ -407,7 +407,7 @@ export type IProperty = BaseDocument & {
   status: PropertyStatus;
   landlord: mongoose.Types.ObjectId;
   agent?: mongoose.Types.ObjectId;
-  memberId: mongoose.Types.ObjectId;
+  memberId?: mongoose.Types.ObjectId;
   organizationId?: mongoose.Types.ObjectId;
 
   // Location details (Enhanced with Kenyan specifics)
@@ -522,14 +522,22 @@ export type IProperty = BaseDocument & {
   pricePerSqm?: number;
   isPromoted: boolean;
   distanceFromCenter?: number; // km from city center
-
-  // Methods
-  getMainImage?: () => string | null;
-  getTotalMonthlyCost?: () => number;
-  getPrimaryVirtualTour?: () => mongoose.Types.ObjectId | null;
-  hasVirtualTours?: () => boolean;
-  canBeEditedBy: (userId: string, userRole: string) => boolean;
 };
+
+export type IProperty = IBaseProperty &
+  BaseDocument & {
+    // landlord: mongoose.Types.ObjectId;
+    // agent?: mongoose.Types.ObjectId;
+    // memberId: mongoose.Types.ObjectId;
+    // organizationId?: mongoose.Types.ObjectId;
+
+    // Methods
+    getMainImage?: () => string | null;
+    getTotalMonthlyCost?: () => number;
+    getPrimaryVirtualTour?: () => mongoose.Types.ObjectId | null;
+    hasVirtualTours?: () => boolean;
+    canBeEditedBy: (userId: string, userRole: string) => boolean;
+  };
 
 /**
  * Property creation data
@@ -570,7 +578,7 @@ export type CreatePropertyData = {
   images: string[];
 
   // Availability
-  availableFrom?: Date;
+  availableFrom?: string;
 
   // Contact
   viewingContact: {
@@ -611,7 +619,7 @@ export type UpdatePropertyData = {
 
   // Availability
   isAvailable?: boolean;
-  availableFrom?: Date;
+  availableFrom?: string;
 
   // Contact
   viewingContact?: {
@@ -656,7 +664,7 @@ export type PropertySearchFilters = {
   amenities?: string[];
 
   // Availability
-  availableFrom?: Date;
+  availableFrom?: string;
   availableTo?: Date;
 
   // Features

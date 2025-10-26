@@ -33,13 +33,13 @@ import { StepProgress } from "./components/step-progress";
 import { AvailabilityForm } from "./forms/availability";
 // Import existing form components (enhanced versions)
 // Import enhanced form components
-import { BasicInfoForm } from "./forms/basic-info";
-import { CompletedForm } from "./forms/completed";
+import { EnhancedBasicInfoForm } from "./forms/basic-info-enhanced";
+import { EnhancedCompletedForm } from "./forms/completed-enhanced";
 import { DetailsForm } from "./forms/details";
 import { FeaturesForm } from "./forms/features";
 import { LocationForm } from "./forms/location";
 import { MediaForm } from "./forms/media";
-import { PricingForm } from "./forms/pricing";
+import { EnhancedPricingForm } from "./forms/pricing";
 import { useEnhancedForm } from "./hooks/use-enhanced-form";
 // Import our enhanced components
 import { useStepValidation } from "./hooks/use-step-validation";
@@ -101,13 +101,9 @@ export function EnhancedPropertyWizard({
     (newStep: number) => {
       const targetStepId = steps[newStep]?.id;
 
-      if (newStep > currentStep) {
-        // Check if can advance
-        // biome-ignore lint/style/useCollapsedIf: ignore
-        if (!canAdvanceToStep(targetStepId as string)) {
-          toast.error("Please complete the current step before proceeding");
-          return;
-        }
+      if (newStep > currentStep && !canAdvanceToStep(targetStepId as string)) {
+        toast.error("Please complete the current step before proceeding");
+        return;
       }
 
       setCurrentStep(newStep);
@@ -163,7 +159,7 @@ export function EnhancedPropertyWizard({
     switch (stepId) {
       case "basic":
         return (
-          <BasicInfoForm
+          <EnhancedBasicInfoForm
             defaultValues={formData.basic}
             onNext={handleNext}
             onSubmit={(data) => {
@@ -234,7 +230,7 @@ export function EnhancedPropertyWizard({
 
       case "pricing":
         return (
-          <PricingForm
+          <EnhancedPricingForm
             defaultValues={formData.pricing as any}
             onNext={handleNext}
             onPrevious={handlePrevious}
@@ -242,6 +238,7 @@ export function EnhancedPropertyWizard({
               form.setValue("pricing", data as any);
               saveNow();
             }}
+            propertyData={form.watch()}
           />
         );
 
@@ -260,7 +257,7 @@ export function EnhancedPropertyWizard({
 
       case "completed":
         return (
-          <CompletedForm
+          <EnhancedCompletedForm
             data={formData as any}
             isSubmitting={isLoading}
             onEdit={(step) => {

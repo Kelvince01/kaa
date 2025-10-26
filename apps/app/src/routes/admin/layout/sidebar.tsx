@@ -28,7 +28,7 @@ export const adminSidebarItems = {
     { title: "Users", url: "/admin/users", icon: Users },
     { title: "Members", url: "/admin/members", icon: Users },
     { title: "Bookings", url: "/admin/bookings", icon: Calendar },
-    { title: "Finances", url: "/admin/finances", icon: DollarSign },
+    { title: "Finances", url: "/admin/financials", icon: DollarSign },
     { title: "Webhooks", url: "/admin/webhooks", icon: DollarSign },
     {
       title: "AI Management",

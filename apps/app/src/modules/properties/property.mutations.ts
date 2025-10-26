@@ -1,9 +1,10 @@
 "use client";
 
+import type { UpdatePropertyData } from "@kaa/models/types";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/query/query-client";
 import * as propertyService from "./property.service";
-import type { Property, PropertySearchParams } from "./property.type";
+import type { PropertySearchParams } from "./property.type";
 
 // Create property mutation
 export const useCreateProperty = () => {
@@ -21,7 +22,7 @@ export const useCreateProperty = () => {
 // Update property mutation
 export const useUpdateProperty = () => {
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Property> }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdatePropertyData }) =>
       propertyService.updateProperty(id, data),
     onSuccess: (_, variables) => {
       // Invalidate and refetch properties

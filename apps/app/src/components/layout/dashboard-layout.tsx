@@ -69,12 +69,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           },
           {
             name: "Booking Requests",
-            href: "/dashboard/booking-requests",
+            href: "/dashboard/bookings/requests",
             icon: Calendar,
           },
           {
             name: "Finances",
-            href: "/dashboard/finances",
+            href: "/dashboard/financials",
             icon: DollarSign,
           },
         ]

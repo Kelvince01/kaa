@@ -45,23 +45,26 @@ const mediaSchema = z.object({
   // Photos
   photos: z
     .array(
-      z.object({
-        id: z.string(),
-        url: z.string().url(),
-        caption: z.string().optional(),
-        isPrimary: z.boolean(),
-        tags: z.array(z.string()).optional(),
-        quality: z.enum(["excellent", "good", "fair", "poor"]).optional(),
-      })
+      z
+        .object({
+          id: z.string().optional(),
+          url: z.url().optional(),
+          caption: z.string().optional(),
+          isPrimary: z.boolean().optional(),
+          tags: z.array(z.string()).optional(),
+          quality: z.enum(["excellent", "good", "fair", "poor"]).optional(),
+        })
+        .optional()
     )
-    .min(1, "At least one photo is required"),
+    .optional(),
+  // .min(1, "At least one photo is required"),
 
   // Videos
   videos: z
     .array(
       z.object({
         id: z.string(),
-        url: z.string().url(),
+        url: z.url(),
         title: z.string().optional(),
         description: z.string().optional(),
         thumbnail: z.string().optional(),
@@ -83,7 +86,7 @@ const mediaSchema = z.object({
     .array(
       z.object({
         id: z.string(),
-        url: z.string().url(),
+        url: z.url(),
         title: z.string().optional(),
         floor: z.string().optional(), // e.g., "Ground Floor", "1st Floor"
         type: z.enum(["layout", "dimension", "furnished", "unfurnished"]),
@@ -96,7 +99,7 @@ const mediaSchema = z.object({
     .array(
       z.object({
         id: z.string(),
-        url: z.string().url(),
+        url: z.url(),
         title: z.string(),
         type: z.enum(["brochure", "lease", "rules", "amenities", "other"]),
         description: z.string().optional(),
@@ -109,7 +112,7 @@ const mediaSchema = z.object({
     .array(
       z.object({
         title: z.string(),
-        url: z.string().url(),
+        url: z.url(),
         type: z.enum(["website", "social", "listing", "review", "other"]),
         description: z.string().optional(),
       })
@@ -119,11 +122,11 @@ const mediaSchema = z.object({
   // SEO & Social
   socialMediaUrls: z
     .object({
-      facebook: z.string().url().optional(),
-      instagram: z.string().url().optional(),
-      twitter: z.string().url().optional(),
-      youtube: z.string().url().optional(),
-      tiktok: z.string().url().optional(),
+      facebook: z.url().optional(),
+      instagram: z.url().optional(),
+      twitter: z.url().optional(),
+      youtube: z.url().optional(),
+      tiktok: z.url().optional(),
     })
     .optional(),
 
@@ -220,7 +223,16 @@ export function MediaForm({
   const form = useForm<MediaFormData>({
     resolver: zodResolver(mediaSchema),
     defaultValues: {
-      photos: [],
+      photos: [
+        {
+          id: "1",
+          url: "https://ssl.cdn-redfin.com/photo/rent/124d0781-6aff-49f4-b8c6-5e64e5ec47a1/bigphoto/0_2.jpg",
+          caption: "Photo 1",
+          isPrimary: true,
+          tags: ["photo"],
+          quality: "excellent",
+        },
+      ],
       videos: [],
       floorPlans: [],
       documents: [],
@@ -342,8 +354,8 @@ export function MediaForm({
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium text-lg">Property Photos</h3>
                       <Badge variant="outline">
-                        {watchedValues.photos.length} photo
-                        {watchedValues.photos.length !== 1 ? "s" : ""} uploaded
+                        {watchedValues.photos?.length || 0} photo
+                        {watchedValues.photos?.length !== 1 ? "s" : ""} uploaded
                       </Badge>
                     </div>
                     <p className="text-gray-600 text-sm">
@@ -353,11 +365,15 @@ export function MediaForm({
 
                     <EnhancedMediaManager
                       acceptedTypes={["image/*"]}
-                      items={watchedValues.photos.map((photo) => ({
-                        ...photo,
-                        type: "image",
-                        isPrimary: photo.isPrimary,
-                      }))}
+                      items={
+                        watchedValues.photos?.map((photo) => ({
+                          ...photo,
+                          id: photo?.id as string,
+                          type: "image",
+                          isPrimary: photo?.isPrimary as boolean,
+                          url: photo?.url as string,
+                        })) || []
+                      }
                       maxFiles={50}
                       onChange={(photos) =>
                         form.setValue(
@@ -970,7 +986,7 @@ export function MediaForm({
 
                 <Button
                   className="min-w-32"
-                  disabled={watchedValues.photos.length === 0}
+                  disabled={watchedValues.photos?.length === 0}
                   type="submit"
                 >
                   Continue to Availability

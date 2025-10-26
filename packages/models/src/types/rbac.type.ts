@@ -40,6 +40,7 @@ export interface IPermission extends BaseDocument {
     value?: any;
   }[];
   isSystem: number;
+  category: string;
 }
 
 export interface IRolePermission extends BaseDocument {
@@ -59,7 +60,7 @@ export interface IUserRole extends BaseDocument {
   memberId?: mongoose.Types.ObjectId;
   organization?: mongoose.Types.ObjectId;
   isPrimary: boolean; // Primary role for the user
-  assignedBy: mongoose.Types.ObjectId;
+  assignedBy?: mongoose.Types.ObjectId;
   assignedAt: Date;
   expiresAt?: Date;
   context?: {

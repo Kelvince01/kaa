@@ -145,13 +145,13 @@ export { SaveIndicator } from "./components/save-indicator";
 export { SmartAddressInput } from "./components/smart-address-input";
 export { StepProgress } from "./components/step-progress";
 export { AvailabilityForm } from "./forms/availability";
-export { BasicInfoForm } from "./forms/basic-info";
-export { CompletedForm } from "./forms/completed";
+export { EnhancedBasicInfoForm as BasicInfoForm } from "./forms/basic-info-enhanced";
+export { EnhancedCompletedForm as CompletedForm } from "./forms/completed-enhanced";
 export { DetailsForm } from "./forms/details";
 export { FeaturesForm } from "./forms/features";
 export { LocationForm } from "./forms/location";
 export { MediaForm } from "./forms/media";
-export { PricingForm } from "./forms/pricing";
+export { EnhancedPricingForm as PricingForm } from "./forms/pricing";
 export { useAIAssistant } from "./hooks/use-ai-assistant";
 export { useAnalytics } from "./hooks/use-analytics";
 // Export hooks

@@ -28,11 +28,13 @@ const StepperFooter = ({ property }: { property?: Property | null }) => {
     prevStep();
   };
 
+  // Only mark as finished when actually completed all steps
+  // Remove premature completion logic - this is now handled in review-info after successful API call
   useEffect(() => {
-    if ((activeStep === 2 && property === null) || hasCompletedAllSteps) {
+    if (hasCompletedAllSteps && property) {
       setFinishedCreating();
     }
-  }, [property, hasCompletedAllSteps, activeStep, setFinishedCreating]);
+  }, [property, hasCompletedAllSteps, setFinishedCreating]);
 
   return (
     <div className="flex w-full justify-end gap-2 max-sm:justify-stretch">

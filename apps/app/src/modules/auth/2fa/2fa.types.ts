@@ -1,6 +1,8 @@
 export type TwoFactorSetupResponse = {
-  qrCodeUrl: string;
-  secret: string;
+  data: {
+    qrCode: string;
+    secret: string;
+  };
 };
 
 export type TwoFactorStatus = {

@@ -9,13 +9,6 @@ import {
   UserStatus,
 } from "@kaa/models/types";
 import {
-  ForgotPasswordRequestSchema,
-  LoginUserRequestSchema,
-  RegisterUserRequestSchema,
-  ResetPasswordRequestSchema,
-  VerifyUserRequestSchema,
-} from "@kaa/schemas";
-import {
   authService,
   fileService,
   memberService,
@@ -48,9 +41,14 @@ import { accessPlugin } from "../rbac/rbac.plugin";
 import { apiKeyController } from "./api-key.controller";
 import { authPlugin } from "./auth.plugin";
 import {
+  ForgotPasswordRequestSchema,
   LoginTwoFactorSchema,
+  LoginUserRequestSchema,
   LoginUserResponseSchema,
+  RegisterUserRequestSchema,
+  ResetPasswordRequestSchema,
   userParamsSchema,
+  VerifyUserRequestSchema,
   verificationStatusSchema,
 } from "./auth.schema";
 import {

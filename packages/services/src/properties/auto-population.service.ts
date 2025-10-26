@@ -1,3 +1,4 @@
+import type { IProperty } from "@kaa/models/types";
 import { logger } from "@kaa/utils";
 import type { Types } from "mongoose";
 import { amenityDiscoveryQueue } from "../queues/amenity.queue";
@@ -531,7 +532,7 @@ export class AutoPopulationService {
   /**
    * Property lifecycle hook - call this when properties are created
    */
-  static async handlePropertyCreated(propertyData: any): Promise<void> {
+  static async handlePropertyCreated(propertyData: IProperty): Promise<void> {
     try {
       if (!propertyData._id) return;
 

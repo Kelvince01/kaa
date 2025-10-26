@@ -1,6 +1,9 @@
 import {
   Member,
   Organization,
+  PaymentMethod,
+  Subscription,
+  SubscriptionPlan,
   User,
   UserRole,
   VerificationToken,
@@ -8,6 +11,7 @@ import {
 } from "@kaa/models";
 import {
   type IUser,
+  KYCStatus,
   type UserResponse as UserResponseType,
   UserStatus,
   WalletStatus,
@@ -349,12 +353,18 @@ export const createUser = async (
         email,
       });
 
+      const subscriptionPlan = await SubscriptionPlan.findOne({ name: "free" });
+      if (!subscriptionPlan) {
+        throw new Error("Subscription plan not found");
+      }
+
       member = new Member({
         name,
         slug,
         role: userRoleObj.roleId as mongoose.Types.ObjectId,
         organization: org._id as mongoose.Types.ObjectId,
         user: newUser._id as mongoose.Types.ObjectId,
+        plan: subscriptionPlan._id,
       });
       await member.save();
       memberId = member._id as mongoose.Types.ObjectId;
@@ -363,6 +373,41 @@ export const createUser = async (
       if (member.usage.users >= member.limits.users) {
         throw new Error("User limit reached for this member"); // ValidationError
       }
+
+      const paymentMethod = await PaymentMethod.create({
+        userId: newUser._id,
+        memberId: member._id,
+        type: "mpesa",
+        provider: "mpesa",
+        details: {
+          mpesaPhoneNumber: formattedPhone.formatted,
+        },
+        isDefault: true,
+        isActive: true,
+      });
+
+      const subscription = await Subscription.create({
+        userId: newUser._id,
+        memberId: member._id,
+        plan: subscriptionPlan._id,
+        paymentMethod: paymentMethod._id,
+        status: "trial",
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        billing: {
+          amount: 0,
+          currency: "KES",
+          interval: "monthly",
+          intervalCount: 1,
+          nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        quota: subscriptionPlan.quota,
+        autoRenew: false,
+      });
+
+      member.subscription = subscription._id;
+      await member.save();
     }
 
     // Create verification token
@@ -448,14 +493,14 @@ export const createUser = async (
       avatar: newUser.profile.avatar,
       role: userRole.name,
       status: newUser.status,
-      emailVerified: newUser.verification.emailVerifiedAt !== undefined,
-      phoneVerified: newUser.verification.phoneVerifiedAt !== undefined,
-      identityVerified: newUser.verification.identityVerifiedAt !== undefined,
-      kycStatus: newUser.verification.kycStatus,
-      county: newUser.addresses.find((addr) => addr.isPrimary)?.county,
-      estate: newUser.addresses.find((addr) => addr.isPrimary)?.estate,
-      preferences: newUser.preferences,
-      stats: newUser.stats,
+      emailVerified: false,
+      phoneVerified: false,
+      identityVerified: false,
+      kycStatus: KYCStatus.PENDING,
+      // county: newUser.addresses.find((addr) => addr.isPrimary)?.county,
+      // estate: newUser.addresses.find((addr) => addr.isPrimary)?.estate,
+      // preferences: newUser.preferences,
+      // stats: newUser.stats,
       createdAt: newUser.createdAt,
       updatedAt: newUser.updatedAt,
     };

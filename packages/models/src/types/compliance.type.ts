@@ -127,9 +127,17 @@ export interface IComplianceRecord extends BaseDocument {
   metadata?: Record<string, any>;
 }
 
+export enum LegalTemplateType {
+  LEASE_AGREEMENT = "lease_agreement",
+  NOTICE = "notice",
+  CONTRACT = "contract",
+  FORM = "form",
+  LETTER = "letter",
+}
+
 export interface ILegalTemplate extends BaseDocument {
   name: string;
-  type: "lease_agreement" | "notice" | "contract" | "form" | "letter";
+  type: LegalTemplateType;
   category: string;
   jurisdiction: string;
 

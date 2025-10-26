@@ -32,140 +32,190 @@ export const propertyMonitoringController = new Elysia({
    * Get property metrics
    * @requires Admin role
    */
-  .get("/metrics", ({ set }) => {
-    try {
-      // This would integrate with the monitoring service
-      // For now, return metric definitions
-      const metricsArray = Object.values(propertyMetrics);
-      return {
-        success: true,
-        data: {
-          metrics: metricsArray,
-          total: metricsArray.length,
-        },
-      };
-    } catch (error) {
-      set.status = 500;
-      return {
-        success: false,
-        error: "Failed to fetch property metrics",
-      };
+  .get(
+    "/metrics",
+    ({ set }) => {
+      try {
+        // This would integrate with the monitoring service
+        // For now, return metric definitions
+        const metricsArray = Object.values(propertyMetrics);
+        return {
+          success: true,
+          data: {
+            metrics: metricsArray,
+            total: metricsArray.length,
+          },
+        };
+      } catch (error) {
+        set.status = 500;
+        return {
+          success: false,
+          error: "Failed to fetch property metrics",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["properties-monitoring"],
+        summary: "Get property metrics",
+        description: "Get property metrics",
+      },
     }
-  })
+  )
   /**
    * Get configured alerts
    * @requires Admin role
    */
-  .get("/alerts", ({ set }) => {
-    try {
-      return {
-        success: true,
-        data: {
-          alerts: propertyAlerts.map((a) => ({
-            name: a.name,
-            description: a.description,
-            type: a.type,
-            severity: a.severity,
-          })),
-          total: propertyAlerts.length,
-        },
-      };
-    } catch (error) {
-      set.status = 500;
-      return {
-        success: false,
-        error: "Failed to fetch property alerts",
-      };
+  .get(
+    "/alerts",
+    ({ set }) => {
+      try {
+        return {
+          success: true,
+          data: {
+            alerts: propertyAlerts.map((a) => ({
+              name: a.name,
+              description: a.description,
+              type: a.type,
+              severity: a.severity,
+            })),
+            total: propertyAlerts.length,
+          },
+        };
+      } catch (error) {
+        set.status = 500;
+        return {
+          success: false,
+          error: "Failed to fetch property alerts",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["properties-monitoring"],
+        summary: "Get property alerts",
+        description: "Get property alerts",
+      },
     }
-  })
+  )
   /**
    * Get dashboard configuration
    * @requires Admin role
    */
-  .get("/dashboard", ({ set }) => {
-    try {
-      return {
-        success: true,
-        data: {
-          name: propertyDashboardConfig.name,
-          widgets: propertyDashboardConfig.widgets.length,
-          layout: propertyDashboardConfig.layout,
-          theme: propertyDashboardConfig.theme,
-        },
-      };
-    } catch (error) {
-      set.status = 500;
-      return {
-        success: false,
-        error: "Failed to fetch dashboard configuration",
-      };
+  .get(
+    "/dashboard",
+    ({ set }) => {
+      try {
+        return {
+          success: true,
+          data: {
+            name: propertyDashboardConfig.name,
+            widgets: propertyDashboardConfig.widgets.length,
+            layout: propertyDashboardConfig.layout,
+            theme: propertyDashboardConfig.theme,
+          },
+        };
+      } catch (error) {
+        set.status = 500;
+        return {
+          success: false,
+          error: "Failed to fetch dashboard configuration",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["properties-monitoring"],
+        summary: "Get dashboard configuration",
+        description: "Get dashboard configuration",
+      },
     }
-  })
+  )
   /**
    * Get report configurations
    * @requires Admin role
    */
-  .get("/reports", ({ set }) => {
-    try {
-      const reportsArray = Object.values(propertyReports);
-      return {
-        success: true,
-        data: {
-          reports: reportsArray,
-          total: reportsArray.length,
-        },
-      };
-    } catch (error) {
-      set.status = 500;
-      return {
-        success: false,
-        error: "Failed to fetch report configurations",
-      };
+  .get(
+    "/reports",
+    ({ set }) => {
+      try {
+        const reportsArray = Object.values(propertyReports);
+        return {
+          success: true,
+          data: {
+            reports: reportsArray,
+            total: reportsArray.length,
+          },
+        };
+      } catch (error) {
+        set.status = 500;
+        return {
+          success: false,
+          error: "Failed to fetch report configurations",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["properties-monitoring"],
+        summary: "Get report configurations",
+        description: "Get report configurations",
+      },
     }
-  })
+  )
   /**
    * Get health check status
    * @requires Admin role
    */
-  .get("/health", async ({ set }) => {
-    try {
-      // Run all health checks
-      const healthChecksArray = Object.values(propertyHealthChecks);
-      const results = await Promise.all(
-        healthChecksArray.map(async (check) => {
-          try {
-            const result = await check.check();
-            return {
-              name: check.name,
-              ...result,
-            };
-          } catch (error) {
-            return {
-              name: check.name,
-              healthy: false,
-              error: "Health check failed",
-            };
-          }
-        })
-      );
+  .get(
+    "/health",
+    async ({ set }) => {
+      try {
+        // Run all health checks
+        const healthChecksArray = Object.values(propertyHealthChecks);
+        const results = await Promise.all(
+          healthChecksArray.map(async (check) => {
+            try {
+              const result = await check.check();
+              return {
+                name: check.name,
+                ...result,
+              };
+            } catch (error) {
+              return {
+                name: check.name,
+                healthy: false,
+                error: "Health check failed",
+              };
+            }
+          })
+        );
 
-      const allHealthy = results.every((r) => r.healthy);
+        const allHealthy = results.every((r) => r.healthy);
 
-      return {
-        success: true,
-        data: {
-          status: allHealthy ? "healthy" : "unhealthy",
-          checks: results,
-        },
-      };
-    } catch (error) {
-      set.status = 500;
-      return {
-        success: false,
-        error: "Failed to fetch health status",
-      };
+        return {
+          success: true,
+          data: {
+            status: allHealthy ? "healthy" : "unhealthy",
+            checks: results,
+          },
+        };
+      } catch (error) {
+        set.status = 500;
+        return {
+          success: false,
+          error: "Failed to fetch health status",
+        };
+      }
+    },
+    {
+      detail: {
+        tags: ["properties-monitoring"],
+        summary: "Get health check status",
+        description: "Get health check status",
+      },
     }
-  });
+  );
 
 // ==================== RATE LIMITING HELPER ====================
 
@@ -409,6 +459,11 @@ export const propertyAIController = new Elysia({ prefix: "/ai" })
       params: t.Object({
         propertyId: t.String(),
       }),
+      detail: {
+        tags: ["properties-ai"],
+        summary: "Get AI property valuation",
+        description: "Get AI property valuation",
+      },
     }
   )
   /**
@@ -444,6 +499,11 @@ export const propertyAIController = new Elysia({ prefix: "/ai" })
       params: t.Object({
         propertyId: t.String(),
       }),
+      detail: {
+        tags: ["properties-ai"],
+        summary: "Get market insights",
+        description: "Get market insights",
+      },
     }
   )
 
@@ -480,6 +540,11 @@ export const propertyAIController = new Elysia({ prefix: "/ai" })
       params: t.Object({
         propertyId: t.String(),
       }),
+      detail: {
+        tags: ["properties-ai"],
+        summary: "Generate SEO content",
+        description: "Generate SEO content",
+      },
     }
   )
   /**
@@ -515,6 +580,11 @@ export const propertyAIController = new Elysia({ prefix: "/ai" })
       params: t.Object({
         propertyId: t.String(),
       }),
+      detail: {
+        tags: ["properties-ai"],
+        summary: "Get pricing suggestions",
+        description: "Get pricing suggestions",
+      },
     }
   );
 

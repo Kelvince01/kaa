@@ -62,7 +62,7 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
       password: "",
       confirmPassword: "",
       role: "tenant",
-      agreeToTerms: false,
+      acceptTerms: false,
     },
   });
 
@@ -516,7 +516,7 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
 
             <FormField
               control={form.control}
-              name="agreeToTerms"
+              name="acceptTerms"
               render={({ field }) => (
                 <FormItem className="flex flex-col items-start">
                   <div className="flex flex-row items-center gap-2">

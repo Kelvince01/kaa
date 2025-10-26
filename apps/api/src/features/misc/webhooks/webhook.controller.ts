@@ -1,10 +1,5 @@
 import crypto from "node:crypto";
 import { type WebhookEventType, WebhookSecurityType } from "@kaa/models/types";
-import {
-  createWebhookSchema,
-  queryUserWebhooksSchema,
-  updateWebhookSchema,
-} from "@kaa/schemas";
 import { webhooksService } from "@kaa/services";
 import { webhooksRepository } from "@kaa/services/repositories";
 import { AppError } from "@kaa/utils";
@@ -12,6 +7,11 @@ import { Elysia, t } from "elysia";
 import mongoose from "mongoose";
 import { authPlugin } from "~/features/auth/auth.plugin";
 import { rolePlugin } from "~/features/rbac/rbac.plugin";
+import {
+  createWebhookSchema,
+  queryUserWebhooksSchema,
+  updateWebhookSchema,
+} from "./webhook.schema";
 // import { rateLimitPlugin } from "~/plugins/rate-limit.plugin";
 
 export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })

@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { userKeys } from "@/modules/users/user.queries";
 import { queryClient } from "@/query/query-client";
 import { sessionService } from "./session.service";
 import type { Session } from "./session.type";
@@ -74,6 +75,9 @@ export const useTerminateAllSessions = () => {
           },
         };
       });
+      queryClient.invalidateQueries({ queryKey: sessionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: userKeys.current() });
+      // queryClient.invalidateQueries({ queryKey: userKeys.detail(user.id) });
 
       toast.success("All other sessions have been terminated");
     },

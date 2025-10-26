@@ -11,8 +11,8 @@ export const userKeys = {
   all: ["users"] as const,
   lists: () => [...userKeys.all, "list"] as const,
   list: (filters: UserFilter) => [...userKeys.lists(), { filters }] as const,
-  details: () => [...userKeys.all, "detail"] as const,
-  detail: (id: string) => [...userKeys.details(), id] as const,
+  current: () => [...userKeys.all, "current"] as const,
+  detail: (id: string) => [...userKeys.current(), id] as const,
 };
 
 // Hooks for user data fetching

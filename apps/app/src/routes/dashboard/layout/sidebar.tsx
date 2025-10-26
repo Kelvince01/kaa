@@ -115,12 +115,12 @@ export const dashboardSidebarItems = (user: User) => ({
           },
           {
             title: "Booking Requests",
-            url: "/dashboard/booking-requests",
+            url: "/dashboard/bookings/requests",
             icon: Calendar,
           },
           {
             title: "Finances",
-            url: "/dashboard/finances",
+            url: "/dashboard/financials",
             icon: DollarSign,
           },
         ]

@@ -99,7 +99,7 @@ export const sessionController = new Elysia().group("sessions", (app) =>
           // Find and delete the session
           const session = await Session.findOneAndDelete({
             _id: id,
-            user: user.id,
+            userId: user.id,
           });
 
           if (!session) {

@@ -1,4 +1,8 @@
-import { ComplianceStatus, ComplianceType } from "@kaa/models/types";
+import {
+  ComplianceStatus,
+  ComplianceType,
+  LegalTemplateType,
+} from "@kaa/models/types";
 import { ComplianceService, SchedulerService } from "@kaa/services";
 import { Elysia, t } from "elysia";
 
@@ -27,19 +31,40 @@ export const complianceController = new Elysia({ prefix: "/compliance" })
           )
         ),
       }),
+      detail: {
+        tags: ["compliance"],
+        summary: "Create a new compliance record",
+        description: "Create a new compliance record",
+      },
     }
   )
 
   .get(
     "/records/landlord/:landlordId",
     async ({ params }) =>
-      await ComplianceService.getComplianceRecordsByLandlord(params.landlordId)
+      await ComplianceService.getComplianceRecordsByLandlord(params.landlordId),
+    {
+      params: t.Object({ landlordId: t.String() }),
+      detail: {
+        tags: ["compliance"],
+        summary: "Get compliance records by landlord ID",
+        description: "Get compliance records by landlord ID",
+      },
+    }
   )
 
   .get(
     "/records/property/:propertyId",
     async ({ params }) =>
-      await ComplianceService.getComplianceRecordsByProperty(params.propertyId)
+      await ComplianceService.getComplianceRecordsByProperty(params.propertyId),
+    {
+      params: t.Object({ propertyId: t.String() }),
+      detail: {
+        tags: ["compliance"],
+        summary: "Get compliance records by property ID",
+        description: "Get compliance records by property ID",
+      },
+    }
   )
 
   .patch(
@@ -55,6 +80,12 @@ export const complianceController = new Elysia({ prefix: "/compliance" })
         status: t.Enum(ComplianceStatus),
         notes: t.Optional(t.String()),
       }),
+      detail: {
+        tags: ["compliance"],
+        summary: "Update the status of a compliance record",
+        description: "Update the status of a compliance record",
+      },
+      params: t.Object({ id: t.String() }),
     }
   )
 
@@ -77,6 +108,12 @@ export const complianceController = new Elysia({ prefix: "/compliance" })
           })
         ),
       }),
+      detail: {
+        tags: ["compliance"],
+        summary: "Add a violation to a compliance record",
+        description: "Add a violation to a compliance record",
+      },
+      params: t.Object({ id: t.String() }),
     }
   )
 
@@ -92,6 +129,12 @@ export const complianceController = new Elysia({ prefix: "/compliance" })
       body: t.Object({
         resolution: t.String(),
       }),
+      detail: {
+        tags: ["compliance"],
+        summary: "Resolve a violation",
+        description: "Resolve a violation",
+      },
+      params: t.Object({ id: t.String(), violationIndex: t.String() }),
     }
   )
 
@@ -109,13 +152,27 @@ export const complianceController = new Elysia({ prefix: "/compliance" })
         reportUrl: t.Optional(t.String()),
         nextInspectionDate: t.Optional(t.String()),
       }),
+      detail: {
+        tags: ["compliance"],
+        summary: "Add an inspection to a compliance record",
+        description: "Add an inspection to a compliance record",
+      },
+      params: t.Object({ id: t.String() }),
     }
   )
 
   .get(
     "/dashboard/:landlordId",
     async ({ params }) =>
-      await ComplianceService.getComplianceDashboard(params.landlordId)
+      await ComplianceService.getComplianceDashboard(params.landlordId),
+    {
+      params: t.Object({ landlordId: t.String() }),
+      detail: {
+        tags: ["compliance"],
+        summary: "Get the compliance dashboard",
+        description: "Get the compliance dashboard",
+      },
+    }
   )
 
   .post(
@@ -145,18 +202,41 @@ export const complianceController = new Elysia({ prefix: "/compliance" })
         }),
         propertyIds: t.Optional(t.Array(t.String())),
       }),
+      detail: {
+        tags: ["compliance"],
+        summary: "Generate a regulatory report",
+        description: "Generate a regulatory report",
+      },
     }
   )
 
   .get(
     "/reports/landlord/:landlordId",
     async ({ params }) =>
-      await ComplianceService.getRegulatoryReportsByLandlord(params.landlordId)
+      await ComplianceService.getRegulatoryReportsByLandlord(params.landlordId),
+    {
+      params: t.Object({ landlordId: t.String() }),
+      detail: {
+        tags: ["compliance"],
+        summary: "Get regulatory reports by landlord ID",
+        description: "Get regulatory reports by landlord ID",
+      },
+    }
   )
 
   .get(
     "/templates",
-    async ({ query }) => await ComplianceService.getLegalTemplates(query)
+    async ({ query }) => await ComplianceService.getLegalTemplates(query),
+    {
+      query: t.Object({
+        type: t.Optional(t.Enum(LegalTemplateType)),
+      }),
+      detail: {
+        tags: ["compliance"],
+        summary: "Get legal templates",
+        description: "Get legal templates",
+      },
+    }
   )
 
   .post(
@@ -172,15 +252,41 @@ export const complianceController = new Elysia({ prefix: "/compliance" })
         variables: t.Record(t.String(), t.Any()),
         createdBy: t.String(),
       }),
+      detail: {
+        tags: ["compliance"],
+        summary: "Generate a document from a template",
+        description: "Generate a document from a template",
+      },
+      params: t.Object({ id: t.String() }),
     }
   )
 
-  .post("/check-expiring", async () => {
-    await SchedulerService.runTask("check_expiring_compliance");
-    return { message: "Expiring compliance records checked successfully" };
-  })
+  .post(
+    "/check-expiring",
+    async () => {
+      await SchedulerService.runTask("check_expiring_compliance");
+      return { message: "Expiring compliance records checked successfully" };
+    },
+    {
+      detail: {
+        tags: ["compliance"],
+        summary: "Check expiring compliance records",
+        description: "Check expiring compliance records",
+      },
+    }
+  )
 
-  .post("/check-inspections", async () => {
-    await SchedulerService.runTask("check_upcoming_inspections");
-    return { message: "Upcoming inspections checked successfully" };
-  });
+  .post(
+    "/check-inspections",
+    async () => {
+      await SchedulerService.runTask("check_upcoming_inspections");
+      return { message: "Upcoming inspections checked successfully" };
+    },
+    {
+      detail: {
+        tags: ["compliance"],
+        summary: "Check upcoming inspections",
+        description: "Check upcoming inspections",
+      },
+    }
+  );

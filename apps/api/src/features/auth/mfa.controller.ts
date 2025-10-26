@@ -17,7 +17,7 @@ import { createOrUpdateSession } from "./session.controller";
 const PHONE_MASK_REGEX = /(\d{3})\d{6}(\d{3})/;
 
 // MFA v2 Controller - Unified implementation
-export const mfaController = new Elysia({ name: "mfa-v2" })
+export const mfaController = new Elysia({ name: "mfa" })
   .decorate({
     sessionStore: new SessionStore(process.env.SESSION_STORAGE as any),
   })

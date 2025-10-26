@@ -47,6 +47,7 @@ type DetailsFormData = {
     value: number;
     unit: "sqft" | "sqm";
   };
+  size?: number;
   floor?: number;
   totalFloors?: number;
   yearBuilt?: number;
@@ -283,11 +284,15 @@ export function DetailsForm({
                             placeholder="Enter area"
                             type="number"
                             {...field}
-                            onChange={(e) =>
+                            onChange={(e) => {
                               field.onChange(
                                 Number.parseFloat(e.target.value) || undefined
-                              )
-                            }
+                              );
+                              form.setValue(
+                                "size",
+                                Number.parseFloat(e.target.value) || undefined
+                              );
+                            }}
                           />
                         </FormControl>
                         <FormMessage />

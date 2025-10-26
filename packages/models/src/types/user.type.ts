@@ -92,9 +92,9 @@ export type UserAddress = {
 
 // User verification information
 export type UserVerification = {
-  emailVerifiedAt: Date;
-  phoneVerifiedAt: Date;
-  identityVerifiedAt: Date;
+  emailVerifiedAt?: Date;
+  phoneVerifiedAt?: Date;
+  identityVerifiedAt?: Date;
   kycStatus: KYCStatus;
   kycData?: {
     identification: KenyanIdentification;
@@ -318,7 +318,7 @@ export type UserResponse = {
   kycStatus: KYCStatus;
   county?: string;
   estate?: string;
-  preferences: UserPreferences;
+  preferences?: UserPreferences;
   stats?: UserStats;
   lastLogin?: Date;
   createdAt: Date;

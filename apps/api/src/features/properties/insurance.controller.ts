@@ -57,24 +57,56 @@ export const insuranceController = new Elysia({ prefix: "/insurance" })
           paymentFrequency: t.String(),
         }),
       }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Create a new insurance policy",
+        description: "Create a new insurance policy",
+      },
     }
   )
 
   .get(
     "/policies/landlord/:landlordId",
     async ({ params }) =>
-      await InsuranceService.getPoliciesByLandlord(params.landlordId)
+      InsuranceService.getPoliciesByLandlord(params.landlordId),
+    {
+      params: t.Object({ landlordId: t.String() }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Get insurance policies by landlord ID",
+        description: "Get insurance policies by landlord ID",
+      },
+    }
   )
 
   .get(
     "/policies/:id",
-    async ({ params }) => await InsuranceService.getPolicyById(params.id)
+    async ({ params }) => await InsuranceService.getPolicyById(params.id),
+    {
+      params: t.Object({ id: t.String() }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Get insurance policy by ID",
+        description: "Get insurance policy by ID",
+      },
+    }
   )
 
   .post(
     "/policies/:id/renew",
     async ({ params, body }) =>
-      await InsuranceService.renewPolicy(params.id, body)
+      await InsuranceService.renewPolicy(params.id, body),
+    {
+      params: t.Object({ id: t.String() }),
+      body: t.Object({
+        reason: t.String(),
+      }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Renew an insurance policy",
+        description: "Renew an insurance policy",
+      },
+    }
   )
 
   .post(
@@ -85,6 +117,12 @@ export const insuranceController = new Elysia({ prefix: "/insurance" })
       body: t.Object({
         reason: t.String(),
       }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Cancel an insurance policy",
+        description: "Cancel an insurance policy",
+      },
+      params: t.Object({ id: t.String() }),
     }
   )
 
@@ -150,18 +188,39 @@ export const insuranceController = new Elysia({ prefix: "/insurance" })
         }),
         submittedBy: t.String(),
       }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Submit a new insurance claim",
+        description: "Submit a new insurance claim",
+      },
     }
   )
 
   .get(
     "/claims/landlord/:landlordId",
     async ({ params }) =>
-      await InsuranceService.getClaimsByLandlord(params.landlordId)
+      await InsuranceService.getClaimsByLandlord(params.landlordId),
+    {
+      params: t.Object({ landlordId: t.String() }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Get insurance claims by landlord ID",
+        description: "Get insurance claims by landlord ID",
+      },
+    }
   )
 
   .get(
     "/claims/:id",
-    async ({ params }) => await InsuranceService.getClaimById(params.id)
+    async ({ params }) => await InsuranceService.getClaimById(params.id),
+    {
+      params: t.Object({ id: t.String() }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Get insurance claim by ID",
+        description: "Get insurance claim by ID",
+      },
+    }
   )
 
   .post(
@@ -173,43 +232,108 @@ export const insuranceController = new Elysia({ prefix: "/insurance" })
         action: t.String(),
         data: t.Any(),
       }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Process an insurance claim",
+        description: "Process an insurance claim",
+      },
+      params: t.Object({ id: t.String() }),
     }
   )
 
   .get(
     "/recommendations/:propertyId",
     async ({ params }) =>
-      await InsuranceService.getInsuranceRecommendations(params.propertyId)
+      await InsuranceService.getInsuranceRecommendations(params.propertyId),
+    {
+      params: t.Object({ propertyId: t.String() }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Get insurance recommendations",
+        description: "Get insurance recommendations",
+      },
+    }
   )
 
-  .post("/check-expiring", async () => {
-    await SchedulerService.runTask("check_expiring_policies");
-    return { message: "Expiring policies checked successfully" };
-  })
+  .post(
+    "/check-expiring",
+    async () => {
+      await SchedulerService.runTask("check_expiring_policies");
+      return { message: "Expiring policies checked successfully" };
+    },
+    {
+      detail: {
+        tags: ["insurance"],
+        summary: "Check expiring policies",
+        description: "Check expiring policies",
+      },
+    }
+  )
 
-  .post("/check-overdue", async () => {
-    await SchedulerService.runTask("check_overdue_payments");
-    return { message: "Overdue payments checked successfully" };
-  })
+  .post(
+    "/check-overdue",
+    async () => {
+      await SchedulerService.runTask("check_overdue_payments");
+      return { message: "Overdue payments checked successfully" };
+    },
+    {
+      detail: {
+        tags: ["insurance"],
+        summary: "Check overdue payments",
+        description: "Check overdue payments",
+      },
+    }
+  )
 
   .get(
     "/policies/expired",
-    async () => await InsuranceService.getExpiredPolicies()
+    async () => await InsuranceService.getExpiredPolicies(),
+    {
+      detail: {
+        tags: ["insurance"],
+        summary: "Get expired policies",
+        description: "Get expired policies",
+      },
+    }
   )
 
   .get(
     "/policies/reminders",
-    async () => await InsuranceService.getInsuranceReminders()
+    async () => await InsuranceService.getInsuranceReminders(),
+    {
+      detail: {
+        tags: ["insurance"],
+        summary: "Get insurance reminders",
+        description: "Get insurance reminders",
+      },
+    }
   )
 
   .get(
     "/claims/:id/attachments",
-    async ({ params }) => await InsuranceService.getClaimAttachments(params.id)
+    async ({ params }) => await InsuranceService.getClaimAttachments(params.id),
+    {
+      params: t.Object({ id: t.String() }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Get insurance claim attachments",
+        description: "Get insurance claim attachments",
+      },
+    }
   )
 
   .delete(
     "/claims/:id",
-    async ({ params }) => await InsuranceService.deleteInsuranceClaim(params.id)
+    async ({ params }) =>
+      await InsuranceService.deleteInsuranceClaim(params.id),
+    {
+      params: t.Object({ id: t.String() }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Delete an insurance claim",
+        description: "Delete an insurance claim",
+      },
+    }
   )
 
   .post(
@@ -223,6 +347,11 @@ export const insuranceController = new Elysia({ prefix: "/insurance" })
       body: t.Object({
         message: t.String(),
       }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Send an insurance reminder",
+        description: "Send an insurance reminder",
+      },
     }
   )
 
@@ -237,5 +366,10 @@ export const insuranceController = new Elysia({ prefix: "/insurance" })
           status: t.Enum(ClaimStatus),
         }),
       }),
+      detail: {
+        tags: ["insurance"],
+        summary: "Bulk update insurance claims",
+        description: "Bulk update insurance claims",
+      },
     }
   );

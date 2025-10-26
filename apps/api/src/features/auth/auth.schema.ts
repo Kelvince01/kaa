@@ -123,6 +123,19 @@ export const RegisterUserResponseSchema = t.Object({
   username: t.String(),
 });
 
+export const VerifyUserRequestSchema = t.Object({
+  token: t.String(),
+});
+
+export const ForgotPasswordRequestSchema = t.Object({
+  email: t.String(),
+});
+
+export const ResetPasswordRequestSchema = t.Object({
+  token: t.String(),
+  password: t.String(),
+});
+
 export const ApiKeyRequestSchema = t.Object({
   name: t.String(),
   permissions: t.Array(t.String()),

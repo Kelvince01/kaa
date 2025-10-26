@@ -374,14 +374,14 @@ const propertySchema = new Schema<IProperty>(
     slug: { type: String, required: true, trim: true, unique: true },
     landlord: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Landlord",
       required: true,
     },
     agent: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Agent",
     },
-    memberId: { type: Schema.Types.ObjectId, ref: "Member", required: true },
+    memberId: { type: Schema.Types.ObjectId, ref: "Member" },
     organizationId: { type: Schema.Types.ObjectId, ref: "Organization" },
     type: {
       type: String,

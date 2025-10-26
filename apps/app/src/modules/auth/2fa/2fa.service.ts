@@ -1,3 +1,4 @@
+import { MFAType } from "@kaa/models/types";
 import { httpClient } from "@/lib/axios";
 import type {
   TwoFactorCompleteLoginRequest,
@@ -7,7 +8,9 @@ import type {
 
 export const twoFactorService = {
   async setup2FA(): Promise<TwoFactorSetupResponse> {
-    const { data } = await httpClient.api.post("/auth/2fa/setup");
+    const { data } = await httpClient.api.post<TwoFactorSetupResponse>(
+      "/auth/mfa/setup/totp"
+    );
     return data;
   },
 
@@ -15,21 +18,24 @@ export const twoFactorService = {
     token: string,
     secret: string
   ): Promise<{ recoveryCodes: string[] }> {
-    const response = await httpClient.api.post("/auth/2fa/verify", {
-      token,
-      secret,
-    });
+    const response = await httpClient.api.post<{ recoveryCodes: string[] }>(
+      "/auth/mfa/setup/totp/verify",
+      {
+        token,
+        secret,
+      }
+    );
     return response.data;
   },
 
   async disable2FA(): Promise<{ message: string }> {
-    const response = await httpClient.api.delete("/auth/2fa/disable");
+    const response = await httpClient.api.delete(`/auth/mfa/${MFAType.TOTP}`);
     return response.data;
   },
 
   async regenerateBackupCodes(): Promise<{ recoveryCodes: string[] }> {
-    const response = await httpClient.api.post(
-      "/auth/2fa/recovery-codes/regenerate"
+    const response = await httpClient.api.post<{ recoveryCodes: string[] }>(
+      "/auth/mfa/recovery-codes/regenerate"
     );
     return response.data;
   },
@@ -37,7 +43,7 @@ export const twoFactorService = {
   async get2FAStatus(): Promise<{
     data: { isEnabled: boolean; backupCodesRemaining: number };
   }> {
-    const { data } = await httpClient.api.get("/auth/2fa/status");
+    const { data } = await httpClient.api.get("/auth/mfa/status");
     return data;
   },
 
@@ -45,7 +51,7 @@ export const twoFactorService = {
     token: string,
     recoveryCode?: string
   ): Promise<{ isValid: boolean }> {
-    const response = await httpClient.api.post("/auth/2fa/validate", {
+    const response = await httpClient.api.post("/auth/mfa/validate", {
       token,
       recoveryCode,
     });
@@ -53,7 +59,7 @@ export const twoFactorService = {
   },
 
   async verifyBackupCode(token: string): Promise<{ usedBackupCode: boolean }> {
-    const response = await httpClient.api.post("/auth/2fa/verify/backup-code", {
+    const response = await httpClient.api.post("/auth/mfa/verify/backup-code", {
       token,
     });
     return response.data;
@@ -64,7 +70,7 @@ export const twoFactorService = {
     payload: TwoFactorCompleteLoginRequest
   ): Promise<TwoFactorCompleteLoginResponse> {
     const { data } = await httpClient.api.post<TwoFactorCompleteLoginResponse>(
-      "/auth/2fa/complete/login",
+      "/auth/mfa/complete/login",
       payload
     );
     return data;

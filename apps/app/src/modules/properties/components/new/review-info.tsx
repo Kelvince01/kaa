@@ -1,3 +1,5 @@
+import type { CreatePropertyData } from "@kaa/models/types";
+import { Alert, AlertDescription } from "@kaa/ui/components/alert";
 import { Badge } from "@kaa/ui/components/badge";
 import { Button } from "@kaa/ui/components/button";
 import {
@@ -27,6 +29,7 @@ import {
   Home,
   MapPin,
   Star,
+  XCircle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
@@ -35,7 +38,11 @@ import { useStepper } from "@/components/common/stepper";
 import UnsavedBadge from "@/components/common/unsaved-badge";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { useFormWithDraft } from "@/hooks/use-draft-form";
-import type { Amenity, Property } from "@/modules/properties/property.type";
+import type {
+  Amenity,
+  ListingType,
+  Property,
+} from "@/modules/properties/property.type";
 import { useDraftStore } from "@/shared/stores/draft.store";
 import { useCreateProperty } from "../../property.mutations";
 import { useNewPropertyStore } from "../../property.store";
@@ -50,7 +57,6 @@ type ReviewInfoProps = {
 };
 
 export const ReviewInfo = ({
-  property,
   sheet: isSheet,
   callback,
   children,
@@ -58,7 +64,7 @@ export const ReviewInfo = ({
   const t = useTranslations();
   const { nextStep } = useStepper();
   const { forms } = useDraftStore();
-  const { setFinishedCreating } = useNewPropertyStore();
+  const { setFinishedCreating, setNewPropertyOpen } = useNewPropertyStore();
   const createPropertyMutation = useCreateProperty();
 
   // Get draft data from all sections
@@ -80,7 +86,7 @@ export const ReviewInfo = ({
   ] as PropertyFormData["availability"];
   const mediaData = forms["property-media-info"] as PropertyFormData["media"];
 
-  const isPending = false;
+  const isPending = createPropertyMutation.isPending;
   const initialFormValues = {
     published: false,
   };
@@ -98,87 +104,122 @@ export const ReviewInfo = ({
   });
 
   const onSubmit = (data: { published: boolean }) => {
-    // Compile all data and submit
-    const propertyData = {
-      ...basicData,
-      ...detailsData,
-      ...locationData,
-      ...pricingData,
-      ...featuresData,
-      ...availabilityData,
-      ...mediaData,
-      ...data,
+    // Transform draft data to match API Property structure
+    const propertyPayload: Partial<Property> = {
+      // Basic information
+      title: basicData?.title,
+      description: basicData?.description,
+      type: basicData?.type as any,
+      listingType: basicData?.listingType as ListingType,
+
+      // Specifications (nested structure)
+      specifications: {
+        bedrooms: detailsData?.bedrooms || 0,
+        bathrooms: detailsData?.bathrooms || 0,
+        size: detailsData?.size || 0,
+        furnished: featuresData?.furnished,
+        parking: featuresData?.parking,
+      } as any,
+
+      // Location (nested structure)
+      location: {
+        country: locationData?.country || "KE",
+        county: locationData?.county,
+        constituency: locationData?.constituency,
+        address: locationData?.address,
+      } as any,
+
+      // Geolocation
+      geolocation:
+        locationData?.geolocation ||
+        ({
+          type: "Point",
+          coordinates: [0, 0],
+        } as any),
+
+      // Pricing (nested structure)
+      pricing: {
+        rent: pricingData?.rentAmount,
+        deposit: pricingData?.securityDeposit,
+        serviceFee: pricingData?.serviceCharge,
+        currency: pricingData?.currency,
+        paymentFrequency: pricingData?.paymentFrequency,
+        negotiable: pricingData?.negotiable,
+        utilitiesIncluded: pricingData?.utilitiesIncluded?.reduce(
+          // biome-ignore lint/performance/noAccumulatingSpread: ignore
+          (acc, util) => ({ ...acc, [util]: true }),
+          {}
+        ),
+      } as any,
+
+      // Amenities
+      amenities: {
+        amenities: featuresData?.amenities || [],
+        features: featuresData?.features || [],
+      } as any,
+
+      // Availability
+      availability: {
+        availableFrom: availabilityData?.availableFrom,
+        availableTo: availabilityData?.availableTo,
+        noticePeriod: availabilityData?.noticePeriod,
+      } as any,
+
+      // Media - transform to match API structure
+      media: {
+        images:
+          mediaData?.photos?.map((photo, index) => ({
+            id: photo.id || crypto.randomUUID(),
+            url: photo.url,
+            caption: photo.caption,
+            isPrimary: photo.isPrimary,
+            order: index,
+            uploadedAt: new Date(),
+          })) || [],
+        videos:
+          mediaData?.videos?.map((video) => ({
+            id: video.id || crypto.randomUUID(),
+            url: video.url,
+            thumbnailUrl: video.thumbnail,
+            uploadedAt: new Date(),
+          })) || [],
+        virtualTours: mediaData?.virtualTour ? [mediaData.virtualTour] : [],
+        floorPlans: mediaData?.floorPlan?.url
+          ? [
+              {
+                id: mediaData.floorPlan.id || crypto.randomUUID(),
+                url: mediaData.floorPlan.url,
+                name: mediaData.floorPlan.caption || "Floor Plan",
+                uploadedAt: new Date(),
+              },
+            ]
+          : [],
+      } as any,
+
+      // Status based on published checkbox
+      status: data.published ? "active" : ("draft" as any),
     };
 
-    // const obj = {
-    // 	"utilitiesIncluded": [
-    // 		"electricity",
-    // 		"cable",
-    // 		"water"
-    // 	],
-    // 	"features": [
-    // 		"balcony",
-    // 		"parking",
-    // 		"wifi"
-    // 	],
-    // 	"amenities": [
-    // 		{
-    // 			"name": "Children's Playground"
-    // 		}
-    // 	],
-    // 	"furnished": true,
-    // 	"parking": true,
-    // 	"published": true
-    // }
+    console.log("Submitting property data:", propertyPayload);
 
-    // const newProperty: Property = {
-    // 	title: propertyData.title,
-    // 	description: propertyData.description,
-    // 	type: propertyData.type as "flat" | "house" | "apartment" | "studio" | "other" | "villa" | "office" | "land",
-    // 	listingType: propertyData.listingType,
-    // 	details: {
-    // 		bedrooms: propertyData.bedrooms,
-    // 		bathrooms: propertyData.bathrooms,
-    // 		size: propertyData.size || 0,
-    // 		furnished: propertyData.furnished || false,
-    // 		furnishedStatus: propertyData.furnishedStatus || "unfurnished",
-    // 		parking: propertyData.parking || false,
-    // 		rooms: propertyData.rooms || 0,
-    // 	},
-    // 	location: {
-    // 		country: propertyData.country || "KE",
-    // 		county: propertyData.county,
-    // 		constituency: propertyData.constituency || "",
-    // 		address: propertyData.address,
-    // 	},
-    // 	geolocation: propertyData.geolocation || { type: "Point", coordinates: [0, 0] },
-    // 	pricing: {
-    // 		rentAmount: propertyData.rentAmount,
-    // 		securityDeposit: propertyData.securityDeposit,
-    // 		serviceCharge: propertyData.serviceCharge,
-    // 		utilitiesIncluded: propertyData.utilitiesIncluded,
-    // 		negotiable: propertyData.negotiable,
-    // 		currency: propertyData.currency,
-    // 		paymentFrequency: propertyData.paymentFrequency,
-    // 	},
-    // 	features: {
-    // 		features: obj.features,
-    // 		amenities: obj.amenities,
-    // 		furnished: obj.furnished,
-    // 		parking: obj.parking,
-    // 	},
-    // 	amenities: propertyData.amenities,
-    // }
-
-    console.log("Submitting complete property data:", propertyData);
-
-    // Here you would typically call your API to create the property
-    // await createProperty(propertyData);
-
-    setFinishedCreating();
-    // Move to next step or show success message
-    nextStep?.();
-    callback?.(property as Property);
+    // Call the API mutation
+    createPropertyMutation.mutate(propertyPayload as unknown as CreatePropertyData, {
+      onSuccess: (createdProperty) => {
+        console.log("Property created successfully:", createdProperty);
+        // Clear draft forms
+        useDraftStore.setState({ forms: {} });
+        // Mark as finished
+        setFinishedCreating();
+        // Close the modal/dialog
+        setNewPropertyOpen(false);
+        // Navigate or callback
+        callback?.(createdProperty);
+      },
+      onError: (error) => {
+        console.error("Failed to create property:", error);
+        // Error will be handled by the mutation's error state
+      },
+    });
   };
 
   return (
@@ -461,6 +502,18 @@ export const ReviewInfo = ({
               />
             </CardContent>
           </Card>
+
+          {/* Error Alert */}
+          {createPropertyMutation.isError && (
+            <Alert variant="destructive">
+              <XCircle className="h-4 w-4" />
+              <AlertDescription>
+                Failed to create property. Please check your data and try again.
+                {createPropertyMutation.error instanceof Error &&
+                  ` Error: ${createPropertyMutation.error.message}`}
+              </AlertDescription>
+            </Alert>
+          )}
 
           <div className="flex flex-col gap-2 sm:flex-row">
             {children}
