@@ -5,7 +5,11 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./stripe": "./src/stripe.util.ts"
+    "./stripe": "./src/stripe.util.ts",
+    "./logger": "./src/logger.util.ts",
+    "./redis": "./src/cache.util.ts",
+    "./bull": "./src/bull.util.ts",
+    "./errors": "./src/error.util.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

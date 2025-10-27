@@ -20,6 +20,7 @@ export const apiKeyController = new Elysia().group("api-keys", (app) =>
             user.memberId || "",
             user.id
           );
+
           set.status = 200;
           return {
             status: "success",

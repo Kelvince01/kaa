@@ -212,7 +212,7 @@ export interface IPasskey extends BaseDocument {
 }
 
 export interface IApiKey extends BaseDocument {
-  memberId: mongoose.Types.ObjectId;
+  memberId?: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   name: string;
   key: string;

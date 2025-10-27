@@ -16,7 +16,6 @@
     "@elysiajs/cors": "^1.3.3",
     "@elysiajs/openapi": "^1.4.11",
     "@kaa/config": "workspace:*",
-    "@kaa/email": "workspace:*",
     "@kaa/models": "workspace:*",
     "@kaa/services": "workspace:*",
     "@kaa/utils": "workspace:*",

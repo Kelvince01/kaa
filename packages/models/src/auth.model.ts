@@ -747,7 +747,7 @@ export const Passkey = mongoose.model<IPasskey>("Passkey", passkeySchema);
 
 const apiKeySchema = new Schema<IApiKey>(
   {
-    memberId: { type: Schema.Types.ObjectId, ref: "Member", required: true },
+    memberId: { type: Schema.Types.ObjectId, ref: "Member" },
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     name: { type: String, required: true },
     key: { type: String, required: true, unique: true },

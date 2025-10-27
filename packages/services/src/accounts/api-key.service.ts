@@ -2,8 +2,8 @@ import crypto from "node:crypto";
 import { ApiKey } from "@kaa/models";
 import type { IApiKey } from "@kaa/models/types";
 import { AppError, logger, NotFoundError } from "@kaa/utils";
-import type mongoose from "mongoose";
 import type { FilterQuery } from "mongoose";
+import mongoose from "mongoose";
 
 export type CreateApiKeyData = {
   memberId: string;
@@ -35,7 +35,6 @@ export class ApiKeyService {
       const hashedKey = crypto.createHash("sha256").update(key).digest("hex");
 
       const apiKey = new ApiKey({
-        memberId: data.memberId,
         userId: data.userId,
         name: data.name,
         key, // Only returned on creation
@@ -44,6 +43,9 @@ export class ApiKeyService {
         rateLimit: data.rateLimit || { requests: 1000, window: 3600 },
         expiresAt: data.expiresAt,
       });
+
+      if (data.memberId)
+        apiKey.memberId = new mongoose.Types.ObjectId(data.memberId);
 
       await apiKey.save();
 
@@ -98,9 +100,14 @@ export class ApiKeyService {
 
   async getApiKeys(memberId: string, userId?: string): Promise<IApiKey[]> {
     try {
-      const query: FilterQuery<IApiKey> = { memberId, isActive: true };
+      const query: FilterQuery<IApiKey> = { isActive: true };
+
       if (userId) {
         query.userId = userId;
+      }
+
+      if (memberId) {
+        query.memberId = memberId;
       }
 
       const apiKeys = await ApiKey.find(query)

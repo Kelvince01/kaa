@@ -1,314 +1,30 @@
-import { sendLoginAlertEmail } from "@kaa/email";
-import { MFASecret, RefreshToken, User } from "@kaa/models";
-import { UserStatus } from "@kaa/models/types";
-import {
-  auditService,
-  memberService,
-  roleService,
-  userService,
-} from "@kaa/services";
-import { getDeviceInfo, logger } from "@kaa/utils";
-import type { Context } from "elysia";
+import { apiKeyService } from "@kaa/services/api-keys";
+import { getMemberBy } from "@kaa/services/members";
+import { getUserById } from "@kaa/services/users";
+import { logger } from "@kaa/utils/logger";
 import Elysia, { t } from "elysia";
 import type mongoose from "mongoose";
-import { config } from "#/config";
-import { authPlugin } from "~/features/auth/auth.plugin";
-import {
-  LoginTwoFactorSchema,
-  LoginUserRequestSchema,
-  LoginUserResponseSchema,
-} from "~/features/auth/auth.schema";
-import { createOrUpdateSession } from "~/features/auth/session.controller";
-// import { authRateLimit } from "~/plugins/rate-limit.plugin";
-import { jwtPlugin } from "~/plugins/security.plugin";
-import { SessionStore } from "~/services/session-store";
+import { apiKeyPlugin } from "./api-key.plugin";
 
-export const authController = new Elysia()
-  .use(jwtPlugin)
-  //   .use(authRateLimit)
-  .decorate({
-    sessionStore: new SessionStore(process.env.SESSION_STORAGE as any),
-  })
-  .post(
-    "/login",
-    async (ctx) => {
-      const {
-        body,
-        set,
-        cookie: { access_token, refresh_token, role_token },
-        jwt,
-        request,
-        server,
-      } = ctx;
-
-      try {
-        const user = await userService.getUserBy({
-          "contact.email": body.email,
-        });
-        if (!user) {
-          set.status = 401;
-          return {
-            status: "error",
-            message: "Invalid credentials",
-          };
-        }
-
-        // Check if account is locked
-        if (user.isLocked()) {
-          set.status = 401;
-          return {
-            status: "error",
-            message: "Account is temporarily locked",
-          };
-        }
-
-        const isPasswordValid = await user.comparePassword(body.password);
-
-        if (!isPasswordValid) {
-          // Increment login attempts
-          user.activity.loginAttempts += 1;
-          if (user.activity.loginAttempts >= 5) {
-            user.activity.lockUntil = new Date(Date.now() + 30 * 60 * 1000); // Lock for 30 minutes
-          }
-          await user.save();
-
-          set.status = 401;
-          return {
-            status: "error",
-            message: "Invalid credentials",
-          };
-        }
-
-        if (user.status !== UserStatus.ACTIVE) {
-          set.status = 401;
-          return {
-            status: "error",
-            message: "User is not active",
-          };
-        }
-
-        if (user.verification.emailVerifiedAt === null) {
-          set.status = 401;
-          return {
-            verified: false,
-            status: "error",
-            message: "Please verify your email before logging in",
-          };
-        }
-
-        const mfaSecret = await MFASecret.findOne({ userId: user._id });
-
-        if (mfaSecret?.isEnabled) {
-          set.status = 200;
-          return {
-            status: "success",
-            message: "Please complete two-factor authentication",
-            requiresTwoFactor: true,
-            userId: (user._id as mongoose.Types.ObjectId).toString(),
-          } as any;
-        }
-
-        // Reset login attempts on successful login
-        user.activity.loginAttempts = 0;
-        user.activity.lockUntil = undefined;
-        user.activity.lastLogin = new Date();
-        user.activity.lastActivity = new Date();
-        await user.save();
-
-        const {
-          _id: id,
-          profile: { displayName, firstName, lastName, avatar },
-          contact: { email, phone },
-          status,
-          verification: {
-            emailVerifiedAt,
-            phoneVerifiedAt,
-            identityVerifiedAt,
-          },
-          createdAt,
-          updatedAt,
-          activity: { lastLogin: lastLoginAt, lastActivity: lastActivityAt },
-        } = user;
-
-        // Get user role
-        const userRole = await roleService.getUserRoleBy({
-          userId: (id as mongoose.Types.ObjectId).toString(),
-        });
-
-        const accessToken = await jwt.sign({
-          sub: (id as mongoose.Types.ObjectId).toString(),
-          iss: "access",
-          exp: Math.floor(Date.now() / 1000) + config.jwt.expiresIn,
-        });
-        const refreshTokenExpiry =
-          Math.floor(Date.now() / 1000) + config.jwt.refreshTokenExpiresIn;
-        const refreshToken = await jwt.sign({
-          sub: (id as mongoose.Types.ObjectId).toString(),
-          iss: "refresh",
-          exp: refreshTokenExpiry,
-        });
-
-        const { userAgent, ip } = getDeviceInfo(request, server);
-
-        await RefreshToken.create({
-          user: user.id,
-          token: refreshToken,
-          expires: new Date(refreshTokenExpiry * 1000),
-          valid: true,
-          revoked: false,
-          ipAddress: ip,
-          userAgent,
-        });
-
-        const sessionId = await createOrUpdateSession(
-          (user._id as mongoose.Types.ObjectId).toString(),
-          accessToken,
-          "regular",
-          "password",
-          ctx as Context,
-          ctx.sessionStore
-        );
-
-        // Set session ID in header for subsequent requests
-        ctx.headers["x-session-id"] = sessionId.sessionId;
-        ctx.cookie.session_id.set({
-          value: sessionId,
-          httpOnly: true,
-          maxAge: Number(config.jwt.expiresIn),
-          path: "/",
-        });
-
-        // Set the auth cookie
-        access_token.set({
-          value: accessToken,
-          httpOnly: true, // Prevents XSS attacks
-          secure: true, // HTTPS only (set to false in development)
-          sameSite: "none", // Required for cross-origin requests
-          maxAge: config.jwt.expiresIn,
-          path: "/",
-        });
-        refresh_token.set({
-          value: refreshToken,
-          httpOnly: true, // Prevents XSS attacks
-          secure: true, // HTTPS only (set to false in development)
-          sameSite: "none", // Required for cross-origin requests
-          maxAge: config.jwt.refreshTokenExpiresIn,
-          path: "/",
-        });
-        role_token.set({
-          value: (userRole?.roleId as any)?.name ?? "",
-          maxAge: config.jwt.refreshTokenExpiresIn,
-          path: "/",
-        });
-        set.headers.authorization = `Bearer ${accessToken}`;
-
-        // Send login alert email
-        await sendLoginAlertEmail(email, ip ?? "", userAgent);
-
-        const member = await memberService.getMemberBy({
-          user: (user._id as mongoose.Types.ObjectId).toString(),
-        });
-
-        // Track login event
-        await auditService.trackEvent({
-          memberId: member?._id?.toString(),
-          userId: (user._id as mongoose.Types.ObjectId).toString(),
-          type: "user_login",
-          category: "user",
-          action: "login",
-        });
-
-        logger.info("User logged in", {
-          userId: user._id,
-          memberId: member?._id?.toString(),
-        });
-
-        set.status = 200;
-        return {
-          status: "success",
-          user: {
-            id: (id as mongoose.Types.ObjectId).toString(),
-            username: displayName,
-            firstName,
-            lastName,
-            email,
-            avatar,
-            memberId: member?._id?.toString(),
-            role: (userRole?.roleId as any)?.name ?? "",
-            phone: phone?.formatted,
-            address: user.addresses?.[0],
-            status,
-            isActive: (user.status as UserStatus) === UserStatus.ACTIVE,
-            isVerified: !!user.verification?.emailVerifiedAt,
-            createdAt,
-            updatedAt,
-            lastLoginAt,
-          } as any,
-          tokens: {
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          },
-          message: "Login successful",
-        };
-      } catch (error) {
-        // If unique mongoose constraint (for username or email) is violated
-        if (
-          error instanceof Error &&
-          error.message.includes("E11000 duplicate key error collection")
-        ) {
-          set.status = 422;
-          return {
-            status: "error",
-            message: "Resource already exists!",
-          };
-        }
-
-        set.status = 401;
-        return {
-          status: "error",
-          message:
-            error instanceof Error ? error.message : "Authentication failed",
-        };
-      }
-    },
-    {
-      body: LoginUserRequestSchema,
-      response: {
-        200: t.Union([
-          t.Object({
-            status: t.Literal("success"),
-            ...LoginUserResponseSchema.properties,
-          }),
-          t.Object({
-            ...LoginTwoFactorSchema.properties,
-          }),
-        ]),
-        401: t.Object({
-          verified: t.Optional(t.Boolean()),
-          status: t.Literal("error"),
-          message: t.String(),
-        }),
-        422: t.Object({
-          status: t.Literal("error"),
-          message: t.String(),
-        }),
-      },
-      detail: {
-        tags: ["auth"],
-        summary: "User login",
-        description: "Authenticate a user and return a token",
-      },
-    }
-  )
+/**
+ * Auth Controller - API Key Management
+ *
+ * All endpoints use API key authentication via X-API-Key or Authorization header
+ * No JWT tokens or session management
+ */
+export const authController = new Elysia({ prefix: "/auth" })
+  // Protected routes - require API key
   .group("", (app) =>
     app
-      .use(authPlugin)
+      .use(apiKeyPlugin)
+
+      // Get current user info from API key
       .get(
         "/me",
         async ({ user, set }) => {
           try {
             // Get full user document
-            const currentUser = await User.findById(user.id);
+            const currentUser = await getUserById(user.id);
             if (!currentUser) {
               set.status = 404;
               return {
@@ -316,15 +32,9 @@ export const authController = new Elysia()
                 message: "User not found",
               };
             }
-            // User is attached to req by the auth middleware
+
             const userProfile = currentUser.getPublicProfile();
-
-            // Get user role
-            const userRole = await roleService.getUserRoleBy({
-              userId: userProfile._id?.toString() ?? "",
-            });
-
-            const member = await memberService.getMemberBy({
+            const member = await getMemberBy({
               user: userProfile._id?.toString() ?? "",
             });
 
@@ -339,14 +49,9 @@ export const authController = new Elysia()
                 firstName: userProfile.profile?.firstName as string,
                 lastName: userProfile.profile?.lastName as string,
                 email: userProfile.contact?.email as string,
-                status: userProfile.status as UserStatus,
-                role: (userRole?.roleId as any)?.name ?? "",
-                phone: userProfile.contact?.phone.formatted,
-                address: userProfile.addresses?.[0] as any,
-                isActive: userProfile.status === UserStatus.ACTIVE,
-                isVerified: !!userProfile.verification?.emailVerifiedAt,
-                createdAt: (userProfile.createdAt as Date).toISOString(),
-                updatedAt: (userProfile.updatedAt as Date).toISOString(),
+                phone: userProfile.contact?.phone?.formatted,
+                permissions: user.permissions,
+                apiKeyId: user.apiKeyId,
               },
             };
           } catch (error) {
@@ -373,22 +78,9 @@ export const authController = new Elysia()
                 firstName: t.String(),
                 lastName: t.String(),
                 email: t.String(),
-                role: t.String(),
                 phone: t.Optional(t.String()),
-                address: t.Optional(
-                  t.Object({
-                    line1: t.String(),
-                    town: t.String(),
-                    postalCode: t.String(),
-                    county: t.String(),
-                    country: t.String(),
-                  })
-                ),
-                status: t.String(),
-                isActive: t.Boolean(),
-                isVerified: t.Boolean(),
-                createdAt: t.String(),
-                updatedAt: t.String(),
+                permissions: t.Array(t.String()),
+                apiKeyId: t.String(),
               }),
             }),
             404: t.Object({
@@ -403,43 +95,376 @@ export const authController = new Elysia()
           },
           detail: {
             tags: ["auth"],
-            summary: "Fetch current user",
-            description: "Fetch the current user",
+            summary: "Get current user info",
+            description: "Get user information from API key",
           },
         }
       )
+
+      // Create new API key
       .post(
-        "/logout",
-        async ({ cookie: { access_token, refresh_token }, user, set }) => {
-          // remove refresh token and access token from cookies
-          access_token.remove();
-          refresh_token.remove();
+        "/api-keys",
+        async ({ user, body, set }) => {
+          try {
+            const apiKey = await apiKeyService.createApiKey({
+              memberId: user.memberId ?? "",
+              userId: user.id,
+              name: body.name,
+              permissions: body.permissions,
+              expiresAt: body.expiresAt ? new Date(body.expiresAt) : undefined,
+              rateLimit: body.rateLimit,
+            });
 
-          // remove refresh token from db & set user online status to offline
-          await User.findByIdAndUpdate(user.id, {
-            isOnline: false,
-            refreshToken: null,
-          });
-          await RefreshToken.findOneAndDelete({ token: refresh_token.value });
+            logger.info("API key created", {
+              apiKeyId: apiKey.id,
+              memberId: user.memberId,
+              userId: user.id,
+            });
 
-          set.status = 200;
-          return {
-            status: "success",
-            message: "Logout successfully",
-          };
+            set.status = 201;
+            return {
+              status: "success",
+              data: apiKey,
+              message:
+                "API key created successfully. Save this key - it won't be shown again!",
+            };
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+
+            set.status = 500;
+            return {
+              status: "error",
+              message: "Failed to create API key",
+              error: errorMessage,
+            };
+          }
+        },
+        {
+          body: t.Object({
+            name: t.String({ minLength: 1, maxLength: 100 }),
+            permissions: t.Optional(t.Array(t.String())),
+            expiresAt: t.Optional(t.String({ format: "date-time" })),
+            rateLimit: t.Optional(
+              t.Object({
+                requests: t.Number({ minimum: 1 }),
+                window: t.Number({ minimum: 1 }),
+              })
+            ),
+          }),
+          response: {
+            201: t.Object({
+              status: t.Literal("success"),
+              data: t.Object({
+                id: t.String(),
+                name: t.String(),
+                key: t.String(),
+                permissions: t.Array(t.String()),
+                rateLimit: t.Optional(
+                  t.Object({
+                    requests: t.Number(),
+                    window: t.Number(),
+                  })
+                ),
+                expiresAt: t.Optional(t.Any()),
+                createdAt: t.Any(),
+              }),
+              message: t.String(),
+            }),
+            500: t.Object({
+              status: t.Literal("error"),
+              message: t.String(),
+              error: t.String(),
+            }),
+          },
+          detail: {
+            tags: ["auth"],
+            summary: "Create API key",
+            description: "Create a new API key for authentication",
+          },
+        }
+      )
+
+      // List all API keys for current user/member
+      .get(
+        "/api-keys",
+        async ({ user, set }) => {
+          try {
+            const apiKeys = await apiKeyService.getApiKeys(
+              user.memberId ?? "",
+              user.id
+            );
+
+            set.status = 200;
+            return {
+              status: "success",
+              data: apiKeys.map((key) => ({
+                id: (key._id as mongoose.Types.ObjectId).toString(),
+                name: key.name,
+                permissions: key.permissions,
+                isActive: key.isActive,
+                lastUsedAt: key.lastUsedAt,
+                expiresAt: key.expiresAt,
+                rateLimit: key.rateLimit,
+                usage: key.usage,
+                createdAt: key.createdAt,
+              })),
+            };
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+
+            set.status = 500;
+            return {
+              status: "error",
+              message: "Failed to fetch API keys",
+              error: errorMessage,
+            };
+          }
         },
         {
           response: {
             200: t.Object({
               status: t.Literal("success"),
+              data: t.Array(
+                t.Object({
+                  id: t.String(),
+                  name: t.String(),
+                  permissions: t.Array(t.String()),
+                  isActive: t.Boolean(),
+                  lastUsedAt: t.Optional(t.Any()),
+                  expiresAt: t.Optional(t.Any()),
+                  rateLimit: t.Optional(
+                    t.Object({
+                      requests: t.Number(),
+                      window: t.Number(),
+                    })
+                  ),
+                  usage: t.Object({
+                    totalRequests: t.Number(),
+                    lastRequest: t.Optional(t.Any()),
+                  }),
+                  createdAt: t.Any(),
+                })
+              ),
+            }),
+            500: t.Object({
+              status: t.Literal("error"),
+              message: t.String(),
+              error: t.String(),
+            }),
+          },
+          detail: {
+            tags: ["auth"],
+            summary: "List API keys",
+            description: "Get all API keys for current user",
+          },
+        }
+      )
+
+      // Get API key usage statistics
+      .get(
+        "/api-keys/:id/usage",
+        async ({ user, params, set }) => {
+          try {
+            const usage = await apiKeyService.getApiKeyUsage(
+              params.id,
+              user.memberId ?? ""
+            );
+
+            set.status = 200;
+            return {
+              status: "success",
+              data: usage,
+            };
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+
+            set.status =
+              error instanceof Error && errorMessage.includes("not found")
+                ? 404
+                : 500;
+            return {
+              status: "error",
+              message: errorMessage,
+            };
+          }
+        },
+        {
+          params: t.Object({
+            id: t.String(),
+          }),
+          response: {
+            200: t.Object({
+              status: t.Literal("success"),
+              data: t.Object({
+                totalRequests: t.Number(),
+                lastRequest: t.Optional(t.Any()),
+                lastUsedAt: t.Optional(t.Any()),
+                rateLimit: t.Optional(
+                  t.Object({
+                    requests: t.Number(),
+                    window: t.Number(),
+                  })
+                ),
+              }),
+            }),
+            404: t.Object({
+              status: t.Literal("error"),
+              message: t.String(),
+            }),
+            500: t.Object({
+              status: t.Literal("error"),
               message: t.String(),
             }),
           },
           detail: {
             tags: ["auth"],
-            summary: "User logout",
-            description:
-              "Logout a user and remove the access token and refresh token from cookies",
+            summary: "Get API key usage",
+            description: "Get usage statistics for an API key",
+          },
+        }
+      )
+
+      // Update API key
+      .patch(
+        "/api-keys/:id",
+        async ({ user, params, body, set }) => {
+          try {
+            const apiKey = await apiKeyService.updateApiKey(
+              params.id,
+              user.memberId ?? "",
+              body
+            );
+
+            logger.info("API key updated", {
+              apiKeyId: params.id,
+              memberId: user.memberId,
+            });
+
+            set.status = 200;
+            return {
+              status: "success",
+              data: {
+                id: (apiKey._id as mongoose.Types.ObjectId).toString(),
+                name: apiKey.name,
+                permissions: apiKey.permissions,
+                expiresAt: apiKey.expiresAt,
+                rateLimit: apiKey.rateLimit,
+              },
+              message: "API key updated successfully",
+            };
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+
+            set.status = errorMessage.includes("not found") ? 404 : 500;
+            return {
+              status: "error",
+              message: errorMessage,
+            };
+          }
+        },
+        {
+          params: t.Object({
+            id: t.String(),
+          }),
+          body: t.Object({
+            name: t.Optional(t.String({ minLength: 1, maxLength: 100 })),
+            permissions: t.Optional(t.Array(t.String())),
+            expiresAt: t.Optional(t.Any()),
+            rateLimit: t.Optional(
+              t.Object({
+                requests: t.Number({ minimum: 1 }),
+                window: t.Number({ minimum: 1 }),
+              })
+            ),
+          }),
+          response: {
+            200: t.Object({
+              status: t.Literal("success"),
+              data: t.Object({
+                id: t.String(),
+                name: t.String(),
+                permissions: t.Array(t.String()),
+                expiresAt: t.Optional(t.Any()),
+                rateLimit: t.Optional(
+                  t.Object({
+                    requests: t.Number(),
+                    window: t.Number(),
+                  })
+                ),
+              }),
+              message: t.String(),
+            }),
+            404: t.Object({
+              status: t.Literal("error"),
+              message: t.String(),
+            }),
+            500: t.Object({
+              status: t.Literal("error"),
+              message: t.String(),
+            }),
+          },
+          detail: {
+            tags: ["auth"],
+            summary: "Update API key",
+            description: "Update API key settings (name, permissions, expiry)",
+          },
+        }
+      )
+
+      // Revoke API key
+      .delete(
+        "/api-keys/:id",
+        async ({ user, params, set }) => {
+          try {
+            await apiKeyService.revokeApiKey(params.id, user.memberId ?? "");
+
+            logger.info("API key revoked", {
+              apiKeyId: params.id,
+              memberId: user.memberId,
+            });
+
+            set.status = 200;
+            return {
+              status: "success",
+              message: "API key revoked successfully",
+            };
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+
+            set.status = errorMessage.includes("not found") ? 404 : 500;
+            return {
+              status: "error",
+              message: errorMessage,
+            };
+          }
+        },
+        {
+          params: t.Object({
+            id: t.String(),
+          }),
+          response: {
+            200: t.Object({
+              status: t.Literal("success"),
+              message: t.String(),
+            }),
+            404: t.Object({
+              status: t.Literal("error"),
+              message: t.String(),
+            }),
+            500: t.Object({
+              status: t.Literal("error"),
+              message: t.String(),
+            }),
+          },
+          detail: {
+            tags: ["auth"],
+            summary: "Revoke API key",
+            description: "Permanently revoke an API key",
           },
         }
       )

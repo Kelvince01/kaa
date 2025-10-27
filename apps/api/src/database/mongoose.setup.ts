@@ -1,5 +1,5 @@
 import config from "@kaa/config/api";
-import { logger } from "@kaa/utils";
+import { logger } from "@kaa/utils/logger";
 import mongoose from "mongoose";
 
 // Database connection
