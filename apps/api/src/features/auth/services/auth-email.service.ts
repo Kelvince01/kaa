@@ -22,7 +22,7 @@ export const sendVerificationEmail = async (
   const verificationUrl = `${config.clientUrl}/auth/verify-email?token=${token}`;
 
   const template = await TemplateService.getTemplateBy({
-    slug: "user-verification",
+    slug: "user-verification-mjml-template",
   });
 
   return emailService.sendEmailWithTemplate({
@@ -56,7 +56,7 @@ export const sendWelcomeEmail = async (
   }
 ): Promise<Job<any, any, string>> => {
   const template = await TemplateService.getTemplateBy({
-    slug: "user-welcome",
+    slug: "welcome-email-mjml-template",
   });
 
   return emailService.sendEmailWithTemplate({
@@ -88,7 +88,7 @@ export const sendLoginAlertEmail = async (
   }
 ): Promise<Job<any, any, string>> => {
   const template = await TemplateService.getTemplateBy({
-    slug: "user-login-alert",
+    slug: "login-alert-email-mjml-template",
   });
 
   return emailService.sendEmailWithTemplate({
@@ -124,7 +124,7 @@ export const sendPasswordResetEmail = async (
   const resetUrl = `${config.clientUrl}/auth/reset-password?token=${token}`;
 
   const template = await TemplateService.getTemplateBy({
-    slug: "user-password-reset",
+    slug: "password-reset-email-mjml-template",
   });
 
   return emailService.sendEmailWithTemplate({

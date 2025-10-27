@@ -15,7 +15,7 @@
     "start:prod": "bun run server",
     "seed": "bun src/scripts/seed/index.ts",
     "seed:rbac": "bun src/scripts/seeds/rbac/index.ts",
-    "seed:templates": "bun src/scripts/seeds/reports/seed-templates.ts",
+    "seed:templates": "bun src/scripts/seeds/templates/index.ts",
     "lint": "bun x biome check .",
     "lint:format": "bun x biome format .",
     "lint:fix": "bun x biome check --write .",

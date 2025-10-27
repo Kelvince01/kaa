@@ -129,7 +129,7 @@ export function PropertyCard({
     return (
       <Card
         className={cn(
-          "group cursor-pointer border-0 shadow-sm transition-all duration-200 hover:shadow-lg",
+          "group cursor-pointer border-0 pt-0! shadow-sm transition-all duration-200 hover:shadow-lg",
           isSelected && "ring-2 ring-primary",
           className
         )}

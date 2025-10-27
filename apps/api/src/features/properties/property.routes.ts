@@ -23,10 +23,10 @@ export const propertyRoutes = new Elysia({
 }).group("/properties", (app) =>
   app
     .use(propertyController)
+    .use(propertyFavoriteController)
     .use(propertyInspectionController)
     .use(propertyConditionController)
     .use(valuationController)
-    .use(propertyFavoriteController)
     .use(searchController)
     .use(propertyMonitoringController)
     .use(propertyAIController)

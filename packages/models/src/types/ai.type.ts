@@ -112,3 +112,25 @@ export interface IAIAgent extends BaseDocument {
   description: string;
   createdBy: mongoose.Types.ObjectId;
 }
+
+export type CreateAIModelData = {
+  name: string;
+  description: string;
+  type:
+    | "regression"
+    | "classification"
+    | "clustering"
+    | "recommendation"
+    | "nlp"
+    | "custom";
+  configuration: {
+    algorithm: string;
+    parameters: Record<string, any>;
+    features: string[];
+    target?: string;
+    textFeatures?: string[];
+    useEmbeddings?: boolean;
+    incrementalLearning?: boolean;
+  };
+  trainingDataSource: string;
+};

@@ -116,11 +116,11 @@ export async function getUserRoleBy({
     query.roleId.name = roleName;
   }
 
-  if (roleName) {
+  if (roleId) {
     query.roleId = roleId;
   }
 
-  if (roleName) {
+  if (userId) {
     query.userId = userId;
   }
 

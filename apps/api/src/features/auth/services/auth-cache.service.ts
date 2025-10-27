@@ -42,7 +42,7 @@ class AuthCacheService {
         logger.debug("User cached", { email });
       }
 
-      return user;
+      return user as IUser | null;
     } catch (error) {
       logger.error("User cache error", { email, error });
       return null;
@@ -77,22 +77,22 @@ class AuthCacheService {
 
   // Role caching
   async getRole(userId: string): Promise<any> {
-    const key = `${this.configs.role.prefix}${userId}`;
+    // const key = `${this.configs.role.prefix}${userId}`;
 
     try {
-      const cached = await redisClient.get(key);
-      if (cached) {
-        return JSON.parse(cached);
-      }
+      // const cached = await redisClient.get(key);
+      // if (cached) {
+      //   return JSON.parse(cached);
+      // }
 
       const role = await roleService.getUserRoleBy({ userId });
-      if (role?.roleId) {
-        await redisClient.setEx(
-          key,
-          this.configs.role.ttl,
-          JSON.stringify(role)
-        );
-      }
+      // if (role?.roleId) {
+      //   await redisClient.setEx(
+      //     key,
+      //     this.configs.role.ttl,
+      //     JSON.stringify(role)
+      //   );
+      // }
 
       return role;
     } catch (error) {

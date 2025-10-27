@@ -10,6 +10,7 @@ import {
   Wallet,
 } from "@kaa/models";
 import {
+  type IMember,
   type IUser,
   KYCStatus,
   type UserResponse as UserResponseType,
@@ -36,7 +37,6 @@ import { memberService } from "..";
 import { notificationService } from "../comms/notification.service";
 import { auditService } from "../misc/audit.service";
 import roleService, {
-  assignRole,
   getDefaultRoleId,
   getRoleByName,
 } from "../rbac/role.service";
@@ -318,7 +318,14 @@ export const createUser = async (
       "profile.lastName": lastName,
       "profile.displayName": username,
       "profile.avatar": avatar || profileImage,
-      "verification.emailVerified": isVerified,
+      "verification.emailVerifiedAt": isVerified ? new Date() : null,
+      "verification.phoneVerifiedAt": isVerified ? new Date() : null,
+      "verification.identityVerifiedAt": isVerified ? new Date() : null,
+      "verification.kycStatus": KYCStatus.PENDING,
+      "activity.loginAttempts": 0,
+      "settings.autoLogout": true,
+      "settings.sessionTimeout": 60,
+      "settings.darkMode": false,
       status: status || "pending",
       addresses:
         county && estate
@@ -337,13 +344,13 @@ export const createUser = async (
           : [],
     });
 
-    const userRoleObj = await UserRole.create({
+    const userRoleObj = new UserRole({
       userId: newUser._id,
       roleId: role ? userRole.id : defaultRoleId,
     });
 
-    let memberId: any | null = null;
-    let member: any | null = null;
+    let memberId: mongoose.Types.ObjectId | null = null;
+    let member: IMember | null = null;
     if (role === "landlord") {
       const org = await Organization.create({
         name,
@@ -405,9 +412,6 @@ export const createUser = async (
         quota: subscriptionPlan.quota,
         autoRenew: false,
       });
-
-      member.subscription = subscription._id;
-      await member.save();
     }
 
     // Create verification token
@@ -427,8 +431,8 @@ export const createUser = async (
 
     // Update member usage
     if (role === "landlord") {
-      member.usage.users += 1;
-      await member.save();
+      (member as IMember).usage.users += 1;
+      await member?.save();
     }
 
     if (role === "tenant") {
@@ -445,11 +449,9 @@ export const createUser = async (
       });
     }
 
-    await assignRole(
-      (newUser._id as mongoose.Types.ObjectId).toString(),
-      role ? userRole.id : defaultRoleId,
-      memberId ? memberId.toString() : null
-    );
+    if (memberId) userRoleObj.memberId = memberId;
+    userRoleObj.assignedBy = newUser._id as mongoose.Types.ObjectId;
+    userRoleObj.save();
 
     // Send welcome notification
     await notificationService.sendNotification(
@@ -461,12 +463,12 @@ export const createUser = async (
           "Your account has been created. Please check your email for login instructions.",
         channels: ["in_app"],
       },
-      memberId ? memberId.toString() : null
+      memberId ? memberId.toString() : undefined
     );
 
     // Track event
     await auditService.trackEvent({
-      memberId,
+      memberId: memberId ? memberId.toString() : undefined,
       userId: (newUser._id as mongoose.Types.ObjectId).toString(),
       type: "user_created",
       category: "user",

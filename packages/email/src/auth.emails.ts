@@ -21,6 +21,7 @@ export const sendVerificationEmail = async (
     template: "verification",
     context: {
       firstName,
+      logoUrl: config.app.logoUrl,
       verificationUrl,
       supportEmail: process.env.SUPPORT_EMAIL || "support@kaa.co.ke",
       year: new Date().getFullYear(),
@@ -47,6 +48,7 @@ export const sendPasswordResetEmail = async (
     template: "password-reset",
     context: {
       firstName,
+      logoUrl: config.app.logoUrl,
       resetUrl,
       expiryHours: 1, // Token expiry in hours
       supportEmail: process.env.SUPPORT_EMAIL || "support@kaa.co.ke",

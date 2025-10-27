@@ -170,10 +170,9 @@ export const getFavoriteProperties = async (
 export const togglePropertyFavorite = async (
   propertyId: string
 ): Promise<{ message: string; isFavorited: boolean }> => {
-  const response = await httpClient.api.post(
-    `/properties/${propertyId}/favorite`,
-    {}
-  );
+  const response = await httpClient.api.post("/properties/favorites", {
+    propertyId,
+  });
   return response.data.data;
 };
 
