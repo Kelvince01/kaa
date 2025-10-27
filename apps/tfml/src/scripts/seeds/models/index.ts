@@ -1,4 +1,4 @@
-import { IAIModel } from "@kaa/models/types";
+import type { IAIModel } from "@kaa/models/types";
 
 export const defaultModels: IAIModel[] = [
   // {

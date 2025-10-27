@@ -1,6 +1,6 @@
 import { AIModel, Prediction } from "@kaa/models";
 import type { IAIModel, IPrediction } from "@kaa/models/types";
-import { logger } from "@kaa/utils";
+import { logger } from "@kaa/utils/logger";
 import type {
   DriftMetrics,
   DriftReport,

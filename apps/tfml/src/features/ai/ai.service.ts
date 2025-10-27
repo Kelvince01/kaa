@@ -1,13 +1,15 @@
 import { AIModel, Prediction, Recommendation } from "@kaa/models";
 import type { IAIModel, IPrediction } from "@kaa/models/types";
-import { permissionService } from "@kaa/services";
-import { AppError, logger, NotFoundError } from "@kaa/utils";
+import { checkPermission } from "@kaa/services/permissions";
+import { AppError, NotFoundError } from "@kaa/utils/errors";
+import { logger } from "@kaa/utils/logger";
 import type { FilterQuery } from "mongoose";
 import mongoose from "mongoose";
 import prom from "prom-client";
 import { aiTrainingQueue } from "./ai.queue";
 // Import interfaces
 import type {
+  AIHealthStatus,
   AIServiceInterface,
   BatchPredictionRequest,
   BatchPredictionResponse,
@@ -143,9 +145,9 @@ export class AIService implements AIServiceInterface {
       sortOrder = "desc",
     } = options;
 
-    const filter: FilterQuery<IAIModel> = {
-      memberId: new mongoose.Types.ObjectId(memberId),
-    };
+    const filter: FilterQuery<IAIModel> = {};
+
+    if (memberId) filter.memberId = new mongoose.Types.ObjectId(memberId);
 
     if (status) filter.status = status;
     if (type) filter.type = type;
@@ -1283,7 +1285,7 @@ export class AIService implements AIServiceInterface {
     userId: string
   ): Promise<void> {
     // Check permissions
-    const hasPermission = await permissionService.checkPermission({
+    const hasPermission = await checkPermission({
       userId,
       memberId,
       permission: AI_PERMISSIONS.DELETE_MODEL,
@@ -1331,6 +1333,90 @@ export class AIService implements AIServiceInterface {
       items,
       pagination: { total, pages: Math.ceil(total / limit), page, limit },
     };
+  }
+
+  /**
+   * Get overall AI service health status
+   */
+  async getHealthStatus(): Promise<AIHealthStatus> {
+    await this.initialize();
+
+    try {
+      // Check services
+      const databaseHealthy = mongoose.connection.readyState === 1;
+      const redisHealthy = true; // Assume healthy; implement redis ping if available
+      const tensorflowHealthy = true; // Assume healthy; add tfjs check if needed
+      const queuesHealthy = true; // Assume healthy; check aiTrainingQueue if possible
+
+      // Count models by status
+      const [totalModels, readyModels, trainingModels, errorModels] =
+        await Promise.all([
+          AIModel.countDocuments({}),
+          AIModel.countDocuments({ status: "ready" }),
+          AIModel.countDocuments({ status: "training" }),
+          AIModel.countDocuments({ status: { $in: ["error", "failed"] } }), // Assuming error statuses
+        ]);
+
+      // Get recent predictions for performance metrics (last 1000)
+      const recentPredictions = await Prediction.find({})
+        .sort({ createdAt: -1 })
+        .limit(1000)
+        .select("processingTime confidence");
+
+      const totalPredictions = await Prediction.countDocuments({});
+      const avgResponseTime =
+        recentPredictions.length > 0
+          ? recentPredictions.reduce(
+              (sum, p) => sum + (p.processingTime || 0),
+              0
+            ) / recentPredictions.length
+          : 0;
+
+      const lowConfidenceCount = recentPredictions.filter(
+        (p) => (p.output.confidence || 0) < 0.5
+      ).length;
+      const errorRate =
+        totalPredictions > 0
+          ? (lowConfidenceCount / totalPredictions) * 100
+          : 0;
+
+      const healthStatus: AIHealthStatus = {
+        status:
+          databaseHealthy && redisHealthy && tensorflowHealthy && queuesHealthy
+            ? errorRate < 5
+              ? "healthy"
+              : "degraded"
+            : "unhealthy",
+        services: {
+          database: databaseHealthy,
+          redis: redisHealthy,
+          tensorflow: tensorflowHealthy,
+          queues: queuesHealthy,
+        },
+        models: {
+          total: totalModels,
+          ready: readyModels,
+          training: trainingModels,
+          error: errorModels,
+        },
+        performance: {
+          avgResponseTime: Math.round(avgResponseTime),
+          totalPredictions,
+          errorRate: Math.round(errorRate * 100) / 100,
+        },
+      };
+
+      logger.debug("AI service health status retrieved", {
+        status: healthStatus.status,
+        totalModels,
+        totalPredictions,
+      });
+
+      return healthStatus;
+    } catch (error) {
+      logger.error("Failed to get AI service health status", { error });
+      throw error;
+    }
   }
 }
 

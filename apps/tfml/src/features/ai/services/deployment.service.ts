@@ -1,5 +1,5 @@
 import { AIModel } from "@kaa/models";
-import { logger } from "@kaa/utils";
+import { logger } from "@kaa/utils/logger";
 import { getModelMonitoringService } from "./model-monitoring.service";
 import { getModelPool } from "./persistent-model-pool.service";
 

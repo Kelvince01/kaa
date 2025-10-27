@@ -736,7 +736,7 @@ export const virtualToursController = new Elysia().group(
           query: t.Object({
             width: t.Optional(t.Number()),
             height: t.Optional(t.Number()),
-            autoplay: t.Optional(t.Boolean()),
+            autoplay: t.Boolean(),
             controls: t.Optional(t.Boolean()),
             responsive: t.Optional(t.Boolean()),
             theme: t.Optional(t.Union([t.Literal("light"), t.Literal("dark")])),

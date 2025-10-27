@@ -177,6 +177,27 @@ export type HealthStatus = {
   lastUpdated: Date;
 };
 
+export type AIHealthStatus = {
+  status: "healthy" | "degraded" | "unhealthy";
+  services: {
+    database: boolean;
+    redis: boolean;
+    tensorflow: boolean;
+    queues: boolean;
+  };
+  models: {
+    total: number;
+    ready: number;
+    training: number;
+    error: number;
+  };
+  performance: {
+    avgResponseTime: number;
+    totalPredictions: number;
+    errorRate: number;
+  };
+};
+
 export type HealthCheck = {
   name: string;
   status: "pass" | "fail" | "warn";

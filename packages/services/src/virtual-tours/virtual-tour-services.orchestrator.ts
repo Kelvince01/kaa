@@ -8,7 +8,6 @@ import { AIService } from "./services/ai.service";
 import { CollaborationService } from "./services/collaboration.service";
 import { EdgeComputingService } from "./services/edge-computing.service";
 import { IotIntegrationService } from "./services/iot-integration.service";
-import { MLAnalyticsService } from "./services/ml-analytics.service";
 
 type ServiceHealth = {
   name: string;
@@ -28,16 +27,18 @@ type SystemHealth = {
   timestamp: Date;
 };
 
-// type Orchestrator = AIService | CollaborationService | MLAnalyticsService | EdgeComputingService | IotIntegrationService;
+// type Orchestrator = AIService | CollaborationService | EdgeComputingService | IotIntegrationService;
 
 export class VirtualTourServicesOrchestrator extends EventEmitter {
   private readonly services: Map<string, any> = new Map();
   private readonly healthStatus: Map<string, ServiceHealth> = new Map();
   private isInitialized = false;
   private healthCheckInterval: NodeJS.Timeout | null = null;
+  private readonly tfmlApiUrl: string;
 
   constructor() {
     super();
+    this.tfmlApiUrl = process.env.TFML_API_URL || "http://localhost:5001";
     this.registerServices();
   }
 
@@ -47,9 +48,10 @@ export class VirtualTourServicesOrchestrator extends EventEmitter {
   private registerServices(): void {
     this.services.set("ai", new AIService());
     this.services.set("collaboration", new CollaborationService());
-    this.services.set("ml-analytics", new MLAnalyticsService());
     this.services.set("edge-computing", new EdgeComputingService());
     this.services.set("iot-integration", new IotIntegrationService());
+    // Note: ML Analytics service has been moved to apps/tfml
+    // Call the tfml API endpoint for ML analytics functionality
   }
 
   /**
@@ -68,7 +70,7 @@ export class VirtualTourServicesOrchestrator extends EventEmitter {
           services: ["edge-computing"],
           description: "Infrastructure services",
         },
-        { services: ["ai", "ml-analytics"], description: "AI/ML services" },
+        { services: ["ai"], description: "AI/ML services" },
         {
           services: ["iot-integration"],
           description: "Advanced feature services",
@@ -127,14 +129,11 @@ export class VirtualTourServicesOrchestrator extends EventEmitter {
     if (aiService) {
       aiService.on(
         "content-generated",
-        (data: { tourId: string; content: string }) => {
+        async (data: { tourId: string; content: string }) => {
           this.emit("ai-content-generated", data);
 
-          // Trigger analytics update
-          const mlService = this.services.get(
-            "ml-analytics"
-          ) as MLAnalyticsService;
-          mlService?.updateRealTimeData?.(data.tourId, {
+          // Update ML analytics via tfml API
+          await this.updateMLAnalytics(data.tourId, {
             type: "ai-content",
             timestamp: Date.now(),
             metadata: data,
@@ -150,14 +149,11 @@ export class VirtualTourServicesOrchestrator extends EventEmitter {
         this.emit("collaboration-session-created", data);
       });
 
-      collaborationService.on("tour-changed", (data: any) => {
+      collaborationService.on("tour-changed", async (data: any) => {
         this.emit("collaborative-change", data);
 
-        // Update analytics
-        const mlService = this.services.get(
-          "ml-analytics"
-        ) as MLAnalyticsService;
-        mlService?.updateRealTimeData?.(data.tourId, {
+        // Update ML analytics via tfml API
+        await this.updateMLAnalytics(data.tourId, {
           type: "collaboration",
           timestamp: Date.now(),
           metadata: data,
@@ -327,7 +323,6 @@ export class VirtualTourServicesOrchestrator extends EventEmitter {
       "collaboration",
       "iot-integration",
       "ai",
-      "ml-analytics",
       "edge-computing",
     ];
 
@@ -438,6 +433,48 @@ export class VirtualTourServicesOrchestrator extends EventEmitter {
       failedServices,
       totalServices: allServices.length,
     };
+  }
+
+  /**
+   * Update ML analytics via tfml API
+   */
+  private async updateMLAnalytics(
+    tourId: string,
+    event: {
+      type: string;
+      timestamp: number;
+      metadata?: any;
+      sceneId?: string;
+      hotspotId?: string;
+      duration?: number;
+      position?: { x: number; y: number };
+    }
+  ): Promise<void> {
+    try {
+      const response = await fetch(
+        `${this.tfmlApiUrl}/api/v1/ml-analytics/real-time-update`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            tourId,
+            event,
+            sessionInfo: {},
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.warn(
+          `Failed to update ML analytics for tour ${tourId}: ${response.statusText}`
+        );
+      }
+    } catch (error) {
+      console.error("Error updating ML analytics:", error);
+      // Don't throw - analytics updates shouldn't break the main flow
+    }
   }
 }
 

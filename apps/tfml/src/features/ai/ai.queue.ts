@@ -1,5 +1,6 @@
 import { AIModel, Prediction } from "@kaa/models";
-import { createQueue, logger, redisOptions } from "@kaa/utils";
+import { createQueue, redisOptions } from "@kaa/utils/bull";
+import { logger } from "@kaa/utils/logger";
 import { Worker } from "bullmq";
 import type mongoose from "mongoose";
 import type { CreateAIModelData } from "./ai.service";

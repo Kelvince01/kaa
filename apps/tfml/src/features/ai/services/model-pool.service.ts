@@ -1,4 +1,4 @@
-import { logger } from "@kaa/utils";
+import { logger } from "@kaa/utils/logger";
 import type * as tf from "@tensorflow/tfjs-node";
 import { aiConfig } from "../ai.config";
 

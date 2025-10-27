@@ -1,6 +1,6 @@
 import path from "node:path";
 import { AIModel } from "@kaa/models";
-import { logger } from "@kaa/utils";
+import { logger } from "@kaa/utils/logger";
 import * as tf from "@tensorflow/tfjs-node";
 import { metricsService } from "./metrics.service";
 

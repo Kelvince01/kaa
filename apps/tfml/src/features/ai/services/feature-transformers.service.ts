@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { logger } from "@kaa/utils";
+import { logger } from "@kaa/utils/logger";
 
 export type TransformerFunction = (
   value: any,

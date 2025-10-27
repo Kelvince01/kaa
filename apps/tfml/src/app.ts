@@ -1,3 +1,4 @@
+import { cors } from "@elysiajs/cors";
 import { openapi } from "@elysiajs/openapi";
 import { Elysia } from "elysia";
 import logixlysia from "logixlysia";
@@ -22,7 +23,7 @@ const app = new Elysia()
         customLogFormat:
           "🦊 {now} {level} {duration} {method} {pathname} {status} {message} {ip}",
       },
-    }),
+    })
   )
   .use(
     openapi({
@@ -42,23 +43,33 @@ const app = new Elysia()
           },
           version: "1.0.0",
         },
+        components: {
+          securitySchemes: {
+            apiKeyAuth: {
+              type: "apiKey",
+              in: "header", // could be "query" or "cookie"
+              name: "x-api-key", // header name clients must send
+            },
+          },
+        },
       },
-      // path: "/api/docs",
-      // specPath: "/api/docs/json",
+      path: "/api/docs",
+      specPath: "/api/docs/json",
       scalar: {
         layout: "classic",
         spec: {
-          // url: "/api/docs/json",
+          url: "/api/docs/json",
         },
         theme: "kepler", // alternate, default, moon, purple, solarized, bluePlanet, saturn, kepler, mars, deepSpace, laserwave, none
         customCss: "body { background-color: #BADA55;}",
       },
-    }),
+    })
   )
   .onStart(() => {
     // Setup database
     new MongooseSetup();
   })
+  .use(cors())
   .get("/", () => "Hello TFML")
   .use(routes)
   // Bull dashboard

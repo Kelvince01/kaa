@@ -1,8 +1,11 @@
 import { AIModel } from "@kaa/models";
 import type { IAIModel } from "@kaa/models/types";
 import Elysia, { t } from "elysia";
-import { authPlugin } from "~/features/auth/auth.plugin";
-import { rolesPlugin } from "~/features/rbac/rbac.plugin";
+import type mongoose from "mongoose";
+import {
+  apiKeyPlugin,
+  requirePermissions,
+} from "#/features/auth/api-key.plugin";
 // import { strictRateLimit } from "~/plugins/rate-limit.plugin";
 import { aiService, getAIService } from "./ai.service";
 
@@ -49,7 +52,7 @@ export const aiController = new Elysia({
   },
 }).group("/ai", (app) =>
   app
-    .use(authPlugin)
+    .use(apiKeyPlugin)
     // Rate limit AI endpoints
     // .use(strictRateLimit)
     // Redis-backed limiter for predict endpoints
@@ -103,7 +106,8 @@ export const aiController = new Elysia({
           data: {
             items: result.items.map((item: IAIModel) => ({
               ...item.toObject(),
-              memberId: item.memberId?.toString() ?? null,
+              _id: (item._id as mongoose.Types.ObjectId).toString(),
+              memberId: item.memberId?.toString() ?? undefined,
             })),
             pagination: result.pagination,
           },
@@ -145,7 +149,8 @@ export const aiController = new Elysia({
       }
     )
 
-    .use(rolesPlugin(["admin"]))
+    // Require admin permissions for model management
+    .use(requirePermissions(["ai:admin", "ai:train"]))
 
     // ===== Model Creation with Enhanced Features =====
 
@@ -1171,6 +1176,34 @@ export const aiController = new Elysia({
           summary: "Auto-train model using AutoML",
           description:
             "Automatically find the best model architecture and hyperparameters",
+        },
+      }
+    )
+
+    .get(
+      "/health",
+      async ({ set }) => {
+        try {
+          const service = await getAIService();
+          const healthStatus = await service.getHealthStatus();
+          return {
+            status: "success",
+            data: healthStatus,
+          };
+        } catch (error: any) {
+          set.status = 500;
+          return {
+            status: "error",
+            message: error.message || "Failed to get health status",
+          };
+        }
+      },
+      {
+        detail: {
+          tags: ["ai"],
+          summary: "Get AI service health status",
+          description:
+            "Returns the overall health status of the AI/ML service including component services, model counts, and performance metrics.",
         },
       }
     )

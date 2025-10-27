@@ -1,4 +1,4 @@
-import { logger } from "@kaa/utils";
+import { logger } from "@kaa/utils/logger";
 import { aiConfig } from "../ai.config";
 import { DataPrepService } from "./data-prep.service";
 import { EmbeddingCacheService } from "./embedding-cache.service";

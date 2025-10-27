@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import { logger } from "@kaa/utils";
+import { logger } from "@kaa/utils/logger";
 import * as tf from "@tensorflow/tfjs-node";
 
 export type MLTask =

@@ -255,10 +255,12 @@ export default function AIAdminPage() {
                           >
                             {model.status}
                           </Badge>
-                          {model.performance.accuracy && (
+                          {model?.performance?.accuracy && (
                             <span className="text-green-600">
-                              {(model.performance.accuracy * 100).toFixed(1)}%
-                              accuracy
+                              {(
+                                model?.performance?.accuracy ?? 0 * 100
+                              ).toFixed(1)}
+                              % accuracy
                             </span>
                           )}
                         </div>

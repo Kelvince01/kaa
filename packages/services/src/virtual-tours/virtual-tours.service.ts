@@ -42,10 +42,12 @@ export class VirtualToursService extends EventEmitter {
   private readonly cdn: AxiosInstance;
   private readonly processingQueue: Map<string, ProcessingInfo>;
   private isAdvancedMode = true;
+  private readonly tfmlApiUrl: string;
 
   constructor() {
     super();
     this.redis = redisClient;
+    this.tfmlApiUrl = process.env.TFML_API_URL || "http://localhost:3000";
 
     this.tours = new Map();
     this.processingQueue = new Map();
@@ -938,8 +940,7 @@ export class VirtualToursService extends EventEmitter {
     };
 
     const config = { ...defaults, ...options };
-    const baseUrl =
-      process.env.TOURS_BASE_URL || "https://tours.kaa-rentals.co.ke";
+    const baseUrl = process.env.TOURS_BASE_URL || "https://tours.kaapro.dev";
 
     return `<iframe src="${baseUrl}/embed/${tourId}?autoplay=${config.autoplay}&controls=${config.controls}&theme=${config.theme}" width="${config.width}" height="${config.height}" frameborder="0" allowfullscreen${config.responsive ? ' style="max-width: 100%; height: auto;"' : ""}></iframe>`;
   }
@@ -958,15 +959,27 @@ export class VirtualToursService extends EventEmitter {
 
     if (includeML && this.isAdvancedMode) {
       try {
-        // Generate ML-enhanced analytics using orchestrator
-        const mlService = ServiceOrchestrator.getService("ml-analytics");
-        if (mlService) {
-          const mlAnalytics = await mlService.generateMLAnalytics(
-            tourId,
-            baseAnalytics
-          );
-          return mlAnalytics;
+        // Generate ML-enhanced analytics via tfml API
+        const response = await fetch(
+          `${this.tfmlApiUrl}/api/v1/ml-analytics/generate`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              tourId,
+              baseAnalytics,
+            }),
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          return result.data;
         }
+
+        console.warn("ML analytics API call failed:", response.statusText);
         return baseAnalytics;
       } catch (error) {
         console.warn("Failed to generate ML analytics:", error);
@@ -989,24 +1002,44 @@ export class VirtualToursService extends EventEmitter {
       const tour = await VirtualTour.findById(tourId);
       if (!tour) throw new Error("Tour not found");
 
-      // Get real-time data from ML analytics service
-      const mlService = ServiceOrchestrator.getService("ml-analytics");
-      const mlAnalytics = mlService
-        ? await mlService.generateMLAnalytics(tourId, tour.analytics)
-        : {
-            realTimeMetrics: {
-              activeViewers: 0,
-              currentEngagementRate: 0,
-              liveHeatmap: [],
-              performanceHealth: {
-                overall: 0.8,
-                loading: 0.8,
-                interaction: 0.8,
-                conversion: 0.2,
-                issues: [],
-              },
+      // Get real-time data from ML analytics via tfml API
+      let mlAnalytics = {
+        realTimeMetrics: {
+          activeViewers: 0,
+          currentEngagementRate: 0,
+          liveHeatmap: [],
+          performanceHealth: {
+            overall: 0.8,
+            loading: 0.8,
+            interaction: 0.8,
+            conversion: 0.2,
+            issues: [],
+          },
+        },
+      };
+
+      try {
+        const response = await fetch(
+          `${this.tfmlApiUrl}/api/v1/ml-analytics/generate`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
             },
-          };
+            body: JSON.stringify({
+              tourId,
+              baseAnalytics: tour.analytics,
+            }),
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          mlAnalytics = result.data;
+        }
+      } catch (error) {
+        console.warn("Failed to fetch ML analytics:", error);
+      }
 
       // Get IoT metrics if available
       const iotService = ServiceOrchestrator.getService("iot-integration");
@@ -1652,9 +1685,7 @@ new TourPlayer({
         realTimeCollaboration:
           this.isAdvancedMode &&
           ServiceOrchestrator.isServiceAvailable("collaboration"),
-        mlAnalytics:
-          this.isAdvancedMode &&
-          ServiceOrchestrator.isServiceAvailable("ml-analytics"),
+        mlAnalytics: this.isAdvancedMode, // ML analytics now via tfml API
         edgeComputing:
           this.isAdvancedMode &&
           ServiceOrchestrator.isServiceAvailable("edge-computing"),
@@ -1828,12 +1859,8 @@ new TourPlayer({
             metrics: serviceMetrics.collaboration || {},
           },
           mlAnalytics: {
-            status: orchestratorStatus.initializedServices.includes(
-              "ml-analytics"
-            )
-              ? "healthy"
-              : "unhealthy",
-            metrics: serviceMetrics["ml-analytics"] || {},
+            status: "external", // ML Analytics is now an external service (tfml)
+            metrics: { note: "Check tfml service health endpoint" },
           },
           edgeComputing: {
             status: orchestratorStatus.initializedServices.includes(

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { AIModel } from "@kaa/models";
 import type { IAIModel } from "@kaa/models/types";
-import { logger } from "@kaa/utils";
+import { logger } from "@kaa/utils/logger";
 import type * as tf from "@tensorflow/tfjs-node";
 import type * as tfGpu from "@tensorflow/tfjs-node-gpu";
 import * as use from "@tensorflow-models/universal-sentence-encoder";

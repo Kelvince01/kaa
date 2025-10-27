@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { logger } from "@kaa/utils";
+import { logger } from "@kaa/utils/logger";
 import * as tf from "@tensorflow/tfjs-node";
 import aiConfig from "../ai.config";
 import { ModelPool, type ModelPoolConfig } from "./model-pool.service";
