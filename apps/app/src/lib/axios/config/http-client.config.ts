@@ -3,6 +3,9 @@ import type { HttpClientConfig } from "../types";
 
 export const httpClientConfig: HttpClientConfig = {
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1",
+  mlBaseURL:
+    process.env.NEXT_PUBLIC_TFML_API_URL || "http://localhost:5001/api/v1",
+  mlApiKey: process.env.NEXT_PUBLIC_TFML_API_KEY,
   timeout: Number.parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || "30000", 10),
 
   retries: {

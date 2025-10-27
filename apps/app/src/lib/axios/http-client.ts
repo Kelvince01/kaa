@@ -121,6 +121,15 @@ export const api = axios.create({
   },
 });
 
+export const mlApi = axios.create({
+  baseURL: httpClientConfig.mlBaseURL,
+  timeout: httpClientConfig.timeout,
+  headers: {
+    "Content-Type": "application/json",
+    "x-api-key": httpClientConfig.mlApiKey,
+  },
+});
+
 // Initialize interceptors
 const requestInterceptor = new RequestInterceptor(
   httpClientConfig,
@@ -177,6 +186,7 @@ api.interceptors.request.use((config) => {
 export const httpClient = {
   // Main API instance
   api,
+  mlApi,
 
   // Performance metrics
   getMetrics: () => metrics.getMetrics(),

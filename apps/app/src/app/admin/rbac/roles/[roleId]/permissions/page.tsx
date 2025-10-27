@@ -47,6 +47,7 @@ const RESOURCE_CATEGORIES: Record<string, string[]> = {
     "sessions",
     "otps",
     "passkeys",
+    "apiKeys",
     "refreshTokens",
     "oauthConnections",
     "securityViolations",

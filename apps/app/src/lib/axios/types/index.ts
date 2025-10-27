@@ -98,6 +98,8 @@ export type LogEntry = {
 
 export type HttpClientConfig = {
   baseURL: string;
+  mlBaseURL: string;
+  mlApiKey?: string;
   timeout: number;
   retries: {
     maxAttempts: number;
