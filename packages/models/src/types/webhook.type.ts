@@ -177,7 +177,7 @@ export enum WebhookFailureReason {
 
 // Interface extending Document
 export interface IWebhookConfig extends BaseDocument {
-  memberId: mongoose.Types.ObjectId;
+  memberId?: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   name: string;
   description?: string;

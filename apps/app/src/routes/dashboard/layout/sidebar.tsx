@@ -11,6 +11,7 @@ import {
   MessageCircle,
   MessageSquare,
   Settings,
+  Shield,
   UserIcon,
   Users,
   Video,
@@ -122,6 +123,11 @@ export const dashboardSidebarItems = (user: User) => ({
             title: "Finances",
             url: "/dashboard/financials",
             icon: DollarSign,
+          },
+          {
+            title: "Legal Documents",
+            url: "/dashboard/documents",
+            icon: Shield,
           },
         ]
       : []),

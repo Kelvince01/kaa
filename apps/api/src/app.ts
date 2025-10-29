@@ -5,6 +5,7 @@ import cookie from "@elysiajs/cookie";
 import { serverTiming } from "@elysiajs/server-timing";
 import staticPlugin from "@elysiajs/static";
 import config from "@kaa/config/api";
+import { initializeSearchServices } from "@kaa/services";
 import { Elysia } from "elysia";
 import { helmet } from "elysia-helmet";
 import { i18next } from "elysia-i18next";
@@ -12,7 +13,6 @@ import prometheusPlugin from "elysia-prometheus";
 import { rateLimit } from "elysia-rate-limit";
 import { elysiaXSS } from "elysia-xss";
 import { Logestic } from "logestic";
-
 import { AppRoutes } from "./app.routes";
 import { MongooseSetup } from "./database/mongoose.setup";
 import { videoCallingService } from "./features/comms";
@@ -60,9 +60,12 @@ app
       optimizations.chunking
     )
   )
-  .onStart(() => {
+  .onStart(async () => {
     // Setup database
     new MongooseSetup();
+
+    // Initialize search services
+    await initializeSearchServices();
   })
   .use(corsPlugin)
   .use(

@@ -1,82 +1,161 @@
-export type Review = {
-  _id: string;
-  property: string | any;
-  reviewer: string | any;
-  rating: number;
+/**
+ * Review Types for Frontend
+ * Based on @kaa/models review types
+ */
+
+import type {
+  IRatingBreakdown,
+  IReview,
+  IReviewResponse,
+  ReviewFlagReason,
+  ReviewSentiment,
+  ReviewStatus,
+  ReviewType,
+} from "@kaa/models/types";
+
+// Re-export types from models
+export type {
+  IReview,
+  IReviewFlag,
+  IReviewResponse,
+  IReviewStatsResponse,
+  ReviewFlagReason,
+  ReviewListResponse,
+  ReviewSentiment,
+  ReviewStatus,
+  ReviewType,
+} from "@kaa/models/types";
+
+export {
+  ReviewFlagReason as ReviewFlagReasonEnum,
+  ReviewSentiment as ReviewSentimentEnum,
+  ReviewStatus as ReviewStatusEnum,
+  ReviewType as ReviewTypeEnum,
+} from "@kaa/models/types";
+
+/**
+ * Review form data
+ */
+export type ReviewFormData = {
+  type: ReviewType;
+  targetId: string;
+  applicationId?: string;
   title: string;
-  comment: string;
-  isVerifiedStay: boolean;
-  stayDate?: string;
-  landlord: string | any;
-  booking?: string | any;
-  propertyRating: number;
-  landlordRating: number;
-  cleanliness: number;
-  location: number;
-  valueForMoney: number;
-  response?: {
-    comment: string;
-    createdAt: string;
+  content: string;
+  rating: IRatingBreakdown;
+  photos?: string[];
+  videos?: string[];
+  tags?: string[];
+  language?: "en" | "sw";
+  reviewDate?: Date;
+  county?: string;
+  city?: string;
+  isAnonymous?: boolean;
+};
+
+/**
+ * Review filter options
+ */
+export type ReviewFilterOptions = {
+  targetId?: string;
+  reviewerId?: string;
+  type?: ReviewType | ReviewType[];
+  status?: ReviewStatus | ReviewStatus[];
+  county?: string;
+  city?: string;
+  language?: "en" | "sw";
+  sentiment?: ReviewSentiment;
+  verified?: boolean;
+  minRating?: number;
+  maxRating?: number;
+  dateFrom?: Date;
+  dateTo?: Date;
+  tags?: string[];
+  search?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: "createdAt" | "rating" | "helpfulCount" | "reviewDate";
+  sortOrder?: "asc" | "desc";
+};
+
+/**
+ * Review with user details
+ */
+export type ReviewWithUser = IReview & {
+  reviewer?: {
+    profile: {
+      _id: string;
+      firstName: string;
+      lastName: string;
+      avatar?: string;
+    };
+    verification: {
+      emailVerifiedAt?: string;
+    };
   };
-  status: "pending" | "approved" | "rejected" | "flagged";
-  rejectionReason?: string;
-  images?: Array<{
-    url: string;
-    caption?: string;
-  }>;
-  createdAt?: Date;
+  response?: IReviewResponse;
 };
 
-export type ReviewCreateInput = {
-  property: string;
-  rating: number;
-  title: string;
-  comment: string;
-  isVerifiedStay?: boolean;
-  stayDate?: string;
-  landlord: string;
-  booking?: string;
-  propertyRating: number;
-  landlordRating: number;
-  cleanliness: number;
-  location: number;
-  valueForMoney: number;
-  images?: Array<{
-    url: string;
-    caption?: string;
-  }>;
+/**
+ * Flag review form data
+ */
+export type FlagReviewFormData = {
+  reviewId: string;
+  reason: ReviewFlagReason;
+  description?: string;
 };
 
-export type ReviewUpdateInput = {
-  rating?: number;
-  title?: string;
-  comment?: string;
-  status?: "pending" | "approved" | "rejected";
-  rejectionReason?: string;
-  response?: {
-    comment: string;
-    createdAt: string;
+/**
+ * Review response form data
+ */
+export type ReviewResponseFormData = {
+  reviewId: string;
+  content: string;
+};
+
+/**
+ * Review moderation action
+ */
+export type ReviewModerationAction = {
+  reviewId: string;
+  action: "approve" | "reject" | "hide";
+  reason?: string;
+  notes?: string;
+};
+
+/**
+ * Bulk moderation action
+ */
+export type BulkModerationAction = {
+  reviewIds: string[];
+  action: "approve" | "reject" | "hide";
+  reason?: string;
+};
+
+/**
+ * Review stats display
+ */
+export type ReviewStatsDisplay = {
+  totalReviews: number;
+  averageRating: number;
+  ratingDistribution: { [key: number]: number };
+  sentimentDistribution: {
+    positive: number;
+    negative: number;
+    neutral: number;
+    mixed: number;
   };
-  images?: Array<{
-    url: string;
-    caption?: string;
-  }>;
+  verificationRate: number;
+  responseRate: number;
 };
 
-export type ReviewListResponse = {
-  reviews: Review[];
-  pagination: {
-    pages: number;
-    total: number;
-    page: number;
-    limit: number;
-  };
-  status: "success" | "error";
-  message?: string;
-};
-
-export type ReviewResponse = {
-  review: Review;
-  status: "success" | "error";
-  message?: string;
-};
+/**
+ * Review tab options
+ */
+export type ReviewTab =
+  | "all"
+  | "positive"
+  | "negative"
+  | "verified"
+  | "withPhotos"
+  | "recent";

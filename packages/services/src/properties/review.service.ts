@@ -5,13 +5,16 @@
  */
 
 import {
+  Agent,
   Booking,
+  Landlord,
   Property,
   PropertyReviewSummary,
   Review,
   ReviewAnalytics,
   ReviewFlag,
   ReviewResponse,
+  Tenant,
   User,
   UserReviewSummary,
 } from "@kaa/models";
@@ -42,6 +45,7 @@ import {
   ValidationError,
 } from "@kaa/utils";
 import type { FilterQuery, PipelineStage } from "mongoose";
+import mongoose from "mongoose";
 import { notificationService } from "../comms/notification.service";
 
 // ==================== REVIEW SERVICE CLASS ====================
@@ -158,16 +162,22 @@ export class ReviewsService {
    */
   async getReview(reviewId: string, userId?: string): Promise<IReview> {
     try {
-      const query = Review.findById(reviewId)
-        .populate("reviewerId", "firstName lastName avatar verified")
-        .populate("responseId");
+      const filter: FilterQuery<IReview> = {
+        _id: new mongoose.Types.ObjectId(reviewId),
+      };
 
       // Apply visibility rules
       if (!userId) {
-        query.where({ status: ReviewStatus.APPROVED });
+        filter.status = ReviewStatus.APPROVED;
       }
 
-      const review = await query.exec();
+      const review = await Review.findOne(filter)
+        .populate(
+          "reviewerId",
+          "profile.firstName profile.lastName profile.avatar verification.emailVerifiedAt"
+        )
+        .populate("responseId");
+
       if (!review) {
         throw new NotFoundError("Review not found");
       }
@@ -249,7 +259,10 @@ export class ReviewsService {
       // Execute queries
       const [reviews, totalCount] = await Promise.all([
         Review.find(filter)
-          .populate("reviewerId", "firstName lastName avatar verified")
+          .populate(
+            "reviewerId",
+            "profile.firstName profile.lastName profile.avatar verification.emailVerifiedAt"
+          )
           .populate("responseId")
           .sort(sort)
           .skip(skip)
@@ -258,8 +271,29 @@ export class ReviewsService {
         Review.countDocuments(filter),
       ]);
 
+      const mappedReviews = reviews.map((r) => ({
+        ...r.toObject(),
+        _id: (r._id as unknown as mongoose.Types.ObjectId).toString(),
+        reviewer: {
+          profile: {
+            _id: (
+              (r.reviewerId as any)._id as mongoose.Types.ObjectId
+            ).toString(),
+            firstName: (r.reviewerId as any).profile.firstName,
+            lastName: (r.reviewerId as any).profile.lastName,
+            avatar: (r.reviewerId as any).profile.avatar,
+          },
+          verification: {
+            emailVerifiedAt: (r.reviewerId as any).verification.emailVerifiedAt,
+          },
+        },
+        createdAt: r.createdAt.toISOString(),
+        updatedAt: r.updatedAt.toISOString(),
+        reviewDate: r.reviewDate.toISOString(),
+      }));
+
       return {
-        reviews: reviews.map((r) => r.toObject()) as any,
+        reviews: mappedReviews as any,
         pagination: {
           page,
           limit,
@@ -412,7 +446,10 @@ export class ReviewsService {
 
       const [reviews, totalCount] = await Promise.all([
         Review.find({ status: ReviewStatus.PENDING })
-          .populate("reviewerId", "firstName lastName avatar verified")
+          .populate(
+            "reviewerId",
+            "profile.firstName profile.lastName profile.avatar verification.emailVerifiedAt"
+          )
           .sort({ createdAt: 1 }) // Oldest first for moderation
           .skip(skip)
           .limit(limit)
@@ -420,8 +457,29 @@ export class ReviewsService {
         Review.countDocuments({ status: ReviewStatus.PENDING }),
       ]);
 
+      const mappedReviews = reviews.map((r) => ({
+        ...r.toObject(),
+        _id: (r._id as unknown as mongoose.Types.ObjectId).toString(),
+        reviewer: {
+          profile: {
+            _id: (
+              (r.reviewerId as any)._id as mongoose.Types.ObjectId
+            ).toString(),
+            firstName: (r.reviewerId as any).profile.firstName,
+            lastName: (r.reviewerId as any).profile.lastName,
+            avatar: (r.reviewerId as any).profile.avatar,
+          },
+          verification: {
+            emailVerifiedAt: (r.reviewerId as any).verification.emailVerifiedAt,
+          },
+        },
+        createdAt: r.createdAt.toISOString(),
+        updatedAt: r.updatedAt.toISOString(),
+        reviewDate: r.reviewDate.toISOString(),
+      }));
+
       return {
-        reviews: reviews.map((r) => r.toObject()) as any,
+        reviews: mappedReviews as any,
         pagination: {
           page,
           limit,
@@ -1662,8 +1720,10 @@ export class ReviewsService {
       switch (review.type) {
         case ReviewType.PROPERTY: {
           const property = await Property.findById(review.targetId);
-          if (property) {
-            targetUserId = property.landlord.toString();
+          const landlord = await Landlord.findById(property?.landlord);
+          if (landlord) {
+            targetUserId =
+              (landlord?.user as mongoose.Types.ObjectId).toString() || "";
             notificationTitle = "New Property Review";
             notificationMessage = `Your property has received a new ${review.rating.overall}-star review`;
           }
@@ -1672,7 +1732,21 @@ export class ReviewsService {
         case ReviewType.USER_LANDLORD:
         case ReviewType.USER_TENANT:
         case ReviewType.AGENT: {
-          targetUserId = review.targetId;
+          const landlord = await Landlord.findById(review.targetId);
+          const tenant = await Tenant.findById(review.targetId);
+          const agent = await Agent.findById(review.targetId);
+
+          if (landlord) {
+            targetUserId =
+              (landlord?.user as mongoose.Types.ObjectId).toString() || "";
+          } else if (tenant) {
+            targetUserId =
+              (tenant?.user as mongoose.Types.ObjectId).toString() || "";
+          } else if (agent) {
+            targetUserId =
+              (agent?.user as mongoose.Types.ObjectId).toString() || "";
+          }
+
           notificationTitle = "New Review";
           notificationMessage = `You have received a new ${review.rating.overall}-star review`;
           break;

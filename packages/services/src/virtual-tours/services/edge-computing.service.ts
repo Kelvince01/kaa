@@ -109,6 +109,8 @@ export class EdgeComputingService extends EventEmitter {
   private readonly adaptiveQuality: AdaptiveQualityConfig;
   readonly loadBalancer: LoadBalancer;
   private activeConnections: Map<string, ConnectionInfo> = new Map();
+  private readonly enableEdgeNodes: boolean =
+    process.env.ENABLE_EDGE_NODES === "false";
 
   constructor() {
     super();
@@ -169,7 +171,9 @@ export class EdgeComputingService extends EventEmitter {
       useClones: false,
     });
 
-    this.initializeEdgeNodes();
+    if (this.enableEdgeNodes) {
+      this.initializeEdgeNodes();
+    }
     this.startPerformanceMonitoring();
   }
 
@@ -662,7 +666,9 @@ export class EdgeComputingService extends EventEmitter {
     }, 60_000); // Every minute
 
     setInterval(async () => {
-      await this.testEdgeNodeConnectivity();
+      if (this.enableEdgeNodes) {
+        await this.testEdgeNodeConnectivity();
+      }
     }, 300_000); // Every 5 minutes
   }
 

@@ -1,3 +1,10 @@
+"use client";
+
+/**
+ * Use Enhanced Form Hook
+ * Handles the form state and logic for the property creation form
+ */
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { CreatePropertyData, PropertyType } from "@kaa/models/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -395,19 +402,12 @@ export function useEnhancedForm({
   const save = useCallback(async () => {
     const isValid = await form.trigger();
 
-    console.log("isValid", isValid);
-    console.log("form.formState.errors", form.formState.errors);
-    console.log("form.formState.isDirty", form.formState.isDirty);
-    console.log("form.formState.isValid", form.formState.isValid);
-
-    // if (!isValid) {
-    //   toast.error("Please fix validation errors before saving");
-    //   return;
-    // }
+    if (!isValid) {
+      toast.error("Please fix validation errors before saving");
+      return;
+    }
 
     const data = form.getValues();
-
-    console.log("data", data);
 
     return saveMutation.mutateAsync(data);
   }, [form, saveMutation]);

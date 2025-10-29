@@ -83,7 +83,8 @@ class WebhooksService {
 
   async createWebhook(
     data: CreateWebhookRequest,
-    createdBy: string
+    createdBy: string,
+    memberId?: string
   ): Promise<IWebhookConfig> {
     try {
       // Set default security configuration
@@ -103,6 +104,8 @@ class WebhooksService {
 
       const webhook = new WebhookConfig({
         ...data,
+        memberId: memberId ? new Types.ObjectId(memberId) : undefined,
+        userId: new Types.ObjectId(createdBy),
         security,
         retryConfig: { ...retryConfig, ...data.retryConfig },
         createdBy: new Types.ObjectId(createdBy),
@@ -169,7 +172,9 @@ class WebhooksService {
 
   async getWebhook(webhookId: string): Promise<IWebhookConfig | null> {
     try {
-      return await WebhookConfig.findById(webhookId).lean();
+      return (await WebhookConfig.findById(
+        webhookId
+      ).lean()) as unknown as IWebhookConfig | null;
     } catch (error) {
       throw new Error(`Failed to get webhook: ${(error as Error).message}`);
     }
@@ -183,7 +188,10 @@ class WebhooksService {
       status?: WebhookStatus;
       events?: WebhookEventType[];
     } = {}
-  ): Promise<{ webhooks: IWebhookConfig[]; total: number }> {
+  ): Promise<{
+    webhooks: IWebhookConfig[];
+    pagination: { total: number; page: number; limit: number; pages: number };
+  }> {
     try {
       const query: FilterQuery<IWebhookConfig> = {
         createdBy: new Types.ObjectId(userId),
@@ -200,7 +208,10 @@ class WebhooksService {
         WebhookConfig.countDocuments(query),
       ]);
 
-      return { webhooks, total };
+      return {
+        webhooks: webhooks as unknown as IWebhookConfig[],
+        pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+      };
     } catch (error) {
       throw new Error(
         `Failed to get user webhooks: ${(error as Error).message}`
@@ -218,7 +229,10 @@ class WebhooksService {
       page?: number;
       limit?: number;
     } = {}
-  ): Promise<{ webhooks: IWebhookConfig[]; total: number }> {
+  ): Promise<{
+    webhooks: IWebhookConfig[];
+    pagination: { total: number; page: number; limit: number; pages: number };
+  }> {
     try {
       const query: FilterQuery<IWebhookConfig> = {};
 
@@ -243,7 +257,10 @@ class WebhooksService {
         WebhookConfig.countDocuments(query),
       ]);
 
-      return { webhooks, total };
+      return {
+        webhooks: webhooks as unknown as IWebhookConfig[],
+        pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+      };
     } catch (error) {
       throw new Error(`Failed to list webhooks: ${(error as Error).message}`);
     }
@@ -302,7 +319,9 @@ class WebhooksService {
       if (options?.nextRetryAt)
         query.nextRetryAt = { $lte: options.nextRetryAt };
 
-      return await WebhookDelivery.findOne(query).lean();
+      return (await WebhookDelivery.findOne(
+        query
+      ).lean()) as IWebhookDelivery | null;
     } catch (error) {
       throw new Error(`Failed to get delivery: ${(error as Error).message}`);
     }
@@ -356,7 +375,7 @@ class WebhooksService {
       ]);
 
       return {
-        deliveries: deliveries as IWebhookDelivery[],
+        deliveries: deliveries as unknown as IWebhookDelivery[],
         pagination: {
           total,
           page: Number(page),
@@ -428,13 +447,16 @@ class WebhooksService {
 
       // Apply additional filters
       const filteredWebhooks = await Promise.all(
-        webhooks.map(async (webhook) => {
-          const matches = await this.doesEventMatchFilters(event, webhook);
+        webhooks.map((webhook) => {
+          const matches = this.doesEventMatchFilters(
+            event,
+            webhook as unknown as IWebhookConfig
+          );
           return matches ? webhook : null;
         })
       );
 
-      return filteredWebhooks.filter(Boolean) as IWebhookConfig[];
+      return filteredWebhooks.filter(Boolean) as unknown as IWebhookConfig[];
     } catch (error) {
       throw new Error(
         `Failed to find matching webhooks: ${(error as Error).message}`

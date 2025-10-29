@@ -195,8 +195,9 @@ export default function PropertiesContainer({
           <div
             className={cn("grid gap-6", gridClasses[viewConfig.gridColumns])}
           >
-            {properties.map((property) => (
+            {properties.map((property, index) => (
               <PropertyCard
+                index={index}
                 isSelected={selectedProperty?._id === property._id}
                 key={property._id}
                 onClick={handlePropertySelect}
@@ -210,8 +211,9 @@ export default function PropertiesContainer({
 
         {viewConfig.viewMode === "list" && (
           <div className="space-y-4">
-            {properties.map((property) => (
+            {properties.map((property, index) => (
               <PropertyCard
+                index={index}
                 isSelected={selectedProperty?._id === property._id}
                 key={property._id}
                 onClick={handlePropertySelect}
@@ -265,6 +267,7 @@ export default function PropertiesContainer({
         <div className="absolute right-4 bottom-4 left-4 z-10">
           <PropertyCard
             className="mx-auto max-w-md"
+            index={0}
             property={selectedProperty}
             viewMode="list"
           />

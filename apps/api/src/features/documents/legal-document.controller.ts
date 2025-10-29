@@ -18,6 +18,22 @@ import Elysia, { t } from "elysia";
 import { authPlugin } from "~/features/auth/auth.plugin";
 import { accessPlugin } from "~/features/rbac/rbac.plugin";
 
+/**
+ * Helper function to get content type based on document format
+ */
+const getContentType = (format: string): string => {
+  switch (format.toLowerCase()) {
+    case "pdf":
+      return "application/pdf";
+    case "docx":
+      return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    case "html":
+      return "text/html";
+    default:
+      return "application/octet-stream";
+  }
+};
+
 export const legalDocumentController = new Elysia().group(
   "legal-documents",
   (app) =>
@@ -421,9 +437,72 @@ export const legalDocumentController = new Elysia().group(
           },
         }
       )
-      // Track document download
-      .post(
+      // Download document file
+      .get(
         "/:documentId/download",
+        async ({ params, set }) => {
+          try {
+            const document = await legalDocumentService.getDocument(
+              params.documentId
+            );
+
+            if (!document) {
+              set.status = 404;
+              return {
+                status: "error",
+                message: "Document not found",
+              };
+            }
+
+            // Track download
+            await legalDocumentService.trackDocumentAccess(
+              params.documentId,
+              "download"
+            );
+
+            // Get file from storage
+            const fileBuffer = await legalDocumentService.getDocumentFile(
+              document.filePath
+            );
+
+            if (!fileBuffer) {
+              set.status = 404;
+              return {
+                status: "error",
+                message: "Document file not found",
+              };
+            }
+
+            // Set appropriate headers for file download
+            set.headers["Content-Type"] = getContentType(document.format);
+            set.headers["Content-Disposition"] =
+              `attachment; filename="${document.type}-${new Date(document.createdAt).toISOString().split("T")[0]}.${document.format}"`;
+            set.headers["Content-Length"] = fileBuffer.length.toString();
+
+            return fileBuffer;
+          } catch (error) {
+            logger.error("Download document error:", error);
+            set.status = 500;
+            return {
+              status: "error",
+              message: "Failed to download document",
+            };
+          }
+        },
+        {
+          params: t.Object({
+            documentId: t.String(),
+          }),
+          detail: {
+            tags: ["legal-documents"],
+            summary: "Download document file",
+            description: "Download the actual document file as a blob",
+          },
+        }
+      )
+      // Track document download (for analytics only)
+      .post(
+        "/:documentId/download/track",
         async ({ params, set }) => {
           try {
             await legalDocumentService.trackDocumentAccess(
@@ -452,7 +531,7 @@ export const legalDocumentController = new Elysia().group(
           detail: {
             tags: ["legal-documents"],
             summary: "Track document download",
-            description: "Record a document download event",
+            description: "Record a document download event for analytics",
           },
         }
       )

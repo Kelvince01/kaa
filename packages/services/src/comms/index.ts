@@ -1,3 +1,7 @@
+/**
+ * Communications Service Exports
+ */
+
 export * from "./email.service";
 export * from "./message.service";
 export * as notificationFactory from "./notification.factory";
@@ -6,6 +10,7 @@ export * from "./notification.utils";
 export * from "./resend.service";
 export * from "./sendgrid.service";
 export * from "./sms.service";
+export * from "./socket.service";
 export * from "./ussd.service";
 export * from "./whatsapp.service";
 export * from "./whatsapp-business.service";

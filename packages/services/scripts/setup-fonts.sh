@@ -18,6 +18,7 @@ NC='\033[0m' # No Color
 # Configuration
 FONTS_DIR="apps/api/assets/fonts"
 TEMP_DIR="/tmp/kaa-fonts-setup"
+PROJECT_ROOT="$(pwd)"
 
 echo -e "${GREEN}=== KAA Legal Documents Service - Font Setup ===${NC}\n"
 
@@ -49,7 +50,8 @@ echo -e "${YELLOW}Extracting DejaVu Sans fonts...${NC}"
 tar -xjf dejavu-fonts-ttf-2.37.tar.bz2
 
 # Copy required DejaVu fonts
-cd "$(pwd)/../../../.."
+# cd "$(pwd)/../../../.."
+cd "$PROJECT_ROOT"
 cp "$TEMP_DIR/dejavu-fonts-ttf-2.37/ttf/DejaVuSans.ttf" "$FONTS_DIR/"
 cp "$TEMP_DIR/dejavu-fonts-ttf-2.37/ttf/DejaVuSans-Bold.ttf" "$FONTS_DIR/"
 echo -e "${GREEN}✓ DejaVu Sans fonts installed${NC}"
@@ -61,14 +63,19 @@ cd "$TEMP_DIR"
 if command -v wget &> /dev/null; then
     wget -q --show-progress -O NotoSans-Regular.ttf "https://github.com/google/fonts/raw/main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf"
     wget -q --show-progress -O NotoSans-Bold.ttf "https://github.com/google/fonts/raw/main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf"
+    wget -q --show-progress -O NotoSansSwahili-Regular.ttf "https://github.com/google/fonts/raw/main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf"
 else
     curl -L -o NotoSans-Regular.ttf "https://github.com/google/fonts/raw/main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf"
     curl -L -o NotoSans-Bold.ttf "https://github.com/google/fonts/raw/main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf"
+    curl -L -o NotoSansSwahili-Regular.ttf "https://github.com/google/fonts/raw/main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf"
 fi
 
 # Copy Noto Sans fonts
-cd "$(pwd)/../../../.."
+# cd "$(pwd)/../../../.."
+cd "$PROJECT_ROOT"
 cp "$TEMP_DIR/NotoSans-Regular.ttf" "$FONTS_DIR/"
+cp "$TEMP_DIR/NotoSans-Bold.ttf" "$FONTS_DIR/"
+cp "$TEMP_DIR/NotoSansSwahili-Regular.ttf" "$FONTS_DIR/"
 echo -e "${GREEN}✓ Noto Sans fonts installed${NC}"
 
 # Verify fonts
@@ -97,7 +104,7 @@ echo -e "${GREEN}✓ Permissions set${NC}"
 echo -e "\n${GREEN}=== Font Setup Complete! ===${NC}\n"
 echo -e "Installed fonts:"
 echo -e "  • DejaVu Sans (Regular & Bold)"
-echo -e "  • Noto Sans (Regular)"
+echo -e "  • Noto Sans (Regular, Bold & Swahili)"
 echo -e "\nNext steps:"
 echo -e "  1. Start/restart your application"
 echo -e "  2. Check logs for font registration status"

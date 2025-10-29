@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { FurnishedStatus } from "@kaa/models/types";
 import { Badge } from "@kaa/ui/components/badge";
 import { Button } from "@kaa/ui/components/button";
 import {
@@ -60,7 +61,7 @@ type BasicInfoFormData = {
   listingType: "rent" | "sale" | "lease";
   availableFrom: Date;
   availableUntil?: Date;
-  furnished: "unfurnished" | "semi_furnished" | "fully_furnished";
+  furnished: FurnishedStatus;
   petPolicy: "allowed" | "not_allowed" | "negotiable";
   smokingPolicy: "allowed" | "not_allowed" | "outside_only";
   tags: string[];
@@ -173,7 +174,7 @@ export function EnhancedBasicInfoForm({
       type: "apartment" as any,
       listingType: "rent",
       availableFrom: new Date(),
-      furnished: "unfurnished" as const,
+      furnished: FurnishedStatus.UNFURNISHED,
       petPolicy: "not_allowed" as const,
       smokingPolicy: "not_allowed" as const,
       tags: [],
@@ -390,7 +391,7 @@ export function EnhancedBasicInfoForm({
             description: "",
             listingType: "rent",
             availableFrom: new Date(),
-            furnished: "unfurnished" as const,
+            furnished: FurnishedStatus.UNFURNISHED,
             petPolicy: "not_allowed" as const,
             smokingPolicy: "not_allowed" as const,
             tags: [],

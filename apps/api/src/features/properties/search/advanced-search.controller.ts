@@ -1,7 +1,7 @@
 import {
-  elasticsearchService,
   type SearchQuery,
   searchAnalyticsService,
+  typesenseService,
 } from "@kaa/services";
 import { logger } from "@kaa/utils";
 import { Elysia, t } from "elysia";
@@ -13,7 +13,7 @@ import {
 } from "./search.middleware";
 
 /**
- * Advanced search controller with Elasticsearch integration
+ * Advanced search controller with Typesense integration
  */
 export const advancedSearchController = new Elysia({
   detail: {
@@ -114,17 +114,18 @@ export const advancedSearchController = new Elysia({
             }
 
             const results =
-              await elasticsearchService.searchProperties(searchQuery);
+              await typesenseService.searchProperties(searchQuery);
 
             set.status = 200;
             return {
               status: "success",
               data: {
                 properties: results.hits.map((hit) => ({
-                  ...hit._source,
-                  _id: hit._id,
-                  _score: hit._score,
+                  ...hit.document,
+                  _id: hit.id,
+                  _score: hit.score,
                   highlight: hit.highlight,
+                  geo_distance_meters: hit.geo_distance_meters,
                 })),
                 pagination: {
                   total: results.total,
@@ -132,7 +133,7 @@ export const advancedSearchController = new Elysia({
                   limit,
                   pages: Math.ceil(results.total / limit),
                 },
-                aggregations: results.aggregations,
+                facets: results.facets,
               },
             };
           } catch (error) {
@@ -169,7 +170,7 @@ export const advancedSearchController = new Elysia({
           }),
           detail: {
             tags: ["advanced-search"],
-            summary: "Advanced property search with Elasticsearch",
+            summary: "Advanced property search with Typesense",
             description:
               "Search properties using advanced filters, geo-location, and full-text search capabilities",
           },
@@ -257,17 +258,18 @@ export const advancedSearchController = new Elysia({
             }
 
             const results =
-              await elasticsearchService.searchContractors(searchQuery);
+              await typesenseService.searchContractors(searchQuery);
 
             set.status = 200;
             return {
               status: "success",
               data: {
                 contractors: results.hits.map((hit) => ({
-                  ...hit._source,
-                  _id: hit._id,
-                  _score: hit._score,
+                  ...hit.document,
+                  _id: hit.id,
+                  _score: hit.score,
                   highlight: hit.highlight,
+                  geo_distance_meters: hit.geo_distance_meters,
                 })),
                 pagination: {
                   total: results.total,
@@ -275,7 +277,7 @@ export const advancedSearchController = new Elysia({
                   limit,
                   pages: Math.ceil(results.total / limit),
                 },
-                aggregations: results.aggregations,
+                facets: results.facets,
               },
             };
           } catch (error) {
@@ -310,7 +312,7 @@ export const advancedSearchController = new Elysia({
           }),
           detail: {
             tags: ["advanced-search"],
-            summary: "Advanced contractor search with Elasticsearch",
+            summary: "Advanced contractor search with Typesense",
             description:
               "Search contractors using advanced filters, geo-location, and specialties",
           },
@@ -330,7 +332,7 @@ export const advancedSearchController = new Elysia({
               };
             }
 
-            const suggestions = await elasticsearchService.getSuggestions(
+            const suggestions = await typesenseService.getSuggestions(
               q,
               type as "properties" | "contractors"
             );
@@ -394,11 +396,9 @@ export const advancedSearchController = new Elysia({
 
             let results: any;
             if (type === "contractors") {
-              results =
-                await elasticsearchService.searchContractors(searchQuery);
+              results = await typesenseService.searchContractors(searchQuery);
             } else {
-              results =
-                await elasticsearchService.searchProperties(searchQuery);
+              results = await typesenseService.searchProperties(searchQuery);
             }
 
             set.status = 200;
@@ -406,9 +406,10 @@ export const advancedSearchController = new Elysia({
               status: "success",
               data: {
                 items: results.hits.map((hit: any) => ({
-                  ...hit._source,
-                  _id: hit._id,
-                  _score: hit._score,
+                  ...hit.document,
+                  _id: hit.id,
+                  _score: hit.score,
+                  geo_distance_meters: hit.geo_distance_meters,
                 })),
                 total: results.total,
                 center: { lat: Number(lat), lon: Number(lon) },
@@ -530,7 +531,7 @@ export const advancedSearchController = new Elysia({
             }
 
             // Trigger reindexing in background
-            elasticsearchService.reindexAll().catch((error) => {
+            typesenseService.reindexAll().catch((error) => {
               logger.error("Background reindexing failed:", error);
             });
 
@@ -551,9 +552,9 @@ export const advancedSearchController = new Elysia({
         {
           detail: {
             tags: ["advanced-search"],
-            summary: "Trigger Elasticsearch reindexing",
+            summary: "Trigger Typesense reindexing",
             description:
-              "Reindex all properties and contractors in Elasticsearch (Admin only)",
+              "Reindex all properties and contractors in Typesense (Admin only)",
             security: [{ bearerAuth: [] }],
           },
         }
@@ -562,19 +563,19 @@ export const advancedSearchController = new Elysia({
         "/health",
         ({ set }) => {
           try {
-            const isHealthy = elasticsearchService.isHealthy();
+            const isHealthy = typesenseService.isHealthy();
 
             set.status = isHealthy ? 200 : 503;
             return {
               status: isHealthy ? "healthy" : "unhealthy",
-              service: "elasticsearch",
+              service: "typesense",
               timestamp: new Date().toISOString(),
             };
           } catch (error) {
             set.status = 503;
             return {
               status: "unhealthy",
-              service: "elasticsearch",
+              service: "typesense",
               error: "Service check failed",
               timestamp: new Date().toISOString(),
             };
@@ -583,9 +584,8 @@ export const advancedSearchController = new Elysia({
         {
           detail: {
             tags: ["advanced-search"],
-            summary: "Check Elasticsearch health",
-            description:
-              "Check if Elasticsearch service is available and healthy",
+            summary: "Check Typesense health",
+            description: "Check if Typesense service is available and healthy",
           },
         }
       )

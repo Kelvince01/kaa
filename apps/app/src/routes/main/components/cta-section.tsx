@@ -1,11 +1,19 @@
 import { Icon } from "@iconify/react";
 import { Button } from "@kaa/ui/components/button";
+// import { motion } from "framer-motion";
 
 export function CTASection() {
   return (
-    <section className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 py-20">
+    <section className="bg-linear-to-r from-emerald-600 to-emerald-700 px-4 py-20">
       <div className="container mx-auto text-center">
         <div className="mx-auto max-w-3xl">
+          {/* <motion.div
+            className="mx-auto max-w-3xl text-center"
+            initial={{ opacity: 0, y: 30 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            whileInView={{ opacity: 1, y: 0 }}
+          > */}
           <h2 className="mb-4 font-bold font-heading text-4xl text-white">
             Ready to Transform Your Property Management?
           </h2>
@@ -37,6 +45,7 @@ export function CTASection() {
           <p className="mt-4 text-emerald-200 text-sm">
             No credit card required • 14-day free trial • Cancel anytime
           </p>
+          {/* </motion.div> */}
         </div>
       </div>
     </section>

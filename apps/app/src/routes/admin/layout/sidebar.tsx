@@ -10,6 +10,7 @@ import {
   Shield,
   SquareTerminal,
   Users,
+  Webhook,
 } from "lucide-react";
 
 export const adminSidebarItems = {
@@ -29,7 +30,7 @@ export const adminSidebarItems = {
     { title: "Members", url: "/admin/members", icon: Users },
     { title: "Bookings", url: "/admin/bookings", icon: Calendar },
     { title: "Finances", url: "/admin/financials", icon: DollarSign },
-    { title: "Webhooks", url: "/admin/webhooks", icon: DollarSign },
+    { title: "Webhooks", url: "/admin/webhooks", icon: Webhook },
     {
       title: "AI Management",
       url: "/admin/ai",

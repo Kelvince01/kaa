@@ -82,20 +82,20 @@ const DEFAULT_COMPARISON_FIELDS: ComparisonField[] = [
 
   // Pricing
   {
-    key: "pricing.rentAmount",
+    key: "pricing.rent",
     label: "Rent/Price",
     category: "Pricing",
     type: "price",
     important: true,
   },
   {
-    key: "pricing.securityDeposit",
+    key: "pricing.deposit",
     label: "Security Deposit",
     category: "Pricing",
     type: "price",
   },
   {
-    key: "pricing.serviceCharge",
+    key: "pricing.serviceFee",
     label: "Service Charge",
     category: "Pricing",
     type: "price",
@@ -130,46 +130,46 @@ const DEFAULT_COMPARISON_FIELDS: ComparisonField[] = [
 
   // Details
   {
-    key: "details.bedrooms",
+    key: "specifications.bedrooms",
     label: "Bedrooms",
     category: "Details",
     type: "number",
     important: true,
   },
   {
-    key: "details.bathrooms",
+    key: "specifications.bathrooms",
     label: "Bathrooms",
     category: "Details",
     type: "number",
     important: true,
   },
   {
-    key: "details.size",
+    key: "specifications.totalArea",
     label: "Size (sq m)",
     category: "Details",
     type: "number",
     important: true,
   },
   {
-    key: "details.furnished",
+    key: "specifications.furnished",
     label: "Furnished",
     category: "Details",
     type: "boolean",
   },
   {
-    key: "details.parking",
+    key: "amenities.parking",
     label: "Parking",
     category: "Details",
     type: "boolean",
   },
   {
-    key: "details.garden",
+    key: "amenities.garden",
     label: "Garden",
     category: "Details",
     type: "boolean",
   },
   {
-    key: "details.yearBuilt",
+    key: "specifications.yearBuilt",
     label: "Year Built",
     category: "Details",
     type: "number",
@@ -181,25 +181,25 @@ const DEFAULT_COMPARISON_FIELDS: ComparisonField[] = [
 
   // Utilities
   {
-    key: "pricing.waterBill",
+    key: "pricing.utilitiesIncluded.water",
     label: "Water Bill",
     category: "Utilities",
     type: "text",
   },
   {
-    key: "pricing.electricityBill",
+    key: "pricing.utilitiesIncluded.electricity",
     label: "Electricity Bill",
     category: "Utilities",
     type: "text",
   },
   {
-    key: "details.generator",
+    key: "amenities.generator",
     label: "Generator",
     category: "Utilities",
     type: "boolean",
   },
   {
-    key: "details.borehole",
+    key: "amenities.borehole",
     label: "Borehole",
     category: "Utilities",
     type: "boolean",
@@ -207,20 +207,20 @@ const DEFAULT_COMPARISON_FIELDS: ComparisonField[] = [
 
   // Availability
   {
-    key: "available",
+    key: "availability.isAvailable",
     label: "Available",
     category: "Availability",
     type: "boolean",
     important: true,
   },
   {
-    key: "availableFrom",
+    key: "availability.availableFrom",
     label: "Available From",
     category: "Availability",
     type: "text",
   },
   {
-    key: "minTenancy",
+    key: "availability.minTenancy",
     label: "Minimum Tenancy",
     category: "Availability",
     type: "text",

@@ -1,18 +1,16 @@
 "use client";
 
-import { Bell, CreditCard, Lock, Shield, User } from "lucide-react";
+import { Bell, CreditCard, Lock, Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuthStore } from "@/modules/auth/auth.store";
 import { NotificationSettingsForm } from "./notification-settings-form";
 import { PaymentSettingsForm } from "./payment-settings-form";
 import { PrivacySettingsForm } from "./privacy-settings-form";
-import { ProfileSettingsForm } from "./profile-settings-form";
 import type {
   NotificationSettingsData,
   PaymentSettingsData,
   PrivacySettingsData,
-  ProfileSettingsData,
   SecuritySettingsData,
   TwoFactorData,
 } from "./schemas";
@@ -20,7 +18,6 @@ import { SecuritySettingsForm } from "./security-settings-form";
 
 // Define the tabs for settings
 const TABS = [
-  { id: "profile", label: "Profile", icon: User },
   { id: "security", label: "Security", icon: Lock },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "privacy", label: "Privacy", icon: Shield },
@@ -30,15 +27,7 @@ const TABS = [
 const AccountSettingsClient = () => {
   const { user, isLoading } = useAuthStore();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("profile");
-
-  // Save handlers for each form
-  const handleSaveProfile = async (data: ProfileSettingsData) => {
-    // Handle profile settings save
-    console.log("Saving profile settings:", data);
-    // Implement API call here
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-  };
+  const [activeTab, setActiveTab] = useState("security");
 
   const handleSavePassword = async (data: SecuritySettingsData) => {
     // Handle password change
@@ -99,9 +88,11 @@ const AccountSettingsClient = () => {
 
   return (
     <div className="mx-auto max-w-6xl p-4 sm:p-6 lg:p-8">
-      <h1 className="mb-6 font-bold text-2xl text-gray-900">
-        Account Settings
-      </h1>
+      <h2 className="mb-6 font-bold text-gray-900 text-xl">Account Settings</h2>
+      <p className="text-gray-600">
+        Manage your account settings, notification preferences, and security
+        options.
+      </p>
 
       {/* Settings Tabs */}
       <div className="mb-6 border-gray-200 border-b">
@@ -123,11 +114,6 @@ const AccountSettingsClient = () => {
           ))}
         </div>
       </div>
-
-      {/* Content for Profile Tab */}
-      {activeTab === "profile" && (
-        <ProfileSettingsForm onSave={handleSaveProfile} />
-      )}
 
       {/* Content for Security Tab */}
       {activeTab === "security" && (

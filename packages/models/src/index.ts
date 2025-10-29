@@ -1,3 +1,4 @@
+export * from "./agent.model";
 export * from "./ai.model";
 export * from "./amenity.model";
 export * from "./analytics.model";

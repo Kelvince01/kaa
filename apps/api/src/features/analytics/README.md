@@ -202,8 +202,8 @@ const { data: insights } = await useMarketIntelligence({
   method: 'POST',
   data: {
     location: { county: 'Nairobi', city: 'Westlands' },
-    details: { bedrooms: 2, bathrooms: 2, size: 80 },
-    pricing: { rentAmount: 75000 },
+    specifications: { bedrooms: 2, bathrooms: 2, size: 80 },
+    pricing: { rent: 75000 },
     amenities: ['parking', 'security', 'generator'],
     type: 'apartment'
   }

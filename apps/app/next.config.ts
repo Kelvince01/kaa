@@ -91,7 +91,7 @@ const nextConfig: NextConfig = {
       // },
     ];
   },
-  transpilePackages: ["@kaa/ui"],
+  transpilePackages: ["@kaa/ui", "three"],
   reactStrictMode: false,
   typescript: {
     ignoreBuildErrors: true,

@@ -10,6 +10,7 @@ export enum UserRole {
   STAFF = "staff",
   VIEWER = "viewer",
   USER = "user",
+  MODERATOR = "moderator",
 }
 
 // User status types

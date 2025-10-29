@@ -244,7 +244,6 @@ const webhookSchema = new Schema<IWebhook>(
     memberId: {
       type: Schema.Types.ObjectId,
       ref: "Member",
-      required: true,
     },
     userId: {
       type: Schema.Types.ObjectId,

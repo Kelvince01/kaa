@@ -31,7 +31,7 @@ import type {
 export const createConditionReport = async (
   data: CreateConditionReportInput
 ): Promise<ConditionResponse> => {
-  const response = await httpClient.api.post("/properties/conditions", data);
+  const response = await httpClient.api.post("/properties/conditions/", data);
   return response.data;
 };
 
@@ -39,7 +39,7 @@ export const createConditionReport = async (
 export const getConditionReports = async (
   params: ConditionQueryParams = {}
 ): Promise<ConditionListResponse> => {
-  const response = await httpClient.api.get("/properties/conditions", {
+  const response = await httpClient.api.get("/properties/conditions/", {
     params,
   });
   return response.data;

@@ -1,5 +1,4 @@
 import jwt from "@elysiajs/jwt";
-import Stream from "@elysiajs/stream";
 import { Passkey, User } from "@kaa/models";
 import { UserStatus } from "@kaa/models/types";
 import {
@@ -8,13 +7,18 @@ import {
   roleService,
   userService,
 } from "@kaa/services";
-import { Elysia, t } from "elysia";
+import { Elysia, sse, t } from "elysia";
 import type mongoose from "mongoose";
 import { authPlugin } from "./auth.plugin";
 
-export const streams = new Map<string, any>();
+// a simple in‑memory map to keep a reference to each client’s generator
+const clients = new Map<string, AsyncGenerator<any, void, unknown>>();
 
-export const meController = new Elysia()
+export const meController = new Elysia({
+  detail: {
+    tags: ["me"],
+  },
+})
   .use(
     jwt({
       name: "jwt",
@@ -56,18 +60,24 @@ export const meController = new Elysia()
               : undefined,
             avatar: userProfile.profile?.avatar,
             username: userProfile.profile?.displayName || "",
-            firstName: userProfile.profile?.firstName,
-            lastName: userProfile.profile?.lastName,
-            email: userProfile.contact?.email,
-            status: userProfile.status as string,
+            firstName: userProfile.profile?.firstName ?? "",
+            lastName: userProfile.profile?.lastName ?? "",
+            email: userProfile.contact?.email ?? "",
+            status: userProfile.status as UserStatus,
             role: (userRole?.roleId as any)?.name ?? "",
             phone: userProfile.contact?.phone.formatted,
-            address: userProfile.addresses?.[0],
+            address: {
+              line1: userProfile.addresses?.[0]?.line1 ?? "",
+              town: userProfile.addresses?.[0]?.town ?? "",
+              county: userProfile.addresses?.[0]?.county ?? "",
+              postalCode: userProfile.addresses?.[0]?.postalCode ?? "",
+              country: userProfile.addresses?.[0]?.country ?? "",
+            },
             isActive: userProfile.status === UserStatus.ACTIVE,
             isVerified: !!userProfile.verification?.emailVerifiedAt,
             createdAt: (userProfile.createdAt as Date).toISOString(),
             updatedAt: (userProfile.updatedAt as Date).toISOString(),
-          } as any,
+          },
         };
       } catch (error) {
         const errorMessage =
@@ -104,7 +114,7 @@ export const meController = new Elysia()
                 country: t.String(),
               })
             ),
-            status: t.String(),
+            status: t.Enum(UserStatus),
             isActive: t.Boolean(),
             isVerified: t.Boolean(),
             createdAt: t.String(),
@@ -122,7 +132,7 @@ export const meController = new Elysia()
         }),
       },
       detail: {
-        tags: ["auth"],
+        tags: ["me"],
         summary: "Fetch current user",
         description: "Fetch the current user",
       },
@@ -258,37 +268,38 @@ export const meController = new Elysia()
    */
   .get(
     "/sse",
-    ({ user, set }) => {
-      return new Stream(async (stream) => {
-        set.headers["Content-Encoding"] = "";
-        streams.set(user.id, stream);
+    // 👇 the handler is a *generator* (function*), not a regular function
+    async function* ({ user, set }) {
+      // set SSE headers **once**, before the first yield
+      set.headers["Content-Encoding"] = "";
+      // ----- 1️⃣ send a “connected” event -----
+      yield sse({
+        event: "connected",
+        data: "connected",
+        retry: 5000,
+      });
+      // store the generator so we could abort it later if needed
+      // (Elysia will auto‑cancel when the client disconnects)
+      clients.set(user.id, (yield* [] as any) as any); // placeholder, just to keep the map
+      console.info("User connected to SSE", user.id);
 
-        console.info("User connected to SSE", user.id);
-        stream.send({
-          event: "connected",
-          data: "connected",
+      // ----- 2️⃣ keep‑alive loop -----
+      while (true) {
+        yield sse({
+          event: "ping",
+          data: "pong",
           retry: 5000,
         });
-
-        //   stream.onAbort(async () => {
-        //     console.info("User disconnected from SSE", user.id);
-        //     await streams.delete(user.id);
-        //   });
-
-        // Keep connection alive
-        while (true) {
-          stream.send({
-            event: "ping",
-            data: "pong",
-            retry: 5000,
-          });
-          await stream.wait(30_000);
-        }
-      });
+        // pause 30 s between pings
+        await new Promise((r) => setTimeout(r, 30_000));
+      }
     },
     {
+      // optional OpenAPI / swagger detail
       detail: {
-        tags: ["auth"],
+        tags: ["me"],
+        summary: "Get SSE stream",
+        description: "Get a Server-Sent Events stream for the current user",
       },
     }
   );

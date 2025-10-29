@@ -1,6 +1,8 @@
+import { SubscriptionPlan } from "@kaa/models";
 import { memberService } from "@kaa/services";
-import { logger } from "@kaa/utils";
+import { logger, NotFoundError } from "@kaa/utils";
 import Elysia, { t } from "elysia";
+import type mongoose from "mongoose";
 import { authPlugin, rolesPlugin } from "~/features/auth/auth.plugin";
 
 export const memberController = new Elysia({
@@ -23,6 +25,7 @@ export const memberController = new Elysia({
           limit: t.Optional(t.Number()),
           search: t.Optional(t.String()),
           plan: t.Optional(t.String()),
+          organization: t.Optional(t.String()),
         }),
         detail: {
           summary: "Get all members",
@@ -33,8 +36,18 @@ export const memberController = new Elysia({
     .get(
       "/:memberId",
       async ({ params }) => {
-        const result = await memberService.getMemberById(params.memberId);
-        return result;
+        const result = (
+          await memberService.getMemberById(params.memberId)
+        ).toObject();
+
+        return {
+          status: "success",
+          data: {
+            ...result,
+            _id: (result._id as mongoose.Types.ObjectId).toString(),
+          },
+          message: "Member fetched successfully",
+        };
       },
       {
         params: t.Object({
@@ -49,12 +62,30 @@ export const memberController = new Elysia({
     .post(
       "/",
       async ({ body }) => {
-        const result = await memberService.createMember(body);
+        const plan = await SubscriptionPlan.findOne({
+          name: body.plan,
+          isActive: true,
+        });
+        if (!plan) {
+          throw new NotFoundError("Plan not found");
+        }
+
+        const result = await memberService.createMember({
+          user: body.user,
+          organization: body.organization,
+          role: body.role,
+          name: body.name,
+          slug: body.slug,
+          plan: (plan._id as mongoose.Types.ObjectId).toString(),
+        });
         logger.info(`Member created: ${body.name}`);
         return result;
       },
       {
         body: t.Object({
+          user: t.String(),
+          organization: t.String(),
+          role: t.String(),
           name: t.String(),
           slug: t.String(),
           plan: t.Optional(
@@ -216,6 +247,26 @@ export const memberController = new Elysia({
           tags: ["members"],
           summary: "Get member stats",
         },
+      }
+    )
+    .get(
+      "/:memberId/stats",
+      async ({ params }) => {
+        const stats = await memberService.getMemberStats(params.memberId);
+
+        return {
+          status: "success",
+          data: stats,
+        };
+      },
+      {
+        detail: {
+          tags: ["members"],
+          summary: "Get member stats by ID",
+        },
+        params: t.Object({
+          memberId: t.String(),
+        }),
       }
     )
 );

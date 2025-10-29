@@ -27,9 +27,15 @@ type MemberFilter = FilterQuery<IMember>;
  * Get all tenants (admin only)
  */
 export const getAllMembers = async (
-  query: { page?: number; limit?: number; search?: string; plan?: string } = {}
+  query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    plan?: string;
+    organization?: string;
+  } = {}
 ) => {
-  const { page = 1, limit = 10, search = "", plan } = query;
+  const { page = 1, limit = 10, search = "", plan, organization } = query;
 
   const filter: MemberFilter = {};
 
@@ -46,6 +52,11 @@ export const getAllMembers = async (
     filter.plan = plan;
   }
 
+  // Add organization filter
+  if (organization) {
+    filter.organization = organization;
+  }
+
   // Calculate pagination
   const skip = (page - 1) * limit;
 
@@ -53,7 +64,14 @@ export const getAllMembers = async (
   const members = await Member.find(filter)
     .skip(skip)
     .limit(limit)
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .populate(
+      "user",
+      "profile.firstName profile.lastName contact.email contact.phone"
+    )
+    .populate("role", "name")
+    .populate("organization", "name slug")
+    .populate("plan", "name");
 
   const total = await Member.countDocuments(filter);
 
@@ -76,7 +94,8 @@ export async function getMemberById(memberId: string): Promise<IMember> {
         "profile.firstName profile.lastName contact.email contact.phone"
       )
       .populate("role", "name")
-      .populate("organization", "name slug");
+      .populate("organization", "name slug")
+      .populate("plan", "name");
 
     if (!member) {
       throw new NotFoundError("Member not found");
@@ -100,7 +119,8 @@ export async function getMemberBy(query: {
       "profile.firstName profile.lastName contact.email contact.phone"
     )
     .populate("role", "name")
-    .populate("organization", "name slug");
+    .populate("organization", "name slug")
+    .populate("plan", "name");
 
   return member;
 }

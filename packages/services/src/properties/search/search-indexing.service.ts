@@ -1,7 +1,7 @@
 import type { IContractor, IProperty } from "@kaa/models/types";
 // import { searchIntegrationService } from "./search-integration.service";
 import { logger } from "@kaa/utils";
-import { elasticsearchService } from "./elasticsearch.service";
+import { typesenseService } from "./typesense.service";
 
 /**
  * Search indexing service for handling automatic indexing of data changes
@@ -137,7 +137,7 @@ class SearchIndexingService {
         // Handle deletions individually
         for (const item of items) {
           const index = type === "property" ? "properties" : "contractors";
-          await elasticsearchService.deleteDocument(
+          await typesenseService.deleteDocument(
             index,
             (item.data._id as any).toString()
           );
@@ -150,7 +150,7 @@ class SearchIndexingService {
         }));
 
         const index = type === "property" ? "properties" : "contractors";
-        await elasticsearchService.bulkIndex(index, documents);
+        await typesenseService.bulkIndex(index, documents);
       }
 
       logger.debug(
@@ -291,7 +291,7 @@ class SearchIndexingService {
       this.clearQueue();
 
       // Trigger full reindex
-      await elasticsearchService.reindexAll();
+      await typesenseService.reindexAll();
 
       logger.info("Full reindex completed");
     } catch (error) {

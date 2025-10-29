@@ -1,5 +1,6 @@
-import { Redis } from "ioredis";
+import { redisClient } from "@kaa/utils/redis";
 import mongoose from "mongoose";
+import type { RedisClientType } from "redis";
 
 // Database performance configuration
 type DBPerformanceConfig = {
@@ -69,19 +70,12 @@ type QueryMetrics = {
 };
 
 class DatabasePerformanceMonitor {
-  private readonly redis: Redis;
+  private readonly redis: RedisClientType;
   readonly queryMetrics: QueryMetrics[] = [];
   private readonly slowQueryThreshold: number;
 
   constructor() {
-    this.redis = new Redis({
-      host: process.env.REDIS_HOST || "localhost",
-      port: Number.parseInt(process.env.REDIS_PORT || "6379", 10),
-      password: process.env.REDIS_PASSWORD,
-      //   retryDelayOnFailover: 100,
-      enableReadyCheck: false,
-      lazyConnect: true,
-    });
+    this.redis = redisClient;
 
     this.slowQueryThreshold = Number.parseInt(
       process.env.SLOW_QUERY_THRESHOLD || "1000",
@@ -141,11 +135,11 @@ class DatabasePerformanceMonitor {
         timestamp: new Date(),
       };
 
-      await this.redis.lpush(
+      await this.redis.lPush(
         "db_connection_stats",
         JSON.stringify(connectionStats)
       );
-      await this.redis.ltrim("db_connection_stats", 0, 999); // Keep last 1000 entries
+      await this.redis.lTrim("db_connection_stats", 0, 999); // Keep last 1000 entries
     } catch (error) {
       console.error("Failed to log connection stats:", error);
     }
@@ -153,7 +147,7 @@ class DatabasePerformanceMonitor {
 
   async getConnectionStats(): Promise<any> {
     try {
-      const stats = await this.redis.lrange("db_connection_stats", 0, 99);
+      const stats = await this.redis.lRange("db_connection_stats", 0, 99);
       return stats.map((stat) => JSON.parse(stat));
     } catch (error) {
       console.error("Failed to get connection stats:", error);
@@ -279,10 +273,10 @@ export const indexDefinitions = [
       { key: { status: 1, isActive: 1 } },
       { key: { "location.county": 1, "location.city": 1 } },
       { key: { "location.coordinates": "2dsphere" } },
-      { key: { type: 1, "pricing.rentAmount": 1 } },
+      { key: { type: 1, "pricing.rent": 1 } },
       {
         key: {
-          "pricing.rentAmount": 1,
+          "pricing.rent": 1,
           "features.bedrooms": 1,
           "features.bathrooms": 1,
         },

@@ -831,7 +831,7 @@ export const reviewController = new Elysia().group("reviews", (app) =>
 
     // ==================== MODERATION ENDPOINTS (ADMIN/MODERATOR) ====================
 
-    .group("/", (app) =>
+    .group("", (app) =>
       app
         .use(accessPlugin("reviews", "read")) // manage
 
@@ -866,7 +866,7 @@ export const reviewController = new Elysia().group("reviews", (app) =>
               limit: t.Optional(t.String()),
             }),
             detail: {
-              tags: ["reviews", "moderation"],
+              tags: ["reviews"],
               summary: "Get pending reviews",
               description:
                 "Get reviews pending moderation. Requires moderation permission.",
@@ -906,7 +906,7 @@ export const reviewController = new Elysia().group("reviews", (app) =>
           limit: t.Optional(t.String()),
         }),
         detail: {
-          tags: ["reviews", "moderation"],
+          tags: ["reviews"],
           summary: "Get flagged reviews",
         },
       }
@@ -947,7 +947,7 @@ export const reviewController = new Elysia().group("reviews", (app) =>
           notes: t.Optional(t.String()),
         }),
         detail: {
-          tags: ["reviews", "moderation"],
+          tags: ["reviews"],
           summary: "Approve a review",
         },
       }
@@ -988,7 +988,7 @@ export const reviewController = new Elysia().group("reviews", (app) =>
           reason: t.String(),
         }),
         detail: {
-          tags: ["reviews", "moderation"],
+          tags: ["reviews"],
           summary: "Reject a review",
         },
       }
@@ -1029,7 +1029,7 @@ export const reviewController = new Elysia().group("reviews", (app) =>
           reason: t.Optional(t.String()),
         }),
         detail: {
-          tags: ["reviews", "moderation"],
+          tags: ["reviews"],
           summary: "Hide a review",
         },
       }
@@ -1070,7 +1070,7 @@ export const reviewController = new Elysia().group("reviews", (app) =>
           reason: t.Optional(t.String()),
         }),
         detail: {
-          tags: ["reviews", "moderation"],
+          tags: ["reviews"],
           summary: "Bulk moderate reviews",
           description: "Approve, reject, or hide multiple reviews at once.",
         },
@@ -1112,7 +1112,7 @@ export const reviewController = new Elysia().group("reviews", (app) =>
           action: t.String(),
         }),
         detail: {
-          tags: ["reviews", "moderation"],
+          tags: ["reviews"],
           summary: "Resolve a flag",
         },
       }
@@ -1145,7 +1145,7 @@ export const reviewController = new Elysia().group("reviews", (app) =>
           reviewIds: t.Array(t.String()),
         }),
         detail: {
-          tags: ["reviews", "analytics"],
+          tags: ["reviews"],
           summary: "Analyze sentiment",
           description: "Analyze sentiment for multiple reviews.",
         },

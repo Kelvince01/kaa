@@ -34,17 +34,12 @@ import {
   type UserPresencePayload,
 } from "@kaa/models/types";
 import { Types } from "mongoose";
+import { socketService } from "./socket.service";
 
 /**
  * Message Service Class
  */
 export class MessageService {
-  private readonly socketService: any; // Will be injected
-
-  constructor(socketService?: any) {
-    this.socketService = socketService;
-  }
-
   // ==================== CONVERSATION METHODS ====================
 
   /**
@@ -134,8 +129,8 @@ export class MessageService {
       const savedConversation = await conversation.save();
 
       // Emit socket event for conversation creation
-      if (this.socketService) {
-        this.socketService.emitToUsers(
+      if (socketService) {
+        socketService.emitToUsers(
           request.participantIds,
           SocketEvent.CONVERSATION_CREATED,
           { conversationId: savedConversation._id }
@@ -318,9 +313,9 @@ export class MessageService {
       await conversation.save();
 
       // Emit socket event
-      if (this.socketService) {
+      if (socketService) {
         const activeParticipants = conversation.getActiveParticipants();
-        this.socketService.emitToUsers(
+        socketService.emitToUsers(
           activeParticipants.map((p) => p.userId),
           SocketEvent.CONVERSATION_UPDATED,
           { conversationId: conversation._id, updatedBy: userId }
@@ -376,16 +371,16 @@ export class MessageService {
       );
 
       // Emit socket events
-      if (this.socketService) {
+      if (socketService) {
         const activeParticipants = conversation.getActiveParticipants();
-        this.socketService.emitToUsers(
+        socketService.emitToUsers(
           activeParticipants.map((p) => p.userId),
           SocketEvent.CONVERSATION_UPDATED,
           { conversationId: conversation._id, participantAdded: request.userId }
         );
 
         // Notify the new participant
-        this.socketService.emitToUsers(
+        socketService.emitToUsers(
           [request.userId],
           SocketEvent.CONVERSATION_CREATED,
           { conversationId: conversation._id }
@@ -442,9 +437,9 @@ export class MessageService {
       );
 
       // Emit socket events
-      if (this.socketService) {
+      if (socketService) {
         const activeParticipants = conversation.getActiveParticipants();
-        this.socketService.emitToUsers(
+        socketService.emitToUsers(
           activeParticipants.map((p) => p.userId),
           SocketEvent.CONVERSATION_UPDATED,
           {
@@ -454,7 +449,7 @@ export class MessageService {
         );
 
         // Notify removed participant
-        this.socketService.emitToUsers(
+        socketService.emitToUsers(
           [participantId],
           SocketEvent.CONVERSATION_DELETED,
           { conversationId: conversation._id }
@@ -569,7 +564,7 @@ export class MessageService {
       );
 
       // Emit socket event for real-time delivery
-      if (this.socketService) {
+      if (socketService) {
         const messagePayload: SocketMessagePayload = {
           conversationId: request.conversationId,
           message: savedMessage,
@@ -577,7 +572,7 @@ export class MessageService {
           timestamp: new Date(),
         };
 
-        this.socketService.emitToConversation(
+        socketService.emitToConversation(
           request.conversationId,
           SocketEvent.MESSAGE_SENT,
           messagePayload
@@ -696,8 +691,8 @@ export class MessageService {
       await message.markAsRead(userId);
 
       // Emit socket event
-      if (this.socketService) {
-        this.socketService.emitToConversation(
+      if (socketService) {
+        socketService.emitToConversation(
           message.conversationId,
           SocketEvent.MESSAGE_READ,
           { messageId, userId, readAt: new Date() }
@@ -748,8 +743,8 @@ export class MessageService {
       await message.save();
 
       // Emit socket event
-      if (this.socketService) {
-        this.socketService.emitToConversation(
+      if (socketService) {
+        socketService.emitToConversation(
           message.conversationId,
           SocketEvent.MESSAGE_EDITED,
           { messageId, newContent: content, editedAt: message.editedAt }
@@ -790,8 +785,8 @@ export class MessageService {
       await message.softDelete();
 
       // Emit socket event
-      if (this.socketService) {
-        this.socketService.emitToConversation(
+      if (socketService) {
+        socketService.emitToConversation(
           message.conversationId,
           SocketEvent.MESSAGE_DELETED,
           { messageId, deletedBy: userId, deletedAt: new Date() }
@@ -813,7 +808,7 @@ export class MessageService {
     userName: string,
     isTyping: boolean
   ): Promise<void> {
-    if (!this.socketService) return;
+    if (!socketService) return;
 
     const payload: TypingIndicatorPayload = {
       conversationId,
@@ -822,7 +817,7 @@ export class MessageService {
       isTyping,
     };
 
-    await this.socketService.emitToConversation(
+    await socketService.emitToConversation(
       conversationId,
       isTyping ? SocketEvent.TYPING_START : SocketEvent.TYPING_STOP,
       payload
@@ -837,7 +832,7 @@ export class MessageService {
     isOnline: boolean,
     conversationIds?: string[]
   ): Promise<void> {
-    if (!this.socketService) return;
+    if (!socketService) return;
 
     const payload: UserPresencePayload = {
       userId,
@@ -850,7 +845,7 @@ export class MessageService {
 
     if (conversationIds) {
       for (const conversationId of conversationIds) {
-        await this.socketService.emitToConversation(
+        await socketService.emitToConversation(
           conversationId,
           isOnline ? SocketEvent.USER_ONLINE : SocketEvent.USER_OFFLINE,
           payload

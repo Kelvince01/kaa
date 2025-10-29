@@ -1274,7 +1274,7 @@ export function createSecurityConfig(): SecurityConfiguration {
         logLevel: "detailed",
         realTimeMonitoring: true,
         logRetention: 365,
-        integrations: ["elasticsearch", "splunk"],
+        integrations: ["typesense", "splunk"],
         sensitiveDataMasking: true,
       },
       privacyControls: {

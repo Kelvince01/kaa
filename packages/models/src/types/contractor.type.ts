@@ -45,6 +45,10 @@ export interface IContractor extends BaseDocument {
     state: string;
     zipCode: string;
     country: string;
+    coordinates: {
+      lat: number;
+      lon: number;
+    };
   };
   specialties: ContractorSpecialty[];
   status: ContractorStatus;

@@ -209,3 +209,12 @@ export type PlanComparison = {
   professional: string | boolean | number;
   enterprise: string | boolean | number;
 };
+
+export type SubscriptionResponse = {
+  status: "success" | "error";
+  data: {
+    subscription?: any; // Subscription;
+  };
+  message?: string;
+  error?: string;
+};

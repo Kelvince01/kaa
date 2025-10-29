@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { PropertyCondition } from "@kaa/models/types";
 import { Badge } from "@kaa/ui/components/badge";
 import { Button } from "@kaa/ui/components/button";
 import {
@@ -51,7 +52,7 @@ type DetailsFormData = {
   floor?: number;
   totalFloors?: number;
   yearBuilt?: number;
-  condition: "excellent" | "good" | "fair" | "needs_renovation";
+  condition: PropertyCondition;
   orientation?:
     | "north"
     | "south"
@@ -92,14 +93,22 @@ type DetailsFormProps = {
 
 const conditionOptions = [
   {
-    value: "excellent",
+    value: PropertyCondition.EXCELLENT,
     label: "Excellent",
     description: "Recently renovated or brand new",
   },
-  { value: "good", label: "Good", description: "Well-maintained, minor wear" },
-  { value: "fair", label: "Fair", description: "Some maintenance needed" },
   {
-    value: "needs_renovation",
+    value: PropertyCondition.GOOD,
+    label: "Good",
+    description: "Well-maintained, minor wear",
+  },
+  {
+    value: PropertyCondition.FAIR,
+    label: "Fair",
+    description: "Some maintenance needed",
+  },
+  {
+    value: PropertyCondition.NEEDS_RENOVATION,
     label: "Needs Renovation",
     description: "Requires significant updates",
   },
@@ -147,7 +156,7 @@ export function DetailsForm({
     defaultValues: {
       bedrooms: 0,
       bathrooms: 0,
-      condition: "good",
+      condition: PropertyCondition.GOOD,
       view: [],
       parking: {
         spaces: 0,

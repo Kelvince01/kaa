@@ -19,6 +19,7 @@ import { complianceController } from "./features/legal/compliance.controller";
 import { locationsController } from "./features/locations/location.controller";
 import { maintenanceController } from "./features/maintenance/maintenance.controller";
 import { monitoringController } from "./features/misc/monitoring/monitoring.controller";
+import { webhookController } from "./features/misc/webhooks/webhook.controller";
 import { billingController } from "./features/org/billing.controller";
 import { memberController } from "./features/org/member.controller";
 import { organizationController } from "./features/org/org.controller";
@@ -81,6 +82,7 @@ const routes = new Elysia({ prefix: "api/v1" })
   .use(insuranceController)
   .use(virtualToursController)
   .use(financialController)
-  .use(complianceController);
+  .use(complianceController)
+  .use(webhookController);
 
 export { routes as AppRoutes };

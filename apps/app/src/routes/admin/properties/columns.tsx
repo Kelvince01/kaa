@@ -5,7 +5,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Home, Star } from "lucide-react";
 import Image from "next/image";
 import type { Property } from "@/modules/properties/property.type";
-import type { User } from "@/modules/users/user.type";
 import { formatDate } from "@/shared/utils/format.util";
 
 export const columns: ColumnDef<Property>[] = [
@@ -63,12 +62,12 @@ export const columns: ColumnDef<Property>[] = [
       <div>
         <div className="text-gray-500 text-sm">
           {row.original.landlord
-            ? `${(row.original.landlord as User).firstName} ${(row.original.landlord as User).lastName}`
+            ? `${(row.original.landlord as any).personalInfo.firstName} ${(row.original.landlord as any).personalInfo.lastName}`
             : "No landlord assigned"}
         </div>
         <div className="text-gray-500 text-xs">
           {row.original.landlord
-            ? (row.original.landlord as User).email
+            ? (row.original.landlord as any).personalInfo.email
             : "No email assigned"}
         </div>
       </div>

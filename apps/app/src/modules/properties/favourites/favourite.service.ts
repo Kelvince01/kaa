@@ -24,19 +24,19 @@ import type {
  * Property Favourites service for managing user favourite properties
  */
 
-// Add property to favourites
+// Add property to favorites
 export const addFavourite = async (
   data: AddFavouriteInput
 ): Promise<FavouriteResponse> => {
-  const response = await httpClient.api.post("/properties/favourites", data);
+  const response = await httpClient.api.post("/properties/favorites/", data);
   return response.data;
 };
 
-// Remove property from favourites
+// Remove property from favorites
 export const removeFavourite = async (
   data: RemoveFavouriteInput
 ): Promise<{ status: string; message: string }> => {
-  const response = await httpClient.api.delete("/properties/favourites", {
+  const response = await httpClient.api.delete("/properties/favorites/", {
     data,
   });
   return response.data;
@@ -46,7 +46,7 @@ export const removeFavourite = async (
 export const toggleFavourite = async (
   propertyId: string
 ): Promise<FavouriteResponse> => {
-  const response = await httpClient.api.post("/properties/favourites/toggle", {
+  const response = await httpClient.api.post("/properties/favorites/toggle", {
     propertyId,
   });
   return response.data;
@@ -56,7 +56,7 @@ export const toggleFavourite = async (
 export const getFavourites = async (
   params: FavouriteQueryParams = {}
 ): Promise<FavouriteListResponse> => {
-  const response = await httpClient.api.get("/properties/favourites", {
+  const response = await httpClient.api.get("/properties/favorites/", {
     params,
   });
   return response.data;
@@ -64,7 +64,7 @@ export const getFavourites = async (
 
 // Get favourite by ID
 export const getFavourite = async (id: string): Promise<FavouriteResponse> => {
-  const response = await httpClient.api.get(`/properties/favourites/${id}`);
+  const response = await httpClient.api.get(`/properties/favorites/${id}`);
   return response.data;
 };
 
@@ -73,34 +73,34 @@ export const checkFavouriteStatus = async (
   propertyId: string
 ): Promise<FavouriteStatusResponse> => {
   const response = await httpClient.api.get(
-    `/properties/favourites/status/${propertyId}`
+    `/properties/favorites/status/${propertyId}`
   );
   return response.data;
 };
 
 // Get favourite statistics
 export const getFavouriteStats = async (): Promise<FavouriteStatsResponse> => {
-  const response = await httpClient.api.get("/properties/favourites/stats");
+  const response = await httpClient.api.get("/properties/favorites/stats");
   return response.data;
 };
 
-// Bulk operations on favourites
+// Bulk operations on favorites
 export const bulkFavouriteOperation = async (
   operation: BulkFavouriteOperation
 ): Promise<{ affected: number; status: string; message: string }> => {
   const response = await httpClient.api.post(
-    "/properties/favourites/bulk",
+    "/properties/favorites/bulk",
     operation
   );
   return response.data;
 };
 
-// Export favourites
+// Export favorites
 export const exportFavourites = async (
   options: FavouriteExportOptions
 ): Promise<Blob> => {
   const response = await httpClient.api.post(
-    "/properties/favourites/export",
+    "/properties/favorites/export",
     options,
     {
       responseType: "blob",
@@ -109,12 +109,12 @@ export const exportFavourites = async (
   return response.data;
 };
 
-// Share favourites
+// Share favorites
 export const shareFavourites = async (
   options: FavouriteShareOptions
 ): Promise<{ status: string; message: string; shareId?: string }> => {
   const response = await httpClient.api.post(
-    "/properties/favourites/share",
+    "/properties/favorites/share",
     options
   );
   return response.data;
@@ -124,23 +124,23 @@ export const shareFavourites = async (
 export const compareFavourites = async (
   propertyIds: string[]
 ): Promise<FavouriteComparisonResponse> => {
-  const response = await httpClient.api.post("/properties/favourites/compare", {
+  const response = await httpClient.api.post("/properties/favorites/compare", {
     propertyIds,
   });
   return response.data;
 };
 
-// Clear all favourites
+// Clear all favorites
 export const clearAllFavourites = async (): Promise<{
   status: string;
   message: string;
   removed: number;
 }> => {
-  const response = await httpClient.api.delete("/properties/favourites/clear");
+  const response = await httpClient.api.delete("/properties/favorites/clear");
   return response.data;
 };
 
-// Get property recommendations based on favourites
+// Get property recommendations based on favorites
 export const getPropertyRecommendations = async (
   limit = 10
 ): Promise<{ recommendations: PropertyRecommendation[]; status: string }> => {
@@ -356,7 +356,7 @@ export const getNotificationSettings = async (): Promise<{
   status: string;
 }> => {
   const response = await httpClient.api.get(
-    "/properties/favourites/notification-settings"
+    "/properties/favorites/notification-settings"
   );
   return response.data;
 };
@@ -370,7 +370,7 @@ export const updateNotificationSettings = async (
   message: string;
 }> => {
   const response = await httpClient.api.put(
-    "/properties/favourites/notification-settings",
+    "/properties/favorites/notification-settings",
     settings
   );
   return response.data;
@@ -378,13 +378,13 @@ export const updateNotificationSettings = async (
 
 // Similar Properties
 
-// Get similar properties to favourites
+// Get similar properties to favorites
 export const getSimilarToFavourites = async (
   favouriteId: string,
   limit = 5
 ): Promise<{ properties: any[]; status: string }> => {
   const response = await httpClient.api.get(
-    `/properties/favourites/${favouriteId}/similar`,
+    `/properties/favorites/${favouriteId}/similar`,
     {
       params: { limit },
     }
@@ -471,30 +471,30 @@ export const sharePropertyList = async (
 export const getFavouriteTrends = async (
   period: "week" | "month" | "quarter" | "year" = "month"
 ): Promise<{ trends: any; status: string }> => {
-  const response = await httpClient.api.get("/properties/favourites/trends", {
+  const response = await httpClient.api.get("/properties/favorites/trends", {
     params: { period },
   });
   return response.data;
 };
 
-// Get market insights based on favourites
+// Get market insights based on favorites
 export const getMarketInsights = async (): Promise<{
   insights: any;
   status: string;
 }> => {
   const response = await httpClient.api.get(
-    "/properties/favourites/market-insights"
+    "/properties/favorites/market-insights"
   );
   return response.data;
 };
 
-// Get price alerts for favourites
+// Get price alerts for favorites
 export const getPriceAlerts = async (): Promise<{
   alerts: any[];
   status: string;
 }> => {
   const response = await httpClient.api.get(
-    "/properties/favourites/price-alerts"
+    "/properties/favorites/price-alerts"
   );
   return response.data;
 };
@@ -506,7 +506,7 @@ export const setPriceAlert = async (
   alertType: "below" | "above" | "change"
 ): Promise<{ status: string; message: string }> => {
   const response = await httpClient.api.post(
-    "/properties/favourites/price-alerts",
+    "/properties/favorites/price-alerts",
     {
       propertyId,
       targetPrice,
@@ -521,7 +521,7 @@ export const removePriceAlert = async (
   alertId: string
 ): Promise<{ status: string; message: string }> => {
   const response = await httpClient.api.delete(
-    `/properties/favourites/price-alerts/${alertId}`
+    `/properties/favorites/price-alerts/${alertId}`
   );
   return response.data;
 };

@@ -25,197 +25,204 @@ import { propertyEndpointLimits } from "./property-rate-limit.config";
 // ==================== MONITORING ENDPOINTS ====================
 
 export const propertyMonitoringController = new Elysia({
-  prefix: "/monitoring",
-})
-  .use(authPlugin)
-  /**
-   * Get property metrics
-   * @requires Admin role
-   */
-  .get(
-    "/metrics",
-    ({ set }) => {
-      try {
-        // This would integrate with the monitoring service
-        // For now, return metric definitions
-        const metricsArray = Object.values(propertyMetrics);
-        return {
-          success: true,
-          data: {
-            metrics: metricsArray,
-            total: metricsArray.length,
-          },
-        };
-      } catch (error) {
-        set.status = 500;
-        return {
-          success: false,
-          error: "Failed to fetch property metrics",
-        };
-      }
-    },
-    {
-      detail: {
-        tags: ["properties-monitoring"],
-        summary: "Get property metrics",
-        description: "Get property metrics",
+  detail: {
+    tags: ["monitoring"],
+    summary: "Property monitoring",
+    description: "Property monitoring endpoints",
+    security: [{ bearerAuth: [] }],
+  },
+}).group("/properties/monitoring", (app) =>
+  app
+    .use(authPlugin)
+    /**
+     * Get property metrics
+     * @requires Admin role
+     */
+    .get(
+      "/metrics",
+      ({ set }) => {
+        try {
+          // This would integrate with the monitoring service
+          // For now, return metric definitions
+          const metricsArray = Object.values(propertyMetrics);
+          return {
+            success: true,
+            data: {
+              metrics: metricsArray,
+              total: metricsArray.length,
+            },
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            success: false,
+            error: "Failed to fetch property metrics",
+          };
+        }
       },
-    }
-  )
-  /**
-   * Get configured alerts
-   * @requires Admin role
-   */
-  .get(
-    "/alerts",
-    ({ set }) => {
-      try {
-        return {
-          success: true,
-          data: {
-            alerts: propertyAlerts.map((a) => ({
-              name: a.name,
-              description: a.description,
-              type: a.type,
-              severity: a.severity,
-            })),
-            total: propertyAlerts.length,
-          },
-        };
-      } catch (error) {
-        set.status = 500;
-        return {
-          success: false,
-          error: "Failed to fetch property alerts",
-        };
+      {
+        detail: {
+          tags: ["properties-monitoring"],
+          summary: "Get property metrics",
+          description: "Get property metrics",
+        },
       }
-    },
-    {
-      detail: {
-        tags: ["properties-monitoring"],
-        summary: "Get property alerts",
-        description: "Get property alerts",
+    )
+    /**
+     * Get configured alerts
+     * @requires Admin role
+     */
+    .get(
+      "/alerts",
+      ({ set }) => {
+        try {
+          return {
+            success: true,
+            data: {
+              alerts: propertyAlerts.map((a) => ({
+                name: a.name,
+                description: a.description,
+                type: a.type,
+                severity: a.severity,
+              })),
+              total: propertyAlerts.length,
+            },
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            success: false,
+            error: "Failed to fetch property alerts",
+          };
+        }
       },
-    }
-  )
-  /**
-   * Get dashboard configuration
-   * @requires Admin role
-   */
-  .get(
-    "/dashboard",
-    ({ set }) => {
-      try {
-        return {
-          success: true,
-          data: {
-            name: propertyDashboardConfig.name,
-            widgets: propertyDashboardConfig.widgets.length,
-            layout: propertyDashboardConfig.layout,
-            theme: propertyDashboardConfig.theme,
-          },
-        };
-      } catch (error) {
-        set.status = 500;
-        return {
-          success: false,
-          error: "Failed to fetch dashboard configuration",
-        };
+      {
+        detail: {
+          tags: ["properties-monitoring"],
+          summary: "Get property alerts",
+          description: "Get property alerts",
+        },
       }
-    },
-    {
-      detail: {
-        tags: ["properties-monitoring"],
-        summary: "Get dashboard configuration",
-        description: "Get dashboard configuration",
+    )
+    /**
+     * Get dashboard configuration
+     * @requires Admin role
+     */
+    .get(
+      "/dashboard",
+      ({ set }) => {
+        try {
+          return {
+            success: true,
+            data: {
+              name: propertyDashboardConfig.name,
+              widgets: propertyDashboardConfig.widgets.length,
+              layout: propertyDashboardConfig.layout,
+              theme: propertyDashboardConfig.theme,
+            },
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            success: false,
+            error: "Failed to fetch dashboard configuration",
+          };
+        }
       },
-    }
-  )
-  /**
-   * Get report configurations
-   * @requires Admin role
-   */
-  .get(
-    "/reports",
-    ({ set }) => {
-      try {
-        const reportsArray = Object.values(propertyReports);
-        return {
-          success: true,
-          data: {
-            reports: reportsArray,
-            total: reportsArray.length,
-          },
-        };
-      } catch (error) {
-        set.status = 500;
-        return {
-          success: false,
-          error: "Failed to fetch report configurations",
-        };
+      {
+        detail: {
+          tags: ["properties-monitoring"],
+          summary: "Get dashboard configuration",
+          description: "Get dashboard configuration",
+        },
       }
-    },
-    {
-      detail: {
-        tags: ["properties-monitoring"],
-        summary: "Get report configurations",
-        description: "Get report configurations",
+    )
+    /**
+     * Get report configurations
+     * @requires Admin role
+     */
+    .get(
+      "/reports",
+      ({ set }) => {
+        try {
+          const reportsArray = Object.values(propertyReports);
+          return {
+            success: true,
+            data: {
+              reports: reportsArray,
+              total: reportsArray.length,
+            },
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            success: false,
+            error: "Failed to fetch report configurations",
+          };
+        }
       },
-    }
-  )
-  /**
-   * Get health check status
-   * @requires Admin role
-   */
-  .get(
-    "/health",
-    async ({ set }) => {
-      try {
-        // Run all health checks
-        const healthChecksArray = Object.values(propertyHealthChecks);
-        const results = await Promise.all(
-          healthChecksArray.map(async (check) => {
-            try {
-              const result = await check.check();
-              return {
-                name: check.name,
-                ...result,
-              };
-            } catch (error) {
-              return {
-                name: check.name,
-                healthy: false,
-                error: "Health check failed",
-              };
-            }
-          })
-        );
+      {
+        detail: {
+          tags: ["properties-monitoring"],
+          summary: "Get report configurations",
+          description: "Get report configurations",
+        },
+      }
+    )
+    /**
+     * Get health check status
+     * @requires Admin role
+     */
+    .get(
+      "/health",
+      async ({ set }) => {
+        try {
+          // Run all health checks
+          const healthChecksArray = Object.values(propertyHealthChecks);
+          const results = await Promise.all(
+            healthChecksArray.map(async (check) => {
+              try {
+                const result = await check.check();
+                return {
+                  name: check.name,
+                  ...result,
+                };
+              } catch (error) {
+                return {
+                  name: check.name,
+                  healthy: false,
+                  error: "Health check failed",
+                };
+              }
+            })
+          );
 
-        const allHealthy = results.every((r) => r.healthy);
+          const allHealthy = results.every((r) => r.healthy);
 
-        return {
-          success: true,
-          data: {
-            status: allHealthy ? "healthy" : "unhealthy",
-            checks: results,
-          },
-        };
-      } catch (error) {
-        set.status = 500;
-        return {
-          success: false,
-          error: "Failed to fetch health status",
-        };
-      }
-    },
-    {
-      detail: {
-        tags: ["properties-monitoring"],
-        summary: "Get health check status",
-        description: "Get health check status",
+          return {
+            success: true,
+            data: {
+              status: allHealthy ? "healthy" : "unhealthy",
+              checks: results,
+            },
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            success: false,
+            error: "Failed to fetch health status",
+          };
+        }
       },
-    }
-  );
+      {
+        detail: {
+          tags: ["properties-monitoring"],
+          summary: "Get health check status",
+          description: "Get health check status",
+        },
+      }
+    )
+);
 
 // ==================== RATE LIMITING HELPER ====================
 
@@ -422,171 +429,180 @@ export const getRateLimitForEndpoint = (endpoint: string) =>
 
 // ==================== AI-POWERED ENDPOINTS ====================
 
-export const propertyAIController = new Elysia({ prefix: "/ai" })
-  .use(authPlugin)
-  /**
-   * Get AI property valuation
-   * @requires Authentication
-   */
-  .post(
-    "/valuation/:propertyId",
-    ({ set, params, user }) => {
-      try {
-        if (!user?.id) {
-          set.status = 401;
-          return { success: false, error: "Unauthorized" };
+export const propertyAIController = new Elysia({
+  detail: {
+    tags: ["ai"],
+    summary: "Property AI",
+    description: "Property AI endpoints",
+    security: [{ bearerAuth: [] }],
+  },
+}).group("/properties/ai", (app) =>
+  app
+    .use(authPlugin)
+    /**
+     * Get AI property valuation
+     * @requires Authentication
+     */
+    .post(
+      "/valuation/:propertyId",
+      ({ set, params, user }) => {
+        try {
+          if (!user?.id) {
+            set.status = 401;
+            return { success: false, error: "Unauthorized" };
+          }
+
+          // This would fetch the property and call the AI service
+          // For now, return placeholder
+          return {
+            success: true,
+            data: {
+              propertyId: params.propertyId,
+              message:
+                "Valuation endpoint ready - integrate with property service",
+            },
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            success: false,
+            error: "Failed to get valuation",
+          };
         }
-
-        // This would fetch the property and call the AI service
-        // For now, return placeholder
-        return {
-          success: true,
-          data: {
-            propertyId: params.propertyId,
-            message:
-              "Valuation endpoint ready - integrate with property service",
-          },
-        };
-      } catch (error) {
-        set.status = 500;
-        return {
-          success: false,
-          error: "Failed to get valuation",
-        };
-      }
-    },
-    {
-      params: t.Object({
-        propertyId: t.String(),
-      }),
-      detail: {
-        tags: ["properties-ai"],
-        summary: "Get AI property valuation",
-        description: "Get AI property valuation",
       },
-    }
-  )
-  /**
-   * Get market insights
-   * @requires Authentication
-   */
-  .post(
-    "/market-insights/:propertyId",
-    ({ set, params, user }) => {
-      try {
-        if (!user?.id) {
-          set.status = 401;
-          return { success: false, error: "Unauthorized" };
+      {
+        params: t.Object({
+          propertyId: t.String(),
+        }),
+        detail: {
+          tags: ["properties-ai"],
+          summary: "Get AI property valuation",
+          description: "Get AI property valuation",
+        },
+      }
+    )
+    /**
+     * Get market insights
+     * @requires Authentication
+     */
+    .post(
+      "/market-insights/:propertyId",
+      ({ set, params, user }) => {
+        try {
+          if (!user?.id) {
+            set.status = 401;
+            return { success: false, error: "Unauthorized" };
+          }
+
+          return {
+            success: true,
+            data: {
+              propertyId: params.propertyId,
+              message:
+                "Market insights endpoint ready - integrate with property service",
+            },
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            success: false,
+            error: "Failed to get market insights",
+          };
         }
-
-        return {
-          success: true,
-          data: {
-            propertyId: params.propertyId,
-            message:
-              "Market insights endpoint ready - integrate with property service",
-          },
-        };
-      } catch (error) {
-        set.status = 500;
-        return {
-          success: false,
-          error: "Failed to get market insights",
-        };
-      }
-    },
-    {
-      params: t.Object({
-        propertyId: t.String(),
-      }),
-      detail: {
-        tags: ["properties-ai"],
-        summary: "Get market insights",
-        description: "Get market insights",
       },
-    }
-  )
+      {
+        params: t.Object({
+          propertyId: t.String(),
+        }),
+        detail: {
+          tags: ["properties-ai"],
+          summary: "Get market insights",
+          description: "Get market insights",
+        },
+      }
+    )
 
-  /**
-   * Generate SEO content
-   * @requires Authentication
-   */
-  .post(
-    "/seo/:propertyId",
-    ({ set, params, user }) => {
-      try {
-        if (!user?.id) {
-          set.status = 401;
-          return { success: false, error: "Unauthorized" };
+    /**
+     * Generate SEO content
+     * @requires Authentication
+     */
+    .post(
+      "/seo/:propertyId",
+      ({ set, params, user }) => {
+        try {
+          if (!user?.id) {
+            set.status = 401;
+            return { success: false, error: "Unauthorized" };
+          }
+
+          return {
+            success: true,
+            data: {
+              propertyId: params.propertyId,
+              message:
+                "SEO generation endpoint ready - integrate with property service",
+            },
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            success: false,
+            error: "Failed to generate SEO content",
+          };
         }
-
-        return {
-          success: true,
-          data: {
-            propertyId: params.propertyId,
-            message:
-              "SEO generation endpoint ready - integrate with property service",
-          },
-        };
-      } catch (error) {
-        set.status = 500;
-        return {
-          success: false,
-          error: "Failed to generate SEO content",
-        };
-      }
-    },
-    {
-      params: t.Object({
-        propertyId: t.String(),
-      }),
-      detail: {
-        tags: ["properties-ai"],
-        summary: "Generate SEO content",
-        description: "Generate SEO content",
       },
-    }
-  )
-  /**
-   * Get pricing suggestions
-   * @requires Authentication
-   */
-  .post(
-    "/pricing-suggestions/:propertyId",
-    ({ set, params, user }) => {
-      try {
-        if (!user?.id) {
-          set.status = 401;
-          return { success: false, error: "Unauthorized" };
+      {
+        params: t.Object({
+          propertyId: t.String(),
+        }),
+        detail: {
+          tags: ["properties-ai"],
+          summary: "Generate SEO content",
+          description: "Generate SEO content",
+        },
+      }
+    )
+    /**
+     * Get pricing suggestions
+     * @requires Authentication
+     */
+    .post(
+      "/pricing-suggestions/:propertyId",
+      ({ set, params, user }) => {
+        try {
+          if (!user?.id) {
+            set.status = 401;
+            return { success: false, error: "Unauthorized" };
+          }
+
+          return {
+            success: true,
+            data: {
+              propertyId: params.propertyId,
+              message:
+                "Pricing suggestions endpoint ready - integrate with property service",
+            },
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            success: false,
+            error: "Failed to get pricing suggestions",
+          };
         }
-
-        return {
-          success: true,
-          data: {
-            propertyId: params.propertyId,
-            message:
-              "Pricing suggestions endpoint ready - integrate with property service",
-          },
-        };
-      } catch (error) {
-        set.status = 500;
-        return {
-          success: false,
-          error: "Failed to get pricing suggestions",
-        };
-      }
-    },
-    {
-      params: t.Object({
-        propertyId: t.String(),
-      }),
-      detail: {
-        tags: ["properties-ai"],
-        summary: "Get pricing suggestions",
-        description: "Get pricing suggestions",
       },
-    }
-  );
+      {
+        params: t.Object({
+          propertyId: t.String(),
+        }),
+        detail: {
+          tags: ["properties-ai"],
+          summary: "Get pricing suggestions",
+          description: "Get pricing suggestions",
+        },
+      }
+    )
+);
 
 // ==================== EXPORT ALL ====================
 

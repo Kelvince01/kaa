@@ -13,10 +13,10 @@ export function MainLayoutContainer({
   disablePadding = false,
 }: MainLayoutContainerProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100">
+    <div className="min-h-screen bg-linear-to-br from-emerald-50 to-emerald-100">
       <Header />
       <Alerter mode="public" />
-      <main className={`flex-grow ${disablePadding ? "" : "pt-16"}`}>
+      <main className={`grow ${disablePadding ? "" : "pt-16"}`}>
         {children}
       </main>
       <Footer />

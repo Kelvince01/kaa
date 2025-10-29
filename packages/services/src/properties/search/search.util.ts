@@ -64,7 +64,7 @@ export function parseSearchOptions(
     includeAggregations,
     includeHighlights,
   } = options;
-  const { page = 1, limit = SEARCH_CONFIG.elasticsearch.defaultPageSize } =
+  const { page = 1, limit = SEARCH_CONFIG.typesense.defaultPageSize } =
     pagination || {};
 
   // Validate pagination
@@ -92,7 +92,7 @@ export function parseSearchOptions(
         query: query.trim(),
         fields: searchFields,
         type: "best_fields",
-        fuzziness: SEARCH_CONFIG.elasticsearch.fuzziness,
+        fuzziness: SEARCH_CONFIG.typesense.fuzziness,
       },
     };
   }
@@ -140,7 +140,7 @@ function buildFilters(
     const {
       lat,
       lon,
-      distance = SEARCH_CONFIG.elasticsearch.defaultGeoDistance,
+      distance = SEARCH_CONFIG.typesense.defaultGeoDistance,
     } = filters.location;
     const geoField =
       entityType === "properties" ? "geolocation" : "address.coordinates";
@@ -167,24 +167,30 @@ function buildFilters(
         priceFilter.lte = filters.priceRange.max;
 
       if (Object.keys(priceFilter).length > 0) {
-        esFilters.push({ range: { "pricing.rentAmount": priceFilter } });
+        esFilters.push({ range: { "pricing.rent": priceFilter } });
       }
     }
 
     if (filters.bedrooms?.length) {
-      esFilters.push({ terms: { "details.bedrooms": filters.bedrooms } });
+      esFilters.push({
+        terms: { "specifications.bedrooms": filters.bedrooms },
+      });
     }
 
     if (filters.bathrooms?.length) {
-      esFilters.push({ terms: { "details.bathrooms": filters.bathrooms } });
+      esFilters.push({
+        terms: { "specifications.bathrooms": filters.bathrooms },
+      });
     }
 
     if (filters.furnished !== undefined) {
-      esFilters.push({ term: { "details.furnished": filters.furnished } });
+      esFilters.push({
+        term: { "specifications.furnished": filters.furnished },
+      });
     }
 
     if (filters.petsAllowed !== undefined) {
-      esFilters.push({ term: { "details.petFriendly": filters.petsAllowed } });
+      esFilters.push({ term: { "rules.petsAllowed": filters.petsAllowed } });
     }
 
     if (filters.features?.length) {
@@ -192,7 +198,7 @@ function buildFilters(
     }
 
     // Always filter for available properties
-    esFilters.push({ term: { available: true } });
+    esFilters.push({ term: { "availability.isAvailable": true } });
   } else if (entityType === "contractors") {
     // Contractor-specific filters
     if (filters.specialties?.length) {
@@ -285,9 +291,8 @@ function buildHighlight(entityType: SearchEntityType): any {
 
   for (const field of highlightFields) {
     fields[field] = {
-      fragment_size: SEARCH_CONFIG.elasticsearch.highlightFragmentSize,
-      number_of_fragments:
-        SEARCH_CONFIG.elasticsearch.highlightNumberOfFragments,
+      fragment_size: SEARCH_CONFIG.typesense.highlightFragmentSize,
+      number_of_fragments: SEARCH_CONFIG.typesense.highlightNumberOfFragments,
     };
   }
 

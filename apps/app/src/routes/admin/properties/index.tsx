@@ -85,6 +85,15 @@ export default function AdminProperties() {
           description="Review, verify, and manage property listings"
           title="Property Management"
         />
+
+        <div>
+          <h2 className="mb-6 font-bold text-gray-900 text-xl">
+            My Properties
+          </h2>
+          <p className="text-gray-600">
+            Manage your listed properties and view applicants.
+          </p>
+        </div>
       </div>
 
       <Separator />

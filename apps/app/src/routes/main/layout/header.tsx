@@ -98,9 +98,9 @@ export function Header() {
             </button>
 
             <Link className="flex items-center gap-2" href="/">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-600 to-emerald-700">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-emerald-600 to-emerald-700">
                 <Icon
-                  className="h-6 w-6 text-white"
+                  className="logo h-6 w-6 text-white"
                   icon="material-symbols:home-work"
                 />
               </div>

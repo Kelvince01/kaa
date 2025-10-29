@@ -259,7 +259,7 @@ export default function PropertyDetailsContainer({
             <NeighborhoodAnalytics property={property} />
 
             {/* Reviews & Ratings */}
-            <PropertyReviews property={property} />
+            <PropertyReviews propertyId={property._id} />
 
             {/* Property Analytics (visible to property owners) */}
             {/* TODO: Add role-based visibility */}

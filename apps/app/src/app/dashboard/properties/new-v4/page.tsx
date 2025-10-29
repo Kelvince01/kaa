@@ -1,19 +1,19 @@
 "use client";
 
-import { PropertyFormV4 } from "@/modules/properties/components/new-v4";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { PropertyFormV4 } from "@/modules/properties/components/new-v4";
 
 /**
  * New Property V4 Page
- * 
+ *
  * Enhanced property listing form with:
  * - 9-step wizard with validation
  * - Mobile-responsive design
  * - Quality scoring and market analysis
  * - GPS location support
  * - Real-time validation
- * 
+ *
  * Route: /dashboard/properties/new-v4
  */
 export default function NewPropertyV4Page() {

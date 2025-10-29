@@ -23,16 +23,11 @@
     "clean": "rm -rf dist node_modules",
     "security-scan": "bun audit --production && gitleaks detect",
     "//": "New commands",
-    "build:client": "bun x vite build",
-    "build:ssr": "bun x vite build --mode ssr",
-    "build:new": "bun run build:client && bun run build:ssr",
     "generate": "bun run scripts/generateStaticPages.ts",
-    "dev:new": "concurrently --kill-others-on-fail --success first -n bun,vite -c blue,green \"cross-env NODE_ENV=development bun --hot run src/index.ts\" \"cross-env NODE_ENV=development vite\"",
-    "start:new": "cross-env NODE_ENV=production bun run src/index.ts",
     "loadtest:login": "bun run scripts/loadtest.ts",
     "loadtest:homepage": "bun run scripts/homepagetest.ts",
-    "artillery:login": "npx artillery run scripts/artillery-login.yml",
-    "artillery:homepage": "npx artillery run scripts/artillery-homepage.yml"
+    "artillery:login": "bunx artillery run scripts/artillery-login.yml",
+    "artillery:homepage": "bunx artillery run scripts/artillery-homepage.yml"
   },
   "dependencies": {
     "@ai-sdk/google": "catalog:",
@@ -91,8 +86,7 @@
     "rate-limiter-flexible": "^7.3.1",
     "redis": "^5.8.3",
     "short-unique-id": "^5.3.2",
-    "speakeasy": "^2.0.0",
-    "vite": "^7.1.7"
+    "speakeasy": "^2.0.0"
   },
   "devDependencies": {
     "@kaa/tsconfig": "workspace:*",

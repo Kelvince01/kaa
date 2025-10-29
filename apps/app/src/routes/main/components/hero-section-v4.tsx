@@ -35,7 +35,7 @@ export function HeroSectionV4() {
   return (
     <section className="relative">
       {/* Background Image */}
-      <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/80 to-emerald-800/80" />
+      <div className="absolute inset-0 bg-linear-to-r from-emerald-600/80 to-emerald-800/80" />
       <div className="relative h-[700px] md:h-[800px]">
         <Image
           alt="Modern apartment living room showcasing AI-powered property management"
@@ -129,7 +129,7 @@ export function HeroSectionV4() {
 
               {/* Right Column - Dashboard Preview */}
               <div className="relative hidden lg:block">
-                <div className="absolute inset-0 rotate-6 transform rounded-3xl bg-gradient-to-r from-emerald-400 to-emerald-600 opacity-20" />
+                <div className="absolute inset-0 rotate-6 transform rounded-3xl bg-linear-to-r from-emerald-400 to-emerald-600 opacity-20" />
                 <Card className="relative border-emerald-200 bg-white/95 shadow-2xl backdrop-blur-md">
                   <CardContent className="p-8">
                     <div className="space-y-6">
@@ -201,7 +201,7 @@ export function HeroSectionV4() {
 
         {/* Decorative Elements */}
         <div className="absolute right-0 bottom-0 hidden h-full w-1/3 lg:block">
-          <div className="absolute inset-0 z-10 bg-gradient-to-l from-transparent to-emerald-600/20" />
+          <div className="absolute inset-0 z-10 bg-linear-to-l from-transparent to-emerald-600/20" />
           <div className="absolute inset-0 opacity-20 mix-blend-overlay">
             <svg
               height="100%"

@@ -52,6 +52,8 @@ $NotoSansUrl = "https://github.com/google/fonts/raw/main/ofl/notosans/NotoSans[w
 
 try {
     Invoke-WebRequest -Uri $NotoSansUrl -OutFile "$FontsDir\NotoSans-Regular.ttf" -UseBasicParsing
+    Invoke-WebRequest -Uri $NotoSansUrl -OutFile "$FontsDir\NotoSans-Bold.ttf" -UseBasicParsing
+    Invoke-WebRequest -Uri $NotoSansUrl -OutFile "$FontsDir\NotoSansSwahili-Regular.ttf" -UseBasicParsing
     Write-Host "✓ Noto Sans fonts installed" -ForegroundColor Green
 } catch {
     Write-Host "Error downloading Noto Sans fonts: $_" -ForegroundColor Red
@@ -87,7 +89,7 @@ Write-Host "=== Font Setup Complete! ===" -ForegroundColor Green
 Write-Host ""
 Write-Host "Installed fonts:"
 Write-Host "  • DejaVu Sans (Regular & Bold)"
-Write-Host "  • Noto Sans (Regular)"
+Write-Host "  • Noto Sans (Regular, Bold & Swahili)"
 Write-Host ""
 Write-Host "Next steps:"
 Write-Host "  1. Start/restart your application"

@@ -1,8 +1,8 @@
 import {
-  elasticsearchService,
   searchAnalyticsService,
   searchIndexingService,
   searchIntegrationService,
+  typesenseService,
 } from "@kaa/services";
 import { logger } from "@kaa/utils";
 import { Elysia, t } from "elysia";
@@ -53,9 +53,9 @@ export const searchRouter = new Elysia({
 
           let results: any;
           if (type === "contractors") {
-            results = await elasticsearchService.searchContractors(searchQuery);
+            results = await typesenseService.searchContractors(searchQuery);
           } else {
-            results = await elasticsearchService.searchProperties(searchQuery);
+            results = await typesenseService.searchProperties(searchQuery);
           }
 
           set.status = 200;
@@ -214,8 +214,8 @@ export const searchRouter = new Elysia({
             data: {
               queue: queueStatus,
               health: healthStatus,
-              elasticsearch: {
-                connected: elasticsearchService.isHealthy(),
+              typesense: {
+                connected: typesenseService.isHealthy(),
               },
             },
           };

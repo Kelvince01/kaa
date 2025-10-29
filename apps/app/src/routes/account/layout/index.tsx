@@ -19,7 +19,7 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from "@kaa/ui/components/sidebar";
-import { CreditCard } from "lucide-react";
+import { CreditCard, Home } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React, { type ReactNode, useEffect, useMemo, useState } from "react";
 import { NavMain, NavUser } from "@/components/layout/sidebar";
@@ -48,13 +48,16 @@ function AccountLayoutContainer({ children }: AccountLayoutProps) {
           title: "Subscription",
           icon: CreditCard,
         },
-        ...baseItems.slice(2),
+        {
+          url: "/account/properties",
+          title: "Properties",
+          icon: Home,
+        },
+        ...baseItems.slice(3),
       ];
     }
-
     return baseItems;
   }, [isLandlord]);
-
   // Helper: flatten nav items for easy lookup
   const navItems = useMemo(() => {
     const flat: { [key: string]: { title: string; url: string } } = {};

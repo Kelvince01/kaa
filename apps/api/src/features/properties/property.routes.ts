@@ -12,22 +12,23 @@ import { searchController } from "./search/search.controller";
 import { valuationController } from "./valuation.controller";
 
 export const propertyRoutes = new Elysia({
+  // prefix: "/properties",
   detail: {
     tags: ["properties"],
+    summary: "Property",
+    description: "Property endpoints",
     security: [
       {
         bearerAuth: [],
       },
     ],
   },
-}).group("/properties", (app) =>
-  app
-    .use(propertyController)
-    .use(propertyFavoriteController)
-    .use(propertyInspectionController)
-    .use(propertyConditionController)
-    .use(valuationController)
-    .use(searchController)
-    .use(propertyMonitoringController)
-    .use(propertyAIController)
-);
+})
+  .use(propertyController)
+  .use(propertyFavoriteController)
+  .use(propertyInspectionController)
+  .use(propertyConditionController)
+  .use(valuationController)
+  .use(searchController)
+  .use(propertyMonitoringController)
+  .use(propertyAIController);

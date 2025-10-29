@@ -122,6 +122,8 @@ export type {
   SavedSearch,
 } from "./property.type";
 export { useRecentlyViewedStore } from "./recently-viewed.store";
+// Export search module
+export * from "./search";
 
 // =============================================================================
 // NEW AI-POWERED COMPONENTS

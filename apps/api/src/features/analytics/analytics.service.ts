@@ -1021,7 +1021,7 @@ export class AnalyticsService {
           $group: {
             _id: "$type",
             count: { $sum: 1 },
-            avgRent: { $avg: "$pricing.rentAmount" },
+            avgRent: { $avg: "$pricing.rent" },
             totalValue: { $sum: { $multiply: ["$pricing.rent", 200] } },
           },
         },

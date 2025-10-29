@@ -1,5 +1,5 @@
 import config from "@kaa/config/api";
-import { del, list, put } from "@vercel/blob";
+import { del, getDownloadUrl, list, put } from "@vercel/blob";
 import { AppError } from "./error.util";
 
 type FileUploadOptions = {
@@ -99,6 +99,31 @@ export const deleteFile = async (
   } catch (error) {
     console.error("Delete file error:", error);
     throw new AppError("Failed to delete file", 500);
+  }
+};
+
+// Download/retrieve a file from Vercel Blob storage
+export const downloadFile = async (url: string): Promise<Buffer | null> => {
+  try {
+    // Fetch the file from the blob URL
+    const downloadUrl = getDownloadUrl(url);
+    const response = await fetch(downloadUrl);
+
+    if (!response.ok) {
+      throw new AppError(
+        `Failed to download file: ${response.statusText}`,
+        response.status
+      );
+    }
+
+    // Convert response to buffer
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    return buffer;
+  } catch (error) {
+    console.error("Download file error:", (error as Error).message);
+    throw new AppError("Failed to download file from cloud storage", 500);
   }
 };
 

@@ -302,7 +302,7 @@ export const analyticsController = new Elysia().group("analytics", (app) =>
                   { $match: { listingType: "rent" } },
                   {
                     $bucket: {
-                      groupBy: "$pricing.rentAmount",
+                      groupBy: "$pricing.rent",
                       boundaries: [
                         0, 10_000, 25_000, 50_000, 100_000, 200_000, 500_000,
                       ],
@@ -317,7 +317,7 @@ export const analyticsController = new Elysia().group("analytics", (app) =>
                   { $match: { listingType: "sale" } },
                   {
                     $bucket: {
-                      groupBy: "$pricing.rentAmount",
+                      groupBy: "$pricing.rent",
                       boundaries: [
                         0, 1_000_000, 5_000_000, 10_000_000, 20_000_000,
                         50_000_000,
@@ -338,7 +338,7 @@ export const analyticsController = new Elysia().group("analytics", (app) =>
             .sort("-views")
             .limit(10)
             .select(
-              "title location.address.town pricing.rentAmount views type listingType"
+              "title location.address.town pricing.rent stats.views type listingType"
             );
 
           // Most booked properties
@@ -365,7 +365,7 @@ export const analyticsController = new Elysia().group("analytics", (app) =>
                 _id: "$property._id",
                 title: "$property.title",
                 city: "$property.location.address.town",
-                price: "$property.pricing.rentAmount",
+                price: "$property.pricing.rent",
                 type: "$property.type",
                 listingType: "$property.listingType",
                 bookingCount: 1,

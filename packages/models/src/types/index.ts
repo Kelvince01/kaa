@@ -1,3 +1,4 @@
+export * from "./agent.type";
 export * from "./ai.type";
 export * from "./amenity.type";
 export * from "./analytics.type";

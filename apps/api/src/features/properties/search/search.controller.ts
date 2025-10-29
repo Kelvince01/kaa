@@ -10,8 +10,11 @@ import { authPlugin } from "~/features/auth/auth.plugin";
 export const searchController = new Elysia({
   detail: {
     tags: ["search"],
+    summary: "Property search",
+    description: "Property search endpoints",
+    security: [{ bearerAuth: [] }],
   },
-}).group("/search", (app) =>
+}).group("/properties/search", (app) =>
   app
     .get(
       "/",
@@ -44,7 +47,9 @@ export const searchController = new Elysia({
           const skip = (pageNum - 1) * limitNum;
 
           // Build filter query
-          const filter: FilterQuery<IProperty> = { available: true };
+          const filter: FilterQuery<IProperty> = {
+            "availability.isAvailable": true,
+          };
 
           // Property type filter
           if (propertyType) {
@@ -53,48 +58,46 @@ export const searchController = new Elysia({
 
           // Price range filter
           if (minPrice || maxPrice) {
-            filter.pricing.rentAmount = {};
+            filter.pricing.rent = {};
             if (minPrice) {
-              (filter.pricing.rentAmount as Record<string, number>).$gte =
-                minPrice;
+              (filter.pricing.rent as Record<string, number>).$gte = minPrice;
             }
             if (maxPrice) {
-              (filter.pricing.rentAmount as Record<string, number>).$lte =
-                maxPrice;
+              (filter.pricing.rent as Record<string, number>).$lte = maxPrice;
             }
           }
 
           // Bedrooms filter
           if (bedrooms) {
-            filter.details.bedrooms = bedrooms;
+            filter.specifications.bedrooms = bedrooms;
           }
 
           // Bathrooms filter
           if (bathrooms) {
-            filter.details.bathrooms = bathrooms;
+            filter.specifications.bathrooms = bathrooms;
           }
 
           // Furnished status filter
           if (furnished) {
-            filter.details.furnished = furnished === true;
+            filter.specifications.furnished = furnished === true;
           }
 
           // Pets allowed filter
           if (petsAllowed) {
-            filter.details.petsAllowed = petsAllowed === true;
+            filter.rules.petsAllowed = petsAllowed === true;
           }
 
           // Available from date filter
           if (availableFrom) {
             const date = new Date(availableFrom as string);
             if (!Number.isNaN(date.getTime())) {
-              filter.availableFrom = { $lte: date };
+              filter.availability.availableFrom = { $lte: date };
             }
           }
 
           // Features filter (array of amenities)
           if (features) {
-            filter.features = { $all: features };
+            filter.amenities = { $all: features };
           }
 
           // Geo-based search within radius
@@ -137,7 +140,7 @@ export const searchController = new Elysia({
             .sort(sort)
             .skip(skip)
             .limit(limitNum)
-            .populate("landlord", "firstName lastName avatar email phone")
+            .populate("landlord", "personalInfo")
             .lean();
 
           // Get total count for pagination
@@ -229,7 +232,7 @@ export const searchController = new Elysia({
 
           const filter: FilterQuery<IProperty> = {
             _id: { $ne: propertyId },
-            available: true,
+            availability: { isAvailable: true },
             type,
             specifications: { bedrooms: bedroomsRange },
             pricing: {

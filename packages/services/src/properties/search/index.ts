@@ -2,20 +2,16 @@
  * Search module exports
  *
  * This module provides comprehensive search functionality including:
- * - Elasticsearch integration for full-text and geo-search
+ * - Typesense integration for full-text and geo-search
  * - Advanced search with filters and aggregations
  * - Search analytics and performance monitoring
  * - Automatic indexing of data changes
  * - Search middleware for rate limiting and validation
  */
 
-import { elasticsearchService } from "./elasticsearch.service";
 import { searchIntegrationService } from "./search-integration.service";
+import { typesenseService } from "./typesense.service";
 
-// Types
-export type { SearchQuery, SearchResult } from "./elasticsearch.service";
-// Core services
-export { elasticsearchService } from "./elasticsearch.service";
 export type {
   // SearchFilters,
   // SearchOptions,
@@ -34,6 +30,10 @@ export {
   searchIndexingService,
 } from "./search-indexing.service";
 export { searchIntegrationService } from "./search-integration.service";
+// Types
+export type { SearchQuery, SearchResult } from "./typesense.service";
+// Core services
+export { typesenseService } from "./typesense.service";
 
 /**
  * Initialize search services
@@ -82,9 +82,9 @@ export async function quickSearch(
   }
 
   if (type === "contractors") {
-    return await elasticsearchService.searchContractors(searchQuery);
+    return await typesenseService.searchContractors(searchQuery);
   }
-  return await elasticsearchService.searchProperties(searchQuery);
+  return await typesenseService.searchProperties(searchQuery);
 }
 
 /**
@@ -94,7 +94,7 @@ export async function getSearchSuggestions(
   query: string,
   type: "properties" | "contractors" = "properties"
 ): Promise<string[]> {
-  return await elasticsearchService.getSuggestions(query, type);
+  return await typesenseService.getSuggestions(query, type);
 }
 
 /**
@@ -113,7 +113,7 @@ export async function findNearby(
   };
 
   if (type === "contractors") {
-    return await elasticsearchService.searchContractors(searchQuery);
+    return await typesenseService.searchContractors(searchQuery);
   }
-  return await elasticsearchService.searchProperties(searchQuery);
+  return await typesenseService.searchProperties(searchQuery);
 }

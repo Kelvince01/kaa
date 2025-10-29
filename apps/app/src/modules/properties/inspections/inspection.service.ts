@@ -27,7 +27,7 @@ import type {
 export const createInspection = async (
   data: CreateInspectionInput
 ): Promise<InspectionResponse> => {
-  const response = await httpClient.api.post("/properties/inspections", data);
+  const response = await httpClient.api.post("/properties/inspections/", data);
   return response.data;
 };
 
@@ -35,7 +35,7 @@ export const createInspection = async (
 export const getInspections = async (
   params: InspectionQueryParams = {}
 ): Promise<InspectionListResponse> => {
-  const response = await httpClient.api.get("/properties/inspections", {
+  const response = await httpClient.api.get("/properties/inspections/", {
     params,
   });
   return response.data;

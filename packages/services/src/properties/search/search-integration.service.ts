@@ -1,7 +1,7 @@
 import type { IContractor, IProperty } from "@kaa/models/types";
 import { logger } from "@kaa/utils";
-import { elasticsearchService } from "./elasticsearch.service";
 import { searchAnalyticsService } from "./search-analytics.service";
+import { typesenseService } from "./typesense.service";
 
 /**
  * Search integration service that coordinates between different search components
@@ -15,10 +15,8 @@ class SearchIntegrationService {
       logger.info("Initializing search integration service...");
 
       // Check Elasticsearch health
-      if (!elasticsearchService.isHealthy()) {
-        logger.warn(
-          "Elasticsearch is not healthy, search features may be limited"
-        );
+      if (!typesenseService.isHealthy()) {
+        logger.warn("Typesense is not healthy, search features may be limited");
         return;
       }
 
@@ -32,7 +30,7 @@ class SearchIntegrationService {
   }
 
   /**
-   * Sync data from database to Elasticsearch if indices are empty
+   * Sync data from database to Typesense if indices are empty
    */
   private async syncDataIfNeeded(): Promise<void> {
     try {
@@ -42,7 +40,7 @@ class SearchIntegrationService {
 
       if (propertiesCount === 0 || contractorsCount === 0) {
         logger.info("Indices appear to be empty, triggering data sync...");
-        await elasticsearchService.reindexAll();
+        await typesenseService.reindexAll();
       }
     } catch (error) {
       logger.error("Failed to sync data:", error);
@@ -55,7 +53,7 @@ class SearchIntegrationService {
   private async getIndexDocumentCount(index: string): Promise<number> {
     try {
       // This is a simplified implementation
-      // In a real scenario, you'd query Elasticsearch for the count
+      // In a real scenario, you'd query Typesense for the count
       return await Promise.resolve(0);
     } catch (error) {
       logger.error(`Failed to get document count for index ${index}:`, error);
@@ -74,11 +72,11 @@ class SearchIntegrationService {
       switch (action) {
         case "create":
         case "update":
-          await elasticsearchService.indexProperty(property);
+          await typesenseService.indexProperty(property);
           logger.debug(`Property ${property._id} indexed for ${action}`);
           break;
         case "delete":
-          await elasticsearchService.deleteDocument(
+          await typesenseService.deleteDocument(
             "properties",
             (property._id as any).toString()
           );
@@ -103,11 +101,11 @@ class SearchIntegrationService {
       switch (action) {
         case "create":
         case "update":
-          await elasticsearchService.indexContractor(contractor);
+          await typesenseService.indexContractor(contractor);
           logger.debug(`Contractor ${contractor._id} indexed for ${action}`);
           break;
         case "delete":
-          await elasticsearchService.deleteDocument(
+          await typesenseService.deleteDocument(
             "contractors",
             (contractor._id as any).toString()
           );
@@ -125,17 +123,17 @@ class SearchIntegrationService {
    * Get search health status
    */
   getHealthStatus(): {
-    elasticsearch: boolean;
+    typesense: boolean;
     analytics: boolean;
     overall: boolean;
   } {
-    const elasticsearch = elasticsearchService.isHealthy();
+    const typesense = typesenseService.isHealthy();
     const analytics = true; // Analytics service is always available (in-memory)
 
     return {
-      elasticsearch,
+      typesense,
       analytics,
-      overall: elasticsearch && analytics,
+      overall: typesense && analytics,
     };
   }
 
@@ -143,7 +141,7 @@ class SearchIntegrationService {
    * Get search statistics
    */
   async getSearchStatistics(): Promise<{
-    elasticsearch: {
+    typesense: {
       connected: boolean;
       indices: string[];
     };
@@ -157,8 +155,8 @@ class SearchIntegrationService {
       const analytics = await searchAnalyticsService.getAnalytics(24);
 
       return {
-        elasticsearch: {
-          connected: elasticsearchService.isHealthy(),
+        typesense: {
+          connected: typesenseService.isHealthy(),
           indices: ["properties", "contractors"],
         },
         analytics: {
@@ -183,9 +181,9 @@ class SearchIntegrationService {
       // Clear old analytics events
       await searchAnalyticsService.clearOldEvents(168); // 7 days
 
-      // Check Elasticsearch health
-      if (!elasticsearchService.isHealthy()) {
-        logger.warn("Elasticsearch health check failed during maintenance");
+      // Check Typesense health
+      if (!typesenseService.isHealthy()) {
+        logger.warn("Typesense health check failed during maintenance");
       }
 
       logger.info("Search maintenance tasks completed");

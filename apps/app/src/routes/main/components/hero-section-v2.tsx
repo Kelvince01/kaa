@@ -30,7 +30,8 @@ export function HeroSectionV2() {
 
   return (
     <section className="relative">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/60 to-primary/80 opacity-90" />
+      {/* <ThreeBackground /> */}
+      <div className="absolute inset-0 bg-linear-to-r from-primary/60 to-primary/80 opacity-90" />
       <div className="relative h-[600px] md:h-[700px]">
         <Image
           alt="Modern apartment living room"
@@ -110,7 +111,7 @@ export function HeroSectionV2() {
 
         {/* Decorative Elements */}
         <div className="absolute right-0 bottom-0 hidden h-full w-full lg:block">
-          <div className="absolute inset-0 z-10 bg-gradient-to-l from-transparent to-emerald-600/20" />
+          <div className="absolute inset-0 z-10 bg-linear-to-l from-transparent to-emerald-600/20" />
           <div className="absolute inset-0 opacity-20 mix-blend-overlay">
             <svg
               height="100%"

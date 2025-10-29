@@ -418,8 +418,15 @@ export const organizationController = new Elysia({
             return { status: "error", message: "Organization not found" };
           }
 
-          // org.members = org.members.filter((m) => m.toString() !== params.memberId);
-          // await org.save();
+          const member = await Member.deleteOne({
+            _id: params.memberId,
+            organization: org._id,
+          });
+
+          if (!member) {
+            set.status = 404;
+            return { status: "error", message: "Member not found" };
+          }
 
           set.status = 200;
           return {

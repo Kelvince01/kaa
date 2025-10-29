@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 import { type WebhookEventType, WebhookSecurityType } from "@kaa/models/types";
 import { webhooksService } from "@kaa/services";
 import { webhooksRepository } from "@kaa/services/repositories";
-import { AppError } from "@kaa/utils";
 import { Elysia, t } from "elysia";
 import mongoose from "mongoose";
 import { authPlugin } from "~/features/auth/auth.plugin";
@@ -14,18 +13,17 @@ import {
 } from "./webhook.schema";
 // import { rateLimitPlugin } from "~/plugins/rate-limit.plugin";
 
-export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
+export const webhookController = new Elysia({ prefix: "/webhooks" })
   .get(
     "/events",
-    ({ set }) => {
+    async ({ set }) => {
       try {
+        const events = await webhooksService.getSupportedEvents();
         set.status = 200;
-        return {
-          status: "success",
-          events: webhooksService.getSupportedEvents(),
-        };
+        return { status: "success", events };
       } catch (error) {
-        return error;
+        set.status = 500;
+        return { status: "error", message: "Failed to get supported events" };
       }
     },
     {
@@ -80,7 +78,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
       // beforeHandle: ({ requireAuth }) => requireAuth(),
       body: createWebhookSchema,
       detail: {
-        tags: ["Webhooks"],
+        tags: ["webhooks"],
         summary: "Create webhook",
         description: "Create a new webhook configuration",
       },
@@ -98,7 +96,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
         webhookId: t.String(),
       }),
       detail: {
-        tags: ["Webhooks"],
+        tags: ["webhooks"],
         summary: "Get webhook",
         description: "Get webhook configuration by ID",
       },
@@ -109,12 +107,16 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
     "/user/webhooks",
     async ({ user }) => {
       const webhooks = await webhooksService.getUserWebhooks(user.id);
-      return { status: "success", data: webhooks };
+      return {
+        status: "success",
+        webhooks: webhooks.webhooks,
+        pagination: webhooks.pagination,
+      };
     },
     {
       query: queryUserWebhooksSchema,
       detail: {
-        tags: ["Webhooks"],
+        tags: ["webhooks"],
         summary: "Get user webhooks",
         description: "Get all webhooks for the authenticated user",
       },
@@ -134,7 +136,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
     {
       body: updateWebhookSchema,
       detail: {
-        tags: ["Webhooks"],
+        tags: ["webhooks"],
         summary: "Update webhook",
         description: "Update webhook configuration",
       },
@@ -152,7 +154,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
         webhookId: t.String(),
       }),
       detail: {
-        tags: ["Webhooks"],
+        tags: ["webhooks"],
         summary: "Delete webhook",
         description: "Delete a webhook configuration",
       },
@@ -170,7 +172,8 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
         const webhook = await webhooksRepository.getWebhookById(webhookId);
 
         if (!webhook) {
-          return new AppError("Webhook not found", 404);
+          set.status = 404;
+          return { status: "error", message: "Webhook not found" };
         }
 
         // Check if user has access to this webhook
@@ -178,10 +181,11 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
           webhook.userId !== new mongoose.Types.ObjectId(user?.id) &&
           role.name !== "admin"
         ) {
-          return new AppError(
-            "You do not have permission to update this webhook",
-            403
-          );
+          set.status = 403;
+          return {
+            status: "error",
+            message: "You do not have permission to update this webhook",
+          };
         }
 
         // Generate new secret
@@ -217,7 +221,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
 
   // Webhook testing and management
   .post(
-    "/:webhookId/test",
+    "/event/:webhookId/test",
     async ({ params }) => {
       const result = await webhooksService.testWebhook(params.webhookId);
       return { status: "success", data: result };
@@ -227,7 +231,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
         webhookId: t.String(),
       }),
       detail: {
-        tags: ["Webhooks"],
+        tags: ["webhooks"],
         summary: "Test webhook",
         description: "Send a test payload to the webhook endpoint",
       },
@@ -235,7 +239,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
   )
 
   .post(
-    "/:webhookId/activate",
+    "/event/:webhookId/activate",
     async ({ params, user }) => {
       await webhooksService.updateWebhook(
         params.webhookId,
@@ -249,7 +253,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
         webhookId: t.String(),
       }),
       detail: {
-        tags: ["Webhooks"],
+        tags: ["webhooks"],
         summary: "Activate webhook",
         description: "Activate a webhook configuration",
       },
@@ -257,7 +261,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
   )
 
   .post(
-    "/:webhookId/deactivate",
+    "/event/:webhookId/deactivate",
     async ({ params, user }) => {
       await webhooksService.updateWebhook(
         params.webhookId,
@@ -271,7 +275,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
         webhookId: t.String(),
       }),
       detail: {
-        tags: ["Webhooks"],
+        tags: ["webhooks"],
         summary: "Deactivate webhook",
         description: "Deactivate a webhook configuration",
       },
@@ -296,7 +300,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
         webhookId: t.String(),
       }),
       detail: {
-        tags: ["Webhooks", "Deliveries"],
+        tags: ["webhooks"],
         summary: "Get webhook deliveries",
         description: "Get delivery history for a webhook",
       },
@@ -316,7 +320,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
         deliveryId: t.String(),
       }),
       detail: {
-        tags: ["Webhooks", "Deliveries"],
+        tags: ["webhooks"],
         summary: "Get webhook delivery",
         description: "Get details of a specific webhook delivery",
       },
@@ -334,7 +338,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
         deliveryId: t.String(),
       }),
       detail: {
-        tags: ["Webhooks", "Deliveries"],
+        tags: ["webhooks"],
         summary: "Redeliver webhook",
         description: "Retry delivery of a failed webhook",
       },
@@ -353,7 +357,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
         webhookId: t.String(),
       }),
       detail: {
-        tags: ["Webhooks", "Events"],
+        tags: ["webhooks"],
         summary: "Get webhook events",
         description: "Get events associated with a webhook",
       },
@@ -371,7 +375,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
         webhookId: t.String(),
       }),
       detail: {
-        tags: ["Webhooks", "Analytics"],
+        tags: ["webhooks", "Analytics"],
         summary: "Get webhook analytics",
         description: "Get analytics and metrics for a webhook",
       },
@@ -390,7 +394,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
         service: t.String(),
       }),
       detail: {
-        tags: ["Webhooks", "Incoming"],
+        tags: ["webhooks", "Incoming"],
         summary: "Handle incoming webhook",
         description: "Handle incoming webhook from external services",
       },
@@ -406,7 +410,7 @@ export const webhooksRoutes = new Elysia({ prefix: "/webhooks" })
     },
     {
       detail: {
-        tags: ["Webhooks", "Events"],
+        tags: ["webhooks"],
         summary: "Get supported events",
         description: "Get list of all supported webhook events",
       },

@@ -26,7 +26,7 @@ import type {
 export const requestValuation = async (
   data: CreateValuationInput
 ): Promise<ValuationResponse> => {
-  const response = await httpClient.api.post("/properties/valuations", data);
+  const response = await httpClient.api.post("/properties/valuations/", data);
   return response.data;
 };
 
@@ -34,7 +34,7 @@ export const requestValuation = async (
 export const createValuation = async (
   data: CreateValuationInput
 ): Promise<ValuationResponse> => {
-  const response = await httpClient.api.post("/properties/valuations", data);
+  const response = await httpClient.api.post("/properties/valuations/", data);
   return response.data;
 };
 
@@ -42,7 +42,7 @@ export const createValuation = async (
 export const getValuations = async (
   params: ValuationQueryParams = {}
 ): Promise<ValuationListResponse> => {
-  const response = await httpClient.api.get("/properties/valuations", {
+  const response = await httpClient.api.get("/properties/valuations/", {
     params,
   });
   return response.data;

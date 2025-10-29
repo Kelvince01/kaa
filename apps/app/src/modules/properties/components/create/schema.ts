@@ -1,3 +1,4 @@
+import { FurnishedStatus, PropertyCondition } from "@kaa/models/types";
 import { z } from "zod";
 
 // Enhanced validation schemas for property creation
@@ -221,7 +222,7 @@ const basicInfoSchema = z
       .min(new Date(), "Available date cannot be in the past")
       .optional(),
     availableUntil: z.date().optional(),
-    furnished: z.enum(["unfurnished", "semi_furnished", "fully_furnished"]),
+    furnished: z.enum(Object.values(FurnishedStatus)),
     petPolicy: z.enum(["allowed", "not_allowed", "negotiable"]),
     smokingPolicy: z.enum(["allowed", "not_allowed", "outside_only"]),
     tags: z.array(z.string()).max(10, "Maximum 10 tags allowed"),
@@ -269,7 +270,7 @@ const detailsSchema = z
         "Year built cannot be more than 2 years in the future"
       )
       .optional(),
-    condition: z.enum(["excellent", "good", "fair", "needs_renovation"]),
+    condition: z.enum(Object.values(PropertyCondition)),
     orientation: z
       .enum([
         "north",
@@ -463,7 +464,7 @@ export const defaultPropertyFormValues: Partial<PropertyFormData> = {
     description: "",
     type: "apartment" as any,
     listingType: "rent" as const,
-    furnished: "unfurnished" as const,
+    furnished: FurnishedStatus.UNFURNISHED,
     petPolicy: "not_allowed" as const,
     smokingPolicy: "not_allowed" as const,
     tags: [],
@@ -493,7 +494,7 @@ export const defaultPropertyFormValues: Partial<PropertyFormData> = {
   details: {
     bedrooms: 1,
     bathrooms: 1,
-    condition: "good" as const,
+    condition: PropertyCondition.GOOD,
     view: [],
   },
   availability: {

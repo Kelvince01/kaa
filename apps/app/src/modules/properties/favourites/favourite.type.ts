@@ -94,21 +94,25 @@ export type FavouriteStats = {
  */
 export type FavouriteListItem = {
   _id: string;
-  propertyId: string;
-  title: string;
-  address: string;
-  price: number;
-  currency: string;
-  propertyType: string;
-  status: string;
-  image: string;
-  addedAt: string;
-  isAvailable: boolean;
-  bedrooms?: number;
-  bathrooms?: number;
-  size?: number;
-  landlordName?: string;
-  landlordContact?: string;
+  property: {
+    _id: string;
+    title: string;
+    address: string;
+    price: number;
+    currency: string;
+    propertyType: string;
+    status: string;
+    image: string;
+    addedAt: string;
+    isAvailable: boolean;
+    bedrooms?: number;
+    bathrooms?: number;
+    size?: number;
+    landlord?: {
+      name: string;
+      contact: string;
+    };
+  };
 };
 
 /**
@@ -157,12 +161,13 @@ export interface FavouriteResponse extends ApiResponse<Favourite> {
   favourite?: Favourite;
 }
 
-export interface FavouriteListResponse
-  extends ApiResponse<FavouriteListItem[]> {
-  favourites?: FavouriteListItem[];
-  items?: FavouriteListItem[];
-  pagination: Pagination;
-}
+export type FavouriteListResponse = {
+  status: "success" | "error";
+  data: {
+    favorites: FavouriteListItem[];
+    pagination: Pagination;
+  };
+};
 
 export interface FavouriteStatsResponse extends ApiResponse<FavouriteStats> {
   stats?: FavouriteStats;

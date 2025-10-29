@@ -201,7 +201,7 @@ export const messageAttachmentSchema = t.Object({
  */
 export const messageDeliverySchema = t.Object({
   participantId: objectIdSchema,
-  status: t.Enum(createEnumFromValues(Object.values(MessageStatus))),
+  status: t.Enum(MessageStatus),
   timestamp: t.Date(),
   readAt: t.Optional(t.Date()),
 });
@@ -215,7 +215,7 @@ export const messageSchema = t.Object({
   _id: t.Optional(objectIdSchema),
   conversationId: objectIdSchema,
   senderId: objectIdSchema,
-  type: t.Enum(createEnumFromValues(Object.values(MessageType))),
+  type: t.Enum(MessageType),
   content: t.String({
     minLength: 1,
     maxLength: MESSAGING_CONSTANTS.LIMITS.MAX_MESSAGE_LENGTH,
@@ -225,8 +225,8 @@ export const messageSchema = t.Object({
     maxItems: MESSAGING_CONSTANTS.LIMITS.MAX_ATTACHMENTS_PER_MESSAGE,
   }),
   replyToMessageId: t.Optional(objectIdSchema),
-  status: t.Enum(createEnumFromValues(Object.values(MessageStatus))),
-  priority: t.Enum(createEnumFromValues(Object.values(MessagePriority))),
+  status: t.Enum(MessageStatus),
+  priority: t.Enum(MessagePriority),
   deliveries: t.Array(messageDeliverySchema),
   metadata: t.Optional(t.Record(t.String(), t.Any())),
   translatedContent: t.Optional(t.Record(t.String(), t.String())),
@@ -247,7 +247,7 @@ export const messageSchema = t.Object({
  */
 export const conversationParticipantSchema = t.Object({
   userId: objectIdSchema,
-  role: t.Enum(createEnumFromValues(Object.values(ParticipantRole))),
+  role: t.Enum(ParticipantRole),
   joinedAt: t.Date(),
   leftAt: t.Optional(t.Date()),
   isActive: t.Boolean(),
@@ -276,9 +276,7 @@ export const conversationSettingsSchema = t.Object({
     maximum: MESSAGING_CONSTANTS.FILE_LIMITS.VIDEO_MAX_SIZE,
     error: "File size limit too large",
   }),
-  allowedFileTypes: t.Array(
-    t.Enum(createEnumFromValues(Object.values(AttachmentType)))
-  ),
+  allowedFileTypes: t.Array(t.Enum(AttachmentType)),
   autoTranslate: t.Boolean(),
   defaultLanguage: t.Union([t.Literal("en"), t.Literal("sw")]),
   businessHoursOnly: t.Boolean(),
@@ -296,10 +294,10 @@ export const conversationSettingsSchema = t.Object({
  */
 export const conversationSchema = t.Object({
   _id: t.Optional(objectIdSchema),
-  type: t.Enum(createEnumFromValues(Object.values(ConversationType))),
+  type: t.Enum(ConversationType),
   title: t.Optional(t.String({ maxLength: 200 })),
   description: t.Optional(t.String({ maxLength: 1000 })),
-  status: t.Enum(createEnumFromValues(Object.values(ConversationStatus))),
+  status: t.Enum(ConversationStatus),
   participants: t.Array(conversationParticipantSchema, {
     minItems: 1,
     maxItems: MESSAGING_CONSTANTS.LIMITS.MAX_PARTICIPANTS,
@@ -325,7 +323,7 @@ export const conversationSchema = t.Object({
  * Create conversation request validation
  */
 export const createConversationRequestSchema = t.Object({
-  type: t.Enum(createEnumFromValues(Object.values(ConversationType))),
+  type: t.Enum(ConversationType),
   title: t.Optional(t.String({ maxLength: 200 })),
   description: t.Optional(t.String({ maxLength: 1000 })),
   participantIds: t.Array(objectIdSchema, {
@@ -348,12 +346,12 @@ export const sendMessageRequestSchema = t.Object({
     maxLength: MESSAGING_CONSTANTS.LIMITS.MAX_MESSAGE_LENGTH,
     error: "Message content is required",
   }),
-  type: t.Optional(t.Enum(createEnumFromValues(Object.values(MessageType)))),
+  type: t.Optional(t.Enum(MessageType)),
   attachments: t.Optional(
     t.Array(
       t.Object({
         file: t.Any(), // File object - will be validated by multer middleware
-        type: t.Enum(createEnumFromValues(Object.values(AttachmentType))),
+        type: t.Enum(AttachmentType),
       }),
       {
         maxItems: MESSAGING_CONSTANTS.LIMITS.MAX_ATTACHMENTS_PER_MESSAGE,
@@ -361,14 +359,7 @@ export const sendMessageRequestSchema = t.Object({
     )
   ),
   replyToMessageId: t.Optional(objectIdSchema),
-  priority: t.Optional(
-    t.Enum({
-      low: "low",
-      normal: "normal",
-      high: "high",
-      urgent: "urgent",
-    })
-  ),
+  priority: t.Optional(t.Enum(MessagePriority)),
   metadata: t.Optional(t.Record(t.String(), t.Any())),
   autoTranslate: t.Optional(t.Boolean()),
 });
@@ -379,15 +370,7 @@ export const sendMessageRequestSchema = t.Object({
 export const updateConversationRequestSchema = t.Object({
   title: t.Optional(t.String({ maxLength: 200 })),
   description: t.Optional(t.String({ maxLength: 1000 })),
-  status: t.Optional(
-    t.Enum({
-      active: "active",
-      archived: "archived",
-      muted: "muted",
-      blocked: "blocked",
-      closed: "closed",
-    })
-  ),
+  status: t.Optional(t.Enum(ConversationStatus)),
   settings: t.Optional(t.Partial(conversationSettingsSchema)),
   metadata: t.Optional(t.Record(t.String(), t.Any())),
 });
@@ -397,14 +380,7 @@ export const updateConversationRequestSchema = t.Object({
  */
 export const addParticipantRequestSchema = t.Object({
   userId: objectIdSchema,
-  role: t.Enum({
-    tenant: "tenant",
-    landlord: "landlord",
-    agent: "agent",
-    admin: "admin",
-    system: "system",
-    support: "support",
-  }),
+  role: t.Enum(ParticipantRole),
   permissions: t.Optional(
     t.Object({
       canRead: t.Optional(t.Boolean()),
@@ -430,24 +406,8 @@ export const bulkMessageRequestSchema = t.Object({
     maxLength: MESSAGING_CONSTANTS.LIMITS.MAX_MESSAGE_LENGTH,
     error: "Message content is required",
   }),
-  type: t.Enum({
-    text: "text",
-    attachment: "attachment",
-    system: "system",
-    property_inquiry: "property_inquiry",
-    application_discussion: "application_discussion",
-    payment_notification: "payment_notification",
-    maintenance_request: "maintenance_request",
-    renewal_discussion: "renewal_discussion",
-    complaint: "complaint",
-    announcement: "announcement",
-  }),
-  priority: t.Enum({
-    low: "low",
-    normal: "normal",
-    high: "high",
-    urgent: "urgent",
-  }),
+  type: t.Enum(MessageType),
+  priority: t.Enum(MessagePriority),
   metadata: t.Optional(t.Record(t.String(), t.Any())),
   scheduledFor: t.Optional(t.Date()),
   respectBusinessHours: t.Boolean(),
@@ -461,37 +421,9 @@ export const bulkMessageRequestSchema = t.Object({
 export const messageListQuerySchema = t.Object({
   conversationId: t.Optional(objectIdSchema),
   senderId: t.Optional(objectIdSchema),
-  type: t.Optional(
-    t.Enum({
-      text: "text",
-      attachment: "attachment",
-      system: "system",
-      property_inquiry: "property_inquiry",
-      application_discussion: "application_discussion",
-      payment_notification: "payment_notification",
-      maintenance_request: "maintenance_request",
-      renewal_discussion: "renewal_discussion",
-      complaint: "complaint",
-      announcement: "announcement",
-    })
-  ),
-  status: t.Optional(
-    t.Enum({
-      sent: "sent",
-      delivered: "delivered",
-      read: "read",
-      failed: "failed",
-      deleted: "deleted",
-    })
-  ),
-  priority: t.Optional(
-    t.Enum({
-      low: "low",
-      normal: "normal",
-      high: "high",
-      urgent: "urgent",
-    })
-  ),
+  type: t.Optional(t.Enum(MessageType)),
+  status: t.Optional(t.Enum(MessageStatus)),
+  priority: t.Optional(t.Enum(MessagePriority)),
   hasAttachments: t.Optional(t.Boolean()),
   dateFrom: t.Optional(t.Date()),
   dateTo: t.Optional(t.Date()),
@@ -511,25 +443,8 @@ export const messageListQuerySchema = t.Object({
  * Conversation list query validation
  */
 export const conversationListQuerySchema = t.Object({
-  type: t.Optional(
-    t.Enum({
-      direct: "direct",
-      group: "group",
-      support: "support",
-      property_thread: "property_thread",
-      application_thread: "application_thread",
-      system: "system",
-    })
-  ),
-  status: t.Optional(
-    t.Enum({
-      active: "active",
-      archived: "archived",
-      muted: "muted",
-      blocked: "blocked",
-      closed: "closed",
-    })
-  ),
+  type: t.Optional(t.Enum(ConversationType)),
+  status: t.Optional(t.Enum(ConversationStatus)),
   participantId: t.Optional(objectIdSchema),
   propertyId: t.Optional(objectIdSchema),
   applicationId: t.Optional(objectIdSchema),

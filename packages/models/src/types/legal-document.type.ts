@@ -173,13 +173,19 @@ type IGeneratedDocument = {
   generatedBy: string;
 };
 
-enum LegalDocumentStatus {
+export enum LegalDocumentStatus {
   GENERATED = "generated",
   SIGNED = "signed",
   EXECUTED = "executed",
   EXPIRED = "expired",
   CANCELLED = "cancelled",
   ARCHIVED = "archived",
+
+  PENDING_SIGNATURE = "pending_signature",
+  DRAFT = "draft",
+  PENDING_REVIEW = "pending_review",
+  ACTIVE = "active",
+  COMPLETED = "completed",
 }
 
 type DocumentParty = {
@@ -268,7 +274,6 @@ export {
   LegalDocumentCategory,
   Language,
   TemplateStatus,
-  LegalDocumentStatus,
   DeliveryMethod,
   FieldType,
   KENYA_LEGAL_CONSTANTS,

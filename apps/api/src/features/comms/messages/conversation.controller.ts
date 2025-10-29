@@ -13,7 +13,7 @@ export const conversationController = new Elysia({
   detail: {
     tags: ["conversations"],
   },
-}).group("/messages", (app) =>
+}).group("/messages-v1", (app) =>
   app
     .use(authPlugin)
 

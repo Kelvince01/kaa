@@ -116,6 +116,14 @@ export default function DocumentDashboard() {
 
   return (
     <div className="space-y-6">
+      <div>
+        <h2 className="mb-6 font-bold text-gray-900 text-xl">Documents</h2>
+        <p className="text-gray-600">
+          Upload and manage important documents like ID verification, proof of
+          address, and references.
+        </p>
+      </div>
+
       {/* Header */}
       <Card>
         <CardHeader>

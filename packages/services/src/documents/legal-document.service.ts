@@ -30,6 +30,7 @@ import {
 } from "@kaa/models/types";
 import {
   deleteFile,
+  downloadFile,
   encryptSensitiveData,
   generateChecksum,
   logger,
@@ -267,7 +268,7 @@ class LegalDocumentsService extends EventEmitter {
     const fallbackChain = [
       preferredFont,
       "Noto Sans",
-      "DejaVu Sans",
+      "DejaVuSans",
       "Helvetica",
       "Arial",
       "sans-serif",
@@ -448,6 +449,12 @@ class LegalDocumentsService extends EventEmitter {
           id: "landlordName",
           name: "Landlord Name",
           type: FieldType.TEXT,
+          required: true,
+        },
+        {
+          id: "landlordPhone",
+          name: "Landlord Phone",
+          type: FieldType.PHONE,
           required: true,
         },
         {
@@ -720,11 +727,11 @@ class LegalDocumentsService extends EventEmitter {
     doc.pipe(stream);
 
     // Get appropriate fonts with fallback support
-    const boldFont = this.getFontFallback("DejaVu Sans");
-    const regularFont = this.getFontFallback("DejaVu Sans");
+    // const boldFont = this.getFontFallback("DejaVu Sans");
+    // const regularFont = this.getFontFallback("DejaVu Sans");
 
     // Add header
-    doc.fontSize(16).font(boldFont);
+    doc.fontSize(16).font("Times-Roman"); // boldFont
     doc.text("KAA RENTALS", { align: "center" });
     doc.moveDown();
 
@@ -739,20 +746,20 @@ class LegalDocumentsService extends EventEmitter {
 
     // Process content
     const lines = content.split("\n");
-    doc.fontSize(11).font(regularFont);
+    doc.fontSize(11).font("Times-Roman"); // regularFont
 
     for (const line of lines) {
       if (line.trim()) {
         // Handle different formatting
         if (line.startsWith("#")) {
-          doc.fontSize(14).font(boldFont);
+          doc.fontSize(14).font("Times-Roman"); // boldFont
           doc.text(line.replace("#", "").trim(), { align: "left" });
           doc.moveDown(0.5);
         } else if (line.startsWith("**") && line.endsWith("**")) {
-          doc.fontSize(11).font(boldFont);
+          doc.fontSize(11).font("Times-Roman"); // boldFont
           doc.text(line.replace(/\*\*/g, "").trim());
         } else {
-          doc.fontSize(11).font(regularFont);
+          doc.fontSize(11).font("Times-Roman"); // boldFont
           doc.text(line.trim());
         }
         doc.moveDown(0.2);
@@ -1565,6 +1572,8 @@ class LegalDocumentsService extends EventEmitter {
       });
     }
 
+    console.log(parties);
+
     return parties;
   }
 
@@ -2113,6 +2122,55 @@ class LegalDocumentsService extends EventEmitter {
     } catch (error) {
       logger.error("Document deletion error:", error);
       return false;
+    }
+  }
+
+  /**
+   * Get document file from storage
+   * Supports both local and cloud storage
+   */
+  async getDocumentFile(filePath: string): Promise<Buffer | null> {
+    try {
+      // Check if it's a cloud URL
+      if (
+        this.useCloudStorage &&
+        (filePath.startsWith("http://") || filePath.startsWith("https://"))
+      ) {
+        // Download from cloud storage
+        logger.info("Downloading file from cloud storage");
+        const fileBuffer = await downloadFile(filePath);
+
+        if (!fileBuffer) {
+          logger.error("Failed to download file from cloud storage");
+          return null;
+        }
+
+        logger.info("File downloaded successfully from cloud storage");
+        return fileBuffer;
+      }
+
+      // Try to read from local storage
+      // If filePath is absolute, use it directly
+      // If relative, resolve from outputPath
+      const localPath = path.isAbsolute(filePath)
+        ? filePath
+        : path.join(this.outputPath, path.basename(filePath));
+
+      // Check if file exists
+      try {
+        await fs.access(localPath);
+      } catch {
+        logger.error("Document file not found");
+        return null;
+      }
+
+      // Read and return file buffer
+      const fileBuffer = await fs.readFile(localPath);
+      logger.info("Document file retrieved from local storage");
+      return fileBuffer;
+    } catch (error) {
+      logger.error("Failed to get document file:", error);
+      return null;
     }
   }
 
