@@ -1,12 +1,17 @@
+import type { UserRole } from "../users/user.type";
+
 export type AdminUser = {
   _id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: "super_admin" | "admin" | "support";
-  lastLogin: Date;
-  isActive: boolean;
-  permissions: string[];
+  contact: {
+    email: string;
+  };
+  profile: {
+    firstName: string;
+    lastName: string;
+  };
+  role: UserRole;
+  activity: { lastLogin?: Date; lastActivity?: Date };
+  status: "active" | "inactive";
   createdAt: Date;
   updatedAt: Date;
 };
@@ -17,23 +22,68 @@ export type SystemStats = {
       total: number;
       landlords: number;
       tenants: number;
+      growth: {
+        percentage: number;
+        trend: "up" | "down" | "flat";
+      };
     };
     properties: {
       total: number;
       active: number;
       let: number;
+      growth: {
+        percentage: number;
+        trend: "up" | "down" | "flat";
+      };
     };
     bookings: {
       total: number;
       pending: number;
+      growth: {
+        percentage: number;
+        trend: "up" | "down" | "flat";
+      };
+    };
+    payments: {
+      total: number;
+      completed: number;
+      pending: number;
+    };
+    revenue: {
+      total: number;
+      period: {
+        start: Date;
+        end: Date;
+      };
+      pending: number;
+      growth: {
+        percentage: number;
+        trend: "up" | "down" | "flat";
+      };
+    };
+  };
+  period: {
+    current: {
+      start: Date;
+      end: Date;
+    };
+    previous: {
+      start: Date;
+      end: Date;
     };
   };
   recentUsers: {
     _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
+    profile: {
+      firstName: string;
+      lastName: string;
+    };
+    contact: {
+      email: string;
+    };
+    roleId: {
+      name: string;
+    };
     createdAt: Date;
   }[];
   recentProperties: {
@@ -49,6 +99,14 @@ export type SystemStats = {
     status: string;
     createdAt: Date;
   }[];
+};
+
+export type SystemStatsFilter = {
+  year?: string;
+  month?: string;
+  period?: "custom" | "daily" | "monthly" | "yearly";
+  startDate?: string;
+  endDate?: string;
 };
 
 export type UserManagementFilter = {
@@ -146,4 +204,108 @@ export type AdminUpdateUserInput = {
   role?: string;
   permissions?: string[];
   isActive?: boolean;
+};
+
+export type PropertyManagementFilter = {
+  search?: string;
+  status?: string;
+  approved?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+};
+
+export type BookingManagementFilter = {
+  status?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+};
+
+export type AdminProperty = {
+  _id: string;
+  title: string;
+  description?: string;
+  status: string;
+  approved: boolean;
+  address: {
+    city?: string;
+    postalCode?: string;
+  };
+  media?: any[];
+  landlord: {
+    personalInfo?: any;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type AdminBooking = {
+  _id: string;
+  property: {
+    _id: string;
+    title: string;
+    location?: any;
+    media?: any[];
+  };
+  tenant: {
+    personalInfo?: any;
+  };
+  landlord?: {
+    personalInfo?: any;
+  };
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type SystemLog = {
+  id: string;
+  timestamp: Date;
+  level: "info" | "error" | "warning";
+  message: string;
+  metadata?: Record<string, any>;
+};
+
+export type PaymentManagementFilter = {
+  search?: string;
+  status?: string;
+  type?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+};
+
+export type AdminPayment = {
+  _id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  type: string;
+  dueDate: Date;
+  paidDate?: Date;
+  description?: string;
+  referenceNumber?: string;
+  transactionId?: string;
+  property?: {
+    _id: string;
+    title: string;
+    location?: any;
+  };
+  tenant: {
+    personalInfo?: any;
+  };
+  landlord: {
+    personalInfo?: any;
+  };
+  booking?: {
+    startDate: Date;
+    endDate: Date;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+  completedAt?: Date;
 };

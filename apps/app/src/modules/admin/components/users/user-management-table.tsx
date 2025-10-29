@@ -81,9 +81,9 @@ export function UserManagementTable() {
   };
 
   const handleSelectAll = (checked: boolean) => {
-    if (checked && data?.users) {
+    if (checked && data?.items) {
       // Select all users on current page
-      const userIds = data.users.map((user) => user._id);
+      const userIds = data.items.map((user) => user._id);
       // This would need to be implemented in the store
       console.log("Select all:", userIds);
     } else {
@@ -221,7 +221,7 @@ export function UserManagementTable() {
               <TableHead className="w-12">
                 <Checkbox
                   checked={
-                    data?.users && selectedUsers.length === data.users.length
+                    data?.items && selectedUsers.length === data.items.length
                   }
                   onCheckedChange={handleSelectAll}
                 />
@@ -235,8 +235,8 @@ export function UserManagementTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data?.users.map((user) => (
-              <TableRow key={user._id}>
+            {data?.items?.map((user, index) => (
+              <TableRow key={index.toString()}>
                 <TableCell>
                   <Checkbox
                     checked={selectedUsers.includes(user._id)}
@@ -248,33 +248,38 @@ export function UserManagementTable() {
                     <Avatar className="h-8 w-8">
                       <AvatarFallback>
                         <AvatarInitials>
-                          {getInitials(user.firstName, user.lastName)}
+                          {getInitials(
+                            user.profile.firstName,
+                            user.profile.lastName
+                          )}
                         </AvatarInitials>
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="font-medium">
-                        {user.firstName} {user.lastName}
+                        {user.profile.firstName} {user.profile.lastName}
                       </p>
                       <p className="text-muted-foreground text-sm">
-                        {user.email}
+                        {user.contact.email}
                       </p>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
                   <Badge variant={getRoleBadgeVariant(user.role)}>
-                    {user.role.replace("_", " ")}
+                    {user?.role ? user.role.replace("_", " ") : "-"}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={getStatusBadgeVariant(user.isActive)}>
-                    {user.isActive ? "Active" : "Inactive"}
+                  <Badge
+                    variant={getStatusBadgeVariant(user.status === "active")}
+                  >
+                    {user.status === "active" ? "Active" : "Inactive"}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground text-sm">
-                  {user.lastLogin
-                    ? formatDistanceToNow(new Date(user.lastLogin), {
+                  {user.activity?.lastLogin
+                    ? formatDistanceToNow(new Date(user.activity.lastLogin), {
                         addSuffix: true,
                       })
                     : "Never"}

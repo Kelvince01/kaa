@@ -1,30 +1,42 @@
 import { httpClient } from "@/lib/axios";
 import type {
+  AdminBooking,
   AdminCreateUserInput,
+  AdminPayment,
+  AdminProperty,
   AdminUpdateUserInput,
   AdminUser,
   AuditLog,
+  BookingManagementFilter,
   BulkUserAction,
   FeatureFlag,
+  PaymentManagementFilter,
+  PropertyManagementFilter,
   SystemConfiguration,
   SystemHealth,
+  SystemLog,
   SystemStats,
+  SystemStatsFilter,
   UserManagementFilter,
 } from "./admin.type";
 
 // System Statistics
-export async function getSystemStats(): Promise<SystemStats> {
-  const { data } = await httpClient.api.get<SystemStats>("/admin/stats");
+export async function getSystemStats(
+  filter?: SystemStatsFilter
+): Promise<SystemStats> {
+  const { data } = await httpClient.api.get<SystemStats>("/admin/stats", {
+    params: filter,
+  });
   return data;
 }
 
 // User Management
 export async function getAdminUsers(filter: UserManagementFilter): Promise<{
-  users: AdminUser[];
+  items: AdminUser[];
   pagination: { page: number; limit: number; total: number; pages: number };
 }> {
   const { data } = await httpClient.api.get<{
-    users: AdminUser[];
+    items: AdminUser[];
     pagination: { page: number; limit: number; total: number; pages: number };
   }>("/admin/users", { params: filter });
   return data;
@@ -192,5 +204,111 @@ export async function exportData(
     type,
     format,
   });
+  return data;
+}
+
+// User Role & Status Management
+export async function updateUserRole(
+  userId: string,
+  role: string
+): Promise<{
+  status: string;
+  data: any;
+  message: string;
+}> {
+  const { data } = await httpClient.api.patch<{
+    status: string;
+    data: any;
+    message: string;
+  }>(`/admin/users/${userId}/role`, { role });
+  return data;
+}
+
+export async function updateUserStatus(
+  userId: string,
+  active: boolean
+): Promise<{
+  status: string;
+  data: any;
+  message: string;
+}> {
+  const { data } = await httpClient.api.patch<{
+    status: string;
+    data: any;
+    message: string;
+  }>(`/admin/users/${userId}/status`, { active });
+  return data;
+}
+
+// Property Management
+export async function getAdminProperties(
+  filter: PropertyManagementFilter
+): Promise<{
+  properties: AdminProperty[];
+  pagination: { page: number; limit: number; total: number; pages: number };
+}> {
+  const { data } = await httpClient.api.get<{
+    properties: AdminProperty[];
+    pagination: { page: number; limit: number; total: number; pages: number };
+  }>("/admin/properties", { params: filter });
+  return data;
+}
+
+export async function updatePropertyApproval(
+  propertyId: string,
+  approved: boolean
+): Promise<{
+  status: string;
+  data: AdminProperty;
+  message: string;
+}> {
+  const { data } = await httpClient.api.patch<{
+    status: string;
+    data: AdminProperty;
+    message: string;
+  }>(`/admin/properties/${propertyId}/approval`, { approved });
+  return data;
+}
+
+// Booking Management
+export async function getAdminBookings(
+  filter: BookingManagementFilter
+): Promise<{
+  items: AdminBooking[];
+  pagination: { page: number; limit: number; total: number; pages: number };
+}> {
+  const { data } = await httpClient.api.get<{
+    items: AdminBooking[];
+    pagination: { page: number; limit: number; total: number; pages: number };
+  }>("/admin/bookings", { params: filter });
+  return data;
+}
+
+// System Logs
+export async function getAdminLogs(params?: {
+  page?: number;
+  limit?: number;
+}): Promise<{
+  items: SystemLog[];
+  pagination: { page: number; limit: number; total: number; pages: number };
+}> {
+  const { data } = await httpClient.api.get<{
+    items: SystemLog[];
+    pagination: { page: number; limit: number; total: number; pages: number };
+  }>("/admin/logs", { params });
+  return data;
+}
+
+// Payment Management
+export async function getAdminPayments(
+  filter: PaymentManagementFilter
+): Promise<{
+  items: AdminPayment[];
+  pagination: { page: number; limit: number; total: number; pages: number };
+}> {
+  const { data } = await httpClient.api.get<{
+    items: AdminPayment[];
+    pagination: { page: number; limit: number; total: number; pages: number };
+  }>("/admin/payments", { params: filter });
   return data;
 }

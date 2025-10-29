@@ -742,7 +742,7 @@ propertySchema.virtual("virtualToursData", {
 
 // Virtual fields
 propertySchema.virtual("primaryImage").get(function () {
-  const primaryImg = this.media.images.find((img: any) => img.isPrimary);
+  const primaryImg = this.media.images.find((img) => img.isPrimary);
   return primaryImg ? primaryImg.url : this.media.images[0]?.url || null;
 });
 

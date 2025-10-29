@@ -1,6 +1,16 @@
 import { PieChart } from "lucide-react";
 
-export const PlatformOverview = ({ stats }: any) => (
+type PlatformOverviewProps = {
+  stats: {
+    tenantPercent: number;
+    landlordPercent: number;
+    avgBookingRate: number;
+    avgResponseTime: number;
+    verifiedPropertyPercent: number;
+  };
+};
+
+export const PlatformOverview = ({ stats }: PlatformOverviewProps) => (
   <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:col-span-2">
     <h3 className="mb-4 flex items-center font-medium text-gray-900 text-lg">
       <PieChart className="mr-2 text-blue-600" />

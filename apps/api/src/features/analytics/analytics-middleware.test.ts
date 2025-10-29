@@ -1,6 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-// @ts-expect-error
-import { AnalyticsEvent, PropertyView, UserSession } from "@kaa/models";
+import {
+  AnalyticsEvent,
+  PropertyView,
+  UserSession,
+} from "../../../../../packages/models/src";
 import { analyticsMiddleware } from "./analytics.middleware";
 import { generateSessionId } from "./analytics.utils";
 

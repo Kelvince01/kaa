@@ -1,8 +1,41 @@
-import { Booking, Property, Role, User } from "@kaa/models";
-import type { IBooking, IProperty } from "@kaa/models/types";
+import { Booking, Payment, Property, Role, User, UserRole } from "@kaa/models";
+import type { IBooking, IPayment, IProperty } from "@kaa/models/types";
 import Elysia, { t } from "elysia";
 import type { FilterQuery, SortOrder } from "mongoose";
 import { authPlugin } from "~/features/auth/auth.plugin";
+
+/**
+ * Calculate growth percentage and trend
+ * @param current - Current period value
+ * @param previous - Previous period value
+ * @returns Object with percentage and trend
+ */
+const calculateGrowth = (
+  current: number,
+  previous: number
+): { percentage: number; trend: "up" | "down" | "flat" } => {
+  if (previous === 0) {
+    return {
+      percentage: current > 0 ? 100 : 0,
+      trend: current > 0 ? "up" : "flat",
+    };
+  }
+
+  const percentageChange = ((current - previous) / previous) * 100;
+  const roundedPercentage = Math.round(percentageChange * 10) / 10;
+
+  let trend: "up" | "down" | "flat" = "flat";
+  if (roundedPercentage > 0) {
+    trend = "up";
+  } else if (roundedPercentage < 0) {
+    trend = "down";
+  }
+
+  return {
+    percentage: Math.abs(roundedPercentage),
+    trend,
+  };
+};
 
 export const adminController = new Elysia().group("admin", (app) =>
   app
@@ -10,8 +43,70 @@ export const adminController = new Elysia().group("admin", (app) =>
     .use(authPlugin)
     .get(
       "/stats",
-      async ({ set }) => {
+      async ({ query, set }) => {
         try {
+          const { year, month, period, startDate, endDate } = query;
+
+          // Determine date ranges based on filters
+          let currentPeriodStart: Date;
+          let currentPeriodEnd: Date;
+          let previousPeriodStart: Date;
+          let previousPeriodEnd: Date;
+
+          const now = new Date();
+
+          if (period === "custom" && startDate && endDate) {
+            // Custom date range
+            currentPeriodStart = new Date(startDate);
+            currentPeriodEnd = new Date(endDate);
+
+            // Calculate previous period with same duration
+            const duration =
+              currentPeriodEnd.getTime() - currentPeriodStart.getTime();
+            previousPeriodEnd = new Date(currentPeriodStart.getTime() - 1);
+            previousPeriodStart = new Date(
+              previousPeriodEnd.getTime() - duration
+            );
+          } else if (year && month) {
+            // Specific year and month
+            const yearNum = Number.parseInt(year, 10);
+            const monthNum = Number.parseInt(month, 10);
+
+            currentPeriodStart = new Date(yearNum, monthNum - 1, 1);
+            currentPeriodEnd = new Date(yearNum, monthNum, 0, 23, 59, 59);
+
+            // Previous month
+            previousPeriodStart = new Date(yearNum, monthNum - 2, 1);
+            previousPeriodEnd = new Date(yearNum, monthNum - 1, 0, 23, 59, 59);
+          } else if (year) {
+            // Specific year (full year stats)
+            const yearNum = Number.parseInt(year, 10);
+
+            currentPeriodStart = new Date(yearNum, 0, 1);
+            currentPeriodEnd = new Date(yearNum, 11, 31, 23, 59, 59);
+
+            // Previous year
+            previousPeriodStart = new Date(yearNum - 1, 0, 1);
+            previousPeriodEnd = new Date(yearNum - 1, 11, 31, 23, 59, 59);
+          } else {
+            // Default: current month
+            currentPeriodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            currentPeriodEnd = now;
+
+            previousPeriodStart = new Date(
+              now.getFullYear(),
+              now.getMonth() - 1,
+              1
+            );
+            previousPeriodEnd = new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              0,
+              23,
+              59,
+              59
+            );
+          }
           // Get counts of different entities
           const [
             totalUsers,
@@ -22,33 +117,73 @@ export const adminController = new Elysia().group("admin", (app) =>
             letProperties,
             totalBookings,
             pendingBookings,
+            totalPayments,
+            completedPayments,
           ] = await Promise.all([
             User.countDocuments(),
-            User.countDocuments({
-              role: (await Role.findOne({ name: "landlord" }))?._id,
+            UserRole.countDocuments({
+              roleId: (await Role.findOne({ name: "landlord" }))?._id,
             }),
-            User.countDocuments({
-              role: (await Role.findOne({ name: "tenant" }))?._id,
+            UserRole.countDocuments({
+              roleId: (await Role.findOne({ name: "tenant" }))?._id,
             }),
             Property.countDocuments(),
             Property.countDocuments({ status: "active" }),
             Property.countDocuments({ status: "let" }),
             Booking.countDocuments(),
             Booking.countDocuments({ status: "pending" }),
+            Payment.countDocuments(),
+            Payment.countDocuments({ status: "completed" }),
           ]);
+
+          // Calculate revenue stats for the selected period
+          const revenueStats = await Payment.aggregate([
+            {
+              $facet: {
+                totalRevenue: [
+                  { $match: { status: "completed" } },
+                  { $group: { _id: null, total: { $sum: "$amount" } } },
+                ],
+                currentPeriodRevenue: [
+                  {
+                    $match: {
+                      status: "completed",
+                      completedAt: {
+                        $gte: currentPeriodStart,
+                        $lte: currentPeriodEnd,
+                      },
+                    },
+                  },
+                  { $group: { _id: null, total: { $sum: "$amount" } } },
+                ],
+                pendingRevenue: [
+                  { $match: { status: "pending" } },
+                  { $group: { _id: null, total: { $sum: "$amount" } } },
+                ],
+              },
+            },
+          ]);
+
+          const revenue = {
+            total: revenueStats[0]?.totalRevenue[0]?.total || 0,
+            period: revenueStats[0]?.currentPeriodRevenue[0]?.total || 0,
+            pending: revenueStats[0]?.pendingRevenue[0]?.total || 0,
+          };
 
           // Get recent users
           const recentUsers = await User.find()
             .sort({ createdAt: -1 })
             .limit(5)
-            .select("firstName lastName email role createdAt");
+            .select(
+              "profile.firstName profile.lastName contact.email createdAt"
+            );
 
           // Get recent properties
           const recentProperties = await Property.find()
             .sort({ createdAt: -1 })
             .limit(5)
-            .select("title location status createdAt")
-            .populate("landlord", "firstName lastName");
+            .select("title location status createdAt media")
+            .populate("landlord", "personalInfo");
 
           // Get recent bookings
           const recentBookings = await Booking.find()
@@ -56,24 +191,81 @@ export const adminController = new Elysia().group("admin", (app) =>
             .limit(5)
             .select("property tenant createdAt")
             .populate("property", "title location")
-            .populate("tenant", "firstName lastName");
+            .populate("tenant", "personalInfo");
 
-          // Calculate trend data (simplified for example)
-          // In a real implementation, you would calculate this based on time periods
-          const userGrowth = {
-            percentage: 5.2,
-            trend: "up",
-          };
+          // Calculate growth trends using the filtered periods
+          // Calculate user growth
+          const [currentPeriodUsers, previousPeriodUsers] = await Promise.all([
+            User.countDocuments({
+              createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
+            }),
+            User.countDocuments({
+              createdAt: {
+                $gte: previousPeriodStart,
+                $lte: previousPeriodEnd,
+              },
+            }),
+          ]);
+          const userGrowth = calculateGrowth(
+            currentPeriodUsers,
+            previousPeriodUsers
+          );
 
-          const propertyGrowth = {
-            percentage: 3.8,
-            trend: "up",
-          };
+          // Calculate property growth
+          const [currentPeriodProperties, previousPeriodProperties] =
+            await Promise.all([
+              Property.countDocuments({
+                createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
+              }),
+              Property.countDocuments({
+                createdAt: {
+                  $gte: previousPeriodStart,
+                  $lte: previousPeriodEnd,
+                },
+              }),
+            ]);
+          const propertyGrowth = calculateGrowth(
+            currentPeriodProperties,
+            previousPeriodProperties
+          );
 
-          const bookingGrowth = {
-            percentage: 7.5,
-            trend: "up",
-          };
+          // Calculate booking growth
+          const [currentPeriodBookings, previousPeriodBookings] =
+            await Promise.all([
+              Booking.countDocuments({
+                createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
+              }),
+              Booking.countDocuments({
+                createdAt: {
+                  $gte: previousPeriodStart,
+                  $lte: previousPeriodEnd,
+                },
+              }),
+            ]);
+          const bookingGrowth = calculateGrowth(
+            currentPeriodBookings,
+            previousPeriodBookings
+          );
+
+          // Calculate revenue growth
+          const previousPeriodRevenueStats = await Payment.aggregate([
+            {
+              $match: {
+                status: "completed",
+                completedAt: {
+                  $gte: previousPeriodStart,
+                  $lte: previousPeriodEnd,
+                },
+              },
+            },
+            { $group: { _id: null, total: { $sum: "$amount" } } },
+          ]);
+          const previousPeriodRevenue =
+            previousPeriodRevenueStats[0]?.total || 0;
+          const revenueGrowth = calculateGrowth(
+            revenue.period,
+            previousPeriodRevenue
+          );
 
           // const cacheKey = "api:/api/v1/admin/stats";
 
@@ -107,6 +299,27 @@ export const adminController = new Elysia().group("admin", (app) =>
                 pending: pendingBookings,
                 growth: bookingGrowth,
               },
+              payments: {
+                total: totalPayments,
+                completed: completedPayments,
+                pending: totalPayments - completedPayments,
+              },
+              revenue: {
+                total: revenue.total,
+                period: revenue.period,
+                pending: revenue.pending,
+                growth: revenueGrowth,
+              },
+            },
+            period: {
+              current: {
+                start: currentPeriodStart,
+                end: currentPeriodEnd,
+              },
+              previous: {
+                start: previousPeriodStart,
+                end: previousPeriodEnd,
+              },
             },
             recentUsers,
             recentProperties,
@@ -137,9 +350,25 @@ export const adminController = new Elysia().group("admin", (app) =>
         }
       },
       {
+        query: t.Object({
+          year: t.Optional(t.String()),
+          month: t.Optional(t.String()),
+          period: t.Optional(
+            t.Union([
+              t.Literal("custom"),
+              t.Literal("daily"),
+              t.Literal("monthly"),
+              t.Literal("yearly"),
+            ])
+          ),
+          startDate: t.Optional(t.String()),
+          endDate: t.Optional(t.String()),
+        }),
         detail: {
           tags: ["admin"],
-          summary: "Get dashboard stats",
+          summary: "Get dashboard stats with optional period filters",
+          description:
+            "Filter stats by year, month, or custom period. Examples: ?year=2024, ?year=2024&month=12, ?period=custom&startDate=2024-01-01&endDate=2024-12-31",
         },
       }
     )
@@ -185,9 +414,7 @@ export const adminController = new Elysia().group("admin", (app) =>
             .sort(sort)
             .skip(skip)
             .limit(limitNum)
-            .select(
-              "-password -refreshToken -verificationToken -passwordResetToken"
-            );
+            .select("-password");
 
           // Get total count for pagination
           const totalUsers = await User.countDocuments(filter);
@@ -229,16 +456,16 @@ export const adminController = new Elysia().group("admin", (app) =>
     )
     .patch(
       "/users/:userId/role",
-      async ({ params, body, set, user }) => {
+      async ({ params, body, set }) => {
         try {
           const { userId } = params;
           const { role } = body;
 
-          const userObj = await User.findByIdAndUpdate(
+          const userObj = await UserRole.findByIdAndUpdate(
             userId,
-            { role },
+            { roleId: role },
             { new: true }
-          ).select("-password");
+          ).populate("userId", "profile contact");
 
           if (!userObj) {
             set.status = 404;
@@ -250,7 +477,7 @@ export const adminController = new Elysia().group("admin", (app) =>
 
           return {
             status: "success",
-            data: user,
+            data: userObj,
             message: "User role updated successfully",
           };
         } catch (error) {
@@ -369,7 +596,7 @@ export const adminController = new Elysia().group("admin", (app) =>
             .sort(sort)
             .skip(skip)
             .limit(limitNum)
-            .populate("landlord", "firstName lastName email");
+            .populate("landlord", "personalInfo");
 
           // Get total count for pagination
           const totalProperties = await Property.countDocuments(filter);
@@ -424,7 +651,7 @@ export const adminController = new Elysia().group("admin", (app) =>
               ...(approved ? { status: "active" } : { status: "inactive" }),
             },
             { new: true }
-          ).populate("landlord", "firstName lastName email");
+          ).populate("landlord", "personalInfo");
 
           if (!propertyObj) {
             set.status = 404;
@@ -493,9 +720,9 @@ export const adminController = new Elysia().group("admin", (app) =>
             .sort(sort)
             .skip(skip)
             .limit(limitNum)
-            .populate("property", "title location images")
-            .populate("tenant", "firstName lastName email")
-            .populate("landlord", "firstName lastName email");
+            .populate("property", "title location media")
+            .populate("tenant", "personalInfo")
+            .populate("landlord", "personalInfo");
 
           // Get total count for pagination
           const totalBookings = await Booking.countDocuments(filter);
@@ -531,6 +758,97 @@ export const adminController = new Elysia().group("admin", (app) =>
         detail: {
           tags: ["admin"],
           summary: "Get all bookings",
+        },
+      }
+    )
+    .get(
+      "/payments",
+      async ({ query, set }) => {
+        try {
+          const {
+            page = "1",
+            limit = "20",
+            status,
+            type,
+            search,
+            sortBy = "createdAt",
+            sortOrder = "desc",
+          } = query;
+
+          // Parse pagination params
+          const pageNum = Number.parseInt(page, 10);
+          const limitNum = Number.parseInt(limit, 10);
+          const skip = (pageNum - 1) * limitNum;
+
+          // Build filter
+          const filter: FilterQuery<IPayment> = {};
+
+          if (status) {
+            filter.status = status;
+          }
+
+          if (type) {
+            filter.type = type;
+          }
+
+          if (search) {
+            filter.$or = [
+              { referenceNumber: { $regex: search, $options: "i" } },
+              { transactionId: { $regex: search, $options: "i" } },
+              { description: { $regex: search, $options: "i" } },
+            ];
+          }
+
+          // Build sort
+          const sort: Record<string, SortOrder> = {};
+          sort[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+          // Get payments with pagination
+          const payments = await Payment.find(filter)
+            .sort(sort)
+            .skip(skip)
+            .limit(limitNum)
+            .populate("property", "title location")
+            .populate("tenant", "personalInfo")
+            .populate("landlord", "personalInfo")
+            .populate("booking", "startDate endDate");
+
+          // Get total count for pagination
+          const totalPayments = await Payment.countDocuments(filter);
+          const totalPages = Math.ceil(totalPayments / limitNum);
+
+          return {
+            status: "success",
+            items: payments,
+            pagination: {
+              total: totalPayments,
+              pages: totalPages,
+              page: pageNum,
+              limit: limitNum,
+            },
+            message: "Payments fetched successfully",
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            status: "error",
+            message: "Failed to get payments",
+          };
+        }
+      },
+      {
+        query: t.Object({
+          page: t.Optional(t.String()),
+          limit: t.Optional(t.String()),
+          status: t.Optional(t.String()),
+          type: t.Optional(t.String()),
+          search: t.Optional(t.String()),
+          sortBy: t.Optional(t.String()),
+          sortOrder: t.Optional(t.String()),
+        }),
+        detail: {
+          tags: ["admin"],
+          summary: "Get all payments",
         },
       }
     )

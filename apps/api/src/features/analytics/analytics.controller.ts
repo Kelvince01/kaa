@@ -32,8 +32,8 @@ export const analyticsController = new Elysia().group("analytics", (app) =>
           const recentBookings = await Booking.find()
             .sort("-createdAt")
             .limit(5)
-            .populate("property", "title")
-            .populate("tenant", "firstName lastName");
+            .populate("property", "title media")
+            .populate("tenant", "personalInfo.firstName personalInfo.lastName");
 
           // Get property stats by type
           const propertyTypeStats = await Property.aggregate([
@@ -335,10 +335,10 @@ export const analyticsController = new Elysia().group("analytics", (app) =>
 
           // Most viewed properties
           const mostViewedProperties = await Property.find()
-            .sort("-views")
+            .sort("-stats.views")
             .limit(10)
             .select(
-              "title location.address.town pricing.rent stats.views type listingType"
+              "title location.address.town pricing.rent stats.views type listingType media"
             );
 
           // Most booked properties

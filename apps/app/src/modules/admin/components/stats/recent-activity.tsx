@@ -14,10 +14,18 @@ import {
 } from "@kaa/ui/components/card";
 import { Skeleton } from "@kaa/ui/components/skeleton";
 import { formatDistanceToNow } from "date-fns";
-import { useSystemStats } from "../../admin.queries";
+import type { SystemStats } from "../../admin.type";
 
-export function RecentActivity() {
-  const { data: stats, isLoading } = useSystemStats();
+export function RecentActivity({
+  stats,
+  isLoading,
+}: {
+  stats: SystemStats | undefined;
+  isLoading: boolean;
+}) {
+  const recentUsers = stats?.recentUsers || [];
+  const recentProperties = stats?.recentProperties || [];
+  const recentBookings = stats?.recentBookings || [];
 
   if (isLoading) {
     return (
@@ -70,27 +78,27 @@ export function RecentActivity() {
           <CardTitle className="text-lg">Recent Users</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {stats.recentUsers.map((user) => (
-            <div className="flex items-center space-x-3" key={user._id}>
+          {recentUsers.map((user, index) => (
+            <div className="flex items-center space-x-3" key={index.toString()}>
               <Avatar className="h-8 w-8">
                 <AvatarFallback>
                   <AvatarInitials>
-                    {getInitials(user.firstName, user.lastName)}
+                    {getInitials(user.profile.firstName, user.profile.lastName)}
                   </AvatarInitials>
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-sm">
-                  {user.firstName} {user.lastName}
+                  {user.profile.firstName} {user.profile.lastName}
                 </p>
                 <p className="truncate text-muted-foreground text-xs">
-                  {user.email}
+                  {user.contact.email}
                 </p>
               </div>
               <div className="text-right">
-                <Badge className="text-xs" variant="outline">
-                  {user.role}
-                </Badge>
+                {/* <Badge className="text-xs" variant="outline">
+                  {user.roleId.name}
+                </Badge> */}
                 <p className="mt-1 text-muted-foreground text-xs">
                   {formatDistanceToNow(new Date(user.createdAt), {
                     addSuffix: true,
@@ -108,7 +116,7 @@ export function RecentActivity() {
           <CardTitle className="text-lg">Recent Properties</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {stats.recentProperties.map((property) => (
+          {recentProperties.map((property) => (
             <div
               className="flex items-center justify-between"
               key={property._id}
@@ -135,7 +143,7 @@ export function RecentActivity() {
           <CardTitle className="text-lg">Recent Bookings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {stats.recentBookings?.map((booking) => (
+          {recentBookings?.map((booking) => (
             <div
               className="flex items-center justify-between"
               key={booking._id}

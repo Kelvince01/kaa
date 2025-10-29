@@ -8,12 +8,25 @@ import {
   CardTitle,
 } from "@kaa/ui/components/card";
 import { Skeleton } from "@kaa/ui/components/skeleton";
-import { Building, Calendar, TrendingUp, Users } from "lucide-react";
-import { useSystemStats } from "../../admin.queries";
+import {
+  Building,
+  Calendar,
+  DollarSign,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { formatCurrency } from "@/shared/utils/format.util";
+import type { SystemStats } from "../../admin.type";
 
-export function SystemStatsCards() {
-  const { data: stats, isLoading, error } = useSystemStats();
-
+export function SystemStatsCards({
+  stats,
+  isLoading,
+  error,
+}: {
+  stats: SystemStats | undefined;
+  isLoading: boolean;
+  error: Error | null;
+}) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -46,24 +59,31 @@ export function SystemStatsCards() {
   const cards = [
     {
       title: "Total Users",
-      value: stats?.stats?.users?.total,
-      description: `${stats?.stats?.users?.landlords} landlords, ${stats?.stats?.users?.tenants} tenants`,
+      value: stats?.stats?.users?.total || 0,
+      description: `${stats?.stats?.users?.landlords || 0} landlords, ${stats?.stats?.users?.tenants || 0} tenants`,
       icon: Users,
       trend: "+12% from last month",
     },
     {
       title: "Properties",
-      value: stats?.stats?.properties?.total,
+      value: stats?.stats?.properties?.total || 0,
       description: `${stats?.stats?.properties?.active} active, ${stats?.stats?.properties?.let} let`,
       icon: Building,
       trend: "+8% from last month",
     },
     {
       title: "Bookings",
-      value: stats?.stats?.bookings?.total,
+      value: stats?.stats?.bookings?.total || 0,
       description: `${stats?.stats?.bookings?.pending} pending approval`,
       icon: Calendar,
       trend: "+23% from last month",
+    },
+    {
+      title: "Revenue",
+      value: formatCurrency(stats?.stats?.revenue?.total || 0),
+      description: "Total revenue for the period",
+      icon: DollarSign,
+      trend: "+12% from last month",
     },
     {
       title: "Growth Rate",
