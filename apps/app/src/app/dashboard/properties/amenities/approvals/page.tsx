@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AmenityApprovalPanel } from "@/modules/properties/amenities/components/AmenityApprovalPanel";
+import { AmenityApprovalPanel } from "@/modules/properties/amenities/components/amenity-approval-panel";
 
 export const metadata: Metadata = {
   title: "Amenity Approvals",

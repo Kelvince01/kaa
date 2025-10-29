@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AmenityManagementDashboard } from "@/modules/properties/amenities/components/AmenityManagementDashboard";
+import { AmenityManagementDashboard } from "@/modules/properties/amenities/components/amenity-mgt-dashboard";
 
 export const metadata: Metadata = {
   title: "Amenity Management",

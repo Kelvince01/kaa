@@ -12,7 +12,7 @@ import {
 import { MentionSchema } from "@/components/common/blocknote/custom-elements/mention/mention";
 import {
   getSlashNotifySlashItem,
-  Notify,
+  // Notify,
 } from "@/components/common/blocknote/custom-elements/notify";
 
 import type {
@@ -33,9 +33,11 @@ import type {
  */
 
 // Custom schema with block specifications and inline content (e.g., Notify block, Mention tag)
-export const customSchema = BlockNoteSchema?.create({
-  // @ts-expect-error
-  blockSpecs: { ...defaultBlockSpecs, notify: Notify }, // Adds Notify block
+export const customSchema = BlockNoteSchema.create({
+  blockSpecs: {
+    ...defaultBlockSpecs,
+    // notify: Notify
+  }, // Adds Notify block
   inlineContentSpecs: { ...defaultInlineContentSpecs, mention: MentionSchema }, // Adds Mention tag
 });
 

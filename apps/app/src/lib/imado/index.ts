@@ -1,7 +1,7 @@
 import { config } from "@kaa/config";
 import { onlineManager } from "@tanstack/react-query";
 import type { Uppy, UppyOptions } from "@uppy/core";
-import { t } from "i18next";
+import { useTranslations } from "next-intl";
 import { toaster } from "@/components/common/toaster";
 import {
   createBaseTusUppy,
@@ -34,6 +34,7 @@ export async function ImadoUppy(
   // Determine if we can upload based on online status and Imado configuration
   const canUpload = onlineManager.isOnline() && config.has.imado;
   const isPublic = opts.public;
+  const t = useTranslations("common");
 
   // Variable to store the upload token
   let token = "";
@@ -123,7 +124,7 @@ export async function ImadoUppy(
         ...file,
         name: file.name || `${file.type}-${file.id}`,
       }));
-      retryImadoUppy.addFiles(validFiles);
+      retryImadoUppy.addFiles(validFiles as any);
 
       // Upload the files
       retryImadoUppy.upload().then(async (result) => {

@@ -1,13 +1,23 @@
 import type { AxiosResponse } from "axios";
 import { httpClient } from "@/lib/axios";
 import type { UploadParams } from "@/lib/imado/types";
-import type { MeResponse } from "../auth/auth.type";
+import type { MeResponse } from "./me.type";
 
 export const meService = {
   // Get current user
   getCurrentUser: async (): Promise<MeResponse> => {
     const response: AxiosResponse<MeResponse> =
       await httpClient.api.get<MeResponse>("/auth/me");
+    return response.data;
+  },
+
+  /**
+   * Fetch user context from backend
+   */
+  fetchUserContext: async (): Promise<MeResponse> => {
+    const response: AxiosResponse<MeResponse> =
+      await httpClient.api.get<MeResponse>("/auth/me");
+
     return response.data;
   },
 

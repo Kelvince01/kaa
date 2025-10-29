@@ -15,14 +15,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import { dialog } from "@/components/common/dialoger/state";
 import { ModeToggle } from "@/components/mode-toggle";
 import { AIChatAssistant } from "@/modules/ai/components/ai-assistant";
-import { useAuthStore } from "@/modules/auth/auth.store";
 import NotificationPopover from "@/modules/comms/notifications/components/notification-popup";
-import type { User } from "@/modules/users/user.type";
-import { dashboardSidebarItems } from "./sidebar";
+import { useUserContext } from "@/modules/me";
+import { getDashboardSidebarItems } from "./sidebar";
 
 export function DashboardHeader() {
   const pathname = usePathname();
-  const { user } = useAuthStore();
+  const { role } = useUserContext();
 
   const [scrolled, setScrolled] = useState<boolean>(false);
 
@@ -46,16 +45,22 @@ export function DashboardHeader() {
   // Helper: flatten nav items for easy lookup
   const navItems = useMemo(() => {
     const flat: { [key: string]: { title: string; url: string } } = {};
-    for (const item of dashboardSidebarItems(user as User).navMain) {
+    const sidebarItems = getDashboardSidebarItems(role?.name);
+
+    for (const item of sidebarItems.navMain) {
       flat[item.url] = { title: item.title, url: item.url };
-      if (item.items) {
-        for (const sub of item.items) {
+      // Check if item has sub-items
+      const itemWithSubs = item as typeof item & {
+        items?: Array<{ title: string; url: string }>;
+      };
+      if (itemWithSubs.items) {
+        for (const sub of itemWithSubs.items) {
           flat[sub.url] = { title: sub.title, url: sub.url };
         }
       }
     }
     return flat;
-  }, [user]);
+  }, [role?.name]);
 
   // Generate breadcrumb items from pathname
   const breadcrumbItems = useMemo(() => {
@@ -116,7 +121,7 @@ export function DashboardHeader() {
           id="right"
         >
           <Button
-            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
+            className="bg-linear-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
             onClick={openAIAssistantDialog}
             size="sm"
           >

@@ -52,7 +52,7 @@ import {
   useAutoPopulationStatus,
   useDiscoverMissingAmenities,
 } from "../amenity.queries";
-import { CreateAmenityForm } from "./CreateAmenityForm";
+import { CreateAmenityForm } from "./create-amenity-form";
 
 type AmenityManagementDashboardProps = {
   county?: string;

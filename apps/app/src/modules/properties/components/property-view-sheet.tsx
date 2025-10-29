@@ -20,6 +20,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@kaa/ui/components/tabs";
+import MapContainer from "@/components/map-container";
 import { PropertyAmenitiesView } from "@/modules/properties";
 import { formatCurrency } from "@/shared/utils/format.util";
 import type { Property } from "../property.type";
@@ -160,51 +161,6 @@ export function PropertyViewSheet({
                     </div>
                   </CardContent>
                 </Card>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-medium">Price</h4>
-                    <p className="text-muted-foreground">
-                      {formatCurrency(
-                        property.pricing.rent,
-                        property.pricing.currency
-                      )}
-                      /{property.pricing.paymentFrequency}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Security Deposit</h4>
-                    <p className="text-muted-foreground">
-                      {formatCurrency(
-                        property.pricing.deposit,
-                        property.pricing.currency
-                      )}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Bedrooms</h4>
-                    <p className="text-muted-foreground">
-                      {property.specifications.bedrooms}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Bathrooms</h4>
-                    <p className="text-muted-foreground">
-                      {property.specifications.bathrooms}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Size</h4>
-                    <p className="text-muted-foreground">
-                      {property.specifications.totalArea} sq.ft
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Furnished</h4>
-                    <p className="text-muted-foreground">
-                      {property.specifications.furnished ? "Yes" : "No"}
-                    </p>
-                  </div>
-                </div>
               </TabsContent>
 
               <TabsContent className="mt-6" value="location">
@@ -220,10 +176,12 @@ export function PropertyViewSheet({
                         {property.location.address.postalCode}
                       </p>
                     </address>
-                    {/* TODO: Add map component */}
-                    <div className="mt-4 flex h-48 w-full items-center justify-center rounded-md bg-muted">
-                      <p className="text-muted-foreground">Map View</p>
-                    </div>
+                    <MapContainer
+                      className="mt-4 flex h-full w-full items-center justify-center rounded-md bg-muted"
+                      latitude={property.geolocation.coordinates[1] ?? 0}
+                      longitude={property.geolocation.coordinates[0] ?? 0}
+                      zoom={10}
+                    />
                   </CardContent>
                 </Card>
               </TabsContent>

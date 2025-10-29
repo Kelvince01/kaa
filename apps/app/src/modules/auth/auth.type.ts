@@ -107,7 +107,7 @@ export type ResetPasswordRequest = {
   password: string;
 };
 
-export type MeResponse = {
+export type MeResponse_v1 = {
   status: "success" | "error";
   user?: {
     id: string;

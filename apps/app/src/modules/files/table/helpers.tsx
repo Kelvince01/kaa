@@ -1,4 +1,3 @@
-import { t } from "i18next";
 import { Suspense } from "react";
 import { dialog } from "@/components/common/dialoger/state";
 import type { UploadedUppyFile } from "@/lib/imado/types";
@@ -89,13 +88,8 @@ export const openAttachmentsUploadDialog = (organizationId: string) => {
     {
       id: "upload-attachment",
       drawerOnMobile: false,
-      title: t("common.upload_item", {
-        item: t("common.attachments").toLowerCase(),
-      }),
-      description: t("common.upload_multiple.text", {
-        item: t("common.attachments").toLowerCase(),
-        count: maxNumberOfFiles,
-      }),
+      title: "Upload attachment",
+      description: `You can upload up to ${maxNumberOfFiles} attachments.`,
       className: "md:max-w-xl",
     }
   );

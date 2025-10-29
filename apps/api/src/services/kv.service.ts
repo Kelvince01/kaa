@@ -1,7 +1,7 @@
 import { ForbiddenError, genTotp, redisClient } from "@kaa/utils";
 import * as adapterConfig from "~/config/adapter.config";
 import * as localeConfig from "~/config/locale.config";
-import type { AuthCodeBody } from "~/features/auth/passkey.controller";
+import type { AuthCodeBody } from "~/features/auth/auth.type";
 
 export type RefreshTokenBody = {
   authId: string;

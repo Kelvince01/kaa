@@ -139,6 +139,8 @@ export const useSearchAmenities = (
  */
 export const usePendingAmenities = (
   options: {
+    name?: string;
+    type?: string;
     county?: string;
     source?: AmenitySource;
     limit?: number;

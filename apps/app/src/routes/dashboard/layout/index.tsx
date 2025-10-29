@@ -13,9 +13,10 @@ import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { NavMain, NavUser, OrgSwitcher } from "@/components/layout/sidebar";
 import { useAuthStore } from "@/modules/auth/auth.store";
+import { useUserContext } from "@/modules/me";
 import type { User } from "@/modules/users/user.type";
 import { DashboardHeader } from "./header";
-import { dashboardSidebarItems } from "./sidebar";
+import { getDashboardSidebarItems } from "./sidebar";
 
 type DashboardLayoutProps = {
   children: ReactNode;
@@ -23,6 +24,7 @@ type DashboardLayoutProps = {
 
 function DashboardLayoutContainer({ children }: DashboardLayoutProps) {
   const { user } = useAuthStore();
+  const { role } = useUserContext();
 
   const { isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
@@ -50,16 +52,17 @@ function DashboardLayoutContainer({ children }: DashboardLayoutProps) {
     );
   }
 
+  // Get role-aware sidebar items
+  const sidebarItems = getDashboardSidebarItems(role?.name);
+
   return (
     <SidebarProvider defaultOpen={false}>
       <Sidebar collapsible="icon">
         <SidebarHeader>
-          <OrgSwitcher
-            organizations={dashboardSidebarItems(user as User).organizations}
-          />
+          <OrgSwitcher />
         </SidebarHeader>
         <SidebarContent>
-          <NavMain items={dashboardSidebarItems(user as User).navMain} />
+          <NavMain items={sidebarItems.navMain} />
         </SidebarContent>
         <SidebarFooter>
           <NavUser user={user as User} />
@@ -70,7 +73,7 @@ function DashboardLayoutContainer({ children }: DashboardLayoutProps) {
         <DashboardHeader />
 
         {/* from-emerald-50 via-white to-emerald-50 */}
-        <main className="flex-1 bg-gradient-to-br from-primary-50 via-white to-primary-50">
+        <main className="flex-1 bg-linear-to-br from-primary-50 via-white to-primary-50">
           <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:px-8">
             {children}
           </div>

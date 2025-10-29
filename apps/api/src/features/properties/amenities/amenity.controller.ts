@@ -1188,9 +1188,11 @@ export const amenityController = new Elysia({ prefix: "/amenities" })
     "/pending",
     async ({ query, set }) => {
       try {
-        const { county, source, limit = 20, skip = 0 } = query;
+        const { name, type, county, source, limit = 20, skip = 0 } = query;
 
         const result = await AmenityService.getPendingAmenities({
+          name,
+          type,
           county,
           source: source as AmenitySource,
           limit: limit as number,
@@ -1204,7 +1206,7 @@ export const amenityController = new Elysia({ prefix: "/amenities" })
             _id: (amenity._id as Types.ObjectId).toString(),
             rating: amenity.rating || 0,
             reviewCount: amenity.reviewCount || 0,
-          })),
+          })) as any,
           pagination: {
             total: result.total,
             limit,
@@ -1224,6 +1226,8 @@ export const amenityController = new Elysia({ prefix: "/amenities" })
     },
     {
       query: t.Object({
+        name: t.Optional(t.String()),
+        type: t.Optional(t.String()),
         county: t.Optional(t.String()),
         source: t.Optional(t.String()),
         limit: t.Optional(t.Number({ minimum: 1, maximum: 100, default: 20 })),

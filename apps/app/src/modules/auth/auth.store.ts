@@ -209,6 +209,17 @@ export const useAuthStore = create<AuthState>()(
           sessionStorage.removeItem("returnUrl");
         }
 
+        // Clear me store (user context)
+        if (typeof window !== "undefined") {
+          try {
+            // Get me store from localStorage and clear it
+            const meStoreKey = "me-store";
+            localStorage.removeItem(meStoreKey);
+          } catch (error) {
+            console.error("Error clearing me store:", error);
+          }
+        }
+
         set({
           user: null,
           status: "unauthenticated",

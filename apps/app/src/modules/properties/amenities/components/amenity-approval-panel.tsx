@@ -30,11 +30,13 @@ import { Textarea } from "@kaa/ui/components/textarea";
 import {
   AlertTriangle,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
   RefreshCw,
   Search,
   XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useApprovalStats,
   useApproveAmenity,
@@ -44,8 +46,8 @@ import {
   useVerificationStats,
 } from "../amenity.queries";
 import type { Amenity, AmenitySource } from "../amenity.type";
-import { AmenityCard } from "./AmenityCard";
-import { VerificationDialog } from "./VerificationDialog";
+import { AmenityCard } from "./amenity-card";
+import { VerificationDialog } from "./verification-dialog";
 
 type AmenityApprovalPanelProps = {
   county?: string;
@@ -61,13 +63,11 @@ export function AmenityApprovalPanel({
   const [selectedSource, setSelectedSource] = useState<AmenitySource | "all">(
     "all"
   );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedAmenities, setSelectedAmenities] = useState<Set<string>>(
     new Set()
   );
-  const [searchQuery, setSearchQuery] = useState("");
-  const [discoveryFilter, setDiscoveryFilter] = useState<
-    "all" | "auto" | "manual"
-  >("all");
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingAmenity, setRejectingAmenity] = useState<Amenity | null>(
     null
@@ -77,16 +77,30 @@ export function AmenityApprovalPanel({
   const [verifyingAmenity, setVerifyingAmenity] = useState<Amenity | null>(
     null
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
-  // Queries
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      setCurrentPage(1); // Reset to first page on search
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Queries with server-side filtering and pagination
   const {
     data: pendingData,
     isLoading,
     refetch,
   } = usePendingAmenities({
+    name: debouncedSearchQuery || undefined,
     county,
     source: selectedSource === "all" ? undefined : selectedSource,
-    limit: 50,
+    limit: itemsPerPage,
+    skip: (currentPage - 1) * itemsPerPage,
   });
 
   const { data: approvalStats } = useApprovalStats(county);
@@ -97,22 +111,17 @@ export function AmenityApprovalPanel({
   const rejectMutation = useRejectAmenity();
   const bulkApproveMutation = useBulkApproveAmenities();
 
+  // Server-side paginated data
   const amenities = pendingData?.amenities || [];
-  const filteredAmenities = amenities.filter((amenity) => {
-    // Search filter
-    const matchesSearch =
-      !searchQuery ||
-      amenity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      amenity.type.toLowerCase().includes(searchQuery.toLowerCase());
+  const totalCount = pendingData?.pagination?.total || 0;
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
-    // Discovery filter
-    const matchesDiscovery =
-      discoveryFilter === "all" ||
-      (discoveryFilter === "auto" && amenity.isAutoDiscovered) ||
-      (discoveryFilter === "manual" && !amenity.isAutoDiscovered);
-
-    return matchesSearch && matchesDiscovery;
-  });
+  // Reset to page 1 when filters change
+  const resetPagination = () => {
+    setCurrentPage(1);
+  };
 
   const handleApprove = async (amenityId: string) => {
     try {
@@ -172,10 +181,10 @@ export function AmenityApprovalPanel({
   };
 
   const handleSelectAll = () => {
-    if (selectedAmenities.size === filteredAmenities.length) {
+    if (selectedAmenities.size === amenities.length) {
       setSelectedAmenities(new Set());
     } else {
-      setSelectedAmenities(new Set(filteredAmenities.map((a) => a._id)));
+      setSelectedAmenities(new Set(amenities.map((a) => a._id)));
     }
   };
 
@@ -269,18 +278,20 @@ export function AmenityApprovalPanel({
       )}
 
       {/* Filters and Search */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Filters</CardTitle>
+      <Card className="border-border/50 shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base">Filters</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 md:flex-row">
-            <div className="flex-1">
-              <Label htmlFor="search">Search Amenities</Label>
-              <div className="relative">
-                <Search className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <Label className="font-medium text-sm" htmlFor="search">
+                Search Amenities
+              </Label>
+              <div className="relative mt-1.5">
+                <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  className="pl-10"
+                  className="h-9 pl-9"
                   id="search"
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by name or type..."
@@ -288,43 +299,30 @@ export function AmenityApprovalPanel({
                 />
               </div>
             </div>
-            <div className="w-full md:w-48">
-              <Label htmlFor="discovery">Discovery Type</Label>
+            <div>
+              <Label className="font-medium text-sm" htmlFor="source">
+                Source
+              </Label>
               <Select
-                onValueChange={(value) => setDiscoveryFilter(value as any)}
-                value={discoveryFilter}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="auto">Auto-Discovered</SelectItem>
-                  <SelectItem value="manual">Manual Entry</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-full md:w-48">
-              <Label htmlFor="source">Source</Label>
-              <Select
-                onValueChange={(value) => setSelectedSource(value as any)}
+                onValueChange={(value) => {
+                  setSelectedSource(value as typeof selectedSource);
+                  resetPagination();
+                }}
                 value={selectedSource}
               >
-                <SelectTrigger>
+                <SelectTrigger className="mt-1.5 h-9">
                   <SelectValue placeholder="All sources" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Sources</SelectItem>
-                  <SelectItem value={"auto_discovered_google"}>
+                  <SelectItem value="auto_discovered_google">
                     Google Places
                   </SelectItem>
-                  <SelectItem value={"auto_discovered_osm"}>
+                  <SelectItem value="auto_discovered_osm">
                     OpenStreetMap
                   </SelectItem>
-                  <SelectItem value={"user_submitted"}>
-                    User Submitted
-                  </SelectItem>
-                  <SelectItem value={"manual"}>Manual Entry</SelectItem>
+                  <SelectItem value="user_submitted">User Submitted</SelectItem>
+                  <SelectItem value="manual">Manual Entry</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -333,33 +331,37 @@ export function AmenityApprovalPanel({
       </Card>
 
       {/* Bulk Actions */}
-      {filteredAmenities.length > 0 && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Checkbox
-                  checked={selectedAmenities.size === filteredAmenities.length}
-                  onCheckedChange={handleSelectAll}
-                />
-                <span className="text-sm">
-                  {selectedAmenities.size} of {filteredAmenities.length}{" "}
-                  selected
-                </span>
-              </div>
-              {selectedAmenities.size > 0 && (
-                <Button
-                  className="bg-green-600 hover:bg-green-700"
-                  disabled={bulkApproveMutation.isPending}
-                  onClick={handleBulkApprove}
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Approve Selected ({selectedAmenities.size})
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      {amenities.length > 0 && (
+        <div className="flex items-center justify-between rounded-lg border border-border/50 bg-card p-4 shadow-sm">
+          <div className="flex items-center space-x-3">
+            <Checkbox
+              checked={
+                selectedAmenities.size === amenities.length &&
+                amenities.length > 0
+              }
+              onCheckedChange={handleSelectAll}
+            />
+            <span className="text-muted-foreground text-sm">
+              <span className="font-medium text-foreground">
+                {selectedAmenities.size}
+              </span>{" "}
+              of{" "}
+              <span className="font-medium text-foreground">{totalCount}</span>{" "}
+              selected
+            </span>
+          </div>
+          {selectedAmenities.size > 0 && (
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              disabled={bulkApproveMutation.isPending}
+              onClick={handleBulkApprove}
+              size="sm"
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Approve Selected ({selectedAmenities.size})
+            </Button>
+          )}
+        </div>
       )}
 
       {/* Amenities List */}
@@ -381,33 +383,126 @@ export function AmenityApprovalPanel({
               </Card>
             ))}
           </div>
-        ) : filteredAmenities.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredAmenities.map((amenity) => (
-              <div className="relative" key={amenity._id}>
-                <Checkbox
-                  checked={selectedAmenities.has(amenity._id)}
-                  className="absolute top-2 left-2 z-10"
-                  onCheckedChange={() => handleSelectAmenity(amenity._id)}
-                />
-                <AmenityCard
-                  amenity={amenity}
-                  className="ml-6"
-                  onApprove={handleApprove}
-                  onReject={() => handleReject(amenity)}
-                  onView={handleVerify}
-                  showActions={true}
-                  showApprovalStatus={true}
-                />
+        ) : amenities.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {amenities.map((amenity) => (
+                <div className="relative" key={amenity._id}>
+                  <Checkbox
+                    checked={selectedAmenities.has(amenity._id)}
+                    className="absolute top-3 left-3 z-10 bg-background/80 backdrop-blur-sm"
+                    onCheckedChange={() => handleSelectAmenity(amenity._id)}
+                  />
+                  <AmenityCard
+                    amenity={amenity}
+                    className="transition-shadow hover:shadow-md"
+                    onApprove={handleApprove}
+                    onReject={() => handleReject(amenity)}
+                    onView={handleVerify}
+                    showActions={true}
+                    showApprovalStatus={true}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between rounded-lg border border-border/50 bg-card p-4 shadow-sm">
+                <div className="text-muted-foreground text-sm">
+                  Showing{" "}
+                  <span className="font-medium text-foreground">
+                    {startIndex + 1}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-medium text-foreground">
+                    {endIndex}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-medium text-foreground">
+                    {totalCount}
+                  </span>{" "}
+                  amenities
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    disabled={currentPage === 1}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
+                    size="sm"
+                    variant="outline"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter((page) => {
+                        // Show first page, last page, current page, and pages around current
+                        return (
+                          page === 1 ||
+                          page === totalPages ||
+                          (page >= currentPage - 1 && page <= currentPage + 1)
+                        );
+                      })
+                      .map((page, index, array) => {
+                        // Add ellipsis between non-consecutive pages
+                        const prevPage = array[index - 1];
+                        const showEllipsisBefore =
+                          index > 0 &&
+                          prevPage !== undefined &&
+                          page - prevPage > 1;
+                        return (
+                          <div key={index.toString()}>
+                            {showEllipsisBefore && (
+                              <span
+                                className="px-2 text-muted-foreground"
+                                key={`ellipsis-${page}`}
+                              >
+                                ...
+                              </span>
+                            )}
+                            <Button
+                              className={
+                                currentPage === page
+                                  ? "bg-primary text-primary-foreground"
+                                  : ""
+                              }
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              size="sm"
+                              variant={
+                                currentPage === page ? "default" : "outline"
+                              }
+                            >
+                              {page}
+                            </Button>
+                          </div>
+                        );
+                      })}
+                  </div>
+                  <Button
+                    disabled={currentPage === totalPages}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                    }
+                    size="sm"
+                    variant="outline"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         ) : (
-          <Alert>
+          <Alert className="border-border/50">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               No pending amenities found.
-              {searchQuery && " Try adjusting your search or filters."}
+              {debouncedSearchQuery && " Try adjusting your search or filters."}
             </AlertDescription>
           </Alert>
         )}

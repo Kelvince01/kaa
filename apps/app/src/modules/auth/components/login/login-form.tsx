@@ -23,6 +23,7 @@ import z from "zod";
 import { useLogin } from "../../auth.queries";
 import { type LoginFormValues, loginSchema } from "../../auth.schema";
 import { OAuthConnectButton } from "../../oauth";
+import { PasskeyLoginButton } from "../../passkey";
 
 // import { PasskeyLoginButton } from "../../passkey";
 
@@ -137,17 +138,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ redirectTo = "/" }) => {
             {/* Passkey Button - Shows when email is valid */}
             {watchedEmail && z.email().safeParse(watchedEmail).success && (
               <>
-                {/*<PasskeyLoginButton*/}
-                {/*  email={watchedEmail}*/}
-                {/*  fullWidth*/}
-                {/*  onSuccess={() => {*/}
-                {/*    console.log("here");*/}
-                {/*    const returnUrl = sessionStorage.getItem("returnUrl");*/}
-                {/*    sessionStorage.removeItem("returnUrl");*/}
-                {/*    window.location.href = returnUrl || redirectTo;*/}
-                {/*  }}*/}
-                {/*  variant="secondary"*/}
-                {/*/>*/}
+                <PasskeyLoginButton
+                  email={watchedEmail}
+                  fullWidth
+                  onSuccess={() => {
+                    console.log("here");
+                    const returnUrl = sessionStorage.getItem("returnUrl");
+                    sessionStorage.removeItem("returnUrl");
+                    window.location.href = returnUrl || redirectTo;
+                  }}
+                  variant="secondary"
+                />
 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">

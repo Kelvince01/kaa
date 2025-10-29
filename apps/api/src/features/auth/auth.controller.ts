@@ -59,7 +59,6 @@ import { meController } from "./me.controller";
 import { accountRecoveryController, mfaController } from "./mfa.controller";
 import { oauthController } from "./oauth.controller";
 import { passkeyController } from "./passkey.controller";
-import { passkeyV2Controller } from "./passkey-v2.controller";
 import { authBackgroundJobs } from "./services/auth-background.service";
 import { authCacheService } from "./services/auth-cache.service";
 import { authMetrics } from "./services/auth-metrics.service";
@@ -1573,5 +1572,4 @@ export const authController = new Elysia()
       .use(mfaController)
       .use(accountRecoveryController)
       .use(passkeyController)
-      .use(passkeyV2Controller)
   );

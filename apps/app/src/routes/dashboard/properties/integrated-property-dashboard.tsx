@@ -3,10 +3,10 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useQueryPerformance } from "@/lib/performance/query-optimization";
-import { PropertyContractorsList } from "./PropertyContractorsList";
-import { PropertyInsurancePanel } from "./PropertyInsurancePanel";
-import { PropertyScheduleCalendar } from "./PropertyScheduleCalendar";
-import { PropertyValuationDashboard } from "./PropertyValuationDashboard";
+import { PropertyContractorsList } from "./property-contractors-list";
+import { PropertyInsurancePanel } from "./property-insurance-panel";
+import { PropertyScheduleCalendar } from "./property-schedule-calendar";
+import { PropertyValuationDashboard } from "./property-valuation-dashboard";
 
 type IntegratedPropertyDashboardProps = {
   propertyId: string;

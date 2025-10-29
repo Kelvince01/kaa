@@ -1,7 +1,6 @@
 export * from "./accounts/api-key.service";
 export * from "./accounts/auth.service";
 export * as landlordService from "./accounts/landlord.service";
-export * as passkeyV2Service from "./accounts/passkey-v2.service";
 export * as tenantService from "./accounts/tenant.service";
 export * from "./accounts/tenant-screening.service";
 export * as userService from "./accounts/user.service";

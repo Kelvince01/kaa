@@ -232,6 +232,8 @@ export class AmenityService {
    */
   static async getPendingAmenities(
     options: {
+      name?: string;
+      type?: string;
       county?: string;
       source?: AmenitySource;
       limit?: number;

@@ -4,10 +4,16 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import "@/modules/files/upload/react-pdf.css";
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+//   "pdfjs-dist/build/pdf.worker.min.mjs",
+//   import.meta.url
+// ).toString();
+
+// const pdflib = require("pdfjs-dist/build/pdf.js");
+// const pdfjsWorker = require("pdfjs-dist/build/pdf.worker.js");
+// pdflib.GlobalWorkerOptions.workerPort = new pdfjsWorker();
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const options = { cMapUrl: "/cmaps/" };
 

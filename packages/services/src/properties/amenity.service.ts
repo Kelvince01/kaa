@@ -940,6 +940,8 @@ export class AmenityService {
    */
   static async getPendingAmenities(
     options: {
+      name?: string;
+      type?: string;
       county?: string;
       source?: AmenitySource;
       limit?: number;
@@ -951,12 +953,20 @@ export class AmenityService {
     hasMore: boolean;
   }> {
     try {
-      const { county, source, limit = 20, skip = 0 } = options;
+      const { name, type, county, source, limit = 20, skip = 0 } = options;
 
       const filter: FilterQuery<IAmenity> = {
         isActive: true,
         approvalStatus: AmenityApprovalStatus.PENDING,
       };
+
+      if (name) {
+        filter.name = name;
+      }
+
+      if (type) {
+        filter.type = type;
+      }
 
       if (county) {
         filter["location.county"] = county;
@@ -983,7 +993,7 @@ export class AmenityService {
         source,
       });
 
-      return { amenities, total, hasMore };
+      return { amenities: amenities as any, total, hasMore };
     } catch (error) {
       logger.error("Error getting pending amenities:", error);
       throw new Error("Failed to get pending amenities");
@@ -1299,7 +1309,7 @@ export class AmenityService {
         }
       );
 
-      return { amenities, total, hasMore };
+      return { amenities: amenities as any, total, hasMore };
     } catch (error) {
       logger.error("Error getting amenities by discovery status:", error);
       throw new Error("Failed to get amenities by discovery status");

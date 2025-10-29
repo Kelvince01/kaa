@@ -349,7 +349,7 @@ export const useRefreshToken = () => {
       // But don't logout if this fails - the user might still be valid
       try {
         const { meService } = await import("../me/me.service");
-        const userData = await meService.getCurrentUser();
+        const userData = await meService.fetchUserContext();
         if (userData?.user) {
           setUser(userData.user as any);
         } else {

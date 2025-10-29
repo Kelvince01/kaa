@@ -24,7 +24,7 @@ import {
   usePropertyAmenities,
 } from "../amenity.queries";
 import { AmenityCategory } from "../amenity.type";
-import { AmenityCard } from "./AmenityCard";
+import { AmenityCard } from "./amenity-card";
 
 type PropertyAmenitiesViewProps = {
   propertyId: string;

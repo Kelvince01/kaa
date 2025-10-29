@@ -96,7 +96,7 @@ function AdminLayoutContainer({ children }: AdminLayoutProps) {
     <SidebarProvider>
       <Sidebar collapsible="icon">
         <SidebarHeader>
-          <OrgSwitcher organizations={adminSidebarItems.organizations} />
+          <OrgSwitcher />
         </SidebarHeader>
         <SidebarContent>
           <NavMain items={adminSidebarItems.navMain} />

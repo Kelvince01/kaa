@@ -1,15 +1,43 @@
 import jwt from "@elysiajs/jwt";
-import { Passkey, User } from "@kaa/models";
+import { User } from "@kaa/models";
 import { UserStatus } from "@kaa/models/types";
-import {
-  memberService,
-  passkeyV2Service,
-  roleService,
-  userService,
-} from "@kaa/services";
+import { memberService, roleService } from "@kaa/services";
 import { Elysia, sse, t } from "elysia";
 import type mongoose from "mongoose";
 import { authPlugin } from "./auth.plugin";
+
+export type UserRole = {
+  id: string;
+  name: string;
+  isPrimary: boolean;
+};
+
+export type UserMember = {
+  id: string;
+  type?: string;
+  name: string;
+  logo?: string;
+  plan: string;
+};
+
+export type UserOrganization = {
+  id: string;
+  name: string;
+  logo?: string;
+  type: string;
+};
+
+export type UserProfile = {
+  type: string; // 'landlord' | 'tenant' | 'admin'
+  data: any; // Role-specific profile data (ILandlord | ITenant)
+};
+
+type UserContext = {
+  role: UserRole;
+  member: UserMember;
+  organization: UserOrganization;
+  profile: UserProfile;
+};
 
 // a simple in‑memory map to keep a reference to each client’s generator
 const clients = new Map<string, AsyncGenerator<any, void, unknown>>();
@@ -42,13 +70,55 @@ export const meController = new Elysia({
         // User is attached to req by the auth middleware
         const userProfile = currentUser.getPublicProfile();
 
-        // Get user role
+        // Get user role with populated role details
         const userRole = await roleService.getUserRoleBy({
           userId: userProfile._id?.toString() ?? "",
         });
+
+        // Get member with populated organization
         const member = await memberService.getMemberBy({
           user: userProfile._id?.toString() ?? "",
         });
+
+        const context: UserContext | null = null;
+        let organization: any | null = null;
+        let profile: any | null = null;
+
+        // Fetch organization if member exists
+        if (member?.organization) {
+          const { Organization } = await import("@kaa/models");
+          organization = await Organization.findById(
+            member.organization
+          ).lean();
+        }
+
+        // Fetch role-specific profile based on role name
+        if (userRole?.roleId) {
+          const roleName =
+            typeof userRole.roleId === "string"
+              ? userRole.roleId
+              : (userRole.roleId as any).name;
+
+          if (roleName === "landlord") {
+            const { Landlord } = await import("@kaa/models");
+            const landlord = await Landlord.findOne({ user: user.id })
+              .populate("organizationId")
+              .lean();
+            profile = landlord;
+            // Use landlord's organization if it exists
+            if (landlord?.organizationId && !organization) {
+              organization = landlord.organizationId;
+            }
+          } else if (roleName === "tenant") {
+            const { Tenant } = await import("@kaa/models");
+            const tenant = await Tenant.findOne({ user: user.id })
+              .populate("property")
+              .lean();
+            profile = tenant;
+            // Tenants don't have organizations
+            organization = null;
+          }
+        }
 
         set.status = 200;
         return {
@@ -77,6 +147,38 @@ export const meController = new Elysia({
             isVerified: !!userProfile.verification?.emailVerifiedAt,
             createdAt: (userProfile.createdAt as Date).toISOString(),
             updatedAt: (userProfile.updatedAt as Date).toISOString(),
+          },
+          context: {
+            role: userRole
+              ? {
+                  id: (userRole._id as mongoose.Types.ObjectId)?.toString(),
+                  name: (userRole.roleId as any)?.name ?? "",
+                  isPrimary: userRole.isPrimary ?? true,
+                }
+              : null,
+            member: member
+              ? {
+                  id: (member._id as mongoose.Types.ObjectId)?.toString(),
+                  type: member.type,
+                  name: member.name,
+                  logo: member.logo,
+                  plan: (member.plan as any)?.name ?? "basic",
+                }
+              : null,
+            organization: organization
+              ? {
+                  id: (organization._id as mongoose.Types.ObjectId)?.toString(),
+                  name: (organization as any).name,
+                  logo: (organization as any).logo,
+                  type: (organization as any).type,
+                }
+              : null,
+            profile: profile
+              ? {
+                  type: (userRole?.roleId as any)?.name ?? "",
+                  data: profile,
+                }
+              : null,
           },
         };
       } catch (error) {
@@ -120,6 +222,48 @@ export const meController = new Elysia({
             createdAt: t.String(),
             updatedAt: t.String(),
           }),
+          context: t.Optional(
+            t.Object({
+              role: t.Optional(
+                t.Nullable(
+                  t.Object({
+                    id: t.String(),
+                    name: t.String(),
+                    isPrimary: t.Boolean(),
+                  })
+                )
+              ),
+              member: t.Optional(
+                t.Nullable(
+                  t.Object({
+                    id: t.String(),
+                    type: t.Optional(t.String()),
+                    name: t.String(),
+                    logo: t.Optional(t.String()),
+                    plan: t.String(),
+                  })
+                )
+              ),
+              organization: t.Optional(
+                t.Nullable(
+                  t.Object({
+                    id: t.String(),
+                    name: t.String(),
+                    logo: t.Optional(t.String()),
+                    type: t.String(),
+                  })
+                )
+              ),
+              profile: t.Optional(
+                t.Nullable(
+                  t.Object({
+                    type: t.String(),
+                    data: t.Any(),
+                  })
+                )
+              ),
+            })
+          ),
         }),
         404: t.Object({
           status: t.Literal("error"),
@@ -186,80 +330,6 @@ export const meController = new Elysia({
         summary: "Get upload token",
         description:
           "This endpoint is used to get an upload token for a user or organization. The token can be used to upload public or private images/files to your S3 bucket using imado.",
-      },
-    }
-  )
-  .post(
-    "/passkey",
-    async ({ set, body, cookie: { passkey_challenge } }) => {
-      try {
-        const { userEmail, attestationObject, clientDataJSON } = body;
-
-        const userData = await userService.getUserBy({
-          "contact.email": userEmail,
-        });
-
-        const challengeFromCookie = passkey_challenge.value as string;
-        if (!challengeFromCookie) {
-          set.status = 401;
-          return {
-            status: "error",
-            message: "Invalid credentials",
-          };
-        }
-
-        const { credentialId, publicKey } =
-          passkeyV2Service.parseAndValidatePasskeyAttestation(
-            clientDataJSON,
-            attestationObject,
-            challengeFromCookie
-          );
-
-        await Passkey.create({
-          userId: userData?._id as mongoose.Types.ObjectId,
-          credentialId,
-          publicKey,
-          counter: 0,
-        });
-
-        set.status = 200;
-        return {
-          status: "success",
-          message: "Passkey created successfully",
-        };
-      } catch (error) {
-        set.status = 500;
-        return {
-          status: "error",
-          message: "Failed to create passkey",
-        };
-      }
-    },
-    {
-      body: t.Object({
-        userEmail: t.String(),
-        attestationObject: t.String(),
-        clientDataJSON: t.String(),
-      }),
-      response: {
-        200: t.Object({
-          status: t.Literal("success"),
-          message: t.String(),
-        }),
-        401: t.Object({
-          status: t.Literal("error"),
-          message: t.String(),
-        }),
-        500: t.Object({
-          status: t.Literal("error"),
-          message: t.String(),
-        }),
-      },
-      detail: {
-        tags: ["me"],
-        summary: "Create passkey",
-        description:
-          "The server associates the public key and the credential ID with the user for future authentication flows and checks the validity of the operation by verifying the signed challenge with the public key.",
       },
     }
   )

@@ -4,7 +4,6 @@ import {
   Building,
   Calendar,
   DollarSign,
-  GalleryVerticalEnd,
   Home,
   Settings,
   Shield,
@@ -14,13 +13,6 @@ import {
 } from "lucide-react";
 
 export const adminSidebarItems = {
-  organizations: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-  ],
   navMain: [
     { title: "Dashboard", url: "/admin", icon: Home },
     { title: "Organizations", url: "/admin/organizations", icon: Briefcase },

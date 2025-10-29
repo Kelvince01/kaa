@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query";
-import { t } from "i18next";
+import { useTranslations } from "next-intl";
 import { type DialogT, dialog } from "@/components/common/dialoger/state";
 import { toaster } from "@/components/common/toaster";
 import AttachmentsCarousel from "@/modules/files/upload/carousel";
@@ -17,8 +17,9 @@ export const openAttachmentDialog = (
   saveInSearchParams = false,
   dialogOptions?: Omit<DialogT, "id">
 ) => {
+  const t = useTranslations("common");
   if (!onlineManager.isOnline())
-    return toaster(t("common.action.offline.text"), "warning");
+    return toaster(t("action.offline.text"), "warning");
 
   const { removeCallback } = dialogOptions || {};
   dialog(

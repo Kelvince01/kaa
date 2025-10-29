@@ -1,14 +1,11 @@
 import config from "@kaa/config/api";
 import { Passkey, User } from "@kaa/models";
-import type { IOTP, IUser } from "@kaa/models/types";
 import {
   base64ToUint8Array,
   getPasskeyRpId,
   uint8ArrayToBase64,
 } from "@kaa/utils";
 import {
-  // AuthenticationResponseJSON,
-  // RegistrationResponseJSON,
   generateAuthenticationOptions,
   generateRegistrationOptions,
   verifyAuthenticationResponse,
@@ -17,39 +14,7 @@ import {
 import Elysia, { t } from "elysia";
 import type mongoose from "mongoose";
 import * as kvService from "~/services/kv.service";
-
-export type Locale = "en" | "sw";
-
-export type GetAuthorizeReqDto = {
-  clientId: string;
-  redirectUri: string;
-  responseType: string;
-  state: string;
-  codeChallenge: string;
-  codeChallengeMethod: string;
-  authorizeMethod?: string | undefined;
-  scopes: string[];
-  locale: Locale;
-  policy?: string | undefined;
-  org?: string | undefined;
-};
-
-export type AuthCodeBody = {
-  request: GetAuthorizeReqDto;
-  user: IUser;
-  otpCode: IOTP;
-  appId: string;
-  appName: string;
-  isFullyAuthorized?: boolean;
-};
-
-export type EnrollOptions = {
-  rpId: string;
-  userId: string;
-  userEmail: string;
-  userDisplayName: string;
-  challenge: string;
-};
+import type { EnrollOptions } from "./auth.type";
 
 export const passkeyController = new Elysia().group("passkey", (app) =>
   app
@@ -168,7 +133,7 @@ export const passkeyController = new Elysia().group("passkey", (app) =>
         const { email } = params;
 
         const user = await User.findOne({
-          email,
+          "contact.email": email.toLowerCase(),
           deletedAt: null,
         });
 
@@ -334,7 +299,7 @@ export const passkeyController = new Elysia().group("passkey", (app) =>
         const { email } = body;
 
         const user = await User.findOne({
-          email,
+          "contact.email": email.toLowerCase(),
           deletedAt: null,
         });
 
@@ -501,7 +466,7 @@ export const passkeyController = new Elysia().group("passkey", (app) =>
         }
 
         const user = await User.findOne({
-          email,
+          "contact.email": email.toLowerCase(),
           deletedAt: null,
         });
 
@@ -540,8 +505,18 @@ export const passkeyController = new Elysia().group("passkey", (app) =>
         >;
         try {
           verification = await verifyAuthenticationResponse({
-            // TODO: Fix this
-            response: passkeyInfo as any,
+            response: {
+              id: passkeyInfo.id,
+              rawId: passkeyInfo.rawId,
+              type: passkeyInfo.type as "public-key",
+              response: {
+                clientDataJSON: passkeyInfo.clientDataJSON,
+                authenticatorData: passkeyInfo.attestationObject,
+                signature: "",
+                // userHandle: passkeyInfo.userHandle,
+              },
+              clientExtensionResults: {},
+            },
             expectedChallenge: challenge,
             expectedOrigin: authServerUrl,
             expectedRPID: getPasskeyRpId(),
