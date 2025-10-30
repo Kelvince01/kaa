@@ -357,4 +357,4 @@ class AirtelMoneyService extends EventEmitter {
   }
 }
 
-export const airtelMoneyService = new AirtelMoneyService();
+export const airtelMoneyService_v1 = new AirtelMoneyService();

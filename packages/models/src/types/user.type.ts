@@ -42,6 +42,7 @@ export enum UserRole {
   LANDLORD = "landlord",
   AGENT = "agent",
   ADMIN = "admin",
+  SUPER_ADMIN = "super_admin",
 }
 
 export type Jwt = {

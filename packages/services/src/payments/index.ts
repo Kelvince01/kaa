@@ -1,4 +1,5 @@
-export * from "./airtel-money.service";
+export * from "./airtel-money/airtel-money.service";
+export * from "./airtel-money-v1.service";
 export * from "./mpesa/mpesa.service";
 export * from "./multi-bank.gateway";
 export * from "./payment.receipt-generator";
