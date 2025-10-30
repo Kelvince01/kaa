@@ -1,5 +1,3 @@
-import type { PartialBlock } from "@blocknote/core";
-import { type FilePanelProps, useBlockNoteEditor } from "@blocknote/react";
 import {
   Dialog,
   DialogContent,
@@ -34,31 +32,27 @@ const basicBlockTypes = {
 };
 
 type UppyFilePanelProps = {
+  fileType: string;
+  onOpenChange: (open: boolean) => void;
   onCreateCallback?: (result: UploadedUppyFile[]) => void;
 };
 
-const UppyFilePanel: React.FC<UppyFilePanelProps & FilePanelProps> = ({
+const UppyFilePanel: React.FC<UppyFilePanelProps> = ({
+  fileType,
+  onOpenChange,
   onCreateCallback,
-  ...props
 }) => {
   const t = useTranslations();
-  const { block } = props;
   const { isOnline } = useOnlineManager();
 
-  const editor = useBlockNoteEditor();
-  const type = (block.type as keyof typeof basicBlockTypes) || "file";
+  const type = (fileType as keyof typeof basicBlockTypes) || "file";
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: we want to close the menu only once
   useEffect(() => {
     if (isOnline) return;
-    editor.filePanel?.closeMenu();
   }, [isOnline]);
 
   return (
-    <Dialog
-      defaultOpen={isOnline}
-      onOpenChange={() => editor.filePanel?.closeMenu()}
-    >
+    <Dialog defaultOpen={isOnline} onOpenChange={onOpenChange}>
       <DialogContent className="md:max-w-xl">
         <DialogHeader>
           <DialogTitle className="h-6">
@@ -70,15 +64,6 @@ const UppyFilePanel: React.FC<UppyFilePanelProps & FilePanelProps> = ({
         </DialogHeader>
         <UploadUppy
           callback={(result) => {
-            for (const res of result) {
-              const updateData: PartialBlock = {
-                props: {
-                  name: res.file.name,
-                  url: res.url,
-                },
-              };
-              editor.updateBlock(block, updateData);
-            }
             onCreateCallback?.(result);
           }}
           imageMode="attachment"

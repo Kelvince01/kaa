@@ -108,7 +108,7 @@ export function ExportOptions({
         const optionIndex = Number.parseInt(keyPressed || "0", 10) - 1;
 
         if (optionIndex >= 0 && optionIndex < options.length) {
-          setSelectedOption(options[optionIndex].id);
+          setSelectedOption(options[optionIndex]?.id ?? "");
         }
       }
     },

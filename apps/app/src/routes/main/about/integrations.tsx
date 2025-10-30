@@ -24,10 +24,10 @@ const integrations: Integrations[] = [
   },
   { name: "Paddle", country: "GB", url: "paddle.com", logo: "paddle.svg" },
   {
-    name: "BlockNote",
+    name: "Tiptap",
     country: "NL",
-    url: "blocknotejs.org",
-    logo: "blocknote.svg",
+    url: "tiptap.org",
+    logo: "tiptap.svg",
   },
   { name: "Novu", country: "IL", url: "novu.co", logo: "novu.svg" },
   { name: "Gleap", country: "AT", url: "gleap.io", logo: "gleap.svg" },

@@ -1,23 +1,56 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@kaa/ui/components/form";
+import { Input } from "@kaa/ui/components/input";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+const testFormSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+});
+
+type TestForm = z.infer<typeof testFormSchema>;
 
 export default function TestPage() {
   const [value, setValue] = useState("");
   const [blocknoteId] = useState("test");
 
+  const form = useForm<TestForm>({
+    resolver: zodResolver(testFormSchema),
+  });
+
+  const onSubmit = (values: TestForm) => {
+    console.log(values);
+  };
+
   return (
-    // <BlockNote
-    //   allowedBlockTypes={["emoji", "heading", "paragraph", "codeBlock"]}
-    //   allowedFileBlockTypes={["image", "file"]}
-    //   className="min-h-20 rounded-md border p-3 pr-6 pl-10"
-    //   defaultValue={value}
-    //   filePanel={(props) => <UppyFilePanel {...props} />}
-    //   id={blocknoteId} // Restrict to image and file uploads
-    //   onChange={(value) => setValue(value)} // Use only specific block types
-    //   updateData={(html) => setValue(html)}
-    // />
     <div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
+
       <button
         onClick={() => {
           console.log("Upload");
