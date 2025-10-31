@@ -19,7 +19,16 @@ import {
   updateConversationRequestSchema,
 } from "./message.schema";
 
-export const messageController = new Elysia({ prefix: "/messages" })
+export const messageController = new Elysia({
+  prefix: "/messages",
+  detail: {
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+  },
+})
   .use(authPlugin)
 
   // ==================== CONVERSATION ENDPOINTS ====================
@@ -255,7 +264,7 @@ export const messageController = new Elysia({ prefix: "/messages" })
     "/:messageId/read",
     async ({ params, user }) => {
       await messageService.markMessageAsRead(params.messageId, user.id);
-      return { success: true, messageId: params.messageId };
+      return { status: "success", messageId: params.messageId };
     },
     {
       params: t.Object({
@@ -265,6 +274,54 @@ export const messageController = new Elysia({ prefix: "/messages" })
         tags: ["messages"],
         summary: "Mark message as read",
         description: "Mark a message as read by current user",
+      },
+    }
+  )
+
+  /**
+   * Get unread message count for the authenticated user
+   */
+  .get(
+    "/unread-count",
+    async ({ set, user }) => {
+      try {
+        const totalUnread = await messageService.getUnreadCount(user.id);
+
+        set.status = 200;
+        return {
+          status: "success",
+          data: { unreadCount: totalUnread },
+          message: "Unread message count retrieved successfully",
+        };
+      } catch (error: unknown) {
+        set.status = 500;
+        return {
+          status: "error",
+          message: "Failed to get unread message count",
+          error: (error as Error).message,
+        };
+      }
+    },
+    {
+      response: {
+        200: t.Object({
+          status: t.Literal("success"),
+          data: t.Object({
+            unreadCount: t.Number(),
+          }),
+          message: t.String(),
+        }),
+        500: t.Object({
+          status: t.Literal("error"),
+          message: t.String(),
+          error: t.String(),
+        }),
+      },
+      detail: {
+        tags: ["messages"],
+        summary: "Get unread message count",
+        description:
+          "Get total unread message count for the authenticated user",
       },
     }
   )
@@ -306,7 +363,7 @@ export const messageController = new Elysia({ prefix: "/messages" })
     "/:messageId",
     async ({ params, user }) => {
       await messageService.deleteMessage(params.messageId, user.id);
-      return { success: true, messageId: params.messageId };
+      return { status: "success", messageId: params.messageId };
     },
     {
       params: t.Object({

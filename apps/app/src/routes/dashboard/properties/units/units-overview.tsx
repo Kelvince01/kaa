@@ -180,9 +180,6 @@ export function UnitsOverview({
               <CardContent>
                 <div className="space-y-3">
                   {urgentUnits.slice(0, 5).map((unit) => (
-                    // biome-ignore lint/a11y/noStaticElementInteractions: ignore
-                    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: ignore
-                    // biome-ignore lint/a11y/useKeyWithClickEvents: ignore
                     <div
                       className="flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:bg-muted/50"
                       key={unit._id}
@@ -220,9 +217,6 @@ export function UnitsOverview({
             <CardContent>
               <div className="space-y-3">
                 {units.slice(0, 10).map((unit) => (
-                  // biome-ignore lint/a11y/noStaticElementInteractions: ignore
-                  // biome-ignore lint/a11y/noNoninteractiveElementInteractions: ignore
-                  // biome-ignore lint/a11y/useKeyWithClickEvents: ignore
                   <div
                     className="flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:bg-muted/50"
                     key={unit._id}

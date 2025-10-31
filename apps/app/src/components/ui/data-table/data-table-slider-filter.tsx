@@ -135,7 +135,6 @@ export function DataTableSliderFilter<TData>({
       <PopoverTrigger asChild>
         <Button className="border-dashed" size="sm" variant="outline">
           {columnFilterValue ? (
-            // biome-ignore lint/a11y/useKeyWithClickEvents: false positive
             // biome-ignore lint/a11y/useSemanticElements: false positive
             <div
               aria-label={`Clear ${title} filter`}

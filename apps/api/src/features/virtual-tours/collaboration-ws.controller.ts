@@ -35,9 +35,9 @@ export const collaborationWebSocketController = new Elysia()
 
     open(ws) {
       try {
-        const sessionId = ws.data.params.sessionId;
-        const userId = ws.data.user?.id;
-        const role = ws.data.query?.role || "viewer";
+        const sessionId = (ws.data.params as any).sessionId;
+        const userId = (ws.data as any).user?.id;
+        const role = (ws.data as any).query?.role || "viewer";
 
         if (!(sessionId && userId)) {
           ws.send(
@@ -52,7 +52,7 @@ export const collaborationWebSocketController = new Elysia()
 
         // Register participant with collaboration service
         const participantId = collaborationService.handleConnection(
-          ws as any,
+          ws,
           sessionId,
           userId,
           role

@@ -5,7 +5,8 @@
 
 import crypto from "node:crypto";
 import { EventEmitter } from "node:events";
-import type { ServerWebSocket } from "bun";
+
+// import type { ServerWebSocket } from "bun";
 
 type LiveTourSession = {
   id: string;
@@ -72,7 +73,7 @@ type TourChange = {
 
 type WebSocketConnection = {
   participantId: string;
-  ws: ServerWebSocket<any>;
+  ws: any; // ServerWebSocket<any>;
   sessionId: string;
   userId: string;
   joinedAt: Date;
@@ -132,7 +133,7 @@ export class CollaborationService extends EventEmitter {
    * Handle WebSocket connection
    */
   handleConnection(
-    ws: ServerWebSocket<any>,
+    ws: any, // ServerWebSocket<any>,
     sessionId: string,
     userId: string,
     role: "host" | "viewer" | "editor"

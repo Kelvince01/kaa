@@ -77,7 +77,6 @@ export function DataTableFacetedFilter<TData, TValue>({
       <PopoverTrigger asChild>
         <Button className="border-dashed" size="sm" variant="outline">
           {selectedValues?.size > 0 ? (
-            // biome-ignore lint/a11y/useKeyWithClickEvents: false positive
             // biome-ignore lint/a11y/useSemanticElements: false positive
             <div
               aria-label={`Clear ${title} filter`}
@@ -130,12 +129,12 @@ export function DataTableFacetedFilter<TData, TValue>({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[12.5rem] p-0">
+      <PopoverContent align="start" className="w-50 p-0">
         <Command>
           <CommandInput placeholder={title} value={""} />
           <CommandList className="max-h-full">
             <CommandEmpty>No results found.</CommandEmpty>
-            <CommandGroup className="max-h-[18.75rem] overflow-y-auto overflow-x-hidden">
+            <CommandGroup className="max-h-75 overflow-y-auto overflow-x-hidden">
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value);
 

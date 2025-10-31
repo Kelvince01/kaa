@@ -313,9 +313,6 @@ export default function BulkRoleAssignmentPage() {
             <div className="max-h-[500px] space-y-2 overflow-y-auto">
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user: User) => (
-                  // biome-ignore lint/a11y/noNoninteractiveElementInteractions: ignore
-                  // biome-ignore lint/a11y/noStaticElementInteractions: ignore
-                  // biome-ignore lint/a11y/useKeyWithClickEvents: ignore
                   <div
                     className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
                       selectedUsers.includes(user.id)

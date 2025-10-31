@@ -644,6 +644,8 @@ export const MESSAGING_CONSTANTS = {
  * Message error codes
  */
 export const MESSAGE_ERROR_CODES = {
+  // User errors
+  USER_NOT_FOUND: "USER_NOT_FOUND",
   // Validation errors
   VALIDATION_ERROR: "VALIDATION_ERROR",
   INVALID_ID: "INVALID_ID",

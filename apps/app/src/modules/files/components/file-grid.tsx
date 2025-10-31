@@ -103,7 +103,6 @@ export function FileGrid({
       return (
         // biome-ignore lint/nursery/useImageSize: by author
         // biome-ignore lint/performance/noImgElement: by author
-        // biome-ignore lint/a11y/noNoninteractiveElementInteractions: by author
         <img
           alt={file.name}
           className="h-full w-full rounded-md object-cover"
@@ -157,8 +156,6 @@ export function FileGrid({
 
         return (
           // biome-ignore lint/a11y/noStaticElementInteractions: by author
-          // biome-ignore lint/a11y/noNoninteractiveElementInteractions: by author
-          // biome-ignore lint/a11y/useKeyWithClickEvents: by author
           <div
             className={`group relative cursor-pointer rounded-lg border bg-card transition-all duration-200 hover:shadow-md ${
               isSelected ? "shadow-md ring-2 ring-primary" : ""

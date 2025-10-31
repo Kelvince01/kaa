@@ -360,6 +360,7 @@ export type IReportDefinition = {
 };
 
 export type IReportSchedule = {
+  _id: string;
   frequency: ReportFrequency;
   interval?: number; // For hourly, daily schedules
   dayOfWeek?: number[]; // For weekly schedules (0-6)

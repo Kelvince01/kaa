@@ -1,18 +1,17 @@
 // Export contractor types
-export * from "./contractor.type";
-
-// Export contractor services
-export * from "./contractor.service";
 
 // Export contractor queries
 export * from "./contractor.queries";
 
+// Export contractor services
+export * from "./contractor.service";
 // Re-export commonly used types for convenience
 export type {
   Contractor,
-  CreateContractorInput,
-  UpdateContractorInput,
+  ContractorListResponse,
   ContractorQueryParams,
   ContractorResponse,
-  ContractorListResponse,
+  CreateContractorInput,
+  UpdateContractorInput,
 } from "./contractor.type";
+export * from "./contractor.type";

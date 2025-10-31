@@ -6,8 +6,9 @@
 
 import { SocketEvent } from "@kaa/models/types";
 import { messageService, socketService } from "@kaa/services";
-import type { ServerWebSocket } from "bun";
+// import type { ServerWebSocket } from "bun";
 import { Elysia, t } from "elysia";
+import { authPlugin } from "~/features/auth/auth.plugin";
 
 /**
  * WebSocket message types
@@ -29,8 +30,10 @@ type WebSocketData = {
 /**
  * WebSocket Controller
  */
-export const websocketController = new Elysia({ prefix: "/ws" })
-  .ws("/chat", {
+export const messageWSController = new Elysia({ prefix: "/chat" })
+  .use(authPlugin)
+  .decorate("connectedAt", new Date())
+  .ws("/ws", {
     // Body validation schema
     body: WebSocketMessageSchema,
 
@@ -44,34 +47,34 @@ export const websocketController = new Elysia({ prefix: "/ws" })
     // WebSocket lifecycle handlers
     open(ws) {
       // : ServerWebSocket<WebSocketData>
-      const { userId, userName, connectedAt } =
-        ws.data as unknown as WebSocketData;
+      // const { userId, userName, connectedAt } =
+      //   ws.data as unknown as WebSocketData;
+      const user = (ws.data as any).user;
+      const userName = `${user.firstName} ${user.lastName}`;
+      const connectedAt = (ws.data as any).connectedAt;
+
+      console.log("open", ws.data);
 
       // Register connection with socket service
-      socketService.addConnection(
-        ws as unknown as ServerWebSocket<any>,
-        userId,
-        userName,
-        {
-          connectedAt,
-        }
-      );
+      socketService.addConnection(ws, user.id, userName, {
+        connectedAt,
+      });
 
       // Send welcome message
       socketService.emitToConnection(
-        ws as unknown as ServerWebSocket<any>,
+        ws, // as unknown as ServerWebSocket<any>,
         SocketEvent.CONNECT,
         {
           type: "connection_established",
           message: "Connected to messaging service",
-          userId,
+          userId: user.id,
           timestamp: new Date().toISOString(),
         }
       );
 
       // Send online users list
       socketService.emitToConnection(
-        ws as unknown as ServerWebSocket<any>,
+        ws, // as unknown as ServerWebSocket<any>,
         SocketEvent.CONNECT,
         {
           type: "online_users",
@@ -89,14 +92,14 @@ export const websocketController = new Elysia({ prefix: "/ws" })
 
       // Handle different event types
       handleWebSocketMessage(
-        ws as unknown as ServerWebSocket<any>,
+        ws, // as unknown as ServerWebSocket<any>,
         userId,
         userName || "User",
         message
       ).catch((error) => {
         console.error("WebSocket message handler error:", error);
         socketService.emitToConnection(
-          ws as unknown as ServerWebSocket<any>,
+          ws, // as unknown as ServerWebSocket<any>,
           SocketEvent.ERROR,
           {
             error: error.message || "Failed to process message",
@@ -110,7 +113,7 @@ export const websocketController = new Elysia({ prefix: "/ws" })
       // : ServerWebSocket<WebSocketData>
       const { userId } = ws.data as unknown as WebSocketData;
       socketService.removeConnection(
-        ws as unknown as ServerWebSocket<any>,
+        ws, // as unknown as ServerWebSocket<any>,
         userId
       );
     },
@@ -123,22 +126,23 @@ export const websocketController = new Elysia({ prefix: "/ws" })
     // },
 
     // Parse incoming messages
-    beforeHandle({ query, set }: { query: any; set: any }) {
-      const { userId, userName, token } = query;
+    // beforeHandle({ set, user }) {
+    //   // const { userId, userName, token } = query;
 
-      // TODO: Implement proper token validation
-      if (token && !validateToken(token, userId)) {
-        set.status = 401;
-        return { error: "Invalid token" };
-      }
+    //   // TODO: Implement proper token validation
+    //   // if (token && !validateToken(token, userId)) {
+    //   //   set.status = 401;
+    //   //   return { error: "Invalid token" };
+    //   // }
 
-      // Attach user data to WebSocket connection
-      return {
-        userId,
-        userName: userName || "User",
-        connectedAt: new Date(),
-      };
-    },
+    //   // Attach user data to WebSocket connection
+    //   set.status = 200;
+    //   return {
+    //     userId: user.id,
+    //     userName: `${user.firstName} ${user.lastName}`,
+    //     connectedAt: new Date(),
+    //   };
+    // },
   })
 
   // Health check endpoint
@@ -178,7 +182,7 @@ export const websocketController = new Elysia({ prefix: "/ws" })
  * Handle incoming WebSocket messages
  */
 async function handleWebSocketMessage(
-  ws: ServerWebSocket<WebSocketData>,
+  ws: any, // ServerWebSocket<WebSocketData>,
   userId: string,
   userName: string,
   message: { event: string; payload: any }
@@ -379,7 +383,7 @@ async function handleSendMessage(
  * Handle request presence
  */
 function handleRequestPresence(
-  ws: ServerWebSocket<WebSocketData>,
+  ws: any, // ServerWebSocket<WebSocketData>,
   payload: { userIds?: string[] }
 ): void {
   const userIds = payload.userIds || socketService.getOnlineUsers();
@@ -423,4 +427,4 @@ function validateToken(_token: string, _userId: string): boolean {
   return true;
 }
 
-export default websocketController;
+export default messageWSController;

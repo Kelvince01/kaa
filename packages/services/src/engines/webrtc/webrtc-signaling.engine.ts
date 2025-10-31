@@ -1,4 +1,7 @@
+import { randomUUID } from "node:crypto";
 import { EventEmitter } from "node:events";
+import { redisClient } from "@kaa/utils";
+import type { RedisClientType } from "redis";
 
 export type SignalingMessage = {
   type:
@@ -31,30 +34,155 @@ export type ParticipantInfo = {
   metadata?: any;
 };
 
+// Redis key patterns
+const REDIS_KEYS = {
+  ROOM: "room:",
+  USER_ROOM: "user_room:",
+  WS_USER: "ws_user:",
+  USER_WS: "user_ws:",
+  ROOM_PARTICIPANTS: "room_participants:",
+} as const;
+
 /**
  * WebRTC Signaling Server
  * Handles signaling for WebRTC connections
  * Now compatible with ElysiaWebSocketAdapter
  */
 export class WebRTCSignalingEngine extends EventEmitter {
-  private readonly rooms: Map<string, Room> = new Map();
-  private readonly userToRoom: Map<string, string> = new Map();
-  private readonly wsToUser: Map<any, string> = new Map(); // Changed from WebSocket to any
+  private readonly redisClient: RedisClientType;
+  // Store WebSocket objects in memory since they can't be serialized to Redis
+  private readonly wsObjects: Map<string, any> = new Map();
+
+  constructor() {
+    super();
+    this.redisClient = redisClient;
+  }
+
+  /**
+   * Generate a unique ID for WebSocket connections
+   */
+  private generateWebSocketId(): string {
+    return randomUUID();
+  }
+
+  /**
+   * Store WebSocket object in memory and create Redis mappings
+   */
+  private async storeWebSocket(ws: any, userId: string): Promise<string> {
+    const wsId = this.generateWebSocketId();
+    this.wsObjects.set(wsId, ws);
+
+    // Store bidirectional mapping in Redis
+    await Promise.all([
+      this.redisClient.set(`${REDIS_KEYS.WS_USER}${wsId}`, userId),
+      this.redisClient.set(`${REDIS_KEYS.USER_WS}${userId}`, wsId),
+    ]);
+
+    return wsId;
+  }
+
+  /**
+   * Get user ID from WebSocket
+   */
+  private async getUserFromWebSocket(ws: any): Promise<string | null> {
+    // Find WebSocket ID from our in-memory map
+    for (const [wsId, storedWs] of this.wsObjects) {
+      if (storedWs === ws) {
+        const userId = await this.redisClient.get(
+          `${REDIS_KEYS.WS_USER}${wsId}`
+        );
+        return userId;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Remove WebSocket from storage
+   */
+  private async removeWebSocket(ws: any): Promise<void> {
+    // Find and remove WebSocket ID
+    for (const [wsId, storedWs] of this.wsObjects) {
+      if (storedWs === ws) {
+        const userId = await this.redisClient.get(
+          `${REDIS_KEYS.WS_USER}${wsId}`
+        );
+
+        // Clean up Redis mappings
+        if (userId) {
+          await Promise.all([
+            this.redisClient.del(`${REDIS_KEYS.WS_USER}${wsId}`),
+            this.redisClient.del(`${REDIS_KEYS.USER_WS}${userId}`),
+            this.redisClient.del(`${REDIS_KEYS.USER_ROOM}${userId}`),
+          ]);
+        }
+
+        this.wsObjects.delete(wsId);
+        break;
+      }
+    }
+  }
+
+  /**
+   * Get room data from Redis
+   */
+  private async getRoomFromRedis(roomId: string): Promise<Room | null> {
+    const roomData = await this.redisClient.get(`${REDIS_KEYS.ROOM}${roomId}`);
+    if (!roomData) return null;
+
+    const room: Room = JSON.parse(roomData);
+    // Convert participants back to Map
+    room.participants = new Map(Object.entries(room.participants));
+    return room;
+  }
+
+  /**
+   * Store room data in Redis
+   */
+  private async setRoom(room: Room): Promise<void> {
+    // Convert participants Map to object for JSON serialization
+    const roomData = {
+      ...room,
+      participants: Object.fromEntries(room.participants),
+    };
+    await this.redisClient.set(
+      `${REDIS_KEYS.ROOM}${room.id}`,
+      JSON.stringify(roomData)
+    );
+  }
+
+  /**
+   * Delete room from Redis
+   */
+  private async deleteRoom(roomId: string): Promise<void> {
+    await this.redisClient.del(`${REDIS_KEYS.ROOM}${roomId}`);
+  }
+
+  /**
+   * Get all room IDs
+   */
+  private async getAllRoomIds(): Promise<string[]> {
+    const keys = await this.redisClient.keys(`${REDIS_KEYS.ROOM}*`);
+    return keys.map((key) => key.replace(REDIS_KEYS.ROOM, ""));
+  }
 
   /**
    * Handle WebSocket connection
    * Store the connection for later message handling
    */
-  handleConnection(ws: any, userId: string): void {
-    this.wsToUser.set(ws, userId);
+  async handleConnection(ws: any, userId: string): Promise<void> {
+    console.log("connecting to WebSocket", userId);
+    await this.storeWebSocket(ws, userId);
     this.emit("connection", { userId, ws });
   }
 
   /**
    * Handle WebSocket message (called by Elysia message handler)
    */
-  handleMessage(ws: any, message: any): void {
-    const userId = this.wsToUser.get(ws);
+  async handleMessage(ws: any, message: any): Promise<void> {
+    console.log("handling message", message);
+    const userId = await this.getUserFromWebSocket(ws);
+    console.log("user ID", userId);
     if (!userId) {
       this.sendError(ws, "User not authenticated");
       return;
@@ -75,7 +203,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
       }
 
       const signalingMessage: SignalingMessage = JSON.parse(data.toString());
-      this.processMessage(ws, signalingMessage);
+      await this.processMessage(ws, signalingMessage);
     } catch (error) {
       console.error("Error parsing signaling message:", error);
       this.sendError(ws, "Invalid message format");
@@ -85,23 +213,26 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Handle WebSocket close (called by Elysia close handler)
    */
-  handleClose(ws: any): void {
-    this.handleDisconnection(ws);
+  async handleClose(ws: any): Promise<void> {
+    await this.handleDisconnection(ws);
   }
 
   /**
    * Handle WebSocket error (called by Elysia error handler)
    */
-  handleError(ws: any, error: Error): void {
+  async handleError(ws: any, error: Error): Promise<void> {
     console.error("WebSocket error:", error);
-    this.handleDisconnection(ws);
+    await this.handleDisconnection(ws);
   }
 
   /**
    * Process signaling message
    */
-  private processMessage(ws: any, message: SignalingMessage): void {
-    const userId = this.wsToUser.get(ws);
+  private async processMessage(
+    ws: any,
+    message: SignalingMessage
+  ): Promise<void> {
+    const userId = await this.getUserFromWebSocket(ws);
     if (!userId) {
       this.sendError(ws, "User not authenticated");
       return;
@@ -115,23 +246,23 @@ export class WebRTCSignalingEngine extends EventEmitter {
 
     switch (message.type) {
       case "join":
-        this.handleJoin(ws, userId, message);
+        await this.handleJoin(ws, userId, message);
         break;
       case "leave":
-        this.handleLeave(userId, message);
+        await this.handleLeave(userId, message);
         break;
       case "offer":
-        this.handleOffer(ws, userId, message);
+        await this.handleOffer(ws, userId, message);
         break;
       case "answer":
-        this.handleAnswer(ws, userId, message);
+        await this.handleAnswer(ws, userId, message);
         break;
       case "ice-candidate":
-        this.handleIceCandidate(ws, userId, message);
+        await this.handleIceCandidate(ws, userId, message);
         break;
       case "mute":
       case "unmute":
-        this.handleMediaToggle(userId, message);
+        await this.handleMediaToggle(userId, message);
         break;
       default:
         this.sendError(ws, `Unknown message type: ${message.type}`);
@@ -141,17 +272,23 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Handle join room
    */
-  private handleJoin(ws: any, userId: string, message: SignalingMessage): void {
+  private async handleJoin(
+    ws: any,
+    userId: string,
+    message: SignalingMessage
+  ): Promise<void> {
     const { roomId, data } = message;
 
     // Check if user is already in a room
-    const currentRoom = this.userToRoom.get(userId);
-    if (currentRoom) {
-      this.handleLeave(userId, { ...message, roomId: currentRoom });
+    const currentRoomId = await this.redisClient.get(
+      `${REDIS_KEYS.USER_ROOM}${userId}`
+    );
+    if (currentRoomId) {
+      await this.handleLeave(userId, { ...message, roomId: currentRoomId });
     }
 
     // Get or create room
-    let room = this.rooms.get(roomId);
+    let room = await this.getRoomFromRedis(roomId);
     if (!room) {
       room = {
         id: roomId,
@@ -159,7 +296,6 @@ export class WebRTCSignalingEngine extends EventEmitter {
         createdAt: new Date(),
         metadata: data?.metadata,
       };
-      this.rooms.set(roomId, room);
       this.emit("roomcreated", { roomId, room });
     }
 
@@ -171,7 +307,11 @@ export class WebRTCSignalingEngine extends EventEmitter {
       metadata: data?.metadata,
     });
 
-    this.userToRoom.set(userId, roomId);
+    // Save room and user-room mapping to Redis
+    await Promise.all([
+      this.setRoom(room),
+      this.redisClient.set(`${REDIS_KEYS.USER_ROOM}${userId}`, roomId),
+    ]);
 
     // Notify user of successful join
     this.send(ws, {
@@ -185,7 +325,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
     });
 
     // Notify other participants
-    this.broadcastToRoom(
+    await this.broadcastToRoom(
       roomId,
       {
         type: "user-joined",
@@ -202,9 +342,12 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Handle leave room
    */
-  private handleLeave(userId: string, message: SignalingMessage): void {
+  private async handleLeave(
+    userId: string,
+    message: SignalingMessage
+  ): Promise<void> {
     const { roomId } = message;
-    const room = this.rooms.get(roomId);
+    const room = await this.getRoomFromRedis(roomId);
 
     if (!room) {
       return;
@@ -212,10 +355,12 @@ export class WebRTCSignalingEngine extends EventEmitter {
 
     // Remove participant from room
     room.participants.delete(userId);
-    this.userToRoom.delete(userId);
+
+    // Remove user-room mapping from Redis
+    await this.redisClient.del(`${REDIS_KEYS.USER_ROOM}${userId}`);
 
     // Notify other participants
-    this.broadcastToRoom(roomId, {
+    await this.broadcastToRoom(roomId, {
       type: "user-left",
       roomId,
       userId,
@@ -224,8 +369,11 @@ export class WebRTCSignalingEngine extends EventEmitter {
 
     // Delete room if empty
     if (room.participants.size === 0) {
-      this.rooms.delete(roomId);
+      await this.deleteRoom(roomId);
       this.emit("roomdeleted", { roomId });
+    } else {
+      // Save updated room
+      await this.setRoom(room);
     }
 
     this.emit("userleft", { roomId, userId, room });
@@ -234,11 +382,11 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Handle WebRTC offer
    */
-  private handleOffer(
+  private async handleOffer(
     ws: any,
     userId: string,
     message: SignalingMessage
-  ): void {
+  ): Promise<void> {
     const { roomId, targetUserId, data } = message;
 
     if (!targetUserId) {
@@ -246,7 +394,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
       return;
     }
 
-    const room = this.rooms.get(roomId);
+    const room = await this.getRoomFromRedis(roomId);
     if (!room) {
       this.sendError(ws, "Room not found");
       return;
@@ -278,11 +426,11 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Handle WebRTC answer
    */
-  private handleAnswer(
+  private async handleAnswer(
     ws: any,
     userId: string,
     message: SignalingMessage
-  ): void {
+  ): Promise<void> {
     const { roomId, targetUserId, data } = message;
 
     if (!targetUserId) {
@@ -290,7 +438,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
       return;
     }
 
-    const room = this.rooms.get(roomId);
+    const room = await this.getRoomFromRedis(roomId);
     if (!room) {
       this.sendError(ws, "Room not found");
       return;
@@ -322,11 +470,11 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Handle ICE candidate
    */
-  private handleIceCandidate(
+  private async handleIceCandidate(
     ws: any,
     userId: string,
     message: SignalingMessage
-  ): void {
+  ): Promise<void> {
     const { roomId, targetUserId, data } = message;
 
     if (!targetUserId) {
@@ -334,7 +482,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
       return;
     }
 
-    const room = this.rooms.get(roomId);
+    const room = await this.getRoomFromRedis(roomId);
     if (!room) {
       return; // Silently ignore if room doesn't exist
     }
@@ -364,16 +512,19 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Handle media toggle (mute/unmute)
    */
-  private handleMediaToggle(userId: string, message: SignalingMessage): void {
+  private async handleMediaToggle(
+    userId: string,
+    message: SignalingMessage
+  ): Promise<void> {
     const { roomId, type, data } = message;
 
-    const room = this.rooms.get(roomId);
+    const room = await this.getRoom(roomId);
     if (!room) {
       return;
     }
 
     // Broadcast media toggle to all participants
-    this.broadcastToRoom(
+    await this.broadcastToRoom(
       roomId,
       {
         type,
@@ -391,15 +542,17 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Handle WebSocket disconnection
    */
-  private handleDisconnection(ws: any): void {
-    const userId = this.wsToUser.get(ws);
+  private async handleDisconnection(ws: any): Promise<void> {
+    const userId = await this.getUserFromWebSocket(ws);
     if (!userId) {
       return;
     }
 
-    const roomId = this.userToRoom.get(userId);
+    const roomId = await this.redisClient.get(
+      `${REDIS_KEYS.USER_ROOM}${userId}`
+    );
     if (roomId) {
-      this.handleLeave(userId, {
+      await this.handleLeave(userId, {
         type: "leave",
         roomId,
         userId,
@@ -407,7 +560,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
       });
     }
 
-    this.wsToUser.delete(ws);
+    await this.removeWebSocket(ws);
     this.emit("disconnection", { userId });
   }
 
@@ -434,12 +587,12 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Broadcast message to all participants in room
    */
-  private broadcastToRoom(
+  private async broadcastToRoom(
     roomId: string,
     message: any,
     excludeUserId?: string
-  ): void {
-    const room = this.rooms.get(roomId);
+  ): Promise<void> {
+    const room = await this.getRoomFromRedis(roomId);
     if (!room) {
       return;
     }
@@ -454,30 +607,42 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Get room information
    */
-  getRoom(roomId: string): Room | undefined {
-    return this.rooms.get(roomId);
+  async getRoom(roomId: string): Promise<Room | null> {
+    return await this.getRoomFromRedis(roomId);
   }
 
   /**
    * Get all rooms
    */
-  getRooms(): Room[] {
-    return Array.from(this.rooms.values());
+  async getRooms(): Promise<Room[]> {
+    const roomIds = await this.getAllRoomIds();
+    const rooms: Room[] = [];
+
+    for (const roomId of roomIds) {
+      const room = await this.getRoomFromRedis(roomId);
+      if (room) {
+        rooms.push(room);
+      }
+    }
+
+    return rooms;
   }
 
   /**
    * Get room count
    */
-  getRoomCount(): number {
-    return this.rooms.size;
+  async getRoomCount(): Promise<number> {
+    const roomIds = await this.getAllRoomIds();
+    return roomIds.length;
   }
 
   /**
    * Get participant count across all rooms
    */
-  getTotalParticipantCount(): number {
+  async getTotalParticipantCount(): Promise<number> {
+    const rooms = await this.getRooms();
     let count = 0;
-    for (const room of this.rooms.values()) {
+    for (const room of rooms) {
       count += room.participants.size;
     }
     return count;
@@ -486,15 +651,19 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Get user's current room
    */
-  getUserRoom(userId: string): string | undefined {
-    return this.userToRoom.get(userId);
+  async getUserRoom(userId: string): Promise<string | null> {
+    return await this.redisClient.get(`${REDIS_KEYS.USER_ROOM}${userId}`);
   }
 
   /**
    * Kick user from room
    */
-  kickUser(roomId: string, userId: string, reason?: string): void {
-    const room = this.rooms.get(roomId);
+  async kickUser(
+    roomId: string,
+    userId: string,
+    reason?: string
+  ): Promise<void> {
+    const room = await this.getRoomFromRedis(roomId);
     if (!room) {
       return;
     }
@@ -513,7 +682,7 @@ export class WebRTCSignalingEngine extends EventEmitter {
     });
 
     // Remove user from room
-    this.handleLeave(userId, {
+    await this.handleLeave(userId, {
       type: "leave",
       roomId,
       userId,
@@ -526,31 +695,31 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Close room and kick all participants
    */
-  closeRoom(roomId: string, reason?: string): void {
-    const room = this.rooms.get(roomId);
+  async closeRoom(roomId: string, reason?: string): Promise<void> {
+    const room = await this.getRoomFromRedis(roomId);
     if (!room) {
       return;
     }
 
     // Kick all participants
     for (const userId of room.participants.keys()) {
-      this.kickUser(roomId, userId, reason);
+      await this.kickUser(roomId, userId, reason);
     }
 
-    this.rooms.delete(roomId);
+    await this.deleteRoom(roomId);
     this.emit("roomclosed", { roomId, reason });
   }
 
   /**
    * Get statistics
    */
-  getStats(): {
+  async getStats(): Promise<{
     rooms: number;
     participants: number;
     averageParticipantsPerRoom: number;
-  } {
-    const rooms = this.rooms.size;
-    const participants = this.getTotalParticipantCount();
+  }> {
+    const rooms = await this.getRoomCount();
+    const participants = await this.getTotalParticipantCount();
 
     return {
       rooms,
@@ -562,15 +731,15 @@ export class WebRTCSignalingEngine extends EventEmitter {
   /**
    * Cleanup and destroy
    */
-  destroy(): void {
+  async destroy(): Promise<void> {
     // Close all rooms
-    for (const roomId of this.rooms.keys()) {
-      this.closeRoom(roomId, "Server shutting down");
+    const roomIds = await this.getAllRoomIds();
+    for (const roomId of roomIds) {
+      await this.closeRoom(roomId, "Server shutting down");
     }
 
-    this.rooms.clear();
-    this.userToRoom.clear();
-    this.wsToUser.clear();
+    // Clear WebSocket objects
+    this.wsObjects.clear();
     this.removeAllListeners();
   }
 }

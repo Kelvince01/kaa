@@ -69,8 +69,6 @@ export function SimpleTooltip({
   const finalTooltipVariants = userTooltipVariants || autoTooltipVariants;
 
   return (
-    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: by author
-    // biome-ignore lint/a11y/noStaticElementInteractions: by author
     <div
       className={cn("relative", className)}
       onMouseEnter={() => setShowTooltip(true)}

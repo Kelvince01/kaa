@@ -423,9 +423,6 @@ export default function FilesPage(props: FilesPageProps) {
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {filteredFiles.map((file) => (
-            // biome-ignore lint/a11y/noNoninteractiveElementInteractions: by author
-            // biome-ignore lint/a11y/noStaticElementInteractions: by author
-            // biome-ignore lint/a11y/useKeyWithClickEvents: by author
             <div
               className={`group relative cursor-pointer rounded-lg border bg-card p-4 transition-shadow hover:shadow-md ${
                 selectedFiles.includes(file._id) ? "ring-2 ring-primary" : ""

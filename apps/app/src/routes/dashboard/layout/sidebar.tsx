@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   Calendar,
   ClipboardCheck,
   DollarSign,
@@ -137,6 +138,37 @@ export const getDashboardSidebarItems = (roleName?: string) => {
       url: "/dashboard/documents",
       icon: Shield,
     },
+    {
+      title: "Reports & Analytics",
+      url: "/dashboard/reports",
+      icon: BarChart3,
+      items: [
+        {
+          title: "Reports Dashboard",
+          url: "/dashboard/reports",
+        },
+        {
+          title: "All Reports",
+          url: "/dashboard/reports/all",
+        },
+        {
+          title: "Templates",
+          url: "/dashboard/reports/templates",
+        },
+        {
+          title: "Scheduled Reports",
+          url: "/dashboard/reports/schedules",
+        },
+        {
+          title: "Analytics",
+          url: "/dashboard/reports/analytics",
+        },
+        {
+          title: "Business Intelligence",
+          url: "/dashboard/reports/insights",
+        },
+      ],
+    },
   ];
 
   // Communication (common for all)
@@ -147,7 +179,7 @@ export const getDashboardSidebarItems = (roleName?: string) => {
     items: [
       {
         title: "Messages",
-        url: "/messages",
+        url: "/dashboard/messages",
       },
       {
         title: "Video Calls",

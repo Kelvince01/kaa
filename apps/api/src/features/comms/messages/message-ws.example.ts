@@ -7,7 +7,7 @@
 import { AttachmentType, MessageType } from "@kaa/models/types";
 import { messageService } from "@kaa/services";
 import { Elysia, t } from "elysia";
-import { websocketController } from "./websocket.controller";
+import { messageWSController } from "./message-ws.controller";
 
 /**
  * Example Elysia app with WebSocket support
@@ -15,13 +15,13 @@ import { websocketController } from "./websocket.controller";
 export const createWebSocketApp = () => {
   const app = new Elysia()
     // Use the WebSocket controller
-    .use(websocketController)
+    .use(messageWSController)
 
     // Add other routes and middleware
     .get("/", () => ({
       message: "Messaging API with WebSocket support",
-      websocket: "/ws/chat",
-      health: "/ws/health",
+      websocket: "/chat/ws",
+      health: "/chat/ws/health",
     }))
 
     // Example: Send message via HTTP (will be broadcast via WebSocket)
@@ -99,7 +99,7 @@ export const createWebSocketApp = () => {
  */
 export const createWebSocketClient = (userId: string, userName: string) => {
   const ws = new WebSocket(
-    `ws://localhost:3000/ws/chat?userId=${userId}&userName=${encodeURIComponent(userName)}`
+    `ws://localhost:3000/chat/ws?userId=${userId}&userName=${encodeURIComponent(userName)}`
   );
 
   ws.onopen = () => {

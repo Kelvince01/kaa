@@ -23,7 +23,7 @@ export const getVirtualTours = async (
   filters?: { status?: string; type?: string }
 ): Promise<TourListResponse> => {
   const response = await httpClient.api.get(
-    `/properties/virtual-tours/property/${propertyId}`,
+    `/virtual-tours/property/${propertyId}`,
     {
       params: filters,
     }
@@ -32,19 +32,14 @@ export const getVirtualTours = async (
 };
 
 export const getVirtualTour = async (tourId: string): Promise<VirtualTour> => {
-  const response = await httpClient.api.get(
-    `/properties/virtual-tours/${tourId}`
-  );
+  const response = await httpClient.api.get(`/virtual-tours/${tourId}`);
   return response.data.data.tour;
 };
 
 export const createVirtualTour = async (
   tourData: CreateTourFormData
 ): Promise<VirtualTour> => {
-  const response = await httpClient.api.post(
-    "/properties/virtual-tours",
-    tourData
-  );
+  const response = await httpClient.api.post("/virtual-tours", tourData);
   return response.data.data.tour;
 };
 
@@ -53,21 +48,21 @@ export const updateVirtualTour = async (
   updates: Partial<VirtualTour>
 ): Promise<VirtualTour> => {
   const response = await httpClient.api.patch(
-    `/properties/virtual-tours/${tourId}`,
+    `/virtual-tours/${tourId}`,
     updates
   );
   return response.data.data.tour;
 };
 
 export const deleteVirtualTour = async (tourId: string): Promise<void> => {
-  await httpClient.api.delete(`/properties/virtual-tours/${tourId}`);
+  await httpClient.api.delete(`/virtual-tours/${tourId}`);
 };
 
 export const publishVirtualTour = async (
   tourId: string
 ): Promise<VirtualTour> => {
   const response = await httpClient.api.post(
-    `/properties/virtual-tours/${tourId}/publish`
+    `/virtual-tours/${tourId}/publish`
   );
   return response.data.data.tour;
 };
@@ -77,7 +72,7 @@ export const duplicateVirtualTour = async (
   title?: string
 ): Promise<VirtualTour> => {
   const response = await httpClient.api.post(
-    `/properties/virtual-tours/${tourId}/duplicate`,
+    `/virtual-tours/${tourId}/duplicate`,
     {
       title,
     }
@@ -91,7 +86,7 @@ export const addScene = async (
   sceneData: SceneFormData
 ): Promise<any> => {
   const response = await httpClient.api.post(
-    `/properties/virtual-tours/${tourId}/scenes`,
+    `/virtual-tours/${tourId}/scenes`,
     sceneData
   );
   return response.data.data.scene;
@@ -103,7 +98,7 @@ export const updateScene = async (
   updates: Partial<SceneFormData>
 ): Promise<any> => {
   const response = await httpClient.api.patch(
-    `/properties/virtual-tours/${tourId}/scenes/${sceneId}`,
+    `/virtual-tours/${tourId}/scenes/${sceneId}`,
     updates
   );
   return response.data.data.scene;
@@ -113,9 +108,7 @@ export const deleteScene = async (
   tourId: string,
   sceneId: string
 ): Promise<void> => {
-  await httpClient.api.delete(
-    `/properties/virtual-tours/${tourId}/scenes/${sceneId}`
-  );
+  await httpClient.api.delete(`/virtual-tours/${tourId}/scenes/${sceneId}`);
 };
 
 // Hotspot operations
@@ -125,7 +118,7 @@ export const addHotspot = async (
   hotspotData: HotspotFormData
 ): Promise<any> => {
   const response = await httpClient.api.post(
-    `/properties/virtual-tours/${tourId}/scenes/${sceneId}/hotspots`,
+    `/virtual-tours/${tourId}/scenes/${sceneId}/hotspots`,
     hotspotData
   );
   return response.data.data.hotspot;
@@ -137,7 +130,7 @@ export const updateHotspot = async (
   updates: Partial<HotspotFormData>
 ): Promise<any> => {
   const response = await httpClient.api.patch(
-    `/properties/virtual-tours/${tourId}/hotspots/${hotspotId}`,
+    `/virtual-tours/${tourId}/hotspots/${hotspotId}`,
     updates
   );
   return response.data.data.hotspot;
@@ -147,9 +140,7 @@ export const deleteHotspot = async (
   tourId: string,
   hotspotId: string
 ): Promise<void> => {
-  await httpClient.api.delete(
-    `/properties/virtual-tours/${tourId}/hotspots/${hotspotId}`
-  );
+  await httpClient.api.delete(`/virtual-tours/${tourId}/hotspots/${hotspotId}`);
 };
 
 // Media operations
@@ -167,7 +158,7 @@ export const uploadMedia = async (
   if (metadata) formData.append("metadata", JSON.stringify(metadata));
 
   const response = await httpClient.api.post(
-    `/properties/virtual-tours/${tourId}/upload`,
+    `/virtual-tours/${tourId}/upload`,
     formData,
     {
       headers: {
@@ -184,8 +175,8 @@ export const getTourAnalytics = async (
   includeMl = false
 ): Promise<TourAnalytics | MLAnalytics> => {
   const endpoint = includeMl
-    ? `/properties/virtual-tours/${tourId}/analytics/ml`
-    : `/properties/virtual-tours/${tourId}/analytics`;
+    ? `/virtual-tours/${tourId}/analytics/ml`
+    : `/virtual-tours/${tourId}/analytics`;
 
   const response = await httpClient.api.get(endpoint);
   return response.data.data.analytics;
@@ -193,7 +184,7 @@ export const getTourAnalytics = async (
 
 export const getRealTimeMetrics = async (tourId: string): Promise<any> => {
   const response = await httpClient.api.get(
-    `/properties/virtual-tours/${tourId}/real-time-metrics`
+    `/virtual-tours/${tourId}/real-time-metrics`
   );
   return response.data.data;
 };
@@ -207,10 +198,7 @@ export const trackTourView = async (
     sessionId: string;
   }
 ): Promise<void> => {
-  await httpClient.api.post(
-    `/properties/virtual-tours/${tourId}/track/view`,
-    metadata
-  );
+  await httpClient.api.post(`/virtual-tours/${tourId}/track/view`, metadata);
 };
 
 export const trackSceneView = async (
@@ -219,13 +207,10 @@ export const trackSceneView = async (
   sessionId: string,
   duration: number
 ): Promise<void> => {
-  await httpClient.api.post(
-    `/properties/virtual-tours/${tourId}/track/scene/${sceneId}`,
-    {
-      sessionId,
-      duration,
-    }
-  );
+  await httpClient.api.post(`/virtual-tours/${tourId}/track/scene/${sceneId}`, {
+    sessionId,
+    duration,
+  });
 };
 
 export const trackHotspotInteraction = async (
@@ -234,7 +219,7 @@ export const trackHotspotInteraction = async (
   interactionType: "view" | "click"
 ): Promise<void> => {
   await httpClient.api.post(
-    `/properties/virtual-tours/${tourId}/track/hotspot/${hotspotId}`,
+    `/virtual-tours/${tourId}/track/hotspot/${hotspotId}`,
     {
       interactionType,
     }
@@ -244,18 +229,16 @@ export const trackHotspotInteraction = async (
 // Advanced features
 export const getServiceCapabilities =
   async (): Promise<VirtualTourCapabilities> => {
-    const response = await httpClient.api.get(
-      "/properties/virtual-tours/capabilities"
-    );
+    const response = await httpClient.api.get("/virtual-tours/capabilities");
     return response.data.data;
   };
 
 export const enableAdvancedMode = async (): Promise<void> => {
-  await httpClient.api.post("/properties/virtual-tours/advanced-mode/enable");
+  await httpClient.api.post("/virtual-tours/advanced-mode/enable");
 };
 
 export const disableAdvancedMode = async (): Promise<void> => {
-  await httpClient.api.post("/properties/virtual-tours/advanced-mode/disable");
+  await httpClient.api.post("/virtual-tours/advanced-mode/disable");
 };
 
 export const startXRSession = async (
@@ -263,7 +246,7 @@ export const startXRSession = async (
   mode: "vr" | "ar",
   settings: any
 ): Promise<void> => {
-  await httpClient.api.post(`/properties/virtual-tours/${tourId}/xr-session`, {
+  await httpClient.api.post(`/virtual-tours/${tourId}/xr-session`, {
     mode,
     settings,
   });
@@ -273,14 +256,14 @@ export const generateSmartConnections = async (
   tourId: string
 ): Promise<any> => {
   const response = await httpClient.api.post(
-    `/properties/virtual-tours/${tourId}/generate-smart-connections`
+    `/virtual-tours/${tourId}/generate-smart-connections`
   );
   return response.data.data;
 };
 
 export const getAccessibilityReport = async (tourId: string): Promise<any> => {
   const response = await httpClient.api.get(
-    `/properties/virtual-tours/${tourId}/accessibility-report`
+    `/virtual-tours/${tourId}/accessibility-report`
   );
   return response.data.data;
 };
@@ -289,12 +272,9 @@ export const enableVoiceControl = async (
   tourId: string,
   platform: "alexa" | "google"
 ): Promise<void> => {
-  await httpClient.api.post(
-    `/properties/virtual-tours/${tourId}/voice-control`,
-    {
-      platform,
-    }
-  );
+  await httpClient.api.post(`/virtual-tours/${tourId}/voice-control`, {
+    platform,
+  });
 };
 
 export const getOptimizedContentUrl = async (
@@ -304,7 +284,7 @@ export const getOptimizedContentUrl = async (
   clientIP: string
 ): Promise<string> => {
   const response = await httpClient.api.get(
-    `/properties/virtual-tours/${tourId}/optimized-content`,
+    `/virtual-tours/${tourId}/optimized-content`,
     {
       params: {
         originalUrl,
@@ -321,7 +301,7 @@ export const getTourRecommendations = async (
   preferences?: any
 ): Promise<VirtualTour[]> => {
   const response = await httpClient.api.get(
-    `/properties/virtual-tours/${tourId}/recommendations`,
+    `/virtual-tours/${tourId}/recommendations`,
     {
       params: preferences ? { preferences: JSON.stringify(preferences) } : {},
     }
@@ -334,12 +314,9 @@ export const getTourEmbedCode = async (
   tourId: string,
   options?: TourEmbedOptions
 ): Promise<string> => {
-  const response = await httpClient.api.get(
-    `/properties/virtual-tours/${tourId}/embed`,
-    {
-      params: options,
-    }
-  );
+  const response = await httpClient.api.get(`/virtual-tours/${tourId}/embed`, {
+    params: options,
+  });
   return response.data.data.embedCode;
 };
 
@@ -353,41 +330,33 @@ export const searchTours = async (
     type?: string;
   }
 ): Promise<VirtualTour[]> => {
-  const response = await httpClient.api.get(
-    "/properties/virtual-tours/search",
-    {
-      params: { q: query, ...filters },
-    }
-  );
+  const response = await httpClient.api.get("/virtual-tours/search", {
+    params: { q: query, ...filters },
+  });
   return response.data.data.tours;
 };
 
 export const getPopularTours = async (limit = 10): Promise<VirtualTour[]> => {
-  const response = await httpClient.api.get(
-    "/properties/virtual-tours/popular",
-    {
-      params: { limit },
-    }
-  );
+  const response = await httpClient.api.get("/virtual-tours/popular", {
+    params: { limit },
+  });
   return response.data.data.tours;
 };
 
 export const getUserTours = async (userId: string): Promise<VirtualTour[]> => {
-  const response = await httpClient.api.get(
-    `/properties/virtual-tours/user/${userId}`
-  );
+  const response = await httpClient.api.get(`/virtual-tours/user/${userId}`);
   return response.data.data.tours;
 };
 
 // Service health
 export const getVirtualToursHealth = async (): Promise<any> => {
-  const response = await httpClient.api.get("/properties/virtual-tours/health");
+  const response = await httpClient.api.get("/virtual-tours/health");
   return response.data.data;
 };
 
 export const getAdvancedServicesHealth = async (): Promise<any> => {
   const response = await httpClient.api.get(
-    "/properties/virtual-tours/advanced-services/health"
+    "/virtual-tours/advanced-services/health"
   );
   return response.data.data;
 };
@@ -396,7 +365,7 @@ export const restartAdvancedService = async (
   serviceName: string
 ): Promise<void> => {
   await httpClient.api.post(
-    `/properties/virtual-tours/advanced-services/${serviceName}/restart`
+    `/virtual-tours/advanced-services/${serviceName}/restart`
   );
 };
 
@@ -405,7 +374,7 @@ export const createCollaborationSession = async (
   tourId: string
 ): Promise<any> => {
   const response = await httpClient.api.post(
-    "/properties/virtual-tours/collaboration/sessions",
+    "/virtual-tours/collaboration/sessions",
     {
       tourId,
     }
@@ -417,7 +386,7 @@ export const getCollaborationSession = async (
   sessionId: string
 ): Promise<any> => {
   const response = await httpClient.api.get(
-    `/properties/virtual-tours/collaboration/sessions/${sessionId}`
+    `/virtual-tours/collaboration/sessions/${sessionId}`
   );
   return response.data.data.session;
 };
@@ -426,7 +395,7 @@ export const endCollaborationSession = async (
   sessionId: string
 ): Promise<void> => {
   await httpClient.api.delete(
-    `/properties/virtual-tours/collaboration/sessions/${sessionId}`
+    `/virtual-tours/collaboration/sessions/${sessionId}`
   );
 };
 
@@ -462,7 +431,7 @@ export const calculatePropertyTaxes = async (
 ): Promise<KenyaPropertyTaxes> => {
   // This could be a local calculation or API call
   const response = await httpClient.api.post(
-    "/properties/kenya-features/calculate-taxes",
+    "/kenya-features/calculate-taxes",
     {
       propertyValue,
       isResident,
@@ -477,7 +446,7 @@ export const getFinancingOptions = async (
   userProfile?: any
 ): Promise<KenyaFinancingOptions> => {
   const response = await httpClient.api.post(
-    "/properties/kenya-features/financing-options",
+    "/kenya-features/financing-options",
     {
       propertyValue,
       userProfile,
@@ -488,7 +457,7 @@ export const getFinancingOptions = async (
 
 export const getCountyMarketData = async (county: string): Promise<any> => {
   const response = await httpClient.api.get(
-    `/properties/kenya-features/counties/${county}/market-data`
+    `/kenya-features/counties/${county}/market-data`
   );
   return response.data.data;
 };

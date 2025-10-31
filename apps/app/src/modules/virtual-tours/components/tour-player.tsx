@@ -321,7 +321,6 @@ export const TourPlayer: React.FC<TourPlayerProps> = ({
       : 0;
 
   return (
-    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: ignore
     <div
       aria-label={`Virtual tour: ${tour.title}`}
       className={cn(

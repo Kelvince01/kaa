@@ -17,6 +17,8 @@ import {
   ConversationStatus,
   ConversationType,
   type CreateConversationRequest,
+  type IConversation,
+  type IMessage,
   MESSAGING_CONSTANTS,
   MessageError,
   type MessageFilters,
@@ -33,7 +35,8 @@ import {
   type UpdateConversationRequest,
   type UserPresencePayload,
 } from "@kaa/models/types";
-import { Types } from "mongoose";
+import { type FilterQuery, Types } from "mongoose";
+import roleService from "../rbac/role.service";
 import { socketService } from "./socket.service";
 
 /**
@@ -61,7 +64,7 @@ export class MessageService {
       }
 
       // Check if a similar conversation already exists for property/application context
-      let existingConversation: any = null;
+      let existingConversation: IConversation | null = null;
       if (request.propertyId || request.applicationId) {
         existingConversation = await this.findExistingConversation(
           request.participantIds.concat(createdBy),
@@ -72,7 +75,7 @@ export class MessageService {
 
       if (existingConversation) {
         return await this.getConversationResponse(
-          existingConversation._id,
+          (existingConversation._id as Types.ObjectId).toString(),
           createdBy
         );
       }
@@ -107,8 +110,12 @@ export class MessageService {
         status: ConversationStatus.ACTIVE,
         participants,
         createdBy,
-        propertyId: request.propertyId,
-        applicationId: request.applicationId,
+        propertyId: request.propertyId
+          ? new Types.ObjectId(request.propertyId)
+          : undefined,
+        applicationId: request.applicationId
+          ? new Types.ObjectId(request.applicationId)
+          : undefined,
         messageCount: 0,
         lastActivity: new Date(),
         settings: {
@@ -118,8 +125,8 @@ export class MessageService {
         metadata: {
           ...request.metadata,
           ...(await this.getKenyaContextMetadata(
-            request.propertyId,
-            request.applicationId
+            request.propertyId ? request.propertyId : undefined,
+            request.applicationId ? request.applicationId : undefined
           )),
         },
         isArchived: false,
@@ -196,7 +203,7 @@ export class MessageService {
       const skip = (page - 1) * limit;
 
       // Build query
-      const query: any = {
+      const query: FilterQuery<IConversation> = {
         "participants.userId": userId,
         "participants.isActive": true,
       };
@@ -617,7 +624,7 @@ export class MessageService {
       const skip = (page - 1) * limit;
 
       // Build query
-      const query: any = {
+      const query: FilterQuery<IMessage> = {
         conversationId,
         isDeleted: filters.isDeleted,
       };
@@ -1004,18 +1011,39 @@ export class MessageService {
     participantIds: string[],
     propertyId?: string,
     applicationId?: string
-  ): Promise<any> {
-    const query: any = {
+  ): Promise<IConversation | null> {
+    const query: FilterQuery<IConversation> = {
       $and: [
         { "participants.userId": { $all: participantIds } },
         { "participants.isActive": true },
       ],
     };
 
-    if (propertyId) query.propertyId = propertyId;
-    if (applicationId) query.applicationId = applicationId;
+    // if (participantIds.length > 0) query["participants.userId"] = { $in: participantIds };
+
+    if (propertyId) query.propertyId = new Types.ObjectId(propertyId);
+    if (applicationId) query.applicationId = new Types.ObjectId(applicationId);
 
     return await Conversation.findOne(query);
+  }
+
+  async getUnreadCount(userId: string): Promise<number> {
+    // Find all conversations for the user
+    const conversations = await Conversation.find({
+      participants: userId,
+    });
+
+    // Calculate total unread messages
+    let totalUnread = 0;
+
+    for (const conversation of conversations) {
+      if (conversation.unreadCount) {
+        const userUnreadCount = conversation.unreadCount.get(userId) || 0;
+        totalUnread += userUnreadCount;
+      }
+    }
+
+    return totalUnread;
   }
 
   /**
@@ -1088,7 +1116,7 @@ export class MessageService {
     _propertyId?: string,
     _applicationId?: string
   ) {
-    const metadata: any = {
+    const metadata: Record<string, any> = {
       timezone: MESSAGING_CONSTANTS.BUSINESS_HOURS.TIMEZONE,
     };
 
@@ -1122,17 +1150,28 @@ export class MessageService {
   /**
    * Process attachments (placeholder - would integrate with file service)
    */
-  private async processAttachments(_attachments: any[]): Promise<any[]> {
+  private async processAttachments(
+    _attachments: { file: File; type: AttachmentType }[]
+  ): Promise<
+    { url: string; key: string; filename: string; contentType: string }[]
+  > {
     // This would integrate with your file upload service
     // For now, returning empty array
-    return await Promise.resolve([]);
+    return await Promise.resolve([
+      {
+        url: "",
+        key: "",
+        filename: "",
+        contentType: "",
+      },
+    ]);
   }
 
   /**
    * Add translation to message
    */
   private async addTranslation(
-    message: any,
+    message: IMessage,
     defaultLanguage: string
   ): Promise<void> {
     // This would integrate with translation service (e.g., Google Translate)
@@ -1154,7 +1193,7 @@ export class MessageService {
   private async sendSystemMessage(
     conversationId: string,
     content: string,
-    metadata?: any
+    metadata?: Record<string, any>
   ): Promise<void> {
     const systemMessage = new Message({
       conversationId,
@@ -1182,8 +1221,8 @@ export class MessageService {
    * Process message in background
    */
   private async processMessageInBackground(
-    message: any,
-    conversation: any
+    message: IMessage,
+    conversation: IConversation
   ): Promise<void> {
     try {
       // Update analytics
@@ -1210,7 +1249,7 @@ export class MessageService {
    * Update message analytics
    */
   private async updateMessageAnalytics(
-    message: any,
+    message: IMessage,
     _conversation: any
   ): Promise<void> {
     const today = new Date();
@@ -1223,7 +1262,7 @@ export class MessageService {
           "metrics.totalMessages": 1,
           [`metrics.messagesByType.${message.type}`]: 1,
           [`metrics.messagesByUser.${message.senderId}`]: 1,
-          "metrics.attachmentCount": message.attachments.length,
+          "metrics.attachmentCount": message.attachments?.length ?? 0,
         },
       },
       { upsert: true, new: true }
@@ -1330,14 +1369,26 @@ export class MessageService {
   /**
    * Get user info (placeholder)
    */
-  private async getUserInfo(userId: string): Promise<any> {
-    // This would fetch user data from user service
-    return await Promise.resolve({
-      _id: userId,
-      firstName: "User",
-      lastName: "Name",
-      avatar: undefined,
-    });
+  private async getUserInfo(userId: string): Promise<{
+    _id: string;
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+    role: ParticipantRole;
+  }> {
+    const user = await roleService.getUserRoleBy({ userId });
+
+    if (!user) {
+      throw new MessageError("USER_NOT_FOUND", "User not found", 404);
+    }
+
+    return {
+      _id: ((user.userId as any)._id as Types.ObjectId).toString(),
+      firstName: (user.userId as any).profile.firstName,
+      lastName: (user.userId as any).profile.lastName,
+      avatar: (user.userId as any).profile.avatar,
+      role: (user.roleId as any).name as ParticipantRole,
+    };
   }
 
   /**
@@ -1397,7 +1448,7 @@ export class MessageService {
 
     return {
       conversation: conversation.toObject(),
-      participants,
+      participants: participants as any,
       lastMessage,
       unreadCount,
       canWrite: participant?.permissions.canWrite as boolean,

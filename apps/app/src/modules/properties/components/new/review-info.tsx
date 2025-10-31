@@ -203,23 +203,26 @@ export const ReviewInfo = ({
     console.log("Submitting property data:", propertyPayload);
 
     // Call the API mutation
-    createPropertyMutation.mutate(propertyPayload as unknown as CreatePropertyData, {
-      onSuccess: (createdProperty) => {
-        console.log("Property created successfully:", createdProperty);
-        // Clear draft forms
-        useDraftStore.setState({ forms: {} });
-        // Mark as finished
-        setFinishedCreating();
-        // Close the modal/dialog
-        setNewPropertyOpen(false);
-        // Navigate or callback
-        callback?.(createdProperty);
-      },
-      onError: (error) => {
-        console.error("Failed to create property:", error);
-        // Error will be handled by the mutation's error state
-      },
-    });
+    createPropertyMutation.mutate(
+      propertyPayload as unknown as CreatePropertyData,
+      {
+        onSuccess: (createdProperty) => {
+          console.log("Property created successfully:", createdProperty);
+          // Clear draft forms
+          useDraftStore.setState({ forms: {} });
+          // Mark as finished
+          setFinishedCreating();
+          // Close the modal/dialog
+          setNewPropertyOpen(false);
+          // Navigate or callback
+          callback?.(createdProperty);
+        },
+        onError: (error) => {
+          console.error("Failed to create property:", error);
+          // Error will be handled by the mutation's error state
+        },
+      }
+    );
   };
 
   return (

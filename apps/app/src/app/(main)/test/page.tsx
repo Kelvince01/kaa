@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import TiptapEditor, { type TiptapEditorRef } from "@kaa/tiptap/editor";
-import MediaLibrary from "@kaa/tiptap/media-library";
+// import MediaLibrary from "@kaa/tiptap/media-library";
 // import SourceEditor from "@kaa/tiptap/source-editor";
 import {
   Form,
@@ -15,6 +15,8 @@ import { Input } from "@kaa/ui/components/input";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useAuth } from "@/modules/auth";
+import { MessagingContainer } from "@/modules/comms/messages";
 
 const testFormSchema = z.object({
   name: z.string(),
@@ -27,6 +29,7 @@ export default function TestPage() {
   const [value, setValue] = useState("");
   const [blocknoteId] = useState("test");
   const editorRef = useRef<TiptapEditorRef>(null);
+  const { user } = useAuth();
 
   const form = useForm<TestForm>({
     resolver: zodResolver(testFormSchema),
@@ -83,9 +86,15 @@ export default function TestPage() {
         </form>
       </Form>
 
-      <MediaLibrary />
+      {/* <MediaLibrary /> */}
 
       {/* <SourceEditor initialContent="let x: number = 5" /> */}
+
+      <MessagingContainer
+        className="h-screen"
+        userId={user?.id || ""}
+        userName={`${user?.firstName} ${user?.lastName}`}
+      />
 
       <button
         onClick={() => {

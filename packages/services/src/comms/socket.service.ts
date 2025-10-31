@@ -7,13 +7,14 @@
 
 import { Conversation } from "@kaa/models";
 import { SocketEvent } from "@kaa/models/types";
-import type { ServerWebSocket } from "bun";
+
+// import type { ServerWebSocket } from "bun";
 
 /**
  * WebSocket connection data structure
  */
 type WebSocketConnection = {
-  ws: ServerWebSocket<any>;
+  ws: any; // ServerWebSocket<any>,
   userId: string;
   userName?: string;
   connectedAt: Date;
@@ -67,7 +68,7 @@ export class SocketService {
    * Register a new WebSocket connection
    */
   addConnection(
-    ws: ServerWebSocket<any>,
+    ws: any, // ServerWebSocket<any>,
     userId: string,
     userName?: string,
     metadata?: Record<string, any>
@@ -101,7 +102,7 @@ export class SocketService {
   /**
    * Remove a WebSocket connection
    */
-  removeConnection(ws: ServerWebSocket<any>, userId: string): void {
+  removeConnection(ws: any, userId: string): void {
     const userConnections = this.connections.get(userId);
     if (!userConnections) return;
 
@@ -303,7 +304,7 @@ export class SocketService {
    * Emit to specific WebSocket connection
    */
   emitToConnection(
-    ws: ServerWebSocket<any>,
+    ws: any, // ServerWebSocket<any>,
     event: SocketEvent,
     payload: any
   ): void {

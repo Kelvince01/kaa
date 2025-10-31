@@ -214,8 +214,6 @@
 //             </div>
 //             <div className="flex flex-wrap gap-1">
 //               {variables.map((variable) => (
-//                 // biome-ignore lint/a11y/useKeyWithClickEvents: false positive
-// // biome-ignore lint/a11y/noNoninteractiveElementInteractions: false positive
 // <code
 //                   key={variable.name}
 //                   className="text-xs bg-background px-2 py-1 rounded border cursor-pointer hover:bg-accent"

@@ -1,9 +1,8 @@
 // Service
-export * from "./methods.service";
 
-// Queries
-export * from "./methods.queries";
-
+export * from "./components/AddPaymentMethodCard";
 // Components
 export * from "./components/PaymentMethodsList";
-export * from "./components/AddPaymentMethodCard";
+// Queries
+export * from "./methods.queries";
+export * from "./methods.service";

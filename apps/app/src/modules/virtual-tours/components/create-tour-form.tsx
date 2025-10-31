@@ -439,9 +439,6 @@ export const CreateTourForm: React.FC<CreateTourFormProps> = ({
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                         {Object.entries(tourTypeConfig).map(
                           ([type, config]) => (
-                            // biome-ignore lint/a11y/noStaticElementInteractions: ignore
-                            // biome-ignore lint/a11y/noNoninteractiveElementInteractions: ignore
-                            // biome-ignore lint/a11y/useKeyWithClickEvents: ignore
                             <div
                               className={`relative cursor-pointer rounded-lg border p-4 transition-all hover:border-primary ${
                                 field.value === type

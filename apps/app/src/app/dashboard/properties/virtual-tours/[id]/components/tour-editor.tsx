@@ -183,9 +183,6 @@ export const TourEditor: React.FC<TourEditorProps> = ({ tourId }) => {
           <CardContent className="p-0">
             <div className="space-y-1 px-4 pb-4">
               {tour.scenes.map((scene, index) => (
-                // biome-ignore lint/a11y/noNoninteractiveElementInteractions: ignore
-                // biome-ignore lint/a11y/noStaticElementInteractions: ignore
-                // biome-ignore lint/a11y/useKeyWithClickEvents: ignore
                 <div
                   className={cn(
                     "flex cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors",
@@ -299,9 +296,6 @@ export const TourEditor: React.FC<TourEditorProps> = ({ tourId }) => {
                     if (!hotspot) return null;
 
                     return (
-                      // biome-ignore lint/a11y/noNoninteractiveElementInteractions: ignore
-                      // biome-ignore lint/a11y/noStaticElementInteractions: ignore
-                      // biome-ignore lint/a11y/useKeyWithClickEvents: ignore
                       <div
                         className={cn(
                           "absolute cursor-pointer rounded-full border-2 border-white transition-all",

@@ -66,7 +66,7 @@ export function PropertiesTableActionBar<TData>({
       <div className="flex items-center space-x-2">
         <DataTableViewOptions table={table} />
         <DataTableExportButton onExport={onExport} />
-        
+
         {/* Add Property Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -88,7 +88,9 @@ export function PropertiesTableActionBar<TData>({
                 </span>
               </div>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/dashboard/properties/new-v4")}>
+            <DropdownMenuItem
+              onClick={() => router.push("/dashboard/properties/new-v4")}
+            >
               <Sparkles className="mr-2 h-4 w-4 text-primary" />
               <div className="flex flex-col">
                 <span className="font-medium">Enhanced Form (V4)</span>

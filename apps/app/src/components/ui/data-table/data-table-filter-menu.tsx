@@ -397,7 +397,6 @@ function DataTableFilterItem<TData>({
     if (!column) return null;
 
     return (
-      // biome-ignore lint/a11y/noNoninteractiveElementInteractions: false positive
       // biome-ignore lint/a11y/useSemanticElements: false positive
       <div
         className="flex h-8 items-center rounded-md bg-background"

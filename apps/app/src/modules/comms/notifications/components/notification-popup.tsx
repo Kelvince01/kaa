@@ -125,9 +125,6 @@ const NotificationItem = ({
   };
 
   return (
-    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: false positive
-    // biome-ignore lint/a11y/noStaticElementInteractions: false positive
-    // biome-ignore lint/a11y/useKeyWithClickEvents: false positive
     <div
       className={cn(
         "group relative cursor-pointer border-b p-4 transition-colors hover:bg-accent/50",
@@ -140,7 +137,7 @@ const NotificationItem = ({
         <div className="absolute top-4 left-2 h-2 w-2 rounded-full bg-primary" />
       )}
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
           <NotificationIcon type={notification.type} />
         </div>
 
