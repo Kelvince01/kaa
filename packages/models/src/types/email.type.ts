@@ -7,7 +7,6 @@
 
 import type mongoose from "mongoose";
 import type { BaseDocument } from "./base.type";
-import type { DeliveryStatus } from "./comms.type";
 import type { ITemplate } from "./template.type";
 
 /**
@@ -36,6 +35,7 @@ export enum EmailTemplateType {
  * Email status states
  */
 export enum EmailStatus {
+  DRAFT = "draft",
   QUEUED = "queued",
   SENDING = "sending",
   SENT = "sent",
@@ -106,13 +106,23 @@ export type EmailSettings = {
   };
 };
 
-export type EmailErrorType = {
+export type IEmailError = {
   code: string;
   message: string;
   provider?: string;
   retryCount?: number;
   lastRetryAt?: Date;
   stack?: string;
+};
+
+export type EmailDeliveryStatus = {
+  delivered: number;
+  failed: number;
+  pending: number;
+  total: number;
+  lastUpdated: Date;
+  providerStatus?: string;
+  providerError?: string;
 };
 
 /**
@@ -138,6 +148,30 @@ export type IEmailAddress = {
   name?: string;
 };
 
+export type EmailContext = {
+  userId?: mongoose.Types.ObjectId;
+  orgId?: mongoose.Types.ObjectId;
+  campaignId?: string;
+  applicationId?: mongoose.Types.ObjectId;
+  paymentId?: mongoose.Types.ObjectId;
+  propertyId?: mongoose.Types.ObjectId;
+  unitId?: mongoose.Types.ObjectId;
+  tenantId?: mongoose.Types.ObjectId;
+  requestId?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  source?: string;
+  tags?: string[];
+};
+
+export type EmailContent = {
+  subject?: string;
+  body: string;
+  html?: string;
+  text?: string;
+  attachments?: IEmailAttachment[];
+};
+
 export interface IEmail extends BaseDocument {
   templateType?: EmailTemplateType;
 
@@ -149,16 +183,12 @@ export interface IEmail extends BaseDocument {
   replyTo?: IEmailAddress;
 
   // Content
-  subject: string;
-  text?: string;
-  html?: string;
-  attachments?: IEmailAttachment[];
+  content: EmailContent;
 
   // Metadata
   templateId?: mongoose.Types.ObjectId;
   category: EmailCategory;
   priority: EmailPriority;
-  tags: string[];
 
   // Tracking
   status: EmailStatus;
@@ -184,26 +214,18 @@ export interface IEmail extends BaseDocument {
   bounceReason?: string;
   bounceType?: BounceType;
 
-  // Relations
-  userId?: mongoose.Types.ObjectId;
-  propertyId?: string;
-  applicationId?: string;
-  paymentId?: string;
-
   // Flags
   isTest: boolean;
 
   headers?: Record<string, string>;
-  context?: Record<string, any>;
+  context?: EmailContext;
   metadata?: Record<string, any>;
 
   scheduledAt?: Date;
   settings: EmailSettings;
   expiresAt?: Date;
-  cost?: number;
-  deliveryStatus?: DeliveryStatus;
-  // context: CommContext;
-  error?: EmailErrorType;
+  deliveryStatus?: EmailDeliveryStatus;
+  error?: IEmailError;
 
   markAsDelivered(): Promise<void>;
   markAsOpened(): Promise<void>;
@@ -225,6 +247,19 @@ export interface IEmail extends BaseDocument {
 //     };
 //   };
 // }
+
+// Analytics types
+export type EmailMetrics = {
+  total: number;
+  delivered: number;
+  failed: number;
+  bounced: number;
+  pending: number;
+  deliveryRate: number;
+  failureRate: number;
+  bounceRate: number;
+  averageDeliveryTime?: number; // minutes
+};
 
 /**
  * Email analytics interface
@@ -289,6 +324,49 @@ export type IEmailBounce = {
   createdAt: Date;
 };
 
+export type EmailBulkProgress = {
+  total: number;
+  sent: number;
+  delivered: number;
+  pending: number;
+  opened: number;
+  clicked: number;
+  bounced: number;
+  failed: number;
+  unsubscribed: number;
+  percentage: number;
+};
+
+export type IEmailBulk = {
+  name: string;
+  description?: string;
+  priority: EmailPriority;
+  recipients: IEmailAddress[];
+  template?: mongoose.Types.ObjectId;
+  settings: EmailSettings;
+  status: EmailStatus;
+  progress: EmailBulkProgress;
+  scheduledAt?: Date;
+  startedAt?: Date;
+  completedAt?: Date;
+  emailIds: string[];
+  context: EmailContext;
+  createdBy?: mongoose.Types.ObjectId;
+} & BaseDocument;
+
+export type IEmailWebhookPayload = {
+  type: "delivery" | "bounce" | "complaint" | "open" | "click";
+  emailId: string;
+  recipient?: IEmailAddress;
+  timestamp: Date;
+  status?: EmailStatus;
+  error?: {
+    code: string;
+    message: string;
+  };
+  metadata?: Record<string, any>;
+};
+
 // ==================== REQUEST/RESPONSE TYPES ====================
 
 /**
@@ -296,45 +374,43 @@ export type IEmailBounce = {
  */
 export type SendEmailRequest = {
   templateType?: EmailTemplateType;
-  to: IEmailAddress | IEmailAddress[] | string | string[];
-  cc?: IEmailAddress | IEmailAddress[] | string | string[];
-  bcc?: IEmailAddress | IEmailAddress[] | string | string[];
-  from?: IEmailAddress | string;
-  replyTo?: IEmailAddress | string;
+  to: IEmailAddress[];
+  cc?: IEmailAddress[];
+  bcc?: IEmailAddress[];
+  from?: IEmailAddress;
+  replyTo?: IEmailAddress;
 
   // Content (for non-template emails)
-  subject?: string;
-  text?: string;
-  html?: string;
+  content: EmailContent;
 
   // Settings
   priority?: EmailPriority;
   category?: EmailCategory;
-  tags?: string[];
   language?: "en" | "sw";
-  scheduledFor?: Date;
-  attachments?: IEmailAttachment[];
+  scheduledAt?: Date;
+  context?: EmailContext;
+  metadata?: Record<string, any>;
+  settings: EmailSettings;
 
   // Options
   respectBusinessHours?: boolean;
   respectOptOut?: boolean;
   isTest?: boolean;
-
-  // Relations
-  userId?: string;
-  propertyId?: string;
-  applicationId?: string;
-  paymentId?: string;
 };
 
 /**
  * Bulk email request
  */
 export type BulkEmailRequest = {
+  name: string;
+  description?: string;
   templateType: EmailTemplateType;
   recipients: Array<{
-    to: IEmailAddress | string;
+    to: IEmailAddress;
+    cc?: IEmailAddress;
+    bcc?: IEmailAddress;
   }>;
+  template?: mongoose.Types.ObjectId;
 
   // Settings
   priority?: EmailPriority;
@@ -342,6 +418,9 @@ export type BulkEmailRequest = {
   tags?: string[];
   language?: "en" | "sw";
   scheduledFor?: Date;
+  context?: EmailContext;
+  metadata?: Record<string, any>;
+  settings: EmailSettings;
 
   // Bulk options
   batchSize?: number;
@@ -592,6 +671,282 @@ export type EmailServiceConfig = {
   };
 };
 
+export type EmailAnalytics = {
+  period: {
+    start: Date;
+    end: Date;
+  };
+  totals: EmailMetrics;
+  byStatus: Record<EmailStatus, number>;
+  byProvider: Record<string, EmailMetrics>;
+  byTemplate: Record<string, EmailMetrics>;
+  byCategory: Record<EmailCategory, EmailMetrics>;
+  trends: {
+    hourly: Array<{
+      hour: string;
+      sent: number;
+      delivered: number;
+      failed: number;
+    }>;
+    daily: Array<{
+      date: string;
+      sent: number;
+      delivered: number;
+      failed: number;
+    }>;
+  };
+  costs: {
+    total: number;
+    byProvider: Record<string, number>;
+    averagePerMessage: number;
+  };
+  performance: {
+    averageSendTime: number;
+    averageRenderTime: number;
+    queueWaitTime: number;
+    successRate: number;
+  };
+};
+
+export type TemplateAnalytics = {
+  templateId: string;
+  templateName: string;
+  category: EmailCategory;
+  usage: {
+    total: number;
+    successful: number;
+    failed: number;
+    successRate: number;
+  };
+  performance: {
+    averageRenderTime: number;
+    averageDeliveryTime?: number;
+    cacheHitRate?: number;
+  };
+  metrics: {
+    delivered?: number;
+    opened?: number; // Email only
+    clicked?: number; // Email only
+    bounced?: number;
+    complained?: number;
+    unsubscribed?: number;
+  };
+  rates: {
+    deliveryRate?: number;
+    openRate?: number;
+    clickRate?: number;
+    bounceRate?: number;
+    complaintRate?: number;
+    unsubscribeRate?: number;
+  };
+  lastUsed?: Date;
+};
+
+export type ProviderAnalytics = {
+  provider: string;
+  metrics: EmailMetrics;
+  costs: {
+    total: number;
+    averagePerMessage: number;
+  };
+  performance: {
+    averageResponseTime: number;
+    successRate: number;
+    errorRate: number;
+  };
+  limits: {
+    rateLimit?: {
+      current: number;
+      limit: number;
+      resetTime: Date;
+    };
+    quota?: {
+      used: number;
+      limit: number;
+      resetTime: Date;
+    };
+  };
+  status: "healthy" | "degraded" | "unhealthy";
+};
+
+export type CampaignAnalytics = {
+  campaignId: string;
+  campaignName?: string;
+  communications: EmailAnalytics;
+  templates: TemplateAnalytics[];
+  providers: ProviderAnalytics[];
+  abTests?: ABTestAnalytics[];
+  goals?: {
+    name: string;
+    target: number;
+    achieved: number;
+    conversionRate: number;
+  }[];
+};
+
+export type ABTestAnalytics = {
+  testId: string;
+  testName: string;
+  status: "running" | "completed" | "stopped";
+  variants: Array<{
+    variantId: string;
+    variantName: string;
+    weight: number;
+    sampleSize: number;
+    metrics: {
+      sent: number;
+      delivered: number;
+      opened?: number;
+      clicked?: number;
+      converted?: number;
+    };
+    rates: {
+      deliveryRate?: number;
+      openRate?: number;
+      clickRate?: number;
+      conversionRate?: number;
+    };
+  }>;
+  winner?: {
+    variantId: string;
+    variantName: string;
+    confidence: number;
+    improvement: number;
+  };
+  startedAt: Date;
+  endedAt?: Date;
+  duration: number; // days
+};
+
+export type UserAnalytics = {
+  userId: string;
+  communications: {
+    total: number;
+    // byType: Record<EmailType, number>;
+    byStatus: Record<EmailStatus, number>;
+  };
+  preferences: {
+    unsubscribed: boolean;
+    categories: Record<EmailCategory, boolean>;
+    // channels: Record<EmailType, boolean>;
+  };
+  engagement: {
+    openRate?: number;
+    clickRate?: number;
+    lastActivity: Date;
+  };
+};
+
+export type GeographicAnalytics = {
+  byCountry: Record<string, EmailMetrics>;
+  byRegion: Record<string, EmailMetrics>;
+  byCity: Record<string, EmailMetrics>;
+  topPerforming: {
+    countries: Array<{ code: string; metrics: EmailMetrics }>;
+    regions: Array<{ code: string; metrics: EmailMetrics }>;
+    cities: Array<{ code: string; metrics: EmailMetrics }>;
+  };
+};
+
+export type TimeBasedAnalytics = {
+  byHour: Record<number, EmailMetrics>;
+  byDayOfWeek: Record<number, EmailMetrics>;
+  byMonth: Record<number, EmailMetrics>;
+  peakHours: Array<{
+    hour: number;
+    volume: number;
+    deliveryRate: number;
+  }>;
+  bestPerformingTimes: {
+    hour: number;
+    dayOfWeek: number;
+    deliveryRate: number;
+  };
+};
+
+export type AnalyticsQuery = {
+  startDate: Date;
+  endDate: Date;
+  status?: EmailStatus[];
+  provider?: string[];
+  templateId?: string[];
+  category?: EmailCategory[];
+  userId?: string;
+  orgId?: string;
+  campaignId?: string;
+  groupBy?:
+    | "hour"
+    | "day"
+    | "week"
+    | "month"
+    | "provider"
+    | "template"
+    | "type";
+  metrics?: string[]; // Specific metrics to include
+};
+
+export type AnalyticsReport = {
+  id: string;
+  name: string;
+  description?: string;
+  query: AnalyticsQuery;
+  data: EmailAnalytics;
+  generatedAt: Date;
+  generatedBy?: string;
+  format: "json" | "csv" | "pdf";
+  scheduled?: {
+    frequency: "daily" | "weekly" | "monthly";
+    nextRun: Date;
+  };
+};
+
+export type RealTimeMetrics = {
+  activeJobs: number;
+  queuedJobs: number;
+  failedJobs: number;
+  processingRate: number; // messages per second
+  averageQueueTime: number; // seconds
+  errorRate: number;
+  providers: Record<
+    string,
+    {
+      status: "healthy" | "degraded" | "unhealthy";
+      activeJobs: number;
+      errorRate: number;
+    }
+  >;
+};
+
+// Alert and monitoring types
+export type EmailAlertCondition = {
+  metric: string;
+  operator: "gt" | "lt" | "eq" | "gte" | "lte";
+  threshold: number;
+  duration?: number; // minutes
+};
+
+export type AlertRule = {
+  id: string;
+  name: string;
+  description?: string;
+  conditions: EmailAlertCondition[];
+  // channels: EmailType[];
+  enabled: boolean;
+  cooldown: number; // minutes
+  lastTriggered?: Date;
+};
+
+export type EmailAlert = {
+  id: string;
+  ruleId: string;
+  ruleName: string;
+  message: string;
+  severity: "low" | "medium" | "high" | "critical";
+  triggeredAt: Date;
+  resolvedAt?: Date;
+  data: Record<string, any>;
+};
+
 // ==================== CONSTANTS ====================
 
 /**
@@ -709,10 +1064,10 @@ export type EmailQueueItem = {
 /**
  * Email delivery report
  */
-export type EmailDeliveryReport = {
+export type IEmailDeliveryReport = {
   emailId: string;
   templateType?: EmailTemplateType;
-  recipient: string;
+  recipient: IEmailAddress;
   status: EmailStatus;
   sentAt?: Date;
   deliveredAt?: Date;
@@ -840,6 +1195,9 @@ export type QueryEmails = {
   priority?: string | undefined;
   recipients?: string[] | undefined;
   templateId?: string | undefined;
+  startDate?: string | undefined;
+  endDate?: string | undefined;
+  status?: string | undefined;
 };
 
 export default {

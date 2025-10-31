@@ -1,6 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import TiptapEditor, { type TiptapEditorRef } from "@kaa/tiptap/editor";
+import MediaLibrary from "@kaa/tiptap/media-library";
+// import SourceEditor from "@kaa/tiptap/source-editor";
 import {
   Form,
   FormControl,
@@ -9,7 +12,7 @@ import {
   FormLabel,
 } from "@kaa/ui/components/form";
 import { Input } from "@kaa/ui/components/input";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -23,6 +26,7 @@ type TestForm = z.infer<typeof testFormSchema>;
 export default function TestPage() {
   const [value, setValue] = useState("");
   const [blocknoteId] = useState("test");
+  const editorRef = useRef<TiptapEditorRef>(null);
 
   const form = useForm<TestForm>({
     resolver: zodResolver(testFormSchema),
@@ -33,9 +37,12 @@ export default function TestPage() {
   };
 
   return (
-    <div>
+    <div className="mx-4 my-4 flex flex-col">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form
+          className="gap-4 space-y-4"
+          onSubmit={form.handleSubmit(onSubmit)}
+        >
           <FormField
             control={form.control}
             name="name"
@@ -48,8 +55,37 @@ export default function TestPage() {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <TiptapEditor
+                    contentMaxHeight={640}
+                    contentMinHeight={256}
+                    initialContent={field.value}
+                    onContentChange={field.onChange}
+                    output="html"
+                    placeholder={{
+                      paragraph: "Type your content here...",
+                      imageCaption: "Type caption for image (optional)",
+                    }}
+                    ref={editorRef}
+                    ssr={true}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
         </form>
       </Form>
+
+      <MediaLibrary />
+
+      {/* <SourceEditor initialContent="let x: number = 5" /> */}
 
       <button
         onClick={() => {

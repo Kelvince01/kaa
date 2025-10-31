@@ -10,8 +10,13 @@ import {
   BounceType,
   EMAIL_CONSTANTS,
   EmailAttachmentType,
+  type EmailBulkProgress,
   EmailCategory,
+  type EmailContent,
+  type EmailContext,
+  type EmailDeliveryStatus,
   EmailPriority,
+  type EmailSettings,
   EmailStatus,
   EmailTemplateType,
   type IEmail,
@@ -19,6 +24,9 @@ import {
   type IEmailAnalytics,
   type IEmailAttachment,
   type IEmailBounce,
+  type IEmailBulk,
+  type IEmailDeliveryReport,
+  type IEmailError,
 } from "./types/email.type";
 
 const emailAttachmentSchema = new Schema<IEmailAttachment>(
@@ -75,7 +83,7 @@ const emailAttachmentSchema = new Schema<IEmailAttachment>(
 );
 
 // Comm Error Schema
-const emailErrorSchema = new Schema(
+const emailErrorSchema = new Schema<IEmailError>(
   {
     code: {
       type: String,
@@ -97,7 +105,7 @@ const emailErrorSchema = new Schema(
 );
 
 // Email Settings Schema
-const emailSettingsSchema = new Schema(
+const emailSettingsSchema = new Schema<EmailSettings>(
   {
     enableDeliveryReports: {
       type: Boolean,
@@ -139,7 +147,7 @@ const emailSettingsSchema = new Schema(
 );
 
 // Delivery Status Schema
-const deliveryStatusSchema = new Schema(
+const deliveryStatusSchema = new Schema<EmailDeliveryStatus>(
   {
     delivered: {
       type: Number,
@@ -163,6 +171,97 @@ const deliveryStatusSchema = new Schema(
     },
     providerStatus: String,
     providerError: String,
+  },
+  { _id: false }
+);
+
+// Email Context Schema
+const emailContextSchema = new Schema<EmailContext>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+    },
+    orgId: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization",
+    },
+    campaignId: String,
+    propertyId: {
+      type: Schema.Types.ObjectId,
+      ref: "Property",
+      index: true,
+    },
+    unitId: {
+      type: Schema.Types.ObjectId,
+      ref: "Unit",
+      index: true,
+    },
+    applicationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Application",
+    },
+    paymentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Payment",
+    },
+    tenantId: {
+      type: Schema.Types.ObjectId,
+      ref: "Tenant",
+    },
+    requestId: {
+      type: String,
+      index: true,
+    },
+    ipAddress: String,
+    userAgent: String,
+    source: String,
+    tags: {
+      type: [String],
+      default: [],
+      validate: {
+        validator: (v: string[]) => v.length <= 10,
+        message: "Maximum 10 tags allowed",
+      },
+    },
+  },
+  { _id: false }
+);
+
+// Comm Content Schema
+const emailContentSchema = new Schema<EmailContent>(
+  {
+    body: {
+      type: String,
+      required: true,
+    },
+    // Subject
+    subject: {
+      type: String,
+      required: true,
+      maxlength: 998, // RFC 2822 limit
+      validate: {
+        validator: (v: string) => v.trim().length > 0,
+        message: "Subject cannot be empty",
+      },
+    },
+    text: {
+      type: String,
+      maxlength: 100_000, // 100KB text limit
+    },
+    html: {
+      type: String,
+      maxlength: 500_000, // 500KB HTML limit
+    },
+    attachments: {
+      type: [emailAttachmentSchema],
+      default: [],
+      validate: {
+        validator: (v: IEmailAttachment[]) => v.length <= 10,
+        message: "Maximum 10 attachments allowed",
+      },
+    },
   },
   { _id: false }
 );
@@ -234,30 +333,9 @@ export const emailSchema = new Schema<IEmail>(
     },
 
     // Content
-    subject: {
-      type: String,
+    content: {
+      type: emailContentSchema,
       required: true,
-      maxlength: 998, // RFC 2822 limit
-      validate: {
-        validator: (v: string) => v.trim().length > 0,
-        message: "Subject cannot be empty",
-      },
-    },
-    text: {
-      type: String,
-      maxlength: 100_000, // 100KB text limit
-    },
-    html: {
-      type: String,
-      maxlength: 500_000, // 500KB HTML limit
-    },
-    attachments: {
-      type: [emailAttachmentSchema],
-      default: [],
-      validate: {
-        validator: (v: IEmailAttachment[]) => v.length <= 10,
-        message: "Maximum 10 attachments allowed",
-      },
     },
 
     templateId: { type: String, ref: "Template", default: null },
@@ -274,14 +352,6 @@ export const emailSchema = new Schema<IEmail>(
       required: true,
       default: EmailPriority.NORMAL,
       index: true,
-    },
-    tags: {
-      type: [String],
-      default: [],
-      validate: {
-        validator: (v: string[]) => v.length <= 10,
-        message: "Maximum 10 tags allowed",
-      },
     },
 
     // Tracking
@@ -370,28 +440,6 @@ export const emailSchema = new Schema<IEmail>(
       enum: Object.values(BounceType),
     },
 
-    // Relations
-    userId: {
-      type: String,
-      ref: "User",
-      index: true,
-    },
-    propertyId: {
-      type: String,
-      ref: "Property",
-      index: true,
-    },
-    applicationId: {
-      type: String,
-      ref: "Application",
-      index: true,
-    },
-    paymentId: {
-      type: String,
-      ref: "Payment",
-      index: true,
-    },
-
     // Flags
     isTest: {
       type: Boolean,
@@ -401,7 +449,6 @@ export const emailSchema = new Schema<IEmail>(
     },
 
     headers: { type: Object },
-    context: { type: Object },
     metadata: { type: Map, of: Schema.Types.Mixed, default: new Map() },
 
     // Timing
@@ -412,14 +459,13 @@ export const emailSchema = new Schema<IEmail>(
     },
 
     // Tracking
-    cost: Number,
     deliveryStatus: deliveryStatusSchema,
 
     // Context and settings
-    // context: {
-    //   type: commContextSchema,
-    //   default: {},
-    // },
+    context: {
+      type: emailContextSchema,
+      default: {},
+    },
     settings: {
       type: emailSettingsSchema,
       required: true,
@@ -435,7 +481,7 @@ export const emailSchema = new Schema<IEmail>(
 
 // Compound indexes for efficient queries
 emailSchema.index({ status: 1, priority: -1, scheduledFor: 1 }); // Queue processing
-emailSchema.index({ userId: 1, createdAt: -1 }); // User emails
+emailSchema.index({ "context.userId": 1, createdAt: -1 }); // User emails
 emailSchema.index({ templateType: 1, category: 1, createdAt: -1 }); // Template analytics
 emailSchema.index({ sendGridMessageId: 1 }, { sparse: true }); // SendGrid tracking
 emailSchema.index({ "to.email": 1, createdAt: -1 }); // Recipient lookup
@@ -444,7 +490,7 @@ emailSchema.index({ language: 1, businessHoursOnly: 1 }); // Kenya-specific quer
 
 // Text search index
 emailSchema.index(
-  { subject: "text", text: "text", html: "text" },
+  { "content.subject": "text", "content.text": "text", "content.html": "text" },
   {
     name: "email_text_search",
     default_language: "english",
@@ -556,6 +602,179 @@ emailSchema.methods.getDeliveryTime = function (): number | null {
   }
   return null;
 };
+
+// Bulk Comm Progress Schema
+const emailBulkProgressSchema = new Schema<EmailBulkProgress>(
+  {
+    total: {
+      type: Number,
+      default: 0,
+    },
+    sent: {
+      type: Number,
+      default: 0,
+    },
+    delivered: {
+      type: Number,
+      default: 0,
+    },
+    failed: {
+      type: Number,
+      default: 0,
+    },
+    pending: {
+      type: Number,
+      default: 0,
+    },
+    percentage: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { _id: false }
+);
+
+// Bulk Comm Recipients Schema
+const emailBulkRecipientSchema = new Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+    },
+    name: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+    metadata: {
+      type: Map,
+      of: Schema.Types.Mixed,
+      default: new Map(),
+    },
+  },
+  { _id: false }
+);
+
+// Bulk Comm Schema
+const emailBulkSchema = new Schema<IEmailBulk & Document>(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100,
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+    priority: {
+      type: String,
+      enum: Object.values(EmailPriority),
+      default: EmailPriority.NORMAL,
+    },
+
+    // Recipients
+    recipients: [emailBulkRecipientSchema],
+
+    // Template
+    template: {
+      type: Schema.Types.ObjectId,
+      ref: "Template",
+    },
+
+    // Settings
+    settings: {
+      type: emailSettingsSchema,
+      required: true,
+    },
+
+    // Progress tracking
+    status: {
+      type: String,
+      enum: Object.values(EmailStatus),
+      default: EmailStatus.DRAFT,
+    },
+    progress: {
+      type: emailBulkProgressSchema,
+      default: {},
+    },
+
+    // Timing
+    scheduledAt: Date,
+    startedAt: Date,
+    completedAt: Date,
+
+    // Individual comm IDs
+    emailIds: [String],
+
+    // Context
+    context: {
+      type: emailContextSchema,
+      default: {},
+    },
+
+    // Creator
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+  },
+  {
+    timestamps: true,
+    collection: "email_bulks",
+  }
+);
+
+// Indexes for bulk comms
+emailBulkSchema.index({ status: 1 });
+emailBulkSchema.index({ scheduledAt: 1 });
+emailBulkSchema.index({ "context.orgId": 1 });
+emailBulkSchema.index({ createdBy: 1 });
+emailBulkSchema.index({ createdAt: -1 });
+
+// Update progress percentage before saving
+emailBulkSchema.pre("save", function () {
+  if (this.progress.total > 0) {
+    this.progress.percentage = Math.round(
+      ((this.progress.sent + this.progress.delivered + this.progress.failed) /
+        this.progress.total) *
+        100
+    );
+  }
+});
+
+// Delivery Report Schema
+const emailDeliveryReportSchema = new Schema<IEmailDeliveryReport & Document>(
+  {
+    emailId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    recipient: {
+      email: String,
+      name: String,
+    },
+    status: {
+      type: String,
+      enum: Object.values(EmailStatus),
+      required: true,
+    },
+    deliveredAt: Date,
+  },
+  {
+    timestamps: true,
+    collection: "email_delivery_reports",
+  }
+);
+
+// Indexes for delivery reports
+emailDeliveryReportSchema.index({ emailId: 1, createdAt: -1 });
+emailDeliveryReportSchema.index({ status: 1 });
+emailDeliveryReportSchema.index({ provider: 1 });
+emailDeliveryReportSchema.index({ createdAt: -1 });
 
 // ==================== EMAIL ANALYTICS SCHEMA ====================
 
@@ -804,7 +1023,6 @@ EmailBounceSchema.index({ isBlacklisted: 1, email: 1 });
 // ==================== EXPORT MODELS ====================
 
 export const Email = mongoose.model<IEmail>("Email", emailSchema);
-// export const Email = model<IEmail & Document>("Email", EmailSchema);
 export const EmailAnalytics = model<IEmailAnalytics & Document>(
   "EmailAnalytics",
   EmailAnalyticsSchema
@@ -812,4 +1030,12 @@ export const EmailAnalytics = model<IEmailAnalytics & Document>(
 export const EmailBounce = model<IEmailBounce & Document>(
   "EmailBounce",
   EmailBounceSchema
+);
+export const EmailBulk = model<IEmailBulk & Document>(
+  "EmailBulk",
+  emailBulkSchema
+);
+export const EmailDeliveryReport = model<IEmailDeliveryReport & Document>(
+  "EmailDeliveryReport",
+  emailDeliveryReportSchema
 );

@@ -9,7 +9,6 @@ export * from "./backup.type";
 export * from "./base.type";
 export * from "./booking.type";
 export * from "./common.type";
-export * from "./comms.type";
 export * from "./compliance.type";
 export * from "./contract.type";
 export * from "./contractor.type";

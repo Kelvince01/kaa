@@ -7,8 +7,6 @@ import {
 } from "@kaa/models";
 import {
   type AtIncomingMessagePayload,
-  type CommWebhookPayload,
-  type DeliveryStatus,
   type ISmsAnalytics,
   type ISmsMessage,
   type ISmsRecipient,
@@ -18,19 +16,22 @@ import {
   SMS_CONSTANTS,
   SmsCategory,
   SmsDeliveryStatus,
+  type SmsDeliveryStatusTracking,
   SmsError,
   type SmsFilters,
   type SmsListResponse,
   SmsPriority,
-  type SmsProvider,
+  SmsProvider,
   type SmsResponse,
   type SmsServiceResponse,
   SmsTemplateType,
-  type SmsType,
+  SmsType,
+  type SmsWebhookPayload,
 } from "@kaa/models/types";
 import { genRandom6DigitString, logger } from "@kaa/utils";
 import AfricasTalking from "africastalking";
 import { DateTime } from "luxon";
+import type mongoose from "mongoose";
 import type { FilterQuery } from "mongoose";
 import { TemplateEngine } from "../engines/template.engine";
 import { smsQueue } from "../queues/sms.queue";
@@ -67,7 +68,7 @@ type SmsData = {
 
 class SmsService {
   keyOptions: KeyOptions;
-  private readonly defaultProvider: SmsProvider = "africastalking";
+  private readonly defaultProvider: SmsProvider = SmsProvider.AFRICASTALKING;
 
   constructor() {
     this.keyOptions = {
@@ -159,7 +160,9 @@ class SmsService {
 
       // Transform SMS
       const smsResponses = await Promise.all(
-        smsMessages.map((sms) => this.getSmsResponse(sms._id.toString()))
+        smsMessages.map((sms) =>
+          this.getSmsResponse((sms._id as mongoose.Types.ObjectId).toString())
+        )
       );
 
       return {
@@ -286,12 +289,14 @@ class SmsService {
 
       // Queue for sending if not scheduled
       if (!scheduledAt) {
-        await this.queueSms(savedMessage._id.toString());
+        await this.queueSms(
+          (savedMessage._id as mongoose.Types.ObjectId).toString()
+        );
       }
 
       return {
         success: true,
-        messageId: savedMessage._id.toString(),
+        messageId: (savedMessage._id as mongoose.Types.ObjectId).toString(),
         segments: savedMessage.segments,
       };
     } catch (error) {
@@ -365,12 +370,14 @@ class SmsService {
 
       // Queue for sending if not scheduled
       if (!scheduledAt) {
-        await this.queueSms(savedMessage._id.toString());
+        await this.queueSms(
+          (savedMessage._id as mongoose.Types.ObjectId).toString()
+        );
       }
 
       return {
         success: true,
-        messageId: savedMessage._id.toString(),
+        messageId: (savedMessage._id as mongoose.Types.ObjectId).toString(),
         segments: savedMessage.segments,
       };
     } catch (error) {
@@ -969,7 +976,7 @@ class SmsService {
     }
   }
 
-  getStatus(_messageId: string): Promise<DeliveryStatus> {
+  getStatus(_messageId: string): Promise<SmsDeliveryStatusTracking> {
     // Africa's Talking doesn't provide real-time status checking
     // Status is typically updated via webhooks
     return Promise.resolve({
@@ -981,12 +988,12 @@ class SmsService {
     });
   }
 
-  async processWebhook(payload: CommWebhookPayload): Promise<void> {
+  async processWebhook(payload: SmsWebhookPayload): Promise<void> {
     try {
       // Africa's Talking sends delivery reports via webhook
       if (payload.type === "delivery") {
         logger.info(
-          `SMS delivery status: ${payload.communicationId} - ${payload.status}`
+          `SMS delivery status: ${payload.smsId} - ${payload.status}`
         );
 
         // Here you would update the communication record in the database
@@ -1122,7 +1129,7 @@ export class SmsServiceFactory {
         appName: "Kaa",
         appUrl: "https://app.kaa.com",
       },
-      type: "notification",
+      type: SmsType.NOTIFICATION,
       context,
     });
   }
@@ -1151,7 +1158,7 @@ export class SmsServiceFactory {
         appName: "Kaa",
         expiryMinutes: options?.expiryMinutes || 10,
       },
-      type: "verification",
+      type: SmsType.VERIFICATION,
       // language: options?.language || "en",
       // category: SmsCategory.AUTHENTICATION,
       priority: SmsPriority.HIGH,
@@ -1191,7 +1198,7 @@ export class SmsServiceFactory {
         unitNumber,
         paymentLink,
       },
-      type: "reminder",
+      type: SmsType.REMINDER,
       priority: SmsPriority.HIGH,
       context,
     });
@@ -1224,7 +1231,7 @@ export class SmsServiceFactory {
         receiptNumber,
         unitNumber,
       },
-      type: "notification",
+      type: SmsType.NOTIFICATION,
       context,
     });
   }
@@ -1259,7 +1266,7 @@ export class SmsServiceFactory {
         unitNumber,
         paymentLink,
       },
-      type: "alert",
+      type: SmsType.ALERT,
       priority: SmsPriority.URGENT,
       context,
     });
@@ -1292,7 +1299,7 @@ export class SmsServiceFactory {
         status,
         description,
       },
-      type: "notification",
+      type: SmsType.NOTIFICATION,
       context,
     });
   }

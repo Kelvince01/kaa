@@ -10,20 +10,25 @@ import {
   SmsCategory,
   SmsDeliveryStatus,
   SmsPriority,
+  SmsProvider,
   SmsTemplateType,
+  SmsType,
 } from "./types/sms.type";
 
-const smsRecipientSchema = new Schema({
-  phoneNumber: {
-    type: String,
-    required: true,
+const smsRecipientSchema = new Schema(
+  {
+    phoneNumber: {
+      type: String,
+      required: true,
+    },
+    name: String,
+    metadata: { type: Schema.Types.Mixed },
   },
-  name: String,
-  metadata: { type: Schema.Types.Mixed },
-});
+  { _id: false }
+);
 
 // SMS Message Schema
-const smsMessageSchema = new Schema<ISmsMessage & Document>(
+const smsMessageSchema = new Schema<ISmsMessage>(
   {
     to: {
       type: [smsRecipientSchema], // Can be string, array of strings, or array of SmsRecipient
@@ -61,17 +66,9 @@ const smsMessageSchema = new Schema<ISmsMessage & Document>(
     },
     type: {
       type: String,
-      enum: [
-        "transactional",
-        "promotional",
-        "notification",
-        "alert",
-        "reminder",
-        "verification",
-        "bulk",
-      ],
+      enum: Object.values(SmsType),
       required: true,
-      default: "transactional",
+      default: SmsType.TRANSACTIONAL,
     },
 
     // Africa's Talking specific
@@ -273,7 +270,7 @@ const smsMessageSchema = new Schema<ISmsMessage & Document>(
       retryInterval: { type: Number, default: 5 }, // minutes
       provider: {
         type: String,
-        enum: ["africastalking", "twilio", "aws-sns", "mock"],
+        enum: Object.values(SmsProvider),
       },
       webhookUrl: String,
     },
@@ -457,15 +454,7 @@ const smsBulkMessageSchema = new Schema<ISmsBulkMessage & Document>(
     },
     type: {
       type: String,
-      enum: [
-        "transactional",
-        "promotional",
-        "notification",
-        "alert",
-        "reminder",
-        "verification",
-        "bulk",
-      ],
+      enum: Object.values(SmsType),
       required: true,
     },
     priority: {
@@ -511,13 +500,16 @@ const smsBulkMessageSchema = new Schema<ISmsBulkMessage & Document>(
       maxRetries: { type: Number, default: 3 },
       provider: {
         type: String,
-        enum: ["africastalking", "twilio", "aws-sns", "mock"],
+        enum: Object.values(SmsProvider),
       },
       webhookUrl: String,
     },
 
     // Individual message IDs for tracking
-    messageIds: [String],
+    messageIds: {
+      type: [String],
+      default: [],
+    },
 
     context: {
       userId: {
@@ -585,15 +577,7 @@ const smsDeliveryReportSchema = new Schema<ISmsDeliveryReport & Document>(
     },
     status: {
       type: String,
-      enum: [
-        "pending",
-        "queued",
-        "sending",
-        "sent",
-        "delivered",
-        "failed",
-        "expired",
-      ],
+      enum: Object.values(SmsDeliveryStatus),
       required: true,
     },
     cost: String,

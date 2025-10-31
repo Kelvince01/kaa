@@ -1,8 +1,8 @@
 import { Email } from "@kaa/models";
 import type {
-  CommWebhookPayload,
-  DeliveryStatus,
+  EmailDeliveryStatus,
   IEmail,
+  IEmailWebhookPayload,
   QueryEmails,
   SendBulkEmail,
   SendBulkEmailWithTemplate,
@@ -71,6 +71,9 @@ class EmailService {
       metadata,
       subject,
       content,
+      startDate,
+      endDate,
+      status,
     } = query;
 
     const limit = limitQuery || 20;
@@ -81,11 +84,18 @@ class EmailService {
       $or: [{ to: { $in: recipients } }],
     };
 
+    if (status) dbQuery.status = status;
     if (templateId) dbQuery.templateId = { $in: templateId };
     if (data) dbQuery.data = { $in: data };
     if (metadata) dbQuery.metadata = { $in: metadata };
-    if (subject) dbQuery.subject = { $in: subject };
-    if (content) dbQuery.content = { $in: content };
+    if (subject) dbQuery.content.subject = { $in: subject };
+    if (content) dbQuery.content.body = { $in: content };
+
+    if (startDate || endDate) {
+      dbQuery.createdAt = {};
+      if (startDate) dbQuery.createdAt.$gte = new Date(startDate);
+      if (endDate) dbQuery.createdAt.$lte = new Date(endDate);
+    }
 
     const emails = await Email.find(dbQuery)
       .sort({ createdAt: -1 })
@@ -110,7 +120,7 @@ class EmailService {
     return await Email.findByIdAndUpdate(emailId, email, { new: true });
   }
 
-  async getStatus(_messageId: string): Promise<DeliveryStatus> {
+  async getStatus(_messageId: string): Promise<EmailDeliveryStatus> {
     // Resend doesn't provide real-time status checking
     // Status is typically updated via webhooks
     return await Promise.resolve({
@@ -122,32 +132,43 @@ class EmailService {
     });
   }
 
-  async processWebhook(payload: CommWebhookPayload): Promise<void> {
+  async processWebhook(payload: IEmailWebhookPayload): Promise<void> {
+    const email = await Email.findById(payload.emailId);
+    if (!email) {
+      logger.warn(`Email not found: ${payload.emailId}`);
+      return;
+    }
+
     try {
       // Process different webhook types
       switch (payload.type) {
         case "delivery":
           // Email delivered
-          logger.info(`Email delivered: ${payload.communicationId}`);
+          logger.info(`Email delivered: ${payload.emailId}`);
+          email.markAsDelivered();
           break;
         case "bounce":
           // Email bounced
-          logger.warn(
-            `Email bounced: ${payload.communicationId}`,
-            payload.error
+          logger.warn(`Email bounced: ${payload.emailId}`, payload.error);
+          email.markAsBounced(
+            payload.error?.code as any,
+            payload.error?.message || "Unknown error"
           );
           break;
         case "complaint":
           // Spam complaint
-          logger.warn(`Spam complaint: ${payload.communicationId}`);
+          logger.warn(`Spam complaint: ${payload.emailId}`);
+          // email.markAsSpam();
           break;
         case "open":
           // Email opened
-          logger.info(`Email opened: ${payload.communicationId}`);
+          logger.info(`Email opened: ${payload.emailId}`);
+          email.markAsOpened();
           break;
         case "click":
           // Link clicked
-          logger.info(`Email link clicked: ${payload.communicationId}`);
+          logger.info(`Email link clicked: ${payload.emailId}`);
+          email.markAsClicked();
           break;
         default:
           logger.warn(`Unknown webhook type: ${payload.type}`);
@@ -161,10 +182,14 @@ class EmailService {
     }
   }
 
-  async getBalance?(): Promise<number> {
-    // Resend doesn't provide balance checking via API
+  async getUsage?(_startDate: Date, _endDate: Date): Promise<any> {
+    // Resend doesn't provide usage checking via API
     // This would need to be checked via the dashboard
-    return await Promise.resolve(0);
+    return await Promise.resolve({
+      total: 0,
+      sent: 0,
+      delivered: 0,
+    });
   }
 
   /**

@@ -8,7 +8,6 @@ export * from "./auth.model";
 export * from "./backup.model";
 export * from "./base.model";
 export * from "./booking.model";
-export * from "./comms.model";
 export * from "./compliance.model";
 export * from "./contract.model";
 export * from "./contractor.model";

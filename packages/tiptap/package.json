@@ -58,6 +58,8 @@
   },
   "exports": {
     "./editor": "./src/editor/index.ts",
+    "./source-editor": "./src/source-editor/Editor.tsx",
+    "./media-library": "./src/media-library/index.ts",
     "./client-renderer": "./src/renderer/ClientRenderer.tsx",
     "./server-renderer": "./src/renderer/ServerRenderer.tsx"
   }

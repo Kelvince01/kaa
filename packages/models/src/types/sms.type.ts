@@ -6,6 +6,7 @@
  */
 
 import type mongoose from "mongoose";
+import type { BaseDocument } from "./base.type";
 import type { ITemplate } from "./template.type";
 
 /**
@@ -36,14 +37,16 @@ export enum SmsDeliveryStatus {
   BUFFERED = "Buffered",
 }
 
-export type SmsType =
-  | "transactional"
-  | "promotional"
-  | "notification"
-  | "alert"
-  | "reminder"
-  | "verification"
-  | "bulk";
+export enum SmsType {
+  TRANSACTIONAL = "transactional",
+  PROMOTIONAL = "promotional",
+  NOTIFICATION = "notification",
+  ALERT = "alert",
+  REMINDER = "reminder",
+  VERIFICATION = "verification",
+  BULK = "bulk",
+}
+
 /**
  * SMS priority levels
  */
@@ -76,7 +79,12 @@ export enum KenyaNetworkCode {
   JTL = "63901",
 }
 
-export type SmsProvider = "africastalking" | "twilio" | "aws-sns" | "mock";
+export enum SmsProvider {
+  AFRICASTALKING = "africastalking",
+  TWILIO = "twilio",
+  AWS_SNS = "aws-sns",
+  MOCK = "mock",
+}
 
 export type ISmsRecipient = {
   phoneNumber: string;
@@ -84,8 +92,7 @@ export type ISmsRecipient = {
   metadata?: Record<string, any>;
 };
 
-export type ISmsMessage = {
-  _id?: string;
+export type ISmsMessage = BaseDocument & {
   to: ISmsRecipient[];
   message?: string; // Raw message content
   template?: mongoose.Types.ObjectId; // Template-based message
@@ -243,6 +250,44 @@ export type ISmsDeliveryReport = {
   errorMessage?: string;
   deliveredAt?: Date;
   createdAt?: Date;
+};
+
+export type SmsDeliveryStatusTracking = {
+  delivered: number;
+  failed: number;
+  pending: number;
+  total: number;
+  lastUpdated: Date;
+  providerStatus?: string;
+  providerError?: string;
+};
+
+export type SmsWebhookPayload = {
+  type: "delivery" | "bounce" | "complaint" | "open" | "click";
+  smsId: string;
+  providerMessageId?: string;
+  recipient?: ISmsRecipient;
+  timestamp: Date;
+  status?: SmsDeliveryStatus;
+  error?: {
+    code: string;
+    message: string;
+  };
+  metadata?: Record<string, any>;
+};
+
+export type SendResult = {
+  success: boolean;
+  providerMessageId?: string;
+  cost?: number;
+  segments?: number;
+  status?: string;
+  error?: {
+    code: string;
+    message: string;
+    providerCode?: string;
+  };
+  metadata?: Record<string, any>;
 };
 
 export type SmsConfig = {

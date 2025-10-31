@@ -1,8 +1,19 @@
 import clsx from "clsx";
 import { LuCheck } from "react-icons/lu";
 
+export type ImageData = {
+  id?: string;
+  url: string;
+  created_at?: string;
+  bytes?: number;
+  format: string;
+  display_name: string;
+  width: number;
+  height: number;
+};
+
 type MediaGalleryProps = {
-  data: any[];
+  data: ImageData[];
   selected: any | null;
   onSelect: (image: any) => void;
 };
@@ -14,7 +25,7 @@ const MediaGallery: React.FC<MediaGalleryProps> = ({
 }) => {
   return (
     <div className="media-gallery">
-      {data.map((image, index) => (
+      {data?.map((image, index) => (
         // biome-ignore lint/a11y/noNoninteractiveElementInteractions: by author
         // biome-ignore lint/a11y/noStaticElementInteractions: by author
         // biome-ignore lint/a11y/useKeyWithClickEvents: by author

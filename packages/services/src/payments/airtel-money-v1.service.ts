@@ -5,7 +5,7 @@
 
 import crypto from "node:crypto";
 import { EventEmitter } from "node:events";
-import { SmsPriority } from "@kaa/models/types";
+import { SmsPriority, SmsType } from "@kaa/models/types";
 import { logger } from "@kaa/utils";
 import { smsService } from "../comms/sms.service";
 import { alternativePaymentsService } from "./provider.service";
@@ -229,7 +229,7 @@ class AirtelMoneyService extends EventEmitter {
       await smsService.sendSms({
         to: [{ phoneNumber: options.phoneNumber }],
         message,
-        type: "notification",
+        type: SmsType.NOTIFICATION,
         priority: SmsPriority.HIGH,
         context: {
           source: "virtual-tours",

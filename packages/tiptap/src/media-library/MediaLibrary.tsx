@@ -1,30 +1,29 @@
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import Button from "../editor/components/ui/Button";
-import MediaGallery from "./MediaGallery";
+import MediaGallery, { type ImageData } from "./MediaGallery";
 
 import "./style.scss";
+
+const defaultImages: ImageData[] = [
+  {
+    url: "https://ssl.cdn-redfin.com/photo/rent/124d0781-6aff-49f4-b8c6-5e64e5ec47a1/islphoto/genIsl.0_2.webp",
+    format: "image/png",
+    display_name: "Test image",
+    width: 100,
+    height: 100,
+  },
+];
 
 type MediaLibraryProps = {
   onInsert?: (image: ImageData) => void;
   onClose?: () => void;
 };
 
-type ImageData = {
-  id?: string;
-  url: string;
-  created_at?: string;
-  bytes?: number;
-  format: string;
-  display_name: string;
-  width: number;
-  height: number;
-};
-
 const MediaLibrary: React.FC<MediaLibraryProps> = ({ onInsert, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [images, setImages] = useState<ImageData[]>([]);
+  const [images, setImages] = useState<ImageData[]>(defaultImages);
   const [previews, setPreviews] = useState<ImageData[]>([]);
   const [selected, setSelected] = useState<ImageData | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -59,7 +58,7 @@ const MediaLibrary: React.FC<MediaLibraryProps> = ({ onInsert, onClose }) => {
   };
 
   const uploadImage = async (file: File) => {
-    if (!file.type.startsWith("image/")) return;
+    if (!file.type.startsWith("image/")) return null;
 
     const formData = new FormData();
     formData.append("file", file);
@@ -72,6 +71,7 @@ const MediaLibrary: React.FC<MediaLibraryProps> = ({ onInsert, onClose }) => {
       return await response.json();
     } catch (error) {
       console.error("Upload error:", error);
+      return null;
     }
   };
 
@@ -86,13 +86,16 @@ const MediaLibrary: React.FC<MediaLibraryProps> = ({ onInsert, onClose }) => {
     setPreviews(loadedPreviews);
 
     const uploadPromises = Array.from(files).map(uploadImage);
-    const uploadImages = await Promise.all(uploadPromises);
+    const uploadResults = await Promise.all(uploadPromises);
+    const uploadedImages = uploadResults.filter(
+      (img): img is ImageData => img !== null
+    );
 
     for (const preview of loadedPreviews) {
       URL.revokeObjectURL(preview.url);
     }
-    setPreviews([]);
-    setImages((prev) => [...uploadImages, ...prev]);
+    setPreviews(defaultImages);
+    setImages((prev) => [...uploadedImages, ...prev]);
     setUploading(false);
   };
 
@@ -104,9 +107,21 @@ const MediaLibrary: React.FC<MediaLibraryProps> = ({ onInsert, onClose }) => {
         setLoading(true);
         const response = await fetch("/api/images");
         const data = await response.json();
-        setImages(data);
+
+        // Ensure data is always an array
+        if (Array.isArray(data)) {
+          setImages(data);
+        } else if (data?.images && Array.isArray(data.images)) {
+          setImages(data.images);
+        } else if (data?.data && Array.isArray(data.data)) {
+          setImages(data.data);
+        } else {
+          console.error("Unexpected API response format:", data);
+          setImages([]);
+        }
       } catch (error) {
         console.error("Error fetching images:", error);
+        setImages([]);
       } finally {
         setLoading(false);
       }
