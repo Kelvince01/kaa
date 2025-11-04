@@ -6,6 +6,7 @@
 import { Badge } from "@kaa/ui/components/badge";
 import { cn } from "@kaa/ui/lib/utils";
 import { Building, Home, Star } from "lucide-react";
+import ImprovedMapMarker from "@/components/common/map/improved-map-marker";
 import Marker from "@/components/common/map/map-marker";
 import type { Property } from "@/modules/properties/property.type";
 
@@ -41,8 +42,8 @@ export function PropertyMarker({
   }).format(property.pricing.rent);
 
   const coordinates = property.geolocation?.coordinates || [0, 0];
-  const longitude = coordinates[1];
-  const latitude = coordinates[0];
+  const longitude = coordinates[0];
+  const latitude = coordinates[1];
 
   const PropertyIcon =
     PROPERTY_TYPE_ICONS[property.type as keyof typeof PROPERTY_TYPE_ICONS] ||
@@ -63,7 +64,7 @@ export function PropertyMarker({
   // Enhanced marker for selected/hovered state
   if (isSelected || isHovered) {
     return (
-      <Marker
+      <ImprovedMapMarker
         data={property}
         latitude={latitude || 0}
         longitude={longitude || 0}
@@ -150,7 +151,7 @@ export function PropertyMarker({
             </div>
           </div>
         </div>
-      </Marker>
+      </ImprovedMapMarker>
     );
   }
 

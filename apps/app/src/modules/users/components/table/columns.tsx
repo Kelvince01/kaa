@@ -32,12 +32,13 @@ import {
   UserX,
 } from "lucide-react";
 import type * as React from "react";
+import { use, useMemo } from "react";
 import { toast } from "sonner";
 import { DataTableColumnHeader } from "@/components/ui/data-table/data-table-column-header";
 import { getErrorMessage } from "@/lib/handle-error";
+import { getRoleById } from "@/modules/rbac/rbac.service";
 import type { DataTableRowAction } from "@/shared/types/data-table";
 import { formatDate } from "@/shared/utils/format.util";
-
 import { UserRole, UserStatus, type User as UserType } from "../../user.type";
 
 export function getStatusIcon(status: UserType["status"]) {
@@ -53,7 +54,7 @@ export function getStatusIcon(status: UserType["status"]) {
   return <Icon className="h-4 w-4" />;
 }
 
-export function getRoleBadge(role: UserRole) {
+export function getRoleBadge(userId: string) {
   const roleColors = {
     [UserRole.SUPER_ADMIN]:
       "bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50",
@@ -90,9 +91,15 @@ export function getRoleBadge(role: UserRole) {
     [UserRole.USER]: "User",
   };
 
+  const roleObj = useMemo(async () => await getRoleById(userId), [userId]);
+  const role = use(roleObj)?.role?.name as UserRole;
+
   return (
-    <Badge className={roleColors[role]} variant="secondary">
-      {roleLabels[role] || role}
+    <Badge
+      className={roleColors[role as keyof typeof roleColors]}
+      variant="secondary"
+    >
+      {roleLabels[role as keyof typeof roleLabels] || role}
     </Badge>
   );
 }
@@ -198,18 +205,17 @@ export function getUsersTableColumns({
       accessorKey: "email",
       cell: ({ row }) => <span>{row.original.email}</span>,
     },
-    {
-      accessorKey: "role",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Role" />
-      ),
-      cell: ({ row }) =>
-        getRoleBadge((row.original.role as { name: UserRole }).name),
-      filterFn: (row, _id, value) =>
-        value.includes((row.original.role as { name: UserRole }).name),
-      enableSorting: true,
-      enableHiding: true,
-    },
+    // {
+    //   accessorKey: "role",
+    //   header: ({ column }) => (
+    //     <DataTableColumnHeader column={column} title="Role" />
+    //   ),
+    //   cell: ({ row }) => getRoleBadge(row.original.id),
+    //   /*filterFn: (row, _id, value) =>
+    //     value.includes((row.original.role as { name: UserRole }).name),*/
+    //   enableSorting: true,
+    //   enableHiding: true,
+    // },
     {
       accessorKey: "status",
       header: ({ column }) => (

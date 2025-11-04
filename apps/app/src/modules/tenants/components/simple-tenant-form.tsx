@@ -22,14 +22,19 @@ import { Input } from "@kaa/ui/components/input";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@kaa/ui/components/select";
 import { Textarea } from "@kaa/ui/components/textarea";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { useUserContext } from "@/modules/me";
+import { useProperties } from "@/modules/properties";
+import { useUnits } from "@/modules/units";
 import { useCreateTenant, useUpdateTenant } from "../tenant.mutations";
 import { TenantStatus } from "../tenant.type";
 
@@ -37,7 +42,7 @@ import { TenantStatus } from "../tenant.type";
 const tenantFormSchema = z.object({
   property: z.string().min(1, "Property is required"),
   unit: z.string().min(1, "Unit is required"),
-  contract: z.string().min(1, "Contract is required"),
+  // contract: z.string().min(1, "Contract is required"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().optional(),
   status: z.nativeEnum(TenantStatus).optional(),
@@ -63,15 +68,21 @@ export default function SimpleTenantForm({
   initialData,
   onSuccess,
 }: SimpleTenantFormProps) {
+  const [selectedProperty, setSelectedProperty] = useState<string>("");
   const createTenantMutation = useCreateTenant();
   const updateTenantMutation = useUpdateTenant();
+  const { profile } = useUserContext();
+  const { data: properties } = useProperties({ landlordId: profile?.data._id });
+  const { data: units, refetch: refetchUnits } = useUnits({
+    property: selectedProperty,
+  });
 
   const form = useForm<TenantFormValues>({
     resolver: zodResolver(tenantFormSchema),
     defaultValues: {
       property: initialData?.property || "",
       unit: initialData?.unit || "",
-      contract: initialData?.contract || "",
+      // contract: initialData?.contract || "",
       startDate: initialData?.startDate
         ? new Date(initialData.startDate).toISOString().split("T")[0]
         : "",
@@ -88,6 +99,10 @@ export default function SimpleTenantForm({
       notes: initialData?.notes || "",
     },
   });
+
+  useEffect(() => {
+    if (selectedProperty) refetchUnits();
+  }, [selectedProperty, refetchUnits]);
 
   const onSubmit = async (values: TenantFormValues) => {
     try {
@@ -134,26 +149,76 @@ export default function SimpleTenantForm({
                     <FormItem>
                       <FormLabel>Property</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter property ID" {...field} />
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            setSelectedProperty(value);
+                          }}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a property" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {properties?.properties?.map((property) => (
+                              <SelectItem
+                                key={property._id}
+                                value={property._id}
+                              >
+                                <div>
+                                  <div className="font-medium">
+                                    {property.title}
+                                  </div>
+                                  <div className="text-muted-foreground text-sm">
+                                    {property.location.address.line1}
+                                  </div>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="unit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unit</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter unit ID" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
+                {selectedProperty && (
+                  <FormField
+                    control={form.control}
+                    name={"unit"}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unit</FormLabel>
+                        <Select
+                          defaultValue={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="capitalize">
+                              <SelectValue placeholder="Select a label" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectGroup>
+                              {units?.items.map((item) => (
+                                <SelectItem
+                                  className="capitalize"
+                                  key={item._id}
+                                  value={item._id}
+                                >
+                                  {item.unitNumber}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {/* <FormField
                   control={form.control}
                   name="contract"
                   render={({ field }) => (
@@ -165,7 +230,7 @@ export default function SimpleTenantForm({
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
               </div>
             </CardContent>
           </Card>

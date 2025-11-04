@@ -32,6 +32,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
+import { useCreateApplication } from "@/modules/applications/application.mutations";
 import type { Property } from "@/modules/properties/property.type";
 import { formatCurrency } from "@/shared/utils/format.util";
 
@@ -62,6 +63,7 @@ export function ContactFormModal({
   onClose,
 }: ContactFormModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const createApplicationMutation = useCreateApplication();
 
   const landlord = property.landlord;
 
@@ -91,14 +93,17 @@ export function ContactFormModal({
     try {
       setIsSubmitting(true);
 
-      // Here you would typically send the contact form data to your API
-      // For now, we'll just simulate a successful submission
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
       console.log("Contact form data:", {
         ...data,
         propertyId: property._id,
         landlordId: (landlord as any)?.id,
+      });
+
+      await createApplicationMutation.mutateAsync({
+        property: property._id,
+        moveInDate: data.moveInDate ?? "",
+        offerAmount: Number(data.budget) ?? 0,
+        notes: data.message,
       });
 
       toast.success(

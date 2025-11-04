@@ -1,5 +1,5 @@
 import { Property, SavedSearch } from "@kaa/models";
-import type { IProperty } from "@kaa/models/types";
+import { FurnishedStatus, type IProperty } from "@kaa/models/types";
 import { Elysia, t } from "elysia";
 import type { FilterQuery } from "mongoose";
 import { authPlugin } from "~/features/auth/auth.plugin";
@@ -232,12 +232,10 @@ export const searchController = new Elysia({
 
           const filter: FilterQuery<IProperty> = {
             _id: { $ne: propertyId },
-            availability: { isAvailable: true },
+            "availability.isAvailable": true,
             type,
-            specifications: { bedrooms: bedroomsRange },
-            pricing: {
-              rent: priceRange,
-            },
+            "specifications.bedrooms": bedroomsRange,
+            "pricing.rent": priceRange,
           };
 
           if (
@@ -729,7 +727,7 @@ export const searchController = new Elysia({
 const buildFilterFromSearchParams = (
   searchParams: Record<string, unknown>
 ): Record<string, unknown> => {
-  const filter: FilterQuery<IProperty> = { available: true };
+  const filter: FilterQuery<IProperty> = { "availability.isAvailable": true };
 
   // Property type filter
   if (searchParams.propertyType) {
@@ -765,8 +763,10 @@ const buildFilterFromSearchParams = (
 
   // Furnished status filter
   if (searchParams.furnished) {
-    filter.rules.furnished =
-      searchParams.furnished === "true" || searchParams.furnished === true;
+    filter.specifications.furnished =
+      searchParams.furnished === "true" || searchParams.furnished === true
+        ? FurnishedStatus.FULLY_FURNISHED
+        : FurnishedStatus.UNFURNISHED;
   }
 
   // Pets allowed filter
@@ -779,7 +779,7 @@ const buildFilterFromSearchParams = (
   if (searchParams.availableFrom) {
     const date = new Date(searchParams.availableFrom as string);
     if (!Number.isNaN(date.getTime())) {
-      filter.availableFrom = { $lte: date };
+      filter.availability.availableFrom = { $lte: date };
     }
   }
 

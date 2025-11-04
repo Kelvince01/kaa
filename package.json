@@ -18,6 +18,7 @@
     "dev:web": "turbo -F @kaa/web dev",
     "dev:app": "turbo -F @kaa/app dev",
     "dev:api": "turbo -F @kaa/api dev",
+    "dev:tfml": "turbo -F @kaa/tfml dev",
     "dev:docs": "turbo -F @kaa/docs dev",
     "release": "semantic-release",
     "commit~": "cz",

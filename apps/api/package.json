@@ -48,6 +48,7 @@
     "@elysiajs/stream": "^1.1.0",
     "@kaa/ai": "workspace:*",
     "@kaa/config": "workspace:*",
+    "@kaa/constants": "workspace:*",
     "@kaa/email": "workspace:*",
     "@kaa/models": "workspace:*",
     "@kaa/services": "workspace:*",

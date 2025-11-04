@@ -25,7 +25,7 @@ type ModalState = {
   vacateUnit: boolean;
 };
 
-export function UnitsContainer() {
+export function UnitsContainer({ property }: { property: string }) {
   const router = useRouter();
   const { data: propertiesData, isLoading: isLoadingProperties } =
     useProperties();
@@ -41,8 +41,7 @@ export function UnitsContainer() {
     vacateUnit: false,
   });
 
-  // Get the first property as default for creating units
-  const defaultPropertyId = propertiesData?.properties?.[0]?._id || "";
+  const defaultPropertyId = property;
   const hasProperties =
     propertiesData?.properties && propertiesData.properties.length > 0;
 
@@ -121,6 +120,7 @@ export function UnitsContainer() {
           <UnitsOverview
             onCreateUnit={handleCreateUnit}
             onViewUnit={handleViewUnit}
+            property={property}
           />
         );
 

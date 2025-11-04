@@ -39,7 +39,7 @@ const tenantSchema: Schema<ITenant> = new Schema<ITenant>(
     contract: {
       type: Schema.Types.ObjectId,
       ref: "Contract",
-      required: [true, "Contract is required"],
+      // required: [true, "Contract is required"],
     },
 
     // Enhanced tenant classification
@@ -380,8 +380,8 @@ tenantSchema.virtual("fullName").get(function () {
 // Virtual for primary emergency contact
 tenantSchema.virtual("primaryEmergencyContact").get(function () {
   return (
-    this.emergencyContacts.find((contact) => contact.isPrimary) ||
-    this.emergencyContacts[0]
+    this.emergencyContacts?.find((contact) => contact.isPrimary) ||
+    this.emergencyContacts?.[0]
   );
 });
 

@@ -5,15 +5,26 @@
  * watermarking, malware scanning, and Kenya-specific features
  */
 
+import config from "@kaa/config/api";
 import {
   FileAccessLevel,
   type FileCategory,
   FileStatus,
   FileType,
+  type IBulkFileOperation,
   ImageOperation,
-} from "@kaa/models/file.type";
+} from "@kaa/models/types";
 import { filesV2Service as filesService } from "@kaa/services";
+import {
+  generatePresignedUploadUrl,
+  getOptimizedAssetUrl,
+  listUserFiles,
+  processFromBuffer,
+  uploadFile,
+} from "@kaa/utils";
 import Elysia, { t } from "elysia";
+import mongoose from "mongoose";
+import ShortUniqueId from "short-unique-id";
 import { authPlugin } from "~/features/auth/auth.plugin";
 import { accessPlugin } from "~/features/rbac/rbac.plugin";
 
@@ -116,8 +127,17 @@ export const fileV2Controller = new Elysia().group("files/v2", (app) =>
       {
         body: t.Object({
           file: t.File({
+            // type: [
+            //   "image/png",
+            //   "image/jpeg",
+            //   "image/jpg",
+            //   "image/gif",
+            //   "image/bmp",
+            //   "image/webp",
+            // ], // List of acceptable image types
             maxSize: 100 * 1024 * 1024, // 100MB
           }),
+          description: t.Optional(t.String()),
           category: t.String(),
           organizationId: t.Optional(t.String()),
           accessLevel: t.Optional(t.String()),
@@ -243,11 +263,55 @@ export const fileV2Controller = new Elysia().group("files/v2", (app) =>
       }
     )
 
+    .get(
+      "/v1",
+      async ({ set, user }) => {
+        try {
+          // List files from storage
+          const files = await listUserFiles(user.id);
+
+          // Get file metadata from database
+          const fileMetadata = await filesService.getFilesByUserId(user.id);
+
+          // Combine storage data with metadata
+          const combinedFiles = files.map((file) => {
+            const metadata = fileMetadata.find(
+              (meta) => meta.path === file.pathname
+            );
+            return {
+              ...file,
+              id: metadata?.id,
+              metadata: metadata || {},
+            };
+          });
+
+          set.status = 200;
+          return {
+            status: "success",
+            results: combinedFiles.length,
+            files: combinedFiles,
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            status: "error",
+            message: "Failed to get files",
+          };
+        }
+      },
+      {
+        detail: {
+          tags: ["files"],
+          summary: "Get all files for current user",
+        },
+      }
+    )
+
     // ==================== DOWNLOAD URL ====================
 
     .get(
       "/:id/download",
-      async ({ set, user, params, query }) => {
+      async ({ set, user, params, query, headers }) => {
         try {
           const expiresIn = query.expiresIn
             ? Number.parseInt(query.expiresIn, 10)
@@ -257,6 +321,12 @@ export const fileV2Controller = new Elysia().group("files/v2", (app) =>
             user.id,
             expiresIn
           );
+
+          // Log the download
+          await filesService.logFileAccess(params.id, user.id, "DOWNLOAD", {
+            ipAddress: headers["x-forwarded-for"] || headers["x-real-ip"],
+            userAgent: headers["user-agent"],
+          });
 
           set.status = 200;
           return {
@@ -289,7 +359,7 @@ export const fileV2Controller = new Elysia().group("files/v2", (app) =>
     // ==================== SEARCH FILES ====================
 
     .get(
-      "/search",
+      "/",
       async ({ set, user, query }) => {
         try {
           const searchQuery = {
@@ -441,6 +511,7 @@ export const fileV2Controller = new Elysia().group("files/v2", (app) =>
         }),
         body: t.Object({
           originalName: t.Optional(t.String()),
+          description: t.Optional(t.String()),
           tags: t.Optional(t.Array(t.String())),
           accessLevel: t.Optional(t.Enum(FileAccessLevel)),
           kenyaMetadata: t.Optional(
@@ -459,6 +530,50 @@ export const fileV2Controller = new Elysia().group("files/v2", (app) =>
         detail: {
           tags: ["files-v2"],
           summary: "Update file metadata",
+        },
+      }
+    )
+
+    // Copy file
+    .post(
+      "/:id/copy",
+      async ({ set, user, params, body }) => {
+        try {
+          const { id } = params;
+          const { name } = body;
+          const copiedFile = await filesService.copyFile(id, user.id, name);
+
+          if (!copiedFile) {
+            set.status = 404;
+            return {
+              status: "error",
+              message: "File not found",
+            };
+          }
+
+          set.status = 201;
+          return {
+            status: "success",
+            file: copiedFile,
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            status: "error",
+            message: "Failed to copy file",
+          };
+        }
+      },
+      {
+        params: t.Object({
+          id: t.String(),
+        }),
+        body: t.Object({
+          name: t.Optional(t.String()),
+        }),
+        detail: {
+          tags: ["files"],
+          summary: "Copy a file",
         },
       }
     )
@@ -492,6 +607,318 @@ export const fileV2Controller = new Elysia().group("files/v2", (app) =>
         detail: {
           tags: ["files-v2"],
           summary: "Soft delete file",
+        },
+      }
+    )
+
+    // Generate presigned URL for direct CDN upload
+    .post(
+      "/upload-url",
+      async ({ set, user, body }) => {
+        try {
+          const { fileName, contentType } = body;
+
+          // Validate file type
+          if (!config.cdn.allowedTypes.includes(contentType)) {
+            set.status = 400;
+            return {
+              status: "error",
+              message: "File type not allowed",
+            };
+          }
+
+          // Generate presigned upload URL
+          const uploadData = await generatePresignedUploadUrl(
+            user.id,
+            fileName,
+            contentType,
+            {
+              public: body.public,
+            }
+          );
+
+          set.status = 200;
+          return {
+            status: "success",
+            uploadData,
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            status: "error",
+            message: "Failed to generate upload URL",
+          };
+        }
+      },
+      {
+        body: t.Object({
+          fileName: t.String(),
+          contentType: t.String(),
+          public: t.Optional(t.Boolean()),
+        }),
+        detail: {
+          tags: ["files"],
+          summary: "Generate presigned upload URL for direct CDN upload",
+        },
+      }
+    )
+    // Get optimized asset URL
+    .get(
+      "/optimize/:path",
+      ({ set, params, query }) => {
+        try {
+          const { path } = params;
+          const { w, h, q, f, fit } = query;
+
+          const optimizedUrl = getOptimizedAssetUrl(path, {
+            width: w ? Number.parseInt(w, 10) : undefined,
+            height: h ? Number.parseInt(h, 10) : undefined,
+            quality: q ? Number.parseInt(q, 10) : undefined,
+            format: f,
+            fit,
+          });
+
+          // Set CDN headers
+          set.headers = {
+            "Cache-Control": "public, max-age=31536000, immutable",
+            "CDN-Cache-Control": "public, max-age=31536000",
+            "X-Optimized": "true",
+          };
+
+          set.status = 200;
+          return {
+            status: "success",
+            url: optimizedUrl,
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            status: "error",
+            message: "Failed to generate optimized URL",
+          };
+        }
+      },
+      {
+        params: t.Object({
+          path: t.String(),
+        }),
+        query: t.Object({
+          w: t.Optional(t.String()),
+          h: t.Optional(t.String()),
+          q: t.Optional(t.String()),
+          f: t.Optional(t.String()),
+          fit: t.Optional(t.String()),
+        }),
+        detail: {
+          tags: ["files"],
+          summary: "Get optimized asset URL",
+        },
+      }
+    )
+    // Direct upload endpoint for CDN
+    .post(
+      "/upload-direct",
+      async ({ set, body, headers }) => {
+        try {
+          const userId = headers["x-user-id"];
+          const fileName = headers["x-file-name"];
+
+          if (!(userId && fileName)) {
+            set.status = 400;
+            return {
+              status: "error",
+              message: "Missing required headers",
+            };
+          }
+
+          const fileBuffer = await body.file.arrayBuffer();
+          const { randomUUID } = new ShortUniqueId({ length: 20 });
+          const fileExtension = body.file.name.split(".").pop() || ".png";
+          const uniqueFileName = `${randomUUID()}.${fileExtension}`;
+
+          // Process and upload file
+          const processed = await processFromBuffer(Buffer.from(fileBuffer));
+
+          const file = await uploadFile(
+            {
+              originalname: uniqueFileName,
+              buffer: processed,
+              mimetype: body.file.type,
+              size: body.file.size,
+            },
+            {
+              userId,
+              public: true,
+              optimization: {
+                quality: config.cdn.imageOptimization.quality,
+                format: "auto",
+              },
+            }
+          );
+
+          // Save metadata
+          const fileData = {
+            user: new mongoose.Types.ObjectId(userId),
+            name: uniqueFileName,
+            path: file.path,
+            url: file.url,
+            cdnUrl: file.cdnUrl,
+            size: file.size,
+            mimeType: body.file.type,
+          };
+
+          // const savedFile = await filesService.createFile(fileData);
+
+          set.status = 201;
+          return {
+            status: "success",
+            file: {
+              ...file,
+              // metadata: savedFile,
+            },
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            status: "error",
+            message: "Direct upload failed",
+          };
+        }
+      },
+      {
+        body: t.Object({
+          file: t.File({
+            type: config.cdn.allowedTypes,
+            maxSize: config.cdn.maxFileSize,
+          }),
+        }),
+        type: "multipart/form-data",
+        detail: {
+          tags: ["files"],
+          summary: "Direct upload to CDN",
+        },
+      }
+    )
+
+    // Bulk file operations
+    .post(
+      "/bulk",
+      async ({ set, user, body }) => {
+        try {
+          const result = await filesService.bulkFileOperation(
+            user.id,
+            body as IBulkFileOperation
+          );
+
+          set.status = result.success ? 200 : 400;
+          return {
+            status: result.success ? "success" : "error",
+            message: result.message,
+            results: result.results,
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            status: "error",
+            message: "Bulk operation failed",
+          };
+        }
+      },
+      {
+        body: t.Object({
+          operation: t.Union([
+            t.Literal("DELETE"),
+            t.Literal("ARCHIVE"),
+            t.Literal("UPDATE_CATEGORY"),
+            t.Literal("UPDATE_ACCESS"),
+            t.Literal("MOVE"),
+          ]),
+          fileIds: t.Array(t.String()),
+          parameters: t.Optional(t.Record(t.String(), t.Any())),
+        }),
+        detail: {
+          tags: ["files"],
+          summary: "Perform bulk operations on files",
+        },
+      }
+    )
+    // Share file
+    .post(
+      "/:id/share",
+      async ({ set, user, params, body }) => {
+        try {
+          const { id } = params;
+          const result = await filesService.shareFile(id, user.id, {
+            isPublic: body.isPublic,
+            allowDownload: body.allowDownload,
+            expiresAt: body.expiresAt ? new Date(body.expiresAt) : undefined,
+          });
+
+          set.status = result.success ? 200 : 400;
+          return {
+            status: result.success ? "success" : "error",
+            message: result.message,
+            shareUrl: result.shareUrl,
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            status: "error",
+            message: "Failed to share file",
+          };
+        }
+      },
+      {
+        params: t.Object({
+          id: t.String(),
+        }),
+        body: t.Object({
+          isPublic: t.Boolean(),
+          allowDownload: t.Optional(t.Boolean()),
+          expiresAt: t.Optional(t.String()),
+        }),
+        detail: {
+          tags: ["files"],
+          summary: "Share a file",
+        },
+      }
+    )
+    // Get shared file
+    .get(
+      "/shared/:token",
+      async ({ set, params }) => {
+        try {
+          const { token } = params;
+          const file = await filesService.getSharedFile(token);
+
+          if (!file) {
+            set.status = 404;
+            return {
+              status: "error",
+              message: "Shared file not found or expired",
+            };
+          }
+
+          set.status = 200;
+          return {
+            status: "success",
+            file,
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            status: "error",
+            message: "Failed to get shared file",
+          };
+        }
+      },
+      {
+        params: t.Object({
+          token: t.String(),
+        }),
+        detail: {
+          tags: ["files"],
+          summary: "Get shared file by token",
         },
       }
     )
@@ -531,10 +958,11 @@ export const fileV2Controller = new Elysia().group("files/v2", (app) =>
     // ==================== USAGE STATISTICS ====================
 
     .get(
-      "/stats/usage",
+      "/stats",
       async ({ set, user, query }) => {
         try {
-          const stats = await filesService.getUsageStats(
+          const stats = await filesService.getFileStats(
+            user.id,
             query.organizationId || user.organizationId,
             query.dateFrom ? new Date(query.dateFrom) : undefined,
             query.dateTo ? new Date(query.dateTo) : undefined
@@ -562,6 +990,56 @@ export const fileV2Controller = new Elysia().group("files/v2", (app) =>
         detail: {
           tags: ["files-v2"],
           summary: "Get file usage statistics",
+        },
+      }
+    )
+
+    // Get file analytics
+    .get(
+      "/:id/analytics",
+      async ({ set, user, params, query }) => {
+        try {
+          const { id } = params;
+          const { timeRange } = query;
+          const analytics = await filesService.getFileAnalytics(
+            id,
+            user.id,
+            timeRange as "7d" | "30d" | "90d"
+          );
+
+          if (!analytics) {
+            set.status = 404;
+            return {
+              status: "error",
+              message: "File not found",
+            };
+          }
+
+          set.status = 200;
+          return {
+            status: "success",
+            analytics,
+          };
+        } catch (error) {
+          set.status = 500;
+          return {
+            status: "error",
+            message: "Failed to get file analytics",
+          };
+        }
+      },
+      {
+        params: t.Object({
+          id: t.String(),
+        }),
+        query: t.Object({
+          timeRange: t.Optional(
+            t.Union([t.Literal("7d"), t.Literal("30d"), t.Literal("90d")])
+          ),
+        }),
+        detail: {
+          tags: ["files"],
+          summary: "Get file analytics",
         },
       }
     )

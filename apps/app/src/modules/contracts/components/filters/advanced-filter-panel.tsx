@@ -85,7 +85,7 @@ export function AdvancedFilterPanel({
   // Initialize temp filters from store
   const initializeTempFilters = () => {
     setTempFilters({
-      searchTerm: filters.searchTerm,
+      searchTerm: filters.searchTerm ?? "",
       statusFilter: filters.statusFilter,
       typeFilter: filters.typeFilter,
       propertyFilter: filters.propertyFilter,

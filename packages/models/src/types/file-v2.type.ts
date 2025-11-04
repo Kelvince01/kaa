@@ -5,7 +5,7 @@
  * Includes image processing, document handling, and Kenya-specific optimizations
  */
 
-// import type { Document } from "mongoose";
+import type mongoose from "mongoose";
 
 // ==================== ENUMS ====================
 
@@ -18,6 +18,7 @@ export enum FileType {
   VIDEO = "video",
   AUDIO = "audio",
   ARCHIVE = "archive",
+  CODE = "code",
   OTHER = "other",
 }
 
@@ -25,6 +26,8 @@ export enum FileType {
  * File categories for organization
  */
 export enum FileCategory {
+  VIRTUAL_TOUR = "virtual_tour",
+  LEGAL_DOCUMENT = "legal_document",
   PROPERTY_PHOTOS = "property_photos",
   PROPERTY_DOCUMENTS = "property_documents",
   USER_AVATAR = "user_avatar",
@@ -80,6 +83,8 @@ export enum ImageOperation {
 export enum StorageProvider {
   AWS_S3 = "aws_s3",
   CLOUDINARY = "cloudinary",
+  GOOGLE_STORAGE = "google_storage",
+  VERCEL_BLOB = "vercel_blob",
   LOCAL = "local",
 }
 
@@ -119,6 +124,7 @@ export type IFile = {
   type: FileType;
   category: FileCategory;
   size: number; // in bytes
+  description?: string;
 
   // Storage information
   provider: StorageProvider;
@@ -126,23 +132,20 @@ export type IFile = {
   key: string;
   url: string;
   cdnUrl?: string;
+  path?: string;
+  thumbnailUrl?: string;
+  previewUrl?: string;
 
   // File metadata
-  metadata: {
-    width?: number;
-    height?: number;
-    duration?: number; // for video/audio
-    pages?: number; // for documents
-    exif?: Record<string, any>; // EXIF data for images
-    checksum: string; // MD5 or SHA256 hash
-    encoding?: string;
-    [key: string]: any;
-  };
+  metadata: IFileMetadata;
+  sharing?: IFileSharingSettings;
+  versions?: IFileVersion[];
+  scanResult?: IFileScanResult;
 
   // Access control
   accessLevel: FileAccessLevel;
-  ownerId: string;
-  organizationId?: string;
+  ownerId: mongoose.Types.ObjectId;
+  organizationId?: mongoose.Types.ObjectId;
 
   // Processing status
   status: FileStatus;
@@ -195,7 +198,7 @@ export type IFile = {
   completedAt?: Date;
 
   // Audit trail
-  uploadedBy: string;
+  uploadedBy: mongoose.Types.ObjectId;
   uploadedAt: Date;
   ipAddress?: string;
   userAgent?: string;
@@ -211,14 +214,80 @@ export type IFile = {
   hasGpsData?: () => void;
 };
 
+// File sharing settings
+export type IFileSharingSettings = {
+  isPublic: boolean;
+  allowDownload: boolean;
+  allowPreview: boolean;
+  expiresAt?: Date;
+  passwordProtected: boolean;
+  password?: string;
+  maxDownloads?: number;
+  downloadCount: number;
+  shareLink?: string;
+  shareToken?: string;
+};
+
+// File metadata
+export type IFileMetadata = {
+  dimensions?: {
+    width: number;
+    height: number;
+  };
+  duration?: number; // for video/audio files
+  pages?: number; // for PDF files
+  resolution?: string;
+  colorSpace?: string;
+  compression?: string;
+  exif?: any;
+  checksum?: string;
+  encoding?: string;
+  orientation?: number;
+  author?: string;
+  title?: string;
+  subject?: string;
+  keywords?: string[];
+  creator?: string;
+  producer?: string;
+  creationDate?: Date;
+  modificationDate?: Date;
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
+  camera?: {
+    make: string;
+    model: string;
+    iso?: number;
+    aperture?: string;
+    shutterSpeed?: string;
+    focalLength?: string;
+  };
+};
+
+// File version
+export type IFileVersion = {
+  id: string;
+  version: number;
+  size: number;
+  url: string;
+  uploadedBy: mongoose.Types.ObjectId;
+  uploadedByName: string;
+  uploadedAt: Date;
+  changes?: string;
+  isActive: boolean;
+};
+
 /**
  * File upload options (used by service)
  */
 export type IFileUploadOptions = {
   // File information
   originalName?: string;
+  description?: string;
 
   // Categorization
+  type?: FileType;
   category?: FileCategory;
   accessLevel?: FileAccessLevel;
 
@@ -282,6 +351,16 @@ export type IFileUploadRequest = {
   // Lifecycle
   expiresAt?: Date;
   tags?: string[];
+};
+
+// File update input
+export type IFileUpdateInput = {
+  name?: string;
+  description?: string;
+  tags?: string[];
+  isPublic?: boolean;
+  metadata?: Partial<IFileMetadata>;
+  sharing?: Partial<IFileSharingSettings>;
 };
 
 /**
@@ -385,6 +464,20 @@ export type IFileSearchQuery = {
   sortOrder?: "asc" | "desc";
 };
 
+// Response types
+export type IFileResponse = {
+  status: "success" | "error";
+  message?: string;
+  file?: IFile;
+};
+
+export type IFileUploadResponse = {
+  status: "success" | "error";
+  message?: string;
+  file?: IFile;
+  uploadUrl?: string;
+};
+
 /**
  * Files response with pagination
  */
@@ -397,6 +490,12 @@ export type IFilesResponse = {
     pages: number;
   };
   filters?: Record<string, any>;
+  summary?: {
+    totalSize: number;
+    totalFiles: number;
+    byCategory: Array<{ category: string; count: number; size: number }>;
+    byMimeType: Array<{ mimeType: string; count: number; size: number }>;
+  };
 };
 
 /**
@@ -424,15 +523,37 @@ export type IFileSearchResponse = {
   };
 };
 
+// File search result
+export type IFileSearchResult = {
+  fileId: string;
+  name: string;
+  category: FileCategory;
+  size: number;
+  uploadedAt: Date;
+  uploadedBy: string;
+  matchType: "name" | "description" | "content" | "tags";
+  highlightedText?: string;
+  relevanceScore: number;
+};
+
 /**
  * File storage information
  */
 export type IFileStorageInfo = {
+  // Common
   provider: StorageProvider;
-  bucket: string;
-  key: string;
   url: string;
   cdnUrl?: string;
+
+  // Vercel Blob
+  path?: string;
+  size?: number;
+  contentType?: string;
+  fileName?: string;
+
+  // AWS S3
+  bucket?: string;
+  key?: string;
   etag?: string;
 };
 
@@ -447,6 +568,85 @@ export type IFileUsageStats = {
   averageSize: number;
   typeDistribution: string[];
   categoryDistribution: string[];
+  byCategory: Array<{ category: string; count: number; size: number }>;
+  byMimeType: Array<{ mimeType: string; count: number; size: number }>;
+  byStatus: Array<{ status: string; count: number }>;
+  byUploader: Array<{
+    userId: string;
+    userName: string;
+    count: number;
+    size: number;
+  }>;
+  byDate: Array<{ date: string; count: number; size: number }>;
+  avgFileSize: number;
+  mostDownloaded: Array<{
+    fileId: string;
+    fileName: string;
+    downloadCount: number;
+  }>;
+  recentUploads: Array<{ fileId: string; fileName: string; uploadedAt: Date }>;
+};
+
+// Image and media optimization options
+export type IOptimizationOptions = {
+  width?: number;
+  height?: number;
+  quality?: number;
+  format?: "jpeg" | "png" | "webp" | "avif";
+  fit?: "cover" | "contain" | "fill" | "inside" | "outside";
+  position?:
+    | "center"
+    | "top"
+    | "right top"
+    | "right"
+    | "right bottom"
+    | "bottom"
+    | "left bottom"
+    | "left"
+    | "left top";
+  background?: string;
+  compress?: boolean;
+  rotate?: number;
+  flip?: boolean;
+  flop?: boolean;
+  blur?: number;
+  sharpen?: number;
+  grayscale?: boolean;
+  progressive?: boolean;
+  metadata?: boolean;
+  withoutEnlargement?: boolean;
+};
+
+// File access log
+export type IFileAccessLog = {
+  fileId: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
+  action: "VIEW" | "DOWNLOAD" | "SHARE" | "EDIT" | "DELETE";
+  ipAddress: string;
+  userAgent: string;
+  accessedAt: Date;
+  metadata?: Record<string, any>;
+};
+
+// File scan result
+export type IFileScanResult = {
+  clean: boolean;
+  threats?: string[];
+  scanDate: Date;
+  scanner: string;
+  scanDuration: number;
+};
+
+// Bulk file operation
+export type IBulkFileOperation = {
+  operation:
+    | "DELETE"
+    | "ARCHIVE"
+    | "UPDATE_CATEGORY"
+    | "UPDATE_ACCESS"
+    | "MOVE";
+  fileIds: string[];
+  parameters?: Record<string, any>;
 };
 
 /**
@@ -472,7 +672,15 @@ export type IFileAnalytics = {
   // Usage metrics
   totalDownloads: number;
   totalViews: number;
+  totalShares: number;
   uniqueUsers: number;
+
+  uniqueViewers: number;
+  viewsByDate: Array<{ date: string; count: number }>;
+  downloadsByDate: Array<{ date: string; count: number }>;
+  topReferrers: Array<{ referrer: string; count: number }>;
+  topCountries: Array<{ country: string; count: number }>;
+  avgViewDuration: number;
 
   // Processing metrics
   processingJobs: number;
@@ -489,7 +697,7 @@ export type IFileAnalytics = {
 
   createdAt: Date;
 
-  calculateAverageFileSize: () => void;
+  calculateAverageFileSize?: () => void;
 };
 
 // ==================== IMAGE PROCESSING ====================
@@ -702,7 +910,7 @@ export type IFileServingOptions = {
 /**
  * Kenya file management constants
  */
-export const KENYA_FILE_CONSTANTS = {
+export const FILE_CONSTANTS = {
   // File size limits (in bytes)
   MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB default
   MIN_FILE_SIZE: 1, // 1 byte minimum

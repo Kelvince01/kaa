@@ -12,8 +12,9 @@
  * - Kenya-specific features
  */
 
-import { Property, User } from "@kaa/models";
+import { Landlord, Property, User } from "@kaa/models";
 import {
+  type FurnishedStatus,
   type IBaseProperty,
   type IProperty,
   type ListingType,
@@ -403,7 +404,7 @@ export const getProperties = async (params: PropertyQueryParams) => {
 
     // Build populate array
     const defaultPopulates = [
-      "landlord:personalInfo", // verified
+      "landlord:personalInfo verification",
       "agent:user",
       "memberId:email phone",
     ];
@@ -933,8 +934,8 @@ export const searchProperties = async (
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .populate("landlord", "firstName lastName phone verified")
-      .populate("agent", "firstName lastName phone")
+      .populate("landlord", "personalInfo verification")
+      .populate("agent", "personalInfo")
       .exec();
   } catch (error) {
     console.error("Error searching properties:", error);
@@ -1489,7 +1490,11 @@ export const verifyProperty = async (
       },
       { new: true }
     ).populate([
-      { path: "landlord", select: "firstName lastName email phone" },
+      {
+        path: "landlord",
+        select:
+          "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone",
+      },
     ]);
 
     if (!updatedProperty) {
@@ -1771,7 +1776,7 @@ export const getFeaturedProperties = async (
   })
     .sort({ createdAt: -1 })
     .limit(limit)
-    .populate("landlord", "firstName lastName phone verified");
+    .populate("landlord", "personalInfo verification");
 
   return properties;
 };
@@ -1788,7 +1793,7 @@ export const getVerifiedProperties = async (
   })
     .sort({ createdAt: -1 })
     .limit(limit)
-    .populate("landlord", "firstName lastName phone verified");
+    .populate("landlord", "personalInfo verification");
 
   return properties;
 };
@@ -1802,7 +1807,7 @@ export const getRecentProperties = async (limit = 10): Promise<IProperty[]> => {
   })
     .sort({ createdAt: -1 })
     .limit(limit)
-    .populate("landlord", "firstName lastName phone verified");
+    .populate("landlord", "personalInfo verification");
 
   return properties;
 };
@@ -1835,7 +1840,10 @@ export const getSimilarProperties = async (
     })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .populate("landlord", "firstName lastName phone verified");
+      .populate(
+        "landlord",
+        "personalInfo.firstName personalInfo.lastName personalInfo.phone verification.status"
+      );
   } catch (error) {
     console.error("Error getting similar properties:", error);
     return [];
@@ -1964,23 +1972,22 @@ export const getSimilarProperties_v2 = async (
       { $limit: limit },
       {
         $lookup: {
-          from: "users",
-          localField: "owner",
+          from: "landlords",
+          localField: "landlord",
           foreignField: "_id",
-          as: "owner",
+          as: "landlord",
           pipeline: [
             {
               $project: {
-                "profile.firstName": 1,
-                "profile.lastName": 1,
-                "verification.emailVerifiedAt": 1,
-                "verification.phoneVerifiedAt": 1,
+                "personalInfo.firstName": 1,
+                "personalInfo.lastName": 1,
+                "verification.status": 1,
               },
             },
           ],
         },
       },
-      { $unwind: { path: "$owner", preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: "$landlord", preserveNullAndEmptyArrays: true } },
     ];
 
     return Property.aggregate(pipeline as PipelineStage[]) as Promise<
@@ -2096,13 +2103,15 @@ export const getRecommendations = async (
 
     const prefs = user.preferences;
 
+    const landlord = await Landlord.findOne({ user: userId });
+
     const pipeline: PipelineStage[] = [
       {
         $match: {
           status: PropertyStatus.ACTIVE,
           "availability.isAvailable": true,
           moderationStatus: "approved",
-          owner: { $ne: new mongoose.Types.ObjectId(userId) },
+          landlord: { $ne: landlord?._id },
         },
       },
       {
@@ -2189,17 +2198,16 @@ export const getRecommendations = async (
       { $limit: limit },
       {
         $lookup: {
-          from: "users",
-          localField: "owner",
+          from: "landlords",
+          localField: "landlord",
           foreignField: "_id",
-          as: "owner",
+          as: "landlord",
           pipeline: [
             {
               $project: {
-                "profile.firstName": 1,
-                "profile.lastName": 1,
-                "verification.emailVerifiedAt": 1,
-                "verification.phoneVerifiedAt": 1,
+                "personalInfo.firstName": 1,
+                "personalInfo.lastName": 1,
+                "verification.status": 1,
               },
             },
           ],
@@ -2222,7 +2230,7 @@ type PropertyNearSearchFilters = {
   bedrooms?: string;
   bathrooms?: string;
   type?: string;
-  furnished?: boolean;
+  furnished?: FurnishedStatus;
   petsAllowed?: boolean;
   availableFrom?: Date;
   tenantId?: string;
@@ -2286,25 +2294,27 @@ export const getPropertiesNearLocation = async (
 
     if (filters.minPrice || filters.maxPrice) {
       // Apply additional filters
-      filter.pricing = { rentAmount: {} };
+      filter.pricing = { rent: {} };
       if (filters.minPrice)
-        (filter.pricing.rentAmount as Record<string, number>).$gte = Number(
+        (filter.pricing.rent as Record<string, number>).$gte = Number(
           filters.minPrice
         );
       if (filters.maxPrice)
-        (filter.pricing.rentAmount as Record<string, number>).$lte = Number(
+        (filter.pricing.rent as Record<string, number>).$lte = Number(
           filters.maxPrice
         );
     }
 
     if (filters.minBedrooms) {
-      filter.details = { bedrooms: { $gte: Number(filters.minBedrooms) } };
+      filter.specifications = {
+        bedrooms: { $gte: Number(filters.minBedrooms) },
+      };
     } else if (filters.bedrooms) {
-      filter.details = { bedrooms: Number(filters.bedrooms) };
+      filter.specifications = { bedrooms: Number(filters.bedrooms) };
     }
 
     if (filters.bathrooms) {
-      filter.details = {
+      filter.specifications = {
         ...filter.details,
         bathrooms: Number(filters.bathrooms),
       };
@@ -2315,15 +2325,23 @@ export const getPropertiesNearLocation = async (
     }
 
     if (filters.furnished !== undefined) {
-      filter.details = { ...filter.details, furnished: filters.furnished };
+      filter.specifications = {
+        ...filter.specifications,
+        furnished: filters.furnished,
+      };
     }
 
     if (filters.petsAllowed !== undefined) {
-      filter.details = { ...filter.details, petFriendly: filters.petsAllowed };
+      filter.specifications = {
+        ...filter.specifications,
+        petFriendly: filters.petsAllowed,
+      };
     }
 
     if (filters.availableFrom) {
-      filter.availableFrom = { $lte: new Date(filters.availableFrom) };
+      filter.availability.availableFrom = {
+        $lte: new Date(filters.availableFrom),
+      };
     }
 
     if (filters.tenantId) {
@@ -2343,8 +2361,8 @@ export const getPropertiesNearLocation = async (
       .skip(skip)
       .limit(limitNum)
       .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
-      .populate("landlord", "firstName lastName phone verified")
-      .populate("agent", "firstName lastName phone")
+      .populate("landlord", "personalInfo verification")
+      .populate("agent", "user")
       .populate("memberId", "email phone")
       .populate("organizationId", "name");
 
@@ -2508,7 +2526,7 @@ export const getExpiringProperties = async (
       status: PropertyStatus.ACTIVE,
     })
       .sort({ expiresAt: 1 })
-      .populate("landlord", "firstName lastName email phone");
+      .populate("landlord", "personalInfo");
   } catch (error) {
     console.error("Error getting expiring properties:", error);
     throw error;
@@ -2526,7 +2544,7 @@ export const getPropertiesPendingModeration = async (): Promise<
       moderationStatus: "pending",
     })
       .sort({ createdAt: 1 })
-      .populate("landlord", "firstName lastName email phone");
+      .populate("landlord", "personalInfo");
   } catch (error) {
     console.error("Error getting properties pending moderation:", error);
     throw error;

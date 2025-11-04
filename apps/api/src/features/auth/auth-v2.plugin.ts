@@ -1,10 +1,16 @@
+import bearer from "@elysiajs/bearer";
 import { cookie } from "@elysiajs/cookie";
-import { jwt } from "@elysiajs/jwt";
 import config from "@kaa/config/api";
-import { User } from "@kaa/models";
 import { UserRole, UserStatus } from "@kaa/models/types";
+import { memberService, roleService, userService } from "@kaa/services";
+import {
+  type PermittedAction,
+  permissionManager,
+} from "@kaa/services/managers";
 import { Elysia } from "elysia";
 import { SignJWT } from "jose";
+import type mongoose from "mongoose";
+import { jwtPlugin } from "~/plugins/security.plugin";
 import { ERROR_CODES, getErrorMessage } from "~/shared/constants/errors";
 
 // JWT types
@@ -27,53 +33,72 @@ export type RequestUser = {
 
 // Create auth plugin
 export const authPlugin = new Elysia({ name: "auth" })
-  .use(
-    jwt({
-      name: "jwt",
-      secret: config.jwt.secret,
-      exp: config.jwt.expiresIn,
-    })
-  )
-  .use(
-    jwt({
-      name: "refreshJwt",
-      secret: config.jwt.refreshTokenSecret,
-      exp: config.jwt.refreshTokenExpiresIn,
-    })
-  )
+  .use(jwtPlugin)
   .use(cookie())
-  .derive(async ({ headers, jwt, cookie }) => {
-    const authHeader = headers.authorization;
-    const token = authHeader?.startsWith("Bearer ")
-      ? authHeader.substring(7)
-      : cookie.accessToken;
+  .use(bearer())
+  .derive(async ({ jwt, cookie: { access_token }, bearer: bearerToken }) => {
+    // Get token from Authorization header or cookie
+    let token: string | null = null;
+
+    if (bearerToken) {
+      // Check if the 'Authorization' header contains a Bearer token
+      token = bearerToken;
+    } else if (access_token.value) {
+      token = access_token.value as string;
+    } else {
+      // Otherwise, set token to null indicating no valid token is present
+      token = null;
+    }
 
     if (!token) {
       return { user: null };
     }
 
     try {
-      const payload = (await jwt.verify(token)) as JWTPayload;
+      const payload = await jwt.verify(token);
 
       if (!payload) {
         return { user: null };
       }
 
       // Fetch user from DB to get current status
-      const dbUser = await User.findById(payload.sub);
-      if (!dbUser || dbUser.status !== UserStatus.ACTIVE) {
+      const userId = payload.sub;
+      const userObj = await userService.getUserById(userId);
+      const userRole = await roleService.getUserRoleBy({
+        userId: (userObj._id as mongoose.Types.ObjectId).toString(),
+      });
+
+      if (!userObj) {
+        // handle error for user not found from the provided access token
         return { user: null };
       }
 
-      const user: RequestUser = {
-        id: payload.sub,
-        email: payload.email,
-        role: payload.role,
-        status: dbUser.status,
-        phone: dbUser.contact?.phone?.formatted,
+      const member = await memberService.getMemberBy({
+        user: (userObj._id as mongoose.Types.ObjectId).toString(),
+      });
+
+      const userRes = {
+        id: (userObj._id as mongoose.Types.ObjectId).toString(),
+        role: (userRole?.roleId as any).name,
+        roleId: (userRole?.roleId as any)._id.toString(),
+        memberId: member
+          ? (member._id as mongoose.Types.ObjectId).toString()
+          : undefined,
+        organizationId: member
+          ? (member.organization as any)._id.toString()
+          : undefined,
+        isVerified: !!userObj.verification.emailVerifiedAt, // Ensure this is always a boolean
+        firstName: userObj.profile.firstName,
+        lastName: userObj.profile.lastName,
+        username: userObj.profile.displayName || "",
+        email: userObj.contact.email,
+        phone: userObj.contact.phone.formatted,
+        status: userObj.status,
+        createdAt: userObj.createdAt,
+        updatedAt: userObj.updatedAt,
       };
 
-      return { user };
+      return { user: userRes };
     } catch (error) {
       return { user: null };
     }
@@ -85,7 +110,7 @@ export const authPlugin = new Elysia({ name: "auth" })
         if (!user) {
           set.status = 401;
           return {
-            success: false,
+            status: "error",
             error: ERROR_CODES.TOKEN_INVALID,
             message: getErrorMessage(ERROR_CODES.TOKEN_INVALID),
           };
@@ -102,7 +127,7 @@ export const authPlugin = new Elysia({ name: "auth" })
           if (!user) {
             set.status = 401;
             return {
-              success: false,
+              status: "error",
               error: ERROR_CODES.TOKEN_INVALID,
               message: getErrorMessage(ERROR_CODES.TOKEN_INVALID),
             };
@@ -111,7 +136,7 @@ export const authPlugin = new Elysia({ name: "auth" })
           if (!allowedRoles.includes(user.role)) {
             set.status = 403;
             return {
-              success: false,
+              status: "error",
               error: ERROR_CODES.INSUFFICIENT_PERMISSIONS,
               message: getErrorMessage(ERROR_CODES.INSUFFICIENT_PERMISSIONS),
             };
@@ -126,7 +151,7 @@ export const authPlugin = new Elysia({ name: "auth" })
         if (!user) {
           set.status = 401;
           return {
-            success: false,
+            status: "error",
             error: ERROR_CODES.TOKEN_INVALID,
             message: getErrorMessage(ERROR_CODES.TOKEN_INVALID),
           };
@@ -135,7 +160,7 @@ export const authPlugin = new Elysia({ name: "auth" })
         if (user.status === UserStatus.SUSPENDED) {
           set.status = 403;
           return {
-            success: false,
+            status: "error",
             error: ERROR_CODES.ACCOUNT_SUSPENDED,
             message: getErrorMessage(ERROR_CODES.ACCOUNT_SUSPENDED),
           };
@@ -144,7 +169,7 @@ export const authPlugin = new Elysia({ name: "auth" })
         if (user.status === UserStatus.BANNED) {
           set.status = 403;
           return {
-            success: false,
+            status: "error",
             error: ERROR_CODES.ACCOUNT_BANNED,
             message: getErrorMessage(ERROR_CODES.ACCOUNT_BANNED),
           };
@@ -161,7 +186,7 @@ export const authPlugin = new Elysia({ name: "auth" })
           if (!user) {
             set.status = 401;
             return {
-              success: false,
+              status: "error",
               error: ERROR_CODES.TOKEN_INVALID,
               message: getErrorMessage(ERROR_CODES.TOKEN_INVALID),
             };
@@ -181,7 +206,7 @@ export const authPlugin = new Elysia({ name: "auth" })
             if (user.id !== ownerId) {
               set.status = 403;
               return {
-                success: false,
+                status: "error",
                 error: ERROR_CODES.INSUFFICIENT_PERMISSIONS,
                 message: getErrorMessage(ERROR_CODES.INSUFFICIENT_PERMISSIONS),
               };
@@ -189,9 +214,51 @@ export const authPlugin = new Elysia({ name: "auth" })
           } catch (error) {
             set.status = 500;
             return {
-              success: false,
+              status: "error",
               error: "RESOURCE_CHECK_FAILED",
               message: "Failed to verify resource ownership",
+            };
+          }
+        },
+      };
+    },
+
+    // New: Require access based on permissions (resource/action specific)
+    requireAccess(resource: string, action: PermittedAction) {
+      return {
+        beforeHandle: async ({ user, set }) => {
+          if (!user) {
+            set.status = 401;
+            return {
+              status: "error",
+              error: ERROR_CODES.TOKEN_INVALID,
+              message: getErrorMessage(ERROR_CODES.TOKEN_INVALID),
+            };
+          }
+
+          try {
+            const access = await permissionManager.can(resource, action, {
+              roleId: user.role, // Assuming role is the roleId; adjust if role has .id
+            });
+
+            console.log("access", access); // Retain for debugging
+
+            if (!access) {
+              set.status = 403;
+              return {
+                status: "error",
+                error: ERROR_CODES.INSUFFICIENT_PERMISSIONS,
+                message:
+                  "Access denied. You are not authorized to access this resource.",
+              };
+            }
+          } catch (error) {
+            console.error("Permission check error:", error);
+            set.status = 500;
+            return {
+              status: "error",
+              error: "PERMISSION_CHECK_FAILED",
+              message: "Failed to check permissions",
             };
           }
         },

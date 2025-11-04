@@ -38,12 +38,12 @@ const applicationSchema = new mongoose.Schema<IApplication>(
     },
     tenant: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Tenant",
       required: true,
     },
     landlord: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Landlord",
     },
     status: {
       type: String,

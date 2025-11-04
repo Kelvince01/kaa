@@ -47,13 +47,13 @@ const ContractSchema = new Schema<IContract>(
     unit: { type: Schema.Types.ObjectId, ref: "Unit", required: true },
     landlord: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Landlord",
       required: true,
     },
     tenants: [
       {
         type: Schema.Types.ObjectId,
-        ref: "User",
+        ref: "Tenant",
         required: true,
       },
     ],

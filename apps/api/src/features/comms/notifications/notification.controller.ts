@@ -15,6 +15,10 @@ import Elysia, { t } from "elysia";
 import type { FilterQuery } from "mongoose";
 import mongoose from "mongoose";
 import { authPlugin } from "~/features/auth/auth.plugin";
+import {
+  emitEmergencyNotification,
+  emitNotificationToUsers,
+} from "./notification-ws.controller";
 
 export const notificationController = new Elysia({ prefix: "/notifications" })
   .use(authPlugin)
@@ -299,6 +303,22 @@ export const notificationController = new Elysia({ prefix: "/notifications" })
             : undefined,
         });
 
+        // Emit WebSocket event if notification was created
+        if (result && Array.isArray(result) && result.length > 0) {
+          const notification = result[0];
+          if (notification?.recipients) {
+            await emitNotificationToUsers(
+              notification.recipients.map((r: any) => r.toString()),
+              notification
+            );
+          } else if (notification?.userId) {
+            await emitNotificationToUsers(
+              [notification.userId.toString()],
+              notification
+            );
+          }
+        }
+
         return { success: true, result };
       } catch (error) {
         set.status = 500;
@@ -398,6 +418,11 @@ export const notificationController = new Elysia({ prefix: "/notifications" })
         });
 
         await notification.save();
+
+        // Emit WebSocket event to recipient if connected
+        if (recipientId) {
+          await emitNotificationToUsers([recipientId], notification.toObject());
+        }
 
         set.status = 200;
         return {
@@ -571,6 +596,9 @@ export const notificationController = new Elysia({ prefix: "/notifications" })
           }
         );
 
+        // Note: Individual notifications are already emitted via WebSocket
+        // in sendSmartNotification, so we don't need to emit them here again
+
         return {
           success: true,
           summary: {
@@ -644,6 +672,21 @@ export const notificationController = new Elysia({ prefix: "/notifications" })
           body.alertMessage,
           body.emergencyContact
         );
+
+        // Emit emergency notifications via WebSocket
+        if (
+          result.regularNotifications &&
+          Array.isArray(result.regularNotifications)
+        ) {
+          for (const notification of result.regularNotifications) {
+            if (notification?.recipients) {
+              const recipients = notification.recipients.map((r: any) =>
+                r.toString()
+              );
+              emitEmergencyNotification(recipients, notification);
+            }
+          }
+        }
 
         return {
           success: true,

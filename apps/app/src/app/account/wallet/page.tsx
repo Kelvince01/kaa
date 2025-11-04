@@ -7,7 +7,7 @@ const WalletClient = dynamic(() => import("@/routes/account/wallet"), {
 });
 
 export const metadata: Metadata = {
-  title: "Wallet | Kaa",
+  title: "Wallet | Account",
   description:
     "Manage your wallet, view balance, make deposits and withdrawals, and track transaction history.",
 };

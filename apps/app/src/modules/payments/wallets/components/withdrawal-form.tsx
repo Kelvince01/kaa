@@ -95,7 +95,7 @@ export function WithdrawalForm({
     }
   };
 
-  const availableBalance = walletData?.balance || 0;
+  const availableBalance = walletData?.balance;
 
   return (
     <Form {...form}>
@@ -115,7 +115,7 @@ export function WithdrawalForm({
               Available Balance
             </span>
             <span className="font-bold text-lg">
-              {formatCurrency(availableBalance)}
+              {availableBalance ? formatCurrency(availableBalance) : "KES 0.00"}
             </span>
           </div>
         </div>
@@ -189,7 +189,11 @@ export function WithdrawalForm({
           )}
           <Button
             className="flex-1"
-            disabled={withdrawalMutation.isPending || availableBalance <= 0}
+            disabled={
+              withdrawalMutation.isPending ||
+              !availableBalance ||
+              availableBalance <= 0
+            }
             type="submit"
           >
             {withdrawalMutation.isPending ? (

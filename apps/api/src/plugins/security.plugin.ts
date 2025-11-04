@@ -85,3 +85,9 @@ export const jwtPlugin = jwt({
   secret: config.jwt.secret,
   schema: jwtSchema,
 });
+
+export const refreshJwtPlugin = jwt({
+  name: "refreshJwt",
+  secret: config.jwt.refreshTokenSecret,
+  schema: jwtSchema,
+});

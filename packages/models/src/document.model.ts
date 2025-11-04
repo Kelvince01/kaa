@@ -4,6 +4,8 @@ import {
   DocumentPriority,
   DocumentStatus,
   type IDocument,
+  type IVerificationFeedback,
+  type IVerificationLog,
 } from "./types/document.type";
 
 const documentSchema = new mongoose.Schema<IDocument>(

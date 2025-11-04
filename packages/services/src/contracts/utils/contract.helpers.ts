@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { Landlord, Tenant } from "@kaa/models";
 import type { IProperty, ITenant, IUser } from "@kaa/models/types";
 import { logger } from "@kaa/utils";
 
@@ -373,21 +374,21 @@ export class ContractStatusHelpers {
    * Determine if contract can be modified
    */
   static canModifyContract(status: string): boolean {
-    return ["DRAFT", "PENDING"].includes(status);
+    return ["draft", "pending"].includes(status);
   }
 
   /**
    * Determine if contract can be signed
    */
   static canSignContract(status: string): boolean {
-    return ["DRAFT", "PENDING"].includes(status);
+    return ["draft", "pending"].includes(status);
   }
 
   /**
    * Determine if contract can be terminated
    */
   static canTerminateContract(status: string): boolean {
-    return ["ACTIVE", "PENDING"].includes(status);
+    return ["active", "pending"].includes(status);
   }
 
   /**
@@ -395,9 +396,9 @@ export class ContractStatusHelpers {
    */
   static getPossibleStatusTransitions(currentStatus: string): string[] {
     const transitions: Record<string, string[]> = {
-      DRAFT: ["PENDING", "CANCELLED"],
-      PENDING: ["ACTIVE", "CANCELLED"],
-      ACTIVE: ["TERMINATED", "EXPIRED"],
+      DRAFT: ["pending", "cancelled"],
+      PENDING: ["active", "cancelled"],
+      ACTIVE: ["terminated", "expired"],
       TERMINATED: [],
       EXPIRED: [],
       CANCELLED: [],
@@ -416,40 +417,50 @@ export class PermissionHelpers {
   /**
    * Check if user can access contract
    */
-  static canAccessContract(
+  static async canAccessContract(
     user: IUser,
     contract: { landlord: string; tenants: string[] },
     userRole?: { name: string }
-  ): boolean {
+  ): Promise<boolean> {
     // Admin can access all contracts
     if (userRole?.name === "admin") {
       return true;
     }
 
+    const landlord = await Landlord.findOne({ user: user.id });
+
     // Landlord can access their contracts
-    if (contract.landlord === user.id) {
+    if (contract.landlord === landlord?.id) {
       return true;
     }
 
+    const tenants = await Tenant.find({ user: user.id });
+
     // Tenants can access their contracts
-    return contract.tenants.includes(user.id);
+    // Check if any of the user's tenant ids are in contract.tenants
+    const tenantIds = tenants.map((t) => t.id);
+    return contract.tenants.some((tenantId: string) =>
+      tenantIds.includes(tenantId)
+    );
   }
 
   /**
    * Check if user can modify contract
    */
-  static canModifyContract(
+  static async canModifyContract(
     user: IUser,
     contract: { landlord: string; status: string },
     userRole?: { name: string }
-  ): boolean {
+  ): Promise<boolean> {
     // Admin can modify all contracts
     if (userRole?.name === "admin") {
       return true;
     }
 
+    const landlord = await Landlord.findOne({ user: user.id });
+
     // Only landlord can modify their contracts
-    if (contract.landlord !== user.id) {
+    if (contract.landlord !== landlord?.id) {
       return false;
     }
 

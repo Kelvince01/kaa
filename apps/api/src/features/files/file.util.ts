@@ -20,7 +20,7 @@ export async function validateFile(
   // Check file size
   const maxFileSizes =
     FILE_CONSTANTS.MAX_FILE_SIZES[
-      options.type as keyof typeof FILE_CONSTANTS.MAX_FILE_SIZES
+      options.type?.toUpperCase() as keyof typeof FILE_CONSTANTS.MAX_FILE_SIZES
     ];
   if (buffer.length > maxFileSizes) {
     errors.push(
@@ -46,7 +46,7 @@ export async function validateFile(
   if (
     mimeType &&
     !FILE_CONSTANTS.SUPPORTED_TYPES[
-      options.type as keyof typeof FILE_CONSTANTS.SUPPORTED_TYPES
+      options.type?.toUpperCase() as keyof typeof FILE_CONSTANTS.SUPPORTED_TYPES
     ].includes(mimeType)
   ) {
     errors.push(`MIME type '${mimeType}' not allowed`);

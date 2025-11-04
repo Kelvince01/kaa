@@ -1,9 +1,5 @@
 import type mongoose from "mongoose";
 import type { BaseDocument } from "./base.type";
-import type { IDocument } from "./document.type";
-import type { IMessage } from "./message.type";
-import type { IProperty } from "./property.type";
-import type { IUser } from "./user.type";
 
 /**
  * Application status enum
@@ -36,26 +32,26 @@ export type IApplicationTimelineEvent = {
   description: string;
   date: Date;
   status: TimelineEventStatus;
-  actor?: mongoose.Types.ObjectId | IUser;
+  actor?: mongoose.Types.ObjectId;
 };
 
 /**
  * Application interface
  */
 export interface IApplication extends BaseDocument {
-  property: mongoose.Types.ObjectId | IProperty;
-  tenant: mongoose.Types.ObjectId | IUser;
+  property: mongoose.Types.ObjectId;
+  tenant: mongoose.Types.ObjectId;
   status: ApplicationStatus;
-  documents: Array<mongoose.Types.ObjectId | IDocument>;
+  documents: mongoose.Types.ObjectId[];
   moveInDate: Date;
   offerAmount?: number;
   notes?: string;
   timeline: IApplicationTimelineEvent[];
   appliedAt: Date;
-  messages?: Array<mongoose.Types.ObjectId | IMessage>;
-  landlord?: mongoose.Types.ObjectId | IUser;
+  messages?: mongoose.Types.ObjectId[];
+  landlord?: mongoose.Types.ObjectId;
   rejectionReason?: string;
-  approvedBy?: mongoose.Types.ObjectId | IUser;
+  approvedBy?: mongoose.Types.ObjectId;
   approvedAt?: Date;
   isExpired?: boolean;
   expiresAt?: Date;

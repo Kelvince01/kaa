@@ -25,7 +25,7 @@ export interface MapMarkerProps extends Omit<MarkerOptions, "element"> {
     marker: mapboxgl.Marker;
     data?: any;
   }) => void;
-  onLoad?: (marker: mapboxgl.Marker) => void;
+  // onLoad?: (marker: mapboxgl.Marker) => void;
   // Animation and styling options
   animate?: boolean;
   hoverScale?: number;
@@ -42,7 +42,7 @@ export function ImprovedMapMarker({
   className,
   onHover,
   onClick,
-  onLoad,
+  // onLoad,
   animate = true,
   hoverScale = 1.1,
   ariaLabel,
@@ -129,15 +129,21 @@ export function ImprovedMapMarker({
     const markerEl = markerRef.current;
     if (!(map && markerEl)) return;
 
-    // Create marker with options
-    const marker = new mapboxgl.Marker({
+    const options: MarkerOptions = {
       element: markerEl,
       ...markerOptions,
-    }).setLngLat([longitude, latitude]);
+    };
 
-    // Add to map
-    marker.addTo(map);
-    markerInstanceRef.current = marker;
+    const addMarker = () => {
+      if (markerRef.current) {
+        markerRef.current.remove();
+      }
+
+      // Create marker with options
+      markerInstanceRef.current = new mapboxgl.Marker(options)
+        .setLngLat([longitude, latitude])
+        .addTo(map);
+    };
 
     // Setup event listeners
     markerEl.addEventListener("mouseenter", handleMouseEnter);
@@ -146,8 +152,15 @@ export function ImprovedMapMarker({
     markerEl.addEventListener("keydown", handleKeyDown);
 
     // Call onLoad callback
-    if (onLoad) {
+    /*if (onLoad) {
       onLoad(marker);
+    }*/
+
+    // Wait until map is fully loaded
+    if (map.loaded()) {
+      addMarker();
+    } else {
+      map.once("load", addMarker);
     }
 
     // Cleanup function
@@ -159,7 +172,7 @@ export function ImprovedMapMarker({
       markerEl.removeEventListener("keydown", handleKeyDown);
 
       // Remove marker from map
-      marker.remove();
+      markerInstanceRef?.current?.remove();
       markerInstanceRef.current = null;
     };
   }, [
@@ -170,7 +183,7 @@ export function ImprovedMapMarker({
     handleMouseLeave,
     handleClick,
     handleKeyDown,
-    onLoad,
+    // onLoad,
   ]);
 
   return (

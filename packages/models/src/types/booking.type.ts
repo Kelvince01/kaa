@@ -16,7 +16,10 @@ export enum BookingStatus {
 /**
  * Booking type
  */
-export type BookingType = "viewing" | "application";
+export enum BookingType {
+  VIEWING = "viewing",
+  APPLICATION = "application",
+}
 
 export type BookingPeriodType = "short-term" | "long-term";
 
@@ -108,3 +111,18 @@ export interface IBooking extends BaseDocument {
     excludeBookingId?: string
   ): Promise<boolean>;
 }
+
+export type CreateBookingInput = {
+  type: BookingType;
+  notes: string;
+  date: string;
+  property: string;
+  time: string;
+  bookingType: BookingPeriodType;
+  startTime: string;
+  endTime: string;
+  viewingType: ViewingType;
+  additionalAttendees: string[];
+  totalAmount: number;
+  depositAmount: number;
+};

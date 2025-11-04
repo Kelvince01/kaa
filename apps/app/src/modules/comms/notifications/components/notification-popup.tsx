@@ -28,6 +28,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useEffect, useState } from "react";
+import { useNotificationWebSocket } from "../hooks/use-notification-websocket";
 import {
   useDeleteAllNotifications,
   useDeleteNotification,
@@ -232,6 +233,54 @@ const NotificationPopover = () => {
       requestPermission();
     }
   }, [hasRequestedPermission]);
+
+  // WebSocket connection for real-time notifications
+  const {
+    isConnected: wsConnected,
+    markAsRead: markAsReadWS,
+    markAllAsRead: markAllAsReadWS,
+  } = useNotificationWebSocket({
+    enabled: true,
+  });
+
+  // Optionally use WebSocket for mark as read (faster, but still call REST for consistency)
+  // The REST call will also trigger WebSocket updates from the server
+
+  // Listen for custom notification events from WebSocket
+  useEffect(() => {
+    const handleNewNotification = (event: CustomEvent<Notification>) => {
+      // React Query will automatically update the cache via the WebSocket hook
+      // We can optionally show a toast here if needed
+      console.log("New notification received:", event.detail);
+    };
+
+    const handleUnreadCountUpdate = (
+      event: CustomEvent<{ unreadCount: number }>
+    ) => {
+      // React Query will automatically update the cache
+      console.log("Unread count updated:", event.detail.unreadCount);
+    };
+
+    window.addEventListener(
+      "notification:new",
+      handleNewNotification as EventListener
+    );
+    window.addEventListener(
+      "notification:unread_count",
+      handleUnreadCountUpdate as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        "notification:new",
+        handleNewNotification as EventListener
+      );
+      window.removeEventListener(
+        "notification:unread_count",
+        handleUnreadCountUpdate as EventListener
+      );
+    };
+  }, []);
 
   const toggleNotifications = () => {
     setIsOpen(!isOpen);

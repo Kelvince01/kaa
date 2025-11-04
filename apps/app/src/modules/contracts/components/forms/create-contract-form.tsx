@@ -38,6 +38,7 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -53,11 +54,13 @@ import {
   Plus,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useUserContext } from "@/modules/me";
 import { useProperties } from "@/modules/properties/property.queries";
 import { useTenants } from "@/modules/tenants/tenant.queries";
+import { useUnits } from "@/modules/units";
 import { useCreateContract } from "../../contract.queries";
 import {
   type CreateContractFormData,
@@ -78,11 +81,15 @@ export function CreateContractForm({ open, onClose }: CreateContractFormProps) {
     { title: string; content: string }[]
   >([]);
   const [specialConditions, setSpecialConditions] = useState<string[]>([]);
+  const { profile } = useUserContext();
 
   const { setFormSubmitting } = useContractStore();
   const createContractMutation = useCreateContract();
-  const { data: properties } = useProperties();
+  const { data: properties } = useProperties({ landlordId: profile?.data._id });
   const { data: tenants } = useTenants();
+  const { data: units, refetch: refetchUnits } = useUnits({
+    property: selectedProperty,
+  });
 
   const form = useForm<CreateContractFormData>({
     resolver: zodResolver(createContractSchema),
@@ -105,10 +112,22 @@ export function CreateContractForm({ open, onClose }: CreateContractFormProps) {
     },
   });
 
+  useEffect(() => {
+    if (selectedProperty) refetchUnits();
+  }, [selectedProperty, refetchUnits]);
+
+  // Update form.tenantIds whenever selectedTenants changes
+  // This ensures the form state is always up-to-date before submit
+  // and gets "live" validation if tenantIds is required by schema
+  useEffect(() => {
+    form.setValue("tenantIds", selectedTenants);
+  }, [selectedTenants, form]); // eslint-disable-line
+
   const onSubmit = async (data: CreateContractFormData) => {
     try {
       setFormSubmitting(true);
 
+      // Ensure tenantIds is updated in the form (as a fallback, set here too)
       const formData = {
         ...data,
         tenantIds: selectedTenants,
@@ -203,7 +222,7 @@ export function CreateContractForm({ open, onClose }: CreateContractFormProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <FormField
                     control={form.control}
                     name="propertyId"
@@ -224,8 +243,8 @@ export function CreateContractForm({ open, onClose }: CreateContractFormProps) {
                           <SelectContent>
                             {properties?.properties?.map((property) => (
                               <SelectItem
-                                key={(property._id as any).toString()}
-                                value={(property._id as any).toString()}
+                                key={property._id}
+                                value={property._id}
                               >
                                 <div>
                                   <div className="font-medium">
@@ -243,6 +262,42 @@ export function CreateContractForm({ open, onClose }: CreateContractFormProps) {
                       </FormItem>
                     )}
                   />
+
+                  {selectedProperty && (
+                    <FormField
+                      control={form.control}
+                      name={"unitId"}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Unit</FormLabel>
+                          <Select
+                            defaultValue={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="capitalize">
+                                <SelectValue placeholder="Select a label" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectGroup>
+                                {units?.items.map((item) => (
+                                  <SelectItem
+                                    className="capitalize"
+                                    key={item._id}
+                                    value={item._id}
+                                  >
+                                    {item.unitNumber}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
                   <FormField
                     control={form.control}
@@ -262,7 +317,7 @@ export function CreateContractForm({ open, onClose }: CreateContractFormProps) {
                           <SelectContent>
                             {Object.values(ContractType).map((type) => (
                               <SelectItem key={type} value={type}>
-                                {type.replace(/_/g, " ")}
+                                {type.replace(/_/g, " ").toUpperCase()}
                               </SelectItem>
                             ))}
                           </SelectContent>

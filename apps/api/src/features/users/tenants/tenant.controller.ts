@@ -1,5 +1,5 @@
 import { Contract, Property, Unit } from "@kaa/models";
-import { TenantStatus } from "@kaa/models/types";
+import { type IContract, TenantStatus } from "@kaa/models/types";
 import { tenantService } from "@kaa/services";
 // import { triggerWebhooks } from "~/features/misc/webhooks/webhooks.service";
 import { clearCache } from "@kaa/utils";
@@ -144,9 +144,11 @@ export const tenantController = new Elysia().group("tenants", (app) =>
     )
     .get(
       "/stats",
-      async ({ set }) => {
+      async ({ set, query }) => {
         try {
-          const stats = await tenantService.getTenantStats();
+          const stats = await tenantService.getTenantStats({
+            property: query.property,
+          });
 
           return {
             status: "success",
@@ -163,6 +165,7 @@ export const tenantController = new Elysia().group("tenants", (app) =>
         }
       },
       {
+        query: t.Object({ property: t.String() }),
         detail: {
           tags: ["tenants"],
           summary: "Get tenant statistics",
@@ -231,14 +234,16 @@ export const tenantController = new Elysia().group("tenants", (app) =>
           }
 
           // Verify the contract exists
-          const contract = await Contract.findById(tenantData.contract);
-          if (!contract) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Contract not found",
-            };
-          }
+          let contract: IContract | null = null;
+          if (tenantData.contract)
+            contract = await Contract.findById(tenantData.contract);
+          // if (!contract) {
+          //   set.status = 404;
+          //   return {
+          //     status: "error",
+          //     message: "Contract not found",
+          //   };
+          // }
 
           // Check if tenant already exists for this unit
           const existingTenant = await mongoose.model("Tenant").findOne({
@@ -259,10 +264,14 @@ export const tenantController = new Elysia().group("tenants", (app) =>
           const createData = {
             ...tenantData,
             property: new mongoose.Types.ObjectId(tenantData.property),
-            contract: new mongoose.Types.ObjectId(tenantData.contract),
+            contract: tenantData.contract
+              ? new mongoose.Types.ObjectId(tenantData.contract)
+              : undefined,
             unit: new mongoose.Types.ObjectId(tenantData.unit),
             user: new mongoose.Types.ObjectId(user.id),
-            memberId: new mongoose.Types.ObjectId(user.memberId),
+            memberId: user.memberId
+              ? new mongoose.Types.ObjectId(user.memberId)
+              : undefined,
             personalInfo: {
               ...tenantData.personalInfo,
               dateOfBirth: new Date(tenantData.personalInfo.dateOfBirth),

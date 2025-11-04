@@ -1,0 +1,441 @@
+{
+  "exportedAt": "2025-11-02T18:34:26.031Z",
+  "count": 3,
+  "templates": [
+    {
+      "_id": "68ff5968b9710e6cb30f69d4",
+      "name": "User Verification MJML Template",
+      "slug": "user-verification-mjml-template",
+      "description": "User verification email template",
+      "category": "email",
+      "type": "verification",
+      "subject": "Verify Your Email Address",
+      "content": "\n&lt;mjml&gt;\n  &lt;mj-head&gt;\n    &lt;mj-title&gt;Verify Your Email Address&lt;/mj-title&gt;\n    &lt;mj-attributes&gt;\n      &lt;mj-all font-family=&quot;Dm Sans&quot; /&gt;\n      &lt;mj-text font-size=&quot;16px&quot; color=&quot;#333333&quot; line-height=&quot;24px&quot; /&gt;\n      &lt;mj-section padding=&quot;20px&quot; /&gt;\n    &lt;/mj-attributes&gt;\n    &lt;mj-style&gt;\n      a {\n        color: #0066cc;\n        text-decoration: none;\n      }\n    &lt;/mj-style&gt;\n  &lt;/mj-head&gt;\n  &lt;mj-body background-color=&quot;#f5f5f5&quot;&gt;\n    &lt;mj-section padding-top=&quot;30px&quot; padding-bottom=&quot;30px&quot;&gt;\n      &lt;mj-column&gt;\n        &lt;mj-image width=&quot;200px&quot; src=&quot;{{logoUrl}}&quot; alt=&quot;Kaa Logo&quot; /&gt;\n      &lt;/mj-column&gt;\n    &lt;/mj-section&gt;\n\n    &lt;mj-section background-color=&quot;#ffffff&quot; border-radius=&quot;5px&quot;&gt;\n      &lt;mj-column&gt;\n        &lt;mj-text font-size=&quot;24px&quot; font-weight=&quot;bold&quot; align=&quot;center&quot; color=&quot;#333333&quot;&gt;\n          Verify Your Email Address\n        &lt;/mj-text&gt;\n\n        &lt;mj-text padding-top=&quot;20px&quot;&gt;\n          Hello {{firstName}},\n        &lt;/mj-text&gt;\n\n        &lt;mj-text&gt;\n          Thank you for creating an account with Kaa. Please verify your email address by clicking the button below:\n        &lt;/mj-text&gt;\n\n        &lt;mj-button background-color=&quot;#4CAF50&quot; color=&quot;white&quot; border-radius=&quot;4px&quot; font-size=&quot;16px&quot; font-weight=&quot;bold&quot; href=&quot;{{verificationUrl}}&quot; width=&quot;300px&quot;&gt;\n          Verify Email Address\n        &lt;/mj-button&gt;\n\n        &lt;mj-text&gt;\n          If the button doesn't work, please copy and paste the following link into your browser:\n        &lt;/mj-text&gt;\n\n        &lt;mj-text font-size=&quot;14px&quot; color=&quot;#0066cc&quot;&gt;\n          {{verificationUrl}}\n        &lt;/mj-text&gt;\n\n        &lt;mj-text&gt;\n          This link will expire in 24 hours.\n        &lt;/mj-text&gt;\n\n        &lt;mj-text&gt;\n          If you did not create an account, please ignore this email.\n        &lt;/mj-text&gt;\n\n        &lt;mj-text padding-top=&quot;20px&quot;&gt;\n          Best regards,&lt;br /&gt;\n          The Kaa Team\n        &lt;/mj-text&gt;\n      &lt;/mj-column&gt;\n    &lt;/mj-section&gt;\n\n    &lt;mj-section&gt;\n      &lt;mj-column&gt;\n        &lt;mj-text font-size=&quot;12px&quot; color=&quot;#999999&quot; align=&quot;center&quot;&gt;\n          If you have any questions, please contact us at &lt;a href=&quot;mailto:{{supportEmail}}&quot;&gt;{{supportEmail}}&lt;/a&gt;\n        &lt;/mj-text&gt;\n\n        &lt;mj-text font-size=&quot;12px&quot; color=&quot;#999999&quot; align=&quot;center&quot;&gt;\n          &amp;copy; {{year}} Kaa. All rights reserved.\n        &lt;/mj-text&gt;\n      &lt;/mj-column&gt;\n    &lt;/mj-section&gt;\n  &lt;/mj-body&gt;\n&lt;/mjml&gt;\n",
+      "variables": [
+        {
+          "name": "firstName",
+          "type": "string",
+          "required": true,
+          "description": "The first name of the user",
+          "validation": {
+            "options": []
+          }
+        },
+        {
+          "name": "logoUrl",
+          "type": "string",
+          "required": true,
+          "description": "The URL of the logo",
+          "validation": {
+            "options": []
+          }
+        },
+        {
+          "name": "verificationUrl",
+          "type": "string",
+          "required": true,
+          "description": "The URL to verify the email address",
+          "validation": {
+            "options": []
+          }
+        },
+        {
+          "name": "supportEmail",
+          "type": "string",
+          "required": true,
+          "description": "The support email address",
+          "validation": {
+            "options": []
+          }
+        },
+        {
+          "name": "year",
+          "type": "number",
+          "required": true,
+          "description": "The year",
+          "validation": {
+            "options": []
+          }
+        }
+      ],
+      "engine": "mjml",
+      "format": "html",
+      "version": 1,
+      "isActive": true,
+      "tags": [
+        "auth",
+        "verification"
+      ],
+      "maxLength": 160,
+      "encoding": "GSM_7BIT",
+      "usageCount": 0,
+      "usage": {
+        "count": 3,
+        "lastUsedAt": "2025-11-02T18:34:00.480Z"
+      },
+      "translations": {
+        "en": {
+          "subject": "Verify Your Email Address",
+          "textContent": "Verify Your Email Address",
+          "_id": "68ff5968b9710e6cb30f69d5"
+        },
+        "sw": {
+          "subject": "Tafadhali tumia barua hii kwa kutekeleza utaratibu wa barua hii",
+          "textContent": "Tafadhali tumia barua hii kwa kutekeleza utaratibu wa barua hii",
+          "_id": "68ff5968b9710e6cb30f69d6"
+        }
+      },
+      "defaultLanguage": "en",
+      "metadata": {
+        "lastUsedAt": "2025-10-27T11:43:39.380Z",
+        "usageCount": 1,
+        "usageHistory": [
+          {
+            "date": "2025-10-27T11:43:39.380Z",
+            "userId": "68ff5aea727206c096acfcb0",
+            "context": "render"
+          }
+        ]
+      },
+      "versions": [],
+      "usageHistory": [],
+      "__v": 0,
+      "createdAt": "2025-10-27T11:37:12.180Z",
+      "updatedAt": "2025-11-02T18:34:00.480Z"
+    },
+    {
+      "_id": "68ff5968b9710e6cb30f69d7",
+      "name": "Welcome Email MJML Template",
+      "slug": "welcome-email-mjml-template",
+      "description": "Welcome email template",
+      "category": "email",
+      "type": "welcome",
+      "subject": "Welcome to Kaa!",
+      "content": "\n&lt;mjml&gt;\n  &lt;mj-head&gt;\n    &lt;mj-title&gt;Welcome to Kaa!&lt;/mj-title&gt;\n    &lt;mj-attributes&gt;\n      &lt;mj-all font-family=&quot;Dm Sans&quot; /&gt;\n      &lt;mj-text font-size=&quot;16px&quot; color=&quot;#333333&quot; line-height=&quot;24px&quot; /&gt;\n      &lt;mj-section padding=&quot;20px&quot; /&gt;\n    &lt;/mj-attributes&gt;\n    &lt;mj-style&gt;\n      a {\n        color: #0066cc;\n        text-decoration: none;\n      }\n    &lt;/mj-style&gt;\n  &lt;/mj-head&gt;\n  &lt;mj-body background-color=&quot;#f5f5f5&quot;&gt;\n    &lt;mj-section padding-top=&quot;30px&quot; padding-bottom=&quot;30px&quot;&gt;\n      &lt;mj-column&gt;\n        &lt;mj-image width=&quot;200px&quot; src=&quot;{{logoUrl}}&quot; alt=&quot;Kaa Logo&quot; /&gt;\n      &lt;/mj-column&gt;\n    &lt;/mj-section&gt;\n\n    &lt;mj-section background-color=&quot;#ffffff&quot; border-radius=&quot;5px&quot;&gt;\n      &lt;mj-column&gt;\n        &lt;mj-text font-size=&quot;24px&quot; font-weight=&quot;bold&quot; align=&quot;center&quot; color=&quot;#333333&quot;&gt;\n          Welcome to Kaa!\n        &lt;/mj-text&gt;\n\n        &lt;mj-text padding-top=&quot;20px&quot;&gt;\n          Hello {{firstName}},\n        &lt;/mj-text&gt;\n\n        &lt;mj-text&gt;\n          Thank you for verifying your email address. Your account is now fully activated, and you're all set to get started with Kaa - your go-to rental property platform.\n        &lt;/mj-text&gt;\n\n        &lt;mj-text&gt;\n          Here are a few things you can do:\n        &lt;/mj-text&gt;\n\n        &lt;mj-text&gt;\n          &lt;ul&gt;\n            &lt;li&gt;Complete your profile with additional information&lt;/li&gt;\n            &lt;li&gt;Browse available properties&lt;/li&gt;\n            &lt;li&gt;Save your favorite listings&lt;/li&gt;\n            &lt;li&gt;Contact property owners directly through our platform&lt;/li&gt;\n          &lt;/ul&gt;\n        &lt;/mj-text&gt;\n\n        &lt;mj-button background-color=&quot;#4CAF50&quot; color=&quot;white&quot; border-radius=&quot;4px&quot; font-size=&quot;16px&quot; font-weight=&quot;bold&quot; href=&quot;{{loginUrl}}&quot; width=&quot;300px&quot;&gt;\n          Get Started\n        &lt;/mj-button&gt;\n\n        &lt;mj-text padding-top=&quot;20px&quot;&gt;\n          If you have any questions or need assistance, don't hesitate to reach out to our support team.\n        &lt;/mj-text&gt;\n\n        &lt;mj-text padding-top=&quot;20px&quot;&gt;\n          Best regards,&lt;br /&gt;\n          The Kaa Team\n        &lt;/mj-text&gt;\n      &lt;/mj-column&gt;\n    &lt;/mj-section&gt;\n\n    &lt;mj-section&gt;\n      &lt;mj-column&gt;\n        &lt;mj-text font-size=&quot;12px&quot; color=&quot;#999999&quot; align=&quot;center&quot;&gt;\n          If you have any questions, please contact us at &lt;a href=&quot;mailto:{{supportEmail}}&quot;&gt;{{supportEmail}}&lt;/a&gt;\n        &lt;/mj-text&gt;\n\n        &lt;mj-text font-size=&quot;12px&quot; color=&quot;#999999&quot; align=&quot;center&quot;&gt;\n          &amp;copy; {{year}} Kaa. All rights reserved.\n        &lt;/mj-text&gt;\n      &lt;/mj-column&gt;\n    &lt;/mj-section&gt;\n  &lt;/mj-body&gt;\n&lt;/mjml&gt;\n",
+      "variables": [
+        {
+          "name": "firstName",
+          "type": "string",
+          "required": true,
+          "description": "The first name of the user",
+          "validation": {
+            "options": []
+          }
+        },
+        {
+          "name": "logoUrl",
+          "type": "string",
+          "required": true,
+          "description": "The URL of the logo",
+          "validation": {
+            "options": []
+          }
+        },
+        {
+          "name": "loginUrl",
+          "type": "string",
+          "required": true,
+          "description": "The URL to login",
+          "validation": {
+            "options": []
+          }
+        },
+        {
+          "name": "supportEmail",
+          "type": "string",
+          "required": true,
+          "description": "The support email address",
+          "validation": {
+            "options": []
+          }
+        },
+        {
+          "name": "year",
+          "type": "number",
+          "required": true,
+          "description": "The year",
+          "validation": {
+            "options": []
+          }
+        }
+      ],
+      "engine": "mjml",
+      "format": "html",
+      "version": 1,
+      "isActive": true,
+      "tags": [
+        "auth",
+        "welcome"
+      ],
+      "maxLength": 160,
+      "encoding": "GSM_7BIT",
+      "usageCount": 0,
+      "usage": {
+        "count": 4,
+        "lastUsedAt": "2025-10-27T11:56:11.578Z"
+      },
+      "translations": {
+        "en": {
+          "subject": "Welcome to Kaa!",
+          "textContent": "Welcome to our platform",
+          "_id": "68ff5968b9710e6cb30f69d8"
+        },
+        "sw": {
+          "subject": "Karibu kwenye Kaa!",
+          "textContent": "Karibu kwenye platform ya Kaa",
+          "_id": "68ff5968b9710e6cb30f69d9"
+        }
+      },
+      "defaultLanguage": "en",
+      "metadata": {
+        "lastUsedAt": "2025-10-27T11:56:11.615Z",
+        "usageCount": 1,
+        "usageHistory": [
+          {
+            "date": "2025-10-27T11:56:11.615Z",
+            "userId": "68ff5aea727206c096acfcb0",
+            "context": "render"
+          }
+        ]
+      },
+      "versions": [],
+      "usageHistory": [],
+      "__v": 0,
+      "createdAt": "2025-10-27T11:37:12.183Z",
+      "updatedAt": "2025-10-27T11:56:11.615Z"
+    },
+    {
+      "_id": "68ff5968b9710e6cb30f69da",
+      "name": "Login Alert Email MJML Template",
+      "slug": "login-alert-email-mjml-template",
+      "description": "Login alert email template",
+      "category": "email",
+      "type": "login-alert",
+      "subject": "New Login Alert",
+      "content": "\n&lt;mjml&gt;\n  &lt;mj-head&gt;\n    &lt;mj-title&gt;New Login Alert&lt;/mj-title&gt;\n    &lt;mj-attributes&gt;\n      &lt;mj-all font-family=&quot;Dm Sans&quot; /&gt;\n      &lt;mj-text font-size=&quot;16px&quot; color=&quot;#333333&quot; line-height=&quot;24px&quot; /&gt;\n      &lt;mj-section padding=&quot;20px&quot; /&gt;\n    &lt;/mj-attributes&gt;\n    &lt;mj-style&gt;\n      a {\n        color: #0066cc;\n        text-decoration: none;\n      }\n    &lt;/mj-style&gt;\n  &lt;/mj-head&gt;\n  &lt;mj-body background-color=&quot;#f5f5f5&quot;&gt;\n    &lt;mj-section padding-top=&quot;30px&quot; padding-bottom=&quot;30px&quot;&gt;\n      &lt;mj-column&gt;\n        &lt;mj-image width=&quot;200px&quot; src=&quot;{{logoUrl}}&quot; alt=&quot;Kaa Logo&quot; /&gt;\n      &lt;/mj-column&gt;\n    &lt;/mj-section&gt;\n\n    &lt;mj-section&gt;\n      &lt;mj-column&gt;\n        &lt;mj-text&gt;\n          &lt;h2&gt;New Login Alert&lt;/h2&gt;\n          &lt;p&gt;A new login was detected on your Kaa account.&lt;/p&gt;\n          &lt;p&gt;&lt;strong&gt;IP Address:&lt;/strong&gt; {{ip}}&lt;/p&gt;\n          &lt;p&gt;&lt;strong&gt;Device:&lt;/strong&gt; {{userAgent}}&lt;/p&gt;\n          &lt;p&gt;&lt;strong&gt;Time:&lt;/strong&gt; {{date}}&lt;/p&gt;\n          &lt;p&gt;If this wasn't you, please change your password immediately.&lt;/p&gt;\n        &lt;/mj-text&gt;\n      &lt;/mj-column&gt;\n    &lt;/mj-section&gt;\n  &lt;/mj-body&gt;\n&lt;/mjml&gt;\n",
+      "variables": [
+        {
+          "name": "ip",
+          "type": "string",
+          "required": true,
+          "description": "The IP address of the user",
+          "validation": {
+            "options": []
+          }
+        },
+        {
+          "name": "userAgent",
+          "type": "string",
+          "required": true,
+          "description": "The user agent of the user",
+          "validation": {
+            "options": []
+          }
+        },
+        {
+          "name": "date",
+          "type": "string",
+          "required": true,
+          "description": "The date of the login",
+          "validation": {
+            "options": []
+          }
+        }
+      ],
+      "engine": "mjml",
+      "format": "html",
+      "version": 1,
+      "isActive": true,
+      "tags": [
+        "auth",
+        "login-alert"
+      ],
+      "maxLength": 160,
+      "encoding": "GSM_7BIT",
+      "usageCount": 0,
+      "usage": {
+        "count": 32,
+        "lastUsedAt": "2025-11-02T14:40:12.748Z"
+      },
+      "translations": {
+        "en": {
+          "subject": "New Login Alert",
+          "textContent": "New Login Alert",
+          "_id": "68ff5968b9710e6cb30f69db"
+        },
+        "sw": {
+          "subject": "Msalio Mchungaji wa Kipindi",
+          "textContent": "Msalio Mchungaji wa Kipindi",
+          "_id": "68ff5968b9710e6cb30f69dc"
+        }
+      },
+      "defaultLanguage": "en",
+      "metadata": {
+        "lastUsedAt": "2025-11-02T14:40:12.775Z",
+        "usageCount": 31,
+        "usageHistory": [
+          {
+            "date": "2025-10-27T12:11:11.692Z",
+            "userId": "68ff5aea727206c096acfcb0",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-27T12:11:24.199Z",
+            "userId": "68ff5aea727206c096acfcb0",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-27T13:06:00.489Z",
+            "userId": "68ff5aea727206c096acfcb0",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-27T13:06:23.205Z",
+            "userId": "68ff5aea727206c096acfcb0",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-27T13:07:51.540Z",
+            "userId": "68ff5aea727206c096acfcb0",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-27T13:09:29.267Z",
+            "userId": "68ff5aea727206c096acfcb0",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-27T13:41:00.908Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-28T02:37:08.369Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-28T03:49:27.403Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-28T07:58:36.380Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-29T06:23:05.813Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-29T16:38:45.286Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-29T16:41:43.489Z",
+            "userId": "68fe409c2eef9e79d31480ba",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-29T16:48:56.970Z",
+            "userId": "68ff5aea727206c096acfcb0",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-29T17:05:21.046Z",
+            "userId": "68fe409c2eef9e79d31480ba",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-29T18:25:51.812Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-29T19:24:42.008Z",
+            "userId": "68fe409c2eef9e79d31480ba",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-29T19:44:11.928Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-30T15:47:57.435Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-31T12:01:35.126Z",
+            "userId": "68ff5aea727206c096acfcb0",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-31T16:17:57.255Z",
+            "userId": "68fe409c2eef9e79d31480ba",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-31T17:01:07.842Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-31T17:06:59.482Z",
+            "userId": "68fe409c2eef9e79d31480ba",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-31T19:36:54.736Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-31T20:30:52.133Z",
+            "userId": "68fe409c2eef9e79d31480ba",
+            "context": "render"
+          },
+          {
+            "date": "2025-10-31T21:04:49.416Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-11-01T11:42:21.104Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-11-01T13:08:19.622Z",
+            "userId": "68fe409c2eef9e79d31480ba",
+            "context": "render"
+          },
+          {
+            "date": "2025-11-01T14:08:21.026Z",
+            "userId": "68f8794ee597c6c2f018b9c3",
+            "context": "render"
+          },
+          {
+            "date": "2025-11-01T14:11:03.318Z",
+            "userId": "68fe409c2eef9e79d31480ba",
+            "context": "render"
+          },
+          {
+            "date": "2025-11-02T14:40:12.775Z",
+            "userId": "68fe409c2eef9e79d31480ba",
+            "context": "render"
+          }
+        ]
+      },
+      "versions": [],
+      "usageHistory": [],
+      "__v": 0,
+      "createdAt": "2025-10-27T11:37:12.183Z",
+      "updatedAt": "2025-11-02T14:40:12.778Z"
+    }
+  ]
+}

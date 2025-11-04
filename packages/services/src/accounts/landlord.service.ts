@@ -89,8 +89,11 @@ export const getLandlordBy = async (query: {
     }
 
     return await Landlord.findOne(searchQuery)
-      .populate("user", "firstName lastName email phone")
-      .populate("properties", "title location totalUnits")
+      .populate(
+        "user",
+        "profile.firstName profile.lastName contact.email contact.phone"
+      )
+      .populate("properties", "title location media totalUnits")
       .populate("organizationId", "name");
   } catch (error) {
     console.error("Error fetching landlord by query:", error);

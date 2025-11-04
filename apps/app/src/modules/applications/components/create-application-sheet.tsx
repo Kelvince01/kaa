@@ -36,10 +36,10 @@ export function CreateApplicationSheet() {
     startTransition(async () => {
       await createApplicationMutation.mutateAsync(input);
 
-      //   if (error) {
-      //     toast.error(error);
-      //     return;
-      //   }
+      if (createApplicationMutation.error) {
+        toast.error(createApplicationMutation.error.message);
+        return;
+      }
 
       form.reset();
       setOpen(false);

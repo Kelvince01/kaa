@@ -3,6 +3,7 @@ import { t } from "elysia";
 
 export const createUnitSchema = t.Object({
   unitNumber: t.String(),
+  tenant: t.Optional(t.String()),
   property: t.String(),
   floor: t.Optional(t.Number()),
   size: t.Optional(t.Number()),

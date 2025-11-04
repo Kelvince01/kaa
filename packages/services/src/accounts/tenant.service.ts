@@ -74,8 +74,11 @@ export const getTenantBy = async (query: {
     }
 
     return await Tenant.findOne(searchQuery)
-      .populate("user", "firstName lastName email phone")
-      .populate("property", "title location address")
+      .populate(
+        "user",
+        "profile.firstName profile.lastName contact.email contact.phone"
+      )
+      .populate("property", "title location media")
       .populate("unit", "unitNumber rent");
   } catch (error) {
     console.error("Error fetching tenant by query:", error);
@@ -269,8 +272,8 @@ export const getTenants = async (params: TenantQueryParams) => {
 
     // Build populate array
     const defaultPopulates = [
-      "user:firstName lastName email phone",
-      "property:title location",
+      "user:profile.firstName profile.lastName contact.email contact.phone",
+      "property:title location media",
       "unit:unitNumber rent",
     ];
     const populateFields = populate.length > 0 ? populate : defaultPopulates;
@@ -624,12 +627,14 @@ export const createTenant = async (
     const [property, unit, contract] = await Promise.all([
       mongoose.model("Property").findById(tenantData.property),
       mongoose.model("Unit").findById(tenantData.unit),
-      mongoose.model("Contract").findById(tenantData.contract),
+      tenantData.contract
+        ? mongoose.model("Contract").findById(tenantData.contract)
+        : undefined,
     ]);
 
     if (!property) throw new BadRequestError("Property not found");
     if (!unit) throw new BadRequestError("Unit not found");
-    if (!contract) throw new BadRequestError("Contract not found");
+    // if (!contract) throw new BadRequestError("Contract not found");
 
     // Check for existing tenant with same email or national ID
     const existingTenant = await Tenant.findOne({
@@ -709,8 +714,12 @@ export const createTenant = async (
     await newTenant.save();
 
     await newTenant.populate([
-      { path: "user", select: "firstName lastName email phone" },
-      { path: "property", select: "title location" },
+      {
+        path: "user",
+        select:
+          "profile.firstName profile.lastName contact.email contact.phone",
+      },
+      { path: "property", select: "title location media" },
       { path: "unit", select: "unitNumber rent" },
       { path: "contract", select: "startDate endDate monthlyRent" },
     ]);

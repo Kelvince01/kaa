@@ -44,25 +44,27 @@ export default function Marker({
   ...props
 }: Props) {
   const { map } = useMap();
-  const markerRef = useRef<HTMLDivElement | null>(null);
-  let marker: mapboxgl.Marker | null = null;
+
+  // Ref for the marker element and marker instance
+  const markerElRef = useRef<HTMLDivElement | null>(null);
+  const markerRef = useRef<mapboxgl.Marker | null>(null);
 
   const handleHover = (isHovered: boolean) => {
-    if (onHover && marker) {
+    if (onHover && markerRef.current) {
       onHover({
         isHovered,
         position: { longitude, latitude },
-        marker,
+        marker: markerRef.current,
         data,
       });
     }
   };
 
   const handleClick = () => {
-    if (onClick && marker) {
+    if (onClick && markerRef.current) {
       onClick({
         position: { longitude, latitude },
-        marker,
+        marker: markerRef.current,
         data,
       });
     }
@@ -70,41 +72,53 @@ export default function Marker({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: marker lifecycle
   useEffect(() => {
-    const markerEl = markerRef.current;
+    const markerEl = markerElRef.current;
     if (!(map && markerEl)) return;
 
     const handleMouseEnter = () => handleHover(true);
     const handleMouseLeave = () => handleHover(false);
 
-    // Add event listeners
     markerEl.addEventListener("mouseenter", handleMouseEnter);
     markerEl.addEventListener("mouseleave", handleMouseLeave);
     markerEl.addEventListener("click", handleClick);
 
-    // Marker options
-    const options = {
+    const options: MarkerOptions = {
       element: markerEl,
       ...props,
     };
 
-    marker = new mapboxgl.Marker(options)
-      .setLngLat([longitude, latitude])
-      ?.addTo(map);
+    const addMarker = () => {
+      if (markerRef.current) {
+        markerRef.current.remove();
+      }
+
+      markerRef.current = new mapboxgl.Marker(options)
+        .setLngLat([longitude, latitude])
+        .addTo(map);
+    };
+
+    // Wait until map is fully loaded
+    if (map.loaded()) {
+      addMarker();
+    } else {
+      map.once("load", addMarker);
+    }
 
     return () => {
-      // Cleanup on unmount
-      if (marker) marker.remove();
-      if (markerEl) {
-        markerEl.removeEventListener("mouseenter", handleMouseEnter);
-        markerEl.removeEventListener("mouseleave", handleMouseLeave);
-        markerEl.removeEventListener("click", handleClick);
+      if (markerRef.current) {
+        markerRef.current.remove();
+        markerRef.current = null;
       }
+
+      markerEl.removeEventListener("mouseenter", handleMouseEnter);
+      markerEl.removeEventListener("mouseleave", handleMouseLeave);
+      markerEl.removeEventListener("click", handleClick);
     };
   }, [map, longitude, latitude]);
 
   return (
     <div>
-      <div ref={markerRef}>{children}</div>
+      <div ref={markerElRef}>{children}</div>
     </div>
   );
 }

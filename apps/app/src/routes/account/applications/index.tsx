@@ -1,7 +1,8 @@
 "use client";
 
 import { AlertCircle, Filter, RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useApplications } from "@/modules/applications/application.queries";
 import {
   type Application,
   ApplicationStatus,
@@ -29,13 +30,12 @@ export enum DocumentCategory {
 
 const Applications = () => {
   // const { user } = useAuthStore();
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     status: "all",
     timeframe: "all",
   });
+  const { data, isLoading } = useApplications({});
 
   // Mock application data
   const mockApplications: Application[] = [
@@ -1411,30 +1411,9 @@ const Applications = () => {
 		},*/
   ];
 
+  const applications = data?.items ?? [];
+
   // Fetch applications from API
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: we need to use a mock data for the demo
-  useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        setIsLoading(true);
-
-        // In a real app, fetch from API
-        // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/applications`);
-
-        // For demo purposes, use mock data
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setApplications(mockApplications);
-      } catch (error) {
-        console.error("Error fetching applications:", error);
-        setError("Failed to load your applications. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchApplications();
-  }, []);
 
   // Filter applications based on current filter settings
   const filteredApplications = applications.filter((app) => {

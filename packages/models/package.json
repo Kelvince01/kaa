@@ -5,8 +5,6 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./file.model": "./src/file-v2.model.ts",
-    "./file.type": "./src/types/file-v2.type.ts",
     "./types": "./src/types/index.ts"
   },
   "scripts": {

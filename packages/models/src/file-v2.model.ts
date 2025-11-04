@@ -5,7 +5,7 @@
  * Includes files, processing jobs, and analytics with Kenya-specific features
  */
 
-import { type Document, model, Schema } from "mongoose";
+import mongoose, { type Document, model, Schema } from "mongoose";
 import {
   FileAccessLevel,
   FileCategory,
@@ -13,18 +13,95 @@ import {
   FileType,
   type IFile,
   type IFileAnalytics,
+  type IFileMetadata,
   type IFileProcessingJob,
+  type IFileScanResult,
+  type IFileSharingSettings,
+  type IFileVersion,
   ImageOperation,
-  // KENYA_FILE_CONSTANTS,
   StorageProvider,
 } from "./types/file-v2.type";
 
 // ==================== FILE SCHEMA ====================
 
+const fileSharingSchema = new mongoose.Schema<IFileSharingSettings>({
+  isPublic: { type: Boolean, default: false },
+  allowDownload: { type: Boolean, default: true },
+  allowPreview: { type: Boolean, default: true },
+  expiresAt: Date,
+  passwordProtected: { type: Boolean, default: false },
+  password: String,
+  maxDownloads: Number,
+  downloadCount: { type: Number, default: 0 },
+  shareLink: String,
+  shareToken: String,
+});
+
+const fileMetadataSchema = new mongoose.Schema<IFileMetadata>({
+  dimensions: {
+    width: Number,
+    height: Number,
+  },
+  duration: Number,
+  pages: Number,
+  resolution: String,
+  colorSpace: String,
+  compression: String,
+  exif: { type: Schema.Types.Mixed }, // EXIF data for images
+  checksum: {
+    type: String,
+    required: true,
+    maxlength: 128,
+    index: true,
+  },
+  encoding: { type: String, maxlength: 50 },
+  orientation: { type: Number, min: 1, max: 8 },
+  author: String,
+  title: String,
+  subject: String,
+  keywords: [String],
+  creator: String,
+  producer: String,
+  creationDate: Date,
+  modificationDate: Date,
+  location: {
+    latitude: Number,
+    longitude: Number,
+  },
+  camera: {
+    make: String,
+    model: String,
+    iso: Number,
+    aperture: String,
+    shutterSpeed: String,
+    focalLength: String,
+  },
+});
+
+const fileVersionSchema = new mongoose.Schema<IFileVersion>({
+  id: String,
+  version: Number,
+  size: Number,
+  url: String,
+  uploadedBy: { type: mongoose.Schema.ObjectId, ref: "User" },
+  uploadedByName: String,
+  uploadedAt: Date,
+  changes: String,
+  isActive: { type: Boolean, default: false },
+});
+
+const fileScanResultSchema = new mongoose.Schema<IFileScanResult>({
+  clean: { type: Boolean, default: true },
+  threats: [String],
+  scanDate: Date,
+  scanner: String,
+  scanDuration: Number,
+});
+
 /**
  * Main file schema
  */
-const FileSchema = new Schema<IFile & Document>(
+const fileSchema = new Schema<IFile & Document>(
   {
     originalName: {
       type: String,
@@ -63,6 +140,7 @@ const FileSchema = new Schema<IFile & Document>(
       min: 0,
       index: true,
     },
+    description: String,
 
     // Storage information
     provider: {
@@ -90,25 +168,18 @@ const FileSchema = new Schema<IFile & Document>(
       type: String,
       maxlength: 1000,
     },
+    path: {
+      type: String,
+      // required: [true, "File path is required"],
+    },
+    thumbnailUrl: String,
+    previewUrl: String,
 
     // File metadata
-    metadata: {
-      width: { type: Number, min: 0 },
-      height: { type: Number, min: 0 },
-      duration: { type: Number, min: 0 }, // for video/audio
-      pages: { type: Number, min: 0 }, // for documents
-      exif: { type: Schema.Types.Mixed }, // EXIF data for images
-      checksum: {
-        type: String,
-        required: true,
-        maxlength: 128,
-        index: true,
-      },
-      encoding: { type: String, maxlength: 50 },
-      colorSpace: { type: String, maxlength: 20 },
-      compression: { type: String, maxlength: 20 },
-      orientation: { type: Number, min: 1, max: 8 },
-    },
+    metadata: fileMetadataSchema,
+    sharing: fileSharingSchema,
+    versions: [fileVersionSchema],
+    scanResult: fileScanResultSchema,
 
     // Access control
     accessLevel: {
@@ -119,13 +190,13 @@ const FileSchema = new Schema<IFile & Document>(
       index: true,
     },
     ownerId: {
-      type: String,
-      required: true,
+      type: mongoose.Schema.ObjectId,
+      required: [true, "File must belong to a user"],
       ref: "User",
       index: true,
     },
     organizationId: {
-      type: String,
+      type: mongoose.Schema.ObjectId,
       ref: "Organization",
       index: true,
     },
@@ -230,7 +301,7 @@ const FileSchema = new Schema<IFile & Document>(
 
     // Audit trail
     uploadedBy: {
-      type: String,
+      type: mongoose.Schema.ObjectId,
       required: true,
       ref: "User",
       index: true,
@@ -271,19 +342,21 @@ const FileSchema = new Schema<IFile & Document>(
 // ==================== FILE SCHEMA INDEXES ====================
 
 // Compound indexes for efficient queries
-FileSchema.index({ ownerId: 1, category: 1, createdAt: -1 });
-FileSchema.index({ type: 1, status: 1, createdAt: -1 });
-FileSchema.index({ relatedEntityId: 1, relatedEntityType: 1 });
-FileSchema.index({ provider: 1, bucket: 1, key: 1 });
-FileSchema.index({ status: 1, expiresAt: 1 });
-FileSchema.index({ "kenyaMetadata.county": 1, type: 1 });
-FileSchema.index({ tags: 1, status: 1 });
+fileSchema.index({ ownerId: 1, category: 1, createdAt: -1 });
+fileSchema.index({ type: 1, status: 1, createdAt: -1 });
+fileSchema.index({ relatedEntityId: 1, relatedEntityType: 1 });
+fileSchema.index({ provider: 1, bucket: 1, key: 1 });
+fileSchema.index({ status: 1, expiresAt: 1 });
+fileSchema.index({ "kenyaMetadata.county": 1, type: 1 });
+fileSchema.index({ tags: 1, status: 1 });
+fileSchema.index({ downloadCount: -1 });
+fileSchema.index({ "sharing.shareToken": 1 });
 
 // Geospatial index for GPS coordinates
-FileSchema.index({ "kenyaMetadata.gpsCoordinates": "2dsphere" });
+fileSchema.index({ "kenyaMetadata.gpsCoordinates": "2dsphere" });
 
 // Text search index
-FileSchema.index(
+fileSchema.index(
   { originalName: "text", tags: "text" },
   {
     name: "file_text_search",
@@ -296,10 +369,10 @@ FileSchema.index(
 );
 
 // TTL index for expired files
-FileSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+fileSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 // TTL index for deleted files cleanup (30 days retention)
-FileSchema.index(
+fileSchema.index(
   { deletedAt: 1 },
   {
     expireAfterSeconds: 30 * 24 * 60 * 60, // 30 days
@@ -312,7 +385,7 @@ FileSchema.index(
 /**
  * Generate file variants (thumbnails, etc.)
  */
-FileSchema.methods.addVariant = function (name: string, variant: any) {
+fileSchema.methods.addVariant = function (name: string, variant: any) {
   this.variants.set(name, variant);
   return this.save();
 };
@@ -320,7 +393,7 @@ FileSchema.methods.addVariant = function (name: string, variant: any) {
 /**
  * Mark file as ready
  */
-FileSchema.methods.markAsReady = function () {
+fileSchema.methods.markAsReady = function () {
   this.status = FileStatus.READY;
   this.processingProgress = 100;
   this.processingError = undefined;
@@ -330,7 +403,7 @@ FileSchema.methods.markAsReady = function () {
 /**
  * Mark file as failed
  */
-FileSchema.methods.markAsFailed = function (error: string) {
+fileSchema.methods.markAsFailed = function (error: string) {
   this.status = FileStatus.FAILED;
   this.processingError = error;
   return this.save();
@@ -339,7 +412,7 @@ FileSchema.methods.markAsFailed = function (error: string) {
 /**
  * Update processing progress
  */
-FileSchema.methods.updateProgress = function (progress: number) {
+fileSchema.methods.updateProgress = function (progress: number) {
   this.processingProgress = Math.max(0, Math.min(100, progress));
   if (progress >= 100) {
     this.status = FileStatus.READY;
@@ -350,7 +423,7 @@ FileSchema.methods.updateProgress = function (progress: number) {
 /**
  * Track file access
  */
-FileSchema.methods.trackAccess = function (type: "view" | "download") {
+fileSchema.methods.trackAccess = function (type: "view" | "download") {
   if (type === "view") {
     this.viewCount += 1;
   } else {
@@ -363,7 +436,7 @@ FileSchema.methods.trackAccess = function (type: "view" | "download") {
 /**
  * Soft delete file
  */
-FileSchema.methods.softDelete = function () {
+fileSchema.methods.softDelete = function () {
   this.status = FileStatus.DELETED;
   this.deletedAt = new Date();
   return this.save();
@@ -372,21 +445,21 @@ FileSchema.methods.softDelete = function () {
 /**
  * Check if file is image
  */
-FileSchema.methods.isImage = function (): boolean {
+fileSchema.methods.isImage = function (): boolean {
   return this.type === FileType.IMAGE;
 };
 
 /**
  * Check if file is document
  */
-FileSchema.methods.isDocument = function (): boolean {
+fileSchema.methods.isDocument = function (): boolean {
   return this.type === FileType.DOCUMENT;
 };
 
 /**
  * Get human readable file size
  */
-FileSchema.methods.getHumanSize = function (): string {
+fileSchema.methods.getHumanSize = function (): string {
   const bytes = this.size;
   if (bytes === 0) return "0 Bytes";
 
@@ -400,7 +473,7 @@ FileSchema.methods.getHumanSize = function (): string {
 /**
  * Check if file has GPS data
  */
-FileSchema.methods.hasGpsData = function (): boolean {
+fileSchema.methods.hasGpsData = function (): boolean {
   return !!(
     this.kenyaMetadata?.gpsCoordinates?.latitude &&
     this.kenyaMetadata?.gpsCoordinates?.longitude
@@ -412,7 +485,7 @@ FileSchema.methods.hasGpsData = function (): boolean {
 /**
  * File processing job schema
  */
-const FileProcessingJobSchema = new Schema<IFileProcessingJob & Document>(
+const fileProcessingJobSchema = new Schema<IFileProcessingJob & Document>(
   {
     fileId: {
       type: String,
@@ -502,12 +575,12 @@ const FileProcessingJobSchema = new Schema<IFileProcessingJob & Document>(
 );
 
 // Processing job indexes
-FileProcessingJobSchema.index({ status: 1, priority: -1, createdAt: 1 });
-FileProcessingJobSchema.index({ fileId: 1, operation: 1 });
-FileProcessingJobSchema.index({ status: 1, startedAt: 1 });
+fileProcessingJobSchema.index({ status: 1, priority: -1, createdAt: 1 });
+fileProcessingJobSchema.index({ fileId: 1, operation: 1 });
+fileProcessingJobSchema.index({ status: 1, startedAt: 1 });
 
 // TTL index for completed/failed jobs (7 days retention)
-FileProcessingJobSchema.index(
+fileProcessingJobSchema.index(
   { completedAt: 1 },
   {
     expireAfterSeconds: 7 * 24 * 60 * 60, // 7 days
@@ -522,7 +595,7 @@ FileProcessingJobSchema.index(
 /**
  * Start processing job
  */
-FileProcessingJobSchema.methods.start = function () {
+fileProcessingJobSchema.methods.start = function () {
   this.status = "processing";
   this.startedAt = new Date();
   return this.save();
@@ -531,7 +604,7 @@ FileProcessingJobSchema.methods.start = function () {
 /**
  * Complete processing job
  */
-FileProcessingJobSchema.methods.complete = function (outputFileId?: string) {
+fileProcessingJobSchema.methods.complete = function (outputFileId?: string) {
   this.status = "completed";
   this.progress = 100;
   this.completedAt = new Date();
@@ -547,7 +620,7 @@ FileProcessingJobSchema.methods.complete = function (outputFileId?: string) {
 /**
  * Fail processing job
  */
-FileProcessingJobSchema.methods.fail = function (error: string) {
+fileProcessingJobSchema.methods.fail = function (error: string) {
   this.status = "failed";
   this.error = error;
   this.completedAt = new Date();
@@ -562,7 +635,7 @@ FileProcessingJobSchema.methods.fail = function (error: string) {
 /**
  * Retry processing job
  */
-FileProcessingJobSchema.methods.retry = function () {
+fileProcessingJobSchema.methods.retry = function () {
   if (this.retryCount < this.maxRetries) {
     this.status = "pending";
     this.retryCount += 1;
@@ -579,7 +652,7 @@ FileProcessingJobSchema.methods.retry = function () {
 /**
  * File analytics schema
  */
-const FileAnalyticsSchema = new Schema<IFileAnalytics & Document>(
+const fileAnalyticsSchema = new Schema<IFileAnalytics & Document>(
   {
     date: {
       type: Date,
@@ -653,7 +726,58 @@ const FileAnalyticsSchema = new Schema<IFileAnalytics & Document>(
       default: 0,
       min: 0,
     },
+    totalShares: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: 0,
+    },
     uniqueUsers: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: 0,
+    },
+
+    uniqueViewers: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: 0,
+    },
+    viewsByDate: {
+      type: [Object],
+      of: {
+        date: Date,
+        count: Number,
+      },
+      default: [],
+    },
+    downloadsByDate: {
+      type: [Object],
+      of: {
+        date: Date,
+        count: Number,
+      },
+      default: [],
+    },
+    topReferrers: {
+      type: [Object],
+      of: {
+        referrer: String,
+        count: Number,
+      },
+      default: [],
+    },
+    topCountries: {
+      type: [Object],
+      of: {
+        country: String,
+        count: Number,
+      },
+      default: [],
+    },
+    avgViewDuration: {
       type: Number,
       required: true,
       default: 0,
@@ -698,15 +822,15 @@ const FileAnalyticsSchema = new Schema<IFileAnalytics & Document>(
 );
 
 // Analytics indexes
-FileAnalyticsSchema.index({ date: -1 });
-FileAnalyticsSchema.index({ date: 1 }, { unique: true });
+fileAnalyticsSchema.index({ date: -1 });
+fileAnalyticsSchema.index({ date: 1 }, { unique: true });
 
 // ==================== ANALYTICS METHODS ====================
 
 /**
  * Update file type distribution
  */
-FileAnalyticsSchema.methods.updateTypeDistribution = function (
+fileAnalyticsSchema.methods.updateTypeDistribution = function (
   type: FileType,
   increment = 1
 ) {
@@ -718,7 +842,7 @@ FileAnalyticsSchema.methods.updateTypeDistribution = function (
 /**
  * Update category distribution
  */
-FileAnalyticsSchema.methods.updateCategoryDistribution = function (
+fileAnalyticsSchema.methods.updateCategoryDistribution = function (
   category: FileCategory,
   increment = 1
 ) {
@@ -730,7 +854,7 @@ FileAnalyticsSchema.methods.updateCategoryDistribution = function (
 /**
  * Calculate average file size
  */
-FileAnalyticsSchema.methods.calculateAverageFileSize = function () {
+fileAnalyticsSchema.methods.calculateAverageFileSize = function () {
   if (this.totalFiles > 0) {
     this.kenyaMetrics.averageFileSize = this.totalStorage / this.totalFiles;
   }
@@ -742,19 +866,19 @@ FileAnalyticsSchema.methods.calculateAverageFileSize = function () {
 /**
  * File virtual fields
  */
-FileSchema.virtual("publicUrl").get(function () {
+fileSchema.virtual("publicUrl").get(function () {
   return this.accessLevel === FileAccessLevel.PUBLIC ? this.url : null;
 });
 
-FileSchema.virtual("isExpired").get(function () {
+fileSchema.virtual("isExpired").get(function () {
   return this.expiresAt && this.expiresAt < new Date();
 });
 
-FileSchema.virtual("isDeleted").get(function () {
+fileSchema.virtual("isDeleted").get(function () {
   return this.status === FileStatus.DELETED || !!this.deletedAt;
 });
 
-FileSchema.virtual("processingDuration").get(function () {
+fileSchema.virtual("processingDuration").get(function () {
   if (this.startedAt && this.completedAt) {
     return this.completedAt.getTime() - this.startedAt.getTime();
   }
@@ -766,7 +890,7 @@ FileSchema.virtual("processingDuration").get(function () {
 /**
  * Generate filename and detect file type before saving
  */
-FileSchema.pre("save", function () {
+fileSchema.pre("save", function () {
   // Generate unique filename if not provided
   if (!this.fileName) {
     const timestamp = Date.now();
@@ -809,7 +933,7 @@ FileSchema.pre("save", function () {
 /**
  * Update processing time calculation
  */
-FileProcessingJobSchema.pre("save", function () {
+fileProcessingJobSchema.pre("save", function () {
   if (
     this.isModified("status") &&
     this.status === "processing" &&
@@ -833,24 +957,49 @@ FileProcessingJobSchema.pre("save", function () {
   }
 });
 
+// File Access Log Model
+const fileAccessLogSchema = new mongoose.Schema(
+  {
+    fileId: { type: mongoose.Schema.ObjectId, ref: "File", required: true },
+    userId: { type: mongoose.Schema.ObjectId, ref: "User", required: true },
+    action: {
+      type: String,
+      enum: ["VIEW", "DOWNLOAD", "SHARE", "EDIT", "DELETE"],
+      required: true,
+    },
+    ipAddress: String,
+    userAgent: String,
+    accessedAt: { type: Date, default: Date.now },
+    metadata: mongoose.Schema.Types.Mixed,
+  },
+  { timestamps: true }
+);
+
+// Indexes for access logs
+fileAccessLogSchema.index({ fileId: 1, accessedAt: -1 });
+fileAccessLogSchema.index({ userId: 1, accessedAt: -1 });
+fileAccessLogSchema.index({ action: 1 });
+
+export const FileAccessLog = mongoose.model(
+  "FileAccessLog",
+  fileAccessLogSchema
+);
+
 // ==================== EXPORT MODELS ====================
 
-export const File = model<IFile & Document>("File", FileSchema);
+export const File = model<IFile & Document>("File", fileSchema);
 export const FileProcessingJob = model<IFileProcessingJob & Document>(
   "FileProcessingJob",
-  FileProcessingJobSchema
+  fileProcessingJobSchema
 );
 export const FileAnalytics = model<IFileAnalytics & Document>(
   "FileAnalytics",
-  FileAnalyticsSchema
+  fileAnalyticsSchema
 );
 
 // Export schemas for testing and extending
-export { FileSchema, FileProcessingJobSchema, FileAnalyticsSchema };
-
-// Default export
-export default {
-  File,
-  FileProcessingJob,
-  FileAnalytics,
+export {
+  fileSchema as FileSchema,
+  fileProcessingJobSchema as FileProcessingJobSchema,
+  fileAnalyticsSchema as FileAnalyticsSchema,
 };

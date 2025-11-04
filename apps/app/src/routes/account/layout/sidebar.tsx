@@ -13,10 +13,10 @@ export const accountSidebarItems = {
   navMain: [
     { title: "Profile", url: "/account/profile", icon: UserIcon },
     { title: "Saved Searches", url: "/account/saved-searches", icon: Search },
-    { title: "Favourites", url: "/account/favourites", icon: Heart },
+    { title: "Favorites", url: "/account/favorites", icon: Heart },
     {
       title: "Applications",
-      url: "/account/applications-v2 ",
+      url: "/account/applications",
       icon: ClipboardCheck,
     },
     { title: "Wallet", url: "/account/wallet", icon: Wallet },

@@ -59,7 +59,7 @@ export function BulkActionsToolbar({
       ...selectedUnitObjects.map((unit) =>
         [
           unit.unitNumber,
-          unit.unitType,
+          unit.type,
           unit.status,
           unit.rent,
           typeof unit.property === "string"

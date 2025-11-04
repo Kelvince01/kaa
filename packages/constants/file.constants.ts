@@ -13,6 +13,8 @@ export const FILE_CONSTANTS = {
     DOCUMENT: 50 * 1024 * 1024, // 50MB
     VIDEO: 100 * 1024 * 1024, // 100MB
     AUDIO: 25 * 1024 * 1024, // 25MB
+    CODE: 10 * 1024 * 1024, // 10MB
+    ARCHIVE: 100 * 1024 * 1024, // 100MB
     OTHER: 25 * 1024 * 1024, // 25MB
   },
 
@@ -52,6 +54,19 @@ export const FILE_CONSTANTS = {
       "video/webm",
     ],
     AUDIO: ["audio/mpeg", "audio/wav", "audio/aac", "audio/ogg"],
+    CODE: [
+      "text/plain",
+      "application/javascript",
+      "application/json",
+      "application/xml",
+      "application/x-python",
+      "application/x-ruby",
+      "application/x-php",
+      "application/x-java",
+      "application/x-c",
+      "application/x-c++",
+      "application/x-c#",
+    ],
     ARCHIVES: [
       "application/zip",
       "application/x-rar-compressed",

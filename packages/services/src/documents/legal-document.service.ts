@@ -16,17 +16,19 @@ import {
   type DocumentParty,
   type DocumentRequest,
   FieldType,
+  FileAccessLevel,
+  FileCategory,
   type GenerationOptions,
   type IDocumentTemplate,
   type IGeneratedDocument,
-  KENYA_LEGAL_CONSTANTS,
   Language,
-  LegalDocumentCategory,
+  type LegalDocumentCategory,
   LegalDocumentStatus,
-  LegalDocumentType,
+  type LegalDocumentType,
   SmsPriority,
+  SmsType,
   type TemplateField,
-  TemplateStatus,
+  type TemplateStatus,
 } from "@kaa/models/types";
 import {
   deleteFile,
@@ -40,13 +42,13 @@ import {
 } from "@kaa/utils";
 import { createCanvas, registerFont } from "canvas";
 import Docxtemplater from "docxtemplater";
-import type mongoose from "mongoose";
 import PDFDocument from "pdfkit";
 import PizZip from "pizzip";
 import QRCode from "qrcode";
 import type { RedisClientType } from "redis";
 import { emailService, smsService, whatsappService } from "../comms";
-import { createFile } from "../files/file.service";
+import { filesV2Service } from "../files/file-v2.service";
+import { defaultLegalDocumentTemplates } from "./legal-document.templates";
 
 /**
  * Font configuration type for PDF generation
@@ -293,7 +295,7 @@ class LegalDocumentsService extends EventEmitter {
     }
 
     // Create default templates
-    const defaultTemplates = this.createDefaultTemplates();
+    const defaultTemplates = defaultLegalDocumentTemplates;
 
     for (const template of defaultTemplates) {
       // Save to database
@@ -308,229 +310,6 @@ class LegalDocumentsService extends EventEmitter {
     }
 
     console.log(`Created ${defaultTemplates.length} default templates`);
-  }
-
-  private createDefaultTemplates(): IDocumentTemplate[] {
-    const templates: IDocumentTemplate[] = [];
-
-    // Residential Tenancy Agreement Template
-    templates.push({
-      id: "residential-tenancy-kenya-v1",
-      name: "Residential Tenancy Agreement (Kenya)",
-      type: LegalDocumentType.TENANCY_AGREEMENT,
-      category: LegalDocumentCategory.CONTRACTS,
-      version: "1.0",
-      language: Language.BILINGUAL,
-      jurisdiction: "kenya",
-      status: TemplateStatus.ACTIVE,
-      fields: [
-        {
-          id: "landlordName",
-          name: "Landlord Name",
-          type: FieldType.TEXT,
-          required: true,
-        },
-        {
-          id: "landlordId",
-          name: "Landlord ID Number",
-          type: FieldType.ID_NUMBER,
-          required: true,
-          kenyaSpecific: true,
-        },
-        {
-          id: "landlordPhone",
-          name: "Landlord Phone",
-          type: FieldType.PHONE,
-          required: true,
-          kenyaSpecific: true,
-        },
-        {
-          id: "tenantName",
-          name: "Tenant Name",
-          type: FieldType.TEXT,
-          required: true,
-        },
-        {
-          id: "tenantId",
-          name: "Tenant ID Number",
-          type: FieldType.ID_NUMBER,
-          required: true,
-          kenyaSpecific: true,
-        },
-        {
-          id: "tenantPhone",
-          name: "Tenant Phone",
-          type: FieldType.PHONE,
-          required: true,
-          kenyaSpecific: true,
-        },
-        {
-          id: "propertyAddress",
-          name: "Property Address",
-          type: FieldType.ADDRESS,
-          required: true,
-        },
-        {
-          id: "county",
-          name: "County",
-          type: FieldType.SELECT,
-          required: true,
-          options: KENYA_LEGAL_CONSTANTS.COUNTIES,
-          kenyaSpecific: true,
-        },
-        {
-          id: "rentAmount",
-          name: "Monthly Rent (KES)",
-          type: FieldType.CURRENCY,
-          required: true,
-        },
-        {
-          id: "depositAmount",
-          name: "Security Deposit (KES)",
-          type: FieldType.CURRENCY,
-          required: true,
-        },
-        {
-          id: "startDate",
-          name: "Tenancy Start Date",
-          type: FieldType.DATE,
-          required: true,
-        },
-        {
-          id: "duration",
-          name: "Duration (Months)",
-          type: FieldType.NUMBER,
-          required: true,
-        },
-        {
-          id: "rentDueDate",
-          name: "Rent Due Date",
-          type: FieldType.NUMBER,
-          required: true,
-          validation: { min: 1, max: 31 },
-        },
-      ],
-      content: this.getResidentialTenancyTemplate(),
-      metadata: {
-        title: "Residential Tenancy Agreement",
-        description:
-          "Standard residential tenancy agreement compliant with Kenyan law",
-        tags: ["residential", "tenancy", "kenya", "rental"],
-        author: "Legal Department",
-        legalReviewed: true,
-        complianceChecked: true,
-        governingLaw: "Laws of Kenya",
-        court: "Environment and Land Court",
-      },
-      compliance: [
-        {
-          law: KENYA_LEGAL_CONSTANTS.LAWS.LANDLORD_TENANT_ACT,
-          section: "Section 7",
-          description: "Notice requirements for termination",
-          mandatory: true,
-        },
-      ],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    // Notice to Quit Template
-    templates.push({
-      id: "notice-to-quit-kenya-v1",
-      name: "Notice to Quit (Kenya)",
-      type: LegalDocumentType.NOTICE_TO_QUIT,
-      category: LegalDocumentCategory.NOTICES,
-      version: "1.0",
-      language: Language.BILINGUAL,
-      jurisdiction: "kenya",
-      status: TemplateStatus.ACTIVE,
-      fields: [
-        {
-          id: "landlordName",
-          name: "Landlord Name",
-          type: FieldType.TEXT,
-          required: true,
-        },
-        {
-          id: "landlordPhone",
-          name: "Landlord Phone",
-          type: FieldType.PHONE,
-          required: true,
-        },
-        {
-          id: "tenantName",
-          name: "Tenant Name",
-          type: FieldType.TEXT,
-          required: true,
-        },
-        {
-          id: "propertyAddress",
-          name: "Property Address",
-          type: FieldType.ADDRESS,
-          required: true,
-        },
-        {
-          id: "reason",
-          name: "Reason for Notice",
-          type: FieldType.SELECT,
-          required: true,
-          options: [
-            "Non-payment of rent",
-            "Breach of tenancy agreement",
-            "End of lease term",
-            "Property sale",
-            "Personal use",
-          ],
-        },
-        {
-          id: "noticePeriod",
-          name: "Notice Period (Days)",
-          type: FieldType.NUMBER,
-          required: true,
-        },
-        {
-          id: "noticeDate",
-          name: "Notice Date",
-          type: FieldType.DATE,
-          required: true,
-        },
-        {
-          id: "quitDate",
-          name: "Date to Quit",
-          type: FieldType.DATE,
-          required: true,
-        },
-        {
-          id: "rentArrears",
-          name: "Rent Arrears (KES)",
-          type: FieldType.CURRENCY,
-          required: false,
-        },
-      ],
-      content: this.getNoticeToQuitTemplate(),
-      metadata: {
-        title: "Notice to Quit Premises",
-        description: "Legal notice for tenant to vacate property",
-        tags: ["notice", "quit", "eviction", "kenya"],
-        author: "Legal Department",
-        legalReviewed: true,
-        complianceChecked: true,
-        governingLaw: "Laws of Kenya",
-        court: "Magistrate Court",
-      },
-      compliance: [
-        {
-          law: KENYA_LEGAL_CONSTANTS.LAWS.LANDLORD_TENANT_ACT,
-          section: "Section 12",
-          description: "Required notice period for termination",
-          mandatory: true,
-        },
-      ],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    return templates;
   }
 
   // Generate document from template
@@ -655,18 +434,25 @@ class LegalDocumentsService extends EventEmitter {
       // Save to database
       const document = await GeneratedDocument.create(documentData);
 
+      const fileName = path.basename(filePath);
+
       // Create file record
-      await createFile({
-        url: fileUrl,
-        cdnUrl,
-        path: filePath,
-        name: path.basename(filePath),
-        mimeType: this.getMimeType(request.options.format),
-        size: fileSize,
-        user: request.requesterId as unknown as mongoose.Types.ObjectId,
+      const uploadOptions = {
+        ownerId: request.requesterId,
+        uploadedBy: request.requesterId,
+        category: FileCategory.LEGAL_DOCUMENT,
+        accessLevel: FileAccessLevel.PUBLIC,
         description: `Legal document: ${template.metadata.title}`,
         tags: ["legal-document", template.type, ...template.metadata.tags],
-      });
+        relatedEntityId: document.id,
+        relatedEntityType: "document",
+        metadata: {
+          checksum,
+          qrCode,
+        },
+      };
+
+      await filesV2Service.uploadFile(fileBuffer, fileName, uploadOptions);
 
       // Cache document record
       await this.cacheDocument(document.toObject());
@@ -713,14 +499,25 @@ class LegalDocumentsService extends EventEmitter {
     const fileName = `${documentId}.pdf`;
     const localPath = path.join(this.outputPath, fileName);
 
+    // Professional PDF configuration
     const doc = new PDFDocument({
-      margins: { top: 50, left: 50, right: 50, bottom: 50 },
+      size: "A4",
+      margins: {
+        top: 72,
+        bottom: 72,
+        left: 72,
+        right: 72,
+      },
       info: {
         Title: "Legal Document",
         Author: "Kaa Rentals Platform",
-        Subject: "Rental Agreement",
-        Creator: "Legal Documents Service",
+        Subject: "Legal Document - Rental Agreement",
+        Keywords: "legal, document, rental, agreement, kenya",
+        Creator: "Kaa Legal Documents Service",
+        Producer: "Kaa Platform",
+        CreationDate: new Date(),
       },
+      compress: true, // Enable compression for smaller file sizes
     });
 
     const stream = FS.createWriteStream(localPath);
@@ -730,61 +527,104 @@ class LegalDocumentsService extends EventEmitter {
     // const boldFont = this.getFontFallback("DejaVu Sans");
     // const regularFont = this.getFontFallback("DejaVu Sans");
 
-    // Add header
-    doc.fontSize(16).font("Times-Roman"); // boldFont
-    doc.text("KAA RENTALS", { align: "center" });
-    doc.moveDown();
+    // Typography configuration
+    const typography = {
+      fontRegular: "Helvetica",
+      fontBold: "Helvetica-Bold",
+      fontItalic: "Helvetica-Oblique",
+      sizes: {
+        title: 24,
+        heading1: 18,
+        heading2: 16,
+        heading3: 14,
+        body: 11,
+        small: 9,
+        footnote: 8,
+      },
+      colors: {
+        primary: "#1e293b",
+        secondary: "#64748b",
+        accent: "#2563eb",
+        success: "#16a34a",
+        danger: "#dc2626",
+        light: "#94a3b8",
+      },
+      spacing: {
+        paragraph: 6,
+        heading: 12,
+        section: 18,
+        large: 24,
+      },
+    };
 
-    // Add watermark if specified
-    if (options.watermark) {
-      doc.save();
-      doc.rotate(45, { origin: [300, 400] });
-      doc.fontSize(60).fillOpacity(0.1);
-      doc.text(options.watermark, 100, 300);
-      doc.restore();
-    }
+    // Page tracking for headers/footers
+    let pageNumber = 0;
+    const totalPages: number[] = [];
 
-    // Process content
-    const lines = content.split("\n");
-    doc.fontSize(11).font("Times-Roman"); // regularFont
+    // Add page numbers and headers/footers
+    doc.on("pageAdded", () => {
+      pageNumber++;
+      totalPages.push(pageNumber);
+      this.addPageHeaderFooter(doc, documentId, pageNumber, typography);
+    });
 
-    for (const line of lines) {
-      if (line.trim()) {
-        // Handle different formatting
-        if (line.startsWith("#")) {
-          doc.fontSize(14).font("Times-Roman"); // boldFont
-          doc.text(line.replace("#", "").trim(), { align: "left" });
-          doc.moveDown(0.5);
-        } else if (line.startsWith("**") && line.endsWith("**")) {
-          doc.fontSize(11).font("Times-Roman"); // boldFont
-          doc.text(line.replace(/\*\*/g, "").trim());
-        } else {
-          doc.fontSize(11).font("Times-Roman"); // boldFont
-          doc.text(line.trim());
-        }
-        doc.moveDown(0.2);
+    // Generate QR code image for embedding
+    // Note: Checksum will be calculated after PDF generation, so we use a temporary one
+    let qrCodeImage: Buffer | null = null;
+    if (options.digitalSignature) {
+      try {
+        // Generate QR code with document ID (checksum will be added later in document metadata)
+        const qrCodeDataUrl = await this.generateQRCode(
+          documentId,
+          "pending" // Placeholder checksum, actual checksum added in document metadata
+        );
+        qrCodeImage = Buffer.from(
+          qrCodeDataUrl.split(",")[1] || qrCodeDataUrl,
+          "base64"
+        );
+      } catch (error) {
+        logger.warn("Failed to generate QR code for PDF:", error);
       }
     }
 
-    // Add signature section
-    doc.moveDown(2);
-    doc.text("_".repeat(50), 50);
-    doc.text("Landlord Signature & Date", 50);
-    doc.moveDown();
-    doc.text("_".repeat(50), 50);
-    doc.text("Tenant Signature & Date", 50);
-
-    // Add QR code if requested
-    if (options.digitalSignature) {
-      doc.moveDown();
-      doc.text(`Document ID: ${documentId}`, { align: "center" });
+    // Add watermark background if specified
+    if (options.watermark) {
+      this.addWatermarkBackground(doc, options.watermark, typography);
     }
 
+    // Document header
+    this.addDocumentHeader(doc, documentId, typography);
+
+    // Process and render content with rich formatting
+    await this.renderRichContent(doc, content, typography, {
+      width: doc.page.width - 144, // Account for margins
+    });
+
+    // Add signature section
+    this.addSignatureSection(doc, typography, {
+      width: doc.page.width - 144,
+    });
+
+    // Add verification footer if QR code available
+    if (qrCodeImage && options.digitalSignature) {
+      await this.addVerificationFooter(
+        doc,
+        documentId,
+        qrCodeImage,
+        typography
+      );
+    }
+
+    // Finalize PDF
     doc.end();
 
-    await new Promise((resolve, reject) => {
-      stream.on("finish", () => resolve(localPath));
-      stream.on("error", reject);
+    // Wait for stream to finish
+    await new Promise<void>((resolve, reject) => {
+      stream.on("finish", () => resolve());
+      stream.on("error", (error) => {
+        logger.error("PDF stream error:", error);
+        reject(error);
+      });
     });
 
     // Upload to cloud storage if enabled
@@ -818,6 +658,620 @@ class LegalDocumentsService extends EventEmitter {
       fileSize: stats.size,
       fileUrl: localPath,
     };
+  }
+
+  /**
+   * Add professional page header and footer
+   */
+  private addPageHeaderFooter(
+    doc: PDFKit.PDFDocument,
+    documentId: string,
+    pageNumber: number,
+    typography: {
+      fontRegular: string;
+      sizes: Record<string, number>;
+      colors: Record<string, string>;
+    }
+  ): void {
+    const pageWidth = doc.page.width;
+    const pageHeight = doc.page.height;
+    const margin = 72;
+    const footnoteSize = typography.sizes.footnote ?? 8;
+    const secondaryColor = typography.colors.secondary ?? "#64748b";
+
+    // Header
+    doc
+      .save()
+      .fontSize(footnoteSize)
+      .fillColor(secondaryColor)
+      .font(typography.fontRegular)
+      .text("KAA RENTALS", margin, 40, {
+        align: "left",
+        width: pageWidth - 2 * margin,
+      })
+      .text(`Document ID: ${documentId.slice(0, 8)}...`, margin, 52, {
+        align: "right",
+        width: pageWidth - 2 * margin,
+      })
+      .restore();
+
+    // Footer with page number
+    const footerY = pageHeight - 40;
+    doc
+      .save()
+      .fontSize(footnoteSize)
+      .fillColor(secondaryColor)
+      .font(typography.fontRegular)
+      .text(`Page ${pageNumber}`, margin, footerY, {
+        align: "center",
+        width: pageWidth - 2 * margin,
+      })
+      .text(
+        new Date().toLocaleDateString("en-GB", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+        margin,
+        footerY + 12,
+        {
+          align: "right",
+          width: pageWidth - 2 * margin,
+        }
+      )
+      .restore();
+  }
+
+  /**
+   * Add watermark background to all pages
+   */
+  private addWatermarkBackground(
+    doc: PDFKit.PDFDocument,
+    watermarkText: string,
+    typography: {
+      fontRegular: string;
+      colors: Record<string, string>;
+    }
+  ): void {
+    const pageWidth = doc.page.width;
+    const pageHeight = doc.page.height;
+    const centerX = pageWidth / 2;
+    const centerY = pageHeight / 2;
+    const lightColor = typography.colors.light ?? "#94a3b8";
+
+    doc
+      .save()
+      .fontSize(72)
+      .fillColor(lightColor)
+      .fillOpacity(0.08)
+      .font(typography.fontRegular)
+      .rotate(45, { origin: [centerX, centerY] })
+      .text(watermarkText, centerX - 200, centerY - 36, {
+        align: "center",
+        width: 400,
+      })
+      .restore();
+  }
+
+  /**
+   * Add professional document header
+   */
+  private addDocumentHeader(
+    doc: PDFKit.PDFDocument,
+    _documentId: string,
+    typography: {
+      fontBold: string;
+      fontRegular: string;
+      sizes: Record<string, number>;
+      colors: Record<string, string>;
+      spacing: Record<string, number>;
+    }
+  ): void {
+    const titleSize = typography.sizes.title ?? 24;
+    const primaryColor = typography.colors.primary ?? "#1e293b";
+    const smallSize = typography.sizes.small ?? 9;
+    const secondaryColor = typography.colors.secondary ?? "#64748b";
+    const sectionSpacing = typography.spacing.section ?? 18;
+    const lightColor = typography.colors.light ?? "#94a3b8";
+
+    doc
+      .fontSize(titleSize)
+      .fillColor(primaryColor)
+      .font(typography.fontBold)
+      .text("KAA RENTALS", {
+        align: "center",
+        width: doc.page.width - 144,
+      });
+
+    doc.moveDown(0.3);
+
+    doc
+      .fontSize(smallSize)
+      .fillColor(secondaryColor)
+      .font(typography.fontRegular)
+      .text("Legal Document Generation Platform", {
+        align: "center",
+        width: doc.page.width - 144,
+      });
+
+    doc.moveDown(sectionSpacing);
+
+    // Divider line
+    doc
+      .moveTo(72, doc.y)
+      .lineTo(doc.page.width - 72, doc.y)
+      .strokeColor(lightColor)
+      .lineWidth(1)
+      .stroke();
+
+    doc.moveDown(sectionSpacing);
+  }
+
+  /**
+   * Render content with rich formatting support
+   * Supports: headings, bold, italic, lists, paragraphs, tables
+   */
+  private renderRichContent(
+    doc: PDFKit.PDFDocument,
+    content: string,
+    typography: {
+      fontRegular: string;
+      fontBold: string;
+      fontItalic: string;
+      sizes: Record<string, number>;
+      colors: Record<string, string>;
+      spacing: Record<string, number>;
+    },
+    options: { width: number }
+  ): void {
+    const lines = content.split("\n");
+    let inList = false;
+    let listType: "ordered" | "unordered" | null = null;
+    let orderedIndex = 1;
+
+    for (const line of lines) {
+      if (!line) {
+        continue;
+      }
+      const trimmedLine = line.trim();
+
+      // Check if we need a page break
+      if (doc.y > doc.page.height - 150) {
+        doc.addPage();
+      }
+
+      if (!trimmedLine) {
+        // Empty line - end list if active
+        if (inList) {
+          inList = false;
+          listType = null;
+          orderedIndex = 1;
+          doc.moveDown(typography.spacing.paragraph ?? 6);
+        } else {
+          doc.moveDown((typography.spacing.paragraph ?? 6) * 0.5);
+        }
+        continue;
+      }
+
+      // Heading detection
+      const primaryColor = typography.colors.primary ?? "#1e293b";
+      const heading1Size = typography.sizes.heading1 ?? 18;
+      const heading2Size = typography.sizes.heading2 ?? 16;
+      const heading3Size = typography.sizes.heading3 ?? 14;
+      const headingSpacing = typography.spacing.heading ?? 12;
+      const paragraphSpacing = typography.spacing.paragraph ?? 6;
+
+      if (trimmedLine.startsWith("# ")) {
+        if (inList) {
+          inList = false;
+          listType = null;
+        }
+        doc
+          .fontSize(heading1Size)
+          .fillColor(primaryColor)
+          .font(typography.fontBold)
+          // biome-ignore lint/performance/useTopLevelRegex: ignore
+          .text(trimmedLine.replace(/^#+\s*/, "").trim(), {
+            width: options.width,
+            align: "left",
+          });
+        doc.moveDown(headingSpacing);
+      } else if (trimmedLine.startsWith("## ")) {
+        if (inList) {
+          inList = false;
+          listType = null;
+        }
+        doc
+          .fontSize(heading2Size)
+          .fillColor(primaryColor)
+          .font(typography.fontBold)
+          // biome-ignore lint/performance/useTopLevelRegex: ignore
+          .text(trimmedLine.replace(/^#+\s*/, "").trim(), {
+            width: options.width,
+            align: "left",
+          });
+        doc.moveDown(headingSpacing * 0.75);
+      } else if (trimmedLine.startsWith("### ")) {
+        if (inList) {
+          inList = false;
+          listType = null;
+        }
+        doc
+          .fontSize(heading3Size)
+          .fillColor(primaryColor)
+          .font(typography.fontBold)
+          // biome-ignore lint/performance/useTopLevelRegex: ignore
+          .text(trimmedLine.replace(/^#+\s*/, "").trim(), {
+            width: options.width,
+            align: "left",
+          });
+        doc.moveDown(headingSpacing * 0.5);
+      }
+      // Ordered list detection
+      // biome-ignore lint/performance/useTopLevelRegex: ignore
+      else if (/^\d+\.\s/.test(trimmedLine)) {
+        if (!inList || listType !== "ordered") {
+          inList = true;
+          listType = "ordered";
+          orderedIndex = 1;
+        }
+        // biome-ignore lint/performance/useTopLevelRegex: ignore
+        const listText = trimmedLine.replace(/^\d+\.\s/, "");
+        const bullet = `${orderedIndex}. `;
+        const indent = 20;
+
+        const bodySize = typography.sizes.body ?? 11;
+        doc
+          .fontSize(bodySize)
+          .fillColor(primaryColor)
+          .font(typography.fontRegular);
+
+        doc.text(bullet, { continued: false, width: indent });
+
+        // Render formatted text with bold/italic support
+        this.renderFormattedText(
+          doc,
+          listText,
+          options.width - indent,
+          typography
+        );
+
+        orderedIndex++;
+        doc.moveDown(paragraphSpacing * 0.75);
+      }
+      // Unordered list detection
+      // biome-ignore lint/performance/useTopLevelRegex: ignore
+      else if (/^[-*]\s/.test(trimmedLine)) {
+        if (!inList || listType !== "unordered") {
+          inList = true;
+          listType = "unordered";
+        }
+        // biome-ignore lint/performance/useTopLevelRegex: ignore
+        const listText = trimmedLine.replace(/^[-*]\s/, "");
+        const bullet = "• ";
+        const indent = 20;
+
+        const bodySize = typography.sizes.body ?? 11;
+        doc
+          .fontSize(bodySize)
+          .fillColor(primaryColor)
+          .font(typography.fontRegular);
+
+        doc.text(bullet, { continued: false, width: indent });
+
+        // Render formatted text with bold/italic support
+        this.renderFormattedText(
+          doc,
+          listText,
+          options.width - indent,
+          typography
+        );
+
+        doc.moveDown(paragraphSpacing * 0.75);
+      }
+      // Regular paragraph with formatting
+      else {
+        if (inList) {
+          inList = false;
+          listType = null;
+          orderedIndex = 1;
+        }
+
+        const bodySize = typography.sizes.body ?? 11;
+        doc
+          .fontSize(bodySize)
+          .fillColor(primaryColor)
+          .font(typography.fontRegular);
+
+        this.renderFormattedText(doc, trimmedLine, options.width, typography);
+        doc.moveDown(paragraphSpacing);
+      }
+    }
+  }
+
+  /**
+   * Render text with inline formatting (bold, italic)
+   */
+  private renderFormattedText(
+    doc: PDFKit.PDFDocument,
+    text: string,
+    width: number,
+    typography: {
+      fontRegular: string;
+      fontBold: string;
+      fontItalic: string;
+      colors: Record<string, string>;
+    }
+  ): void {
+    // Parse bold (**text**) and italic (*text*) markers
+    const parts: Array<{
+      text: string;
+      bold?: boolean;
+      italic?: boolean;
+    }> = [];
+
+    const boldRegex = /\*\*([^*]+)\*\*/g;
+    const italicRegex = /\*([^*]+)\*/g;
+
+    const boldMatches: Array<{ start: number; end: number; text: string }> = [];
+    const italicMatches: Array<{ start: number; end: number; text: string }> =
+      [];
+
+    // Collect all bold matches
+    let match: RegExpExecArray | null;
+    // biome-ignore lint/suspicious/noAssignInExpressions: ignore
+    while ((match = boldRegex.exec(text)) !== null) {
+      const matchText = match[1];
+      if (matchText) {
+        boldMatches.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          text: matchText,
+        });
+      }
+    }
+
+    // Collect all italic matches (excluding those inside bold)
+    // biome-ignore lint/suspicious/noAssignInExpressions: ignore
+    while ((match = italicRegex.exec(text)) !== null) {
+      const isInsideBold = boldMatches.some(
+        (bm) =>
+          match &&
+          match.index !== undefined &&
+          match.index > bm.start &&
+          match.index < bm.end
+      );
+      const matchText = match[1];
+      if (!isInsideBold && matchText) {
+        italicMatches.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          text: matchText,
+        });
+      }
+    }
+
+    // Merge and sort all matches
+    const allMatches = [
+      ...boldMatches.map((m) => ({ ...m, type: "bold" as const })),
+      ...italicMatches.map((m) => ({ ...m, type: "italic" as const })),
+    ].sort((a, b) => a.start - b.start);
+
+    // Build parts array
+    let lastIndex = 0;
+    for (const match of allMatches) {
+      if (match.start > lastIndex) {
+        parts.push({ text: text.slice(lastIndex, match.start) });
+      }
+      parts.push({
+        text: match.text,
+        bold: match.type === "bold",
+        italic: match.type === "italic",
+      });
+      lastIndex = match.end;
+    }
+
+    if (lastIndex < text.length) {
+      parts.push({ text: text.slice(lastIndex) });
+    }
+
+    // If no formatting found, render as plain text
+    if (parts.length === 0) {
+      doc.text(text, { width, align: "left" });
+      return;
+    }
+
+    // Render parts with formatting
+    let isFirst = true;
+    for (const part of parts) {
+      if (part.text.length === 0) {
+        continue;
+      }
+
+      const font =
+        part.bold && part.italic
+          ? typography.fontBold
+          : part.bold
+            ? typography.fontBold
+            : part.italic
+              ? typography.fontItalic
+              : typography.fontRegular;
+
+      doc.font(font).text(part.text, {
+        width: isFirst ? width : undefined,
+        continued: !isFirst || part !== parts.at(-1),
+      });
+
+      isFirst = false;
+    }
+
+    // Reset to regular font
+    doc.font(typography.fontRegular);
+  }
+
+  /**
+   * Add professional signature section
+   */
+  private addSignatureSection(
+    doc: PDFKit.PDFDocument,
+    typography: {
+      fontRegular: string;
+      fontBold: string;
+      sizes: Record<string, number>;
+      colors: Record<string, string>;
+      spacing: Record<string, number>;
+    },
+    options: { width: number }
+  ): void {
+    // Ensure we have space or add new page
+    if (doc.y > doc.page.height - 200) {
+      doc.addPage();
+    }
+
+    doc.moveDown(typography.spacing.large);
+
+    // Signature boxes
+    const signatureWidth = (options.width - 20) / 2;
+    const signatureHeight = 80;
+    const lightColor = typography.colors.light ?? "#94a3b8";
+    const secondaryColor = typography.colors.secondary ?? "#64748b";
+    const primaryColor = typography.colors.primary ?? "#1e293b";
+    const smallSize = typography.sizes.small ?? 9;
+    const paragraphSpacing = typography.spacing.paragraph ?? 6;
+
+    // Landlord signature
+    doc
+      .rect(72, doc.y, signatureWidth, signatureHeight)
+      .strokeColor(lightColor)
+      .lineWidth(1)
+      .stroke();
+
+    doc
+      .fontSize(smallSize)
+      .fillColor(secondaryColor)
+      .font(typography.fontRegular)
+      .text("Landlord Signature & Date", 77, doc.y + 5, {
+        width: signatureWidth - 10,
+      });
+
+    doc
+      .moveTo(77, doc.y + signatureHeight - 25)
+      .lineTo(72 + signatureWidth - 5, doc.y + signatureHeight - 25)
+      .strokeColor(primaryColor)
+      .lineWidth(0.5)
+      .stroke();
+
+    doc.moveDown(signatureHeight + paragraphSpacing);
+
+    // Tenant signature
+    doc
+      .rect(72, doc.y, signatureWidth, signatureHeight)
+      .strokeColor(lightColor)
+      .lineWidth(1)
+      .stroke();
+
+    doc
+      .fontSize(smallSize)
+      .fillColor(secondaryColor)
+      .font(typography.fontRegular)
+      .text("Tenant Signature & Date", 77, doc.y + 5, {
+        width: signatureWidth - 10,
+      });
+
+    doc
+      .moveTo(77, doc.y + signatureHeight - 25)
+      .lineTo(72 + signatureWidth - 5, doc.y + signatureHeight - 25)
+      .strokeColor(primaryColor)
+      .lineWidth(0.5)
+      .stroke();
+  }
+
+  /**
+   * Add verification footer with QR code
+   */
+  private addVerificationFooter(
+    doc: PDFKit.PDFDocument,
+    documentId: string,
+    qrCodeImage: Buffer,
+    typography: {
+      fontRegular: string;
+      sizes: Record<string, number>;
+      colors: Record<string, string>;
+      spacing?: Record<string, number>;
+    }
+  ): void {
+    // Ensure we have space or add new page
+    if (doc.y > doc.page.height - 150) {
+      doc.addPage();
+    }
+
+    const sectionSpacing = typography.spacing?.section ?? 18;
+    const paragraphSpacing = typography.spacing?.paragraph ?? 6;
+    const lightColor = typography.colors.light ?? "#94a3b8";
+    const secondaryColor = typography.colors.secondary ?? "#64748b";
+    const smallSize = typography.sizes.small ?? 9;
+    const footnoteSize = typography.sizes.footnote ?? 8;
+
+    doc.moveDown(sectionSpacing);
+
+    // Divider
+    doc
+      .moveTo(72, doc.y)
+      .lineTo(doc.page.width - 72, doc.y)
+      .strokeColor(lightColor)
+      .lineWidth(1)
+      .stroke();
+
+    doc.moveDown(paragraphSpacing);
+
+    try {
+      // Add QR code image
+      const qrSize = 80;
+      doc.image(qrCodeImage, doc.page.width - 72 - qrSize, doc.y, {
+        width: qrSize,
+        height: qrSize,
+      });
+
+      // Add verification text
+      doc
+        .fontSize(smallSize)
+        .fillColor(secondaryColor)
+        .font(typography.fontRegular)
+        .text("Document Verification", 72, doc.y, {
+          width: doc.page.width - 144 - qrSize - 10,
+        });
+
+      doc.moveDown(paragraphSpacing * 0.5);
+
+      doc
+        .fontSize(footnoteSize)
+        .fillColor(secondaryColor)
+        .text(`Document ID: ${documentId}`, 72, doc.y, {
+          width: doc.page.width - 144 - qrSize - 10,
+        });
+
+      doc
+        .fontSize(footnoteSize)
+        .fillColor(secondaryColor)
+        .text(
+          "Scan QR code or use Document ID to verify authenticity",
+          72,
+          doc.y + 12,
+          {
+            width: doc.page.width - 144 - qrSize - 10,
+          }
+        );
+    } catch (error) {
+      logger.warn("Failed to add QR code to PDF:", error);
+      // Fallback to text only
+      doc
+        .fontSize(smallSize)
+        .fillColor(secondaryColor)
+        .text(`Document ID: ${documentId}`, {
+          width: doc.page.width - 144,
+          align: "center",
+        });
+    }
   }
 
   private async generateHTML(
@@ -1572,8 +2026,6 @@ class LegalDocumentsService extends EventEmitter {
       });
     }
 
-    console.log(parties);
-
     return parties;
   }
 
@@ -1662,7 +2114,7 @@ class LegalDocumentsService extends EventEmitter {
     await smsService.sendSms({
       to: [{ phoneNumber: recipient }],
       message: `Your legal document "${document.title}" has been generated. Document ID: ${document.id}. Access it at: ${process.env.API_BASE_URL}/documents/${document.id}`,
-      type: "transactional",
+      type: SmsType.TRANSACTIONAL,
       priority: SmsPriority.HIGH,
     });
 
@@ -1782,15 +2234,6 @@ class LegalDocumentsService extends EventEmitter {
     const cleaned = phoneNumber.replace(/\D/g, "");
     // biome-ignore lint/performance/useTopLevelRegex: ignore
     return /^(?:254|0)[71]\d{8}$/.test(cleaned);
-  }
-
-  private getMimeType(format: string): string {
-    const mimeTypes: Record<string, string> = {
-      pdf: "application/pdf",
-      html: "text/html",
-      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    };
-    return mimeTypes[format] || "application/octet-stream";
   }
 
   // Template management methods
@@ -2172,62 +2615,6 @@ class LegalDocumentsService extends EventEmitter {
       logger.error("Failed to get document file:", error);
       return null;
     }
-  }
-
-  // Helper methods for default templates
-  private getResidentialTenancyTemplate(): string {
-    return `
-  # RESIDENTIAL TENANCY AGREEMENT
-  
-  **THIS AGREEMENT** is made this {currentDate} day between:
-  
-  **THE LANDLORD**: {landlordName}, ID No. {landlordId}, Phone: {landlordPhone}
-  
-  **THE TENANT**: {tenantName}, ID No. {tenantId}, Phone: {tenantPhone}
-  
-  **PROPERTY**: {propertyAddress}, {county} County
-  
-  ## TERMS AND CONDITIONS
-  
-  1. **RENT**: The monthly rent is KES {rentAmount}, due on the {rentDueDate} of each month.
-  
-  2. **SECURITY DEPOSIT**: A security deposit of KES {depositAmount} is required.
-  
-  3. **TENANCY PERIOD**: This tenancy shall commence on {startDate} for a period of {duration} months.
-  
-  4. **UTILITIES**: Tenant shall be responsible for electricity, water, and other utilities.
-  
-  5. **MAINTENANCE**: Tenant shall maintain the property in good condition.
-  
-  6. **TERMINATION**: Either party may terminate with 30 days written notice.
-  
-  7. **GOVERNING LAW**: This agreement is governed by the Laws of Kenya.
-  
-  **IN WITNESS WHEREOF**, the parties have executed this agreement on the date first written above.
-  `;
-  }
-
-  private getNoticeToQuitTemplate(): string {
-    return `
-  # NOTICE TO QUIT
-  
-  **TO**: {tenantName}
-  
-  **PROPERTY ADDRESS**: {propertyAddress}
-  
-  **DATE**: {noticeDate}
-  
-  You are hereby required to QUIT and deliver up to me the above-mentioned premises which you hold as my tenant.
-  
-  **REASON**: {reason}
-  
-  You are required to quit the premises within {noticePeriod} days from the date of service of this notice, failing which proceedings will be instituted against you to recover possession of the said premises.
-  
-  **QUIT DATE**: {quitDate}
-  
-  _______________________
-  Landlord: {landlordName}
-  `;
   }
 }
 

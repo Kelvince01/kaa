@@ -3,8 +3,14 @@ import {
   sendBookingNotificationEmail,
   sendBookingStatusUpdateEmail,
 } from "@kaa/email";
-import { Booking, Property, Tenant } from "@kaa/models";
-import { BookingStatus, type IBooking, PaymentMethod } from "@kaa/models/types";
+import { Booking, Landlord, Property, Tenant } from "@kaa/models";
+import {
+  BookingStatus,
+  type IBooking,
+  type ILandlord,
+  type ITenant,
+  PaymentMethod,
+} from "@kaa/models/types";
 import Elysia, { t } from "elysia";
 import type mongoose from "mongoose";
 import type { FilterQuery } from "mongoose";
@@ -48,8 +54,8 @@ export const bookingController = new Elysia().group("bookings", (app) =>
               .skip(skip)
               .limit(limitNum)
               .populate("property", "title media location pricing rentPeriod")
-              .populate("tenant", "firstName lastName email phone avatar")
-              .populate("landlord", "firstName lastName email phone avatar");
+              .populate("tenant", "personalInfo")
+              .populate("landlord", "personalInfo");
 
             // Get total count for pagination
             const totalBookings = await Booking.countDocuments(filter);
@@ -89,9 +95,8 @@ export const bookingController = new Elysia().group("bookings", (app) =>
         }
       )
     )
-    .group("/", (app) =>
+    .group("", (app) =>
       app
-        .use(tenantPlugin)
         .post(
           "/",
           async ({ body, set, user }) => {
@@ -109,7 +114,10 @@ export const bookingController = new Elysia().group("bookings", (app) =>
                 date,
               } = body;
 
-              const property = await Property.findById(propertyId);
+              const property = await Property.findById(propertyId).populate(
+                "landlord",
+                "personalInfo.firstName personalInfo.lastName personalInfo.email"
+              );
 
               if (!property) {
                 set.status = 404;
@@ -220,19 +228,20 @@ export const bookingController = new Elysia().group("bookings", (app) =>
               body.depositAmount = Math.round(depositAmount);
 
               // Get landlord ID
-              const landlordId = property.landlord;
+              const landlordId = (property.landlord as any).id;
 
               const bookingTenant = await Tenant.findOne({ user: user.id });
 
               // Create new booking
               const booking = new Booking({
                 property: propertyId,
-                tenant: bookingTenant?._id,
+                tenant: bookingTenant?.id,
                 landlord: landlordId,
                 time,
                 date,
                 startTime,
                 endTime,
+                bookingType,
                 status: "pending",
                 type: type || "viewing",
                 viewingType: viewingType || "in-person",
@@ -248,21 +257,21 @@ export const bookingController = new Elysia().group("bookings", (app) =>
               const updatedProperty = await Property.findByIdAndUpdate(
                 propertyId,
                 {
-                  $push: { viewings: booking._id },
+                  $push: { viewings: booking.id },
                 }
               );
 
               // Send notification to landlord
               await sendBookingNotificationEmail({
-                landlordEmail: (property.landlord as any).email,
-                landlordName: (property.landlord as any).name,
+                landlordEmail: (property.landlord as any).personalInfo.email,
+                landlordName: `${(property.landlord as any).personalInfo.firstName} ${(property.landlord as any).personalInfo.firstName}`,
                 propertyTitle: property.title,
                 tenantName: `${bookingTenant?.personalInfo.firstName} ${bookingTenant?.personalInfo.lastName}`,
                 startDate: startTime,
                 endDate: endTime,
                 bookingType: body.bookingType,
                 totalAmount: body.totalAmount,
-                bookingId: (booking._id as mongoose.Types.ObjectId).toString(),
+                bookingId: booking.id,
               });
 
               return {
@@ -271,6 +280,7 @@ export const bookingController = new Elysia().group("bookings", (app) =>
                 message: "Booking created successfully",
               };
             } catch (error) {
+              console.log(error);
               set.status = 500;
               return {
                 status: "error",
@@ -286,12 +296,12 @@ export const bookingController = new Elysia().group("bookings", (app) =>
               type: t.String(),
               bookingType: t.String(),
               viewingType: t.String(),
-              notes: t.String(),
-              additionalAttendees: t.Array(t.String()),
+              notes: t.Optional(t.String()),
+              additionalAttendees: t.Optional(t.Array(t.String())),
               time: t.String(),
               date: t.String(),
-              totalAmount: t.Number(),
-              depositAmount: t.Number(),
+              totalAmount: t.Optional(t.Number()),
+              depositAmount: t.Optional(t.Number()),
             }),
             detail: {
               tags: ["bookings"],
@@ -300,7 +310,6 @@ export const bookingController = new Elysia().group("bookings", (app) =>
             },
           }
         )
-
         .get(
           "/:id",
           async ({ params, set }) => {
@@ -311,10 +320,16 @@ export const bookingController = new Elysia().group("bookings", (app) =>
               const booking = await Booking.findById(id)
                 .populate(
                   "property",
-                  "title media address pricing rentPeriod details type"
+                  "title media pricing specifications type location" // rentPeriod
                 )
-                .populate("tenant", "firstName lastName email phone avatar")
-                .populate("landlord", "firstName lastName email phone avatar");
+                .populate(
+                  "tenant",
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone personalInfo.avatar"
+                )
+                .populate(
+                  "landlord",
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone personalInfo.avatar"
+                );
 
               if (!booking) {
                 set.status = 404;
@@ -348,10 +363,87 @@ export const bookingController = new Elysia().group("bookings", (app) =>
             },
           }
         )
+        .get(
+          "/property/:propertyId",
+          async ({ params, set, query }) => {
+            try {
+              const { propertyId } = params;
+              const { status, page = "1", limit = "10" } = query;
+
+              const property = await Property.findById(propertyId);
+
+              if (!property) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Property not found",
+                };
+              }
+
+              // Build filter
+              const filter: FilterQuery<IBooking> = { property: propertyId };
+              if (status) {
+                filter.status = status;
+              }
+
+              // Parse pagination params
+              const pageNum = Number.parseInt(page, 10);
+              const limitNum = Number.parseInt(limit, 10);
+              const skip = (pageNum - 1) * limitNum;
+
+              // Execute query with pagination
+              const bookings = await Booking.find(filter)
+                .sort({ startTime: 1 })
+                .skip(skip)
+                .limit(limitNum)
+                .populate(
+                  "tenant",
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone personalInfo.avatar"
+                );
+
+              // Get total count for pagination
+              const totalBookings = await Booking.countDocuments(filter);
+              const totalPages = Math.ceil(totalBookings / limitNum);
+
+              return {
+                status: "success",
+                data: bookings,
+                pagination: {
+                  total: totalBookings,
+                  pages: totalPages,
+                  page: pageNum,
+                  limit: limitNum,
+                },
+                message: "Bookings fetched successfully",
+              };
+            } catch (error) {
+              set.status = 500;
+              return {
+                status: "error",
+                message: "Failed to fetch bookings",
+              };
+            }
+          },
+          {
+            params: t.Object({
+              propertyId: t.String(),
+            }),
+            query: t.Object({
+              status: t.Optional(t.String()),
+              page: t.Optional(t.String()),
+              limit: t.Optional(t.String()),
+            }),
+            detail: {
+              tags: ["bookings"],
+              summary: "Get bookings by property ID",
+              description: "Get bookings by property ID",
+            },
+          }
+        )
         .use(accessPlugin("bookings", "update"))
         .put(
           "/:id/status",
-          async ({ params, body, tenant, set, user, role }) => {
+          async ({ params, body, set, user, role }) => {
             try {
               const { id } = params;
               const { status, reason } = body;
@@ -374,13 +466,16 @@ export const bookingController = new Elysia().group("bookings", (app) =>
                 };
               }
 
+              const tenant: ITenant | null = await Tenant.findOne({
+                user: user.id,
+              });
+              const landlord: ILandlord | null = await Landlord.findOne({
+                user: user.id,
+              });
+
               // Check if user is authorized to update the booking
-              const isLandlord =
-                (booking.landlord as mongoose.Types.ObjectId).toString() ===
-                user.id;
-              const isTenant =
-                (booking.tenant as mongoose.Types.ObjectId).toString() ===
-                tenant.id;
+              const isLandlord = booking.landlord?.toString() === landlord?.id;
+              const isTenant = booking.tenant.toString() === tenant?.id;
               const isAdmin = role.name === "admin";
 
               // Apply status change rules
@@ -691,6 +786,7 @@ export const bookingController = new Elysia().group("bookings", (app) =>
             },
           }
         )
+        .use(tenantPlugin)
         .post(
           "/:id/feedback",
           async ({ params, body, tenant, set }) => {
@@ -780,80 +876,6 @@ export const bookingController = new Elysia().group("bookings", (app) =>
               tags: ["bookings"],
               summary: "Add booking feedback",
               description: "Add booking feedback",
-            },
-          }
-        )
-        .get(
-          "/property/:propertyId",
-          async ({ params, set, query }) => {
-            try {
-              const { propertyId } = params;
-              const { status, page = "1", limit = "10" } = query;
-
-              const property = await Property.findById(propertyId);
-
-              if (!property) {
-                set.status = 404;
-                return {
-                  status: "error",
-                  message: "Property not found",
-                };
-              }
-
-              // Build filter
-              const filter: FilterQuery<IBooking> = { property: propertyId };
-              if (status) {
-                filter.status = status;
-              }
-
-              // Parse pagination params
-              const pageNum = Number.parseInt(page, 10);
-              const limitNum = Number.parseInt(limit, 10);
-              const skip = (pageNum - 1) * limitNum;
-
-              // Execute query with pagination
-              const bookings = await Booking.find(filter)
-                .sort({ startTime: 1 })
-                .skip(skip)
-                .limit(limitNum)
-                .populate("tenant", "firstName lastName email phone avatar");
-
-              // Get total count for pagination
-              const totalBookings = await Booking.countDocuments(filter);
-              const totalPages = Math.ceil(totalBookings / limitNum);
-
-              return {
-                status: "success",
-                data: bookings,
-                pagination: {
-                  total: totalBookings,
-                  pages: totalPages,
-                  page: pageNum,
-                  limit: limitNum,
-                },
-                message: "Bookings fetched successfully",
-              };
-            } catch (error) {
-              set.status = 500;
-              return {
-                status: "error",
-                message: "Failed to fetch bookings",
-              };
-            }
-          },
-          {
-            params: t.Object({
-              propertyId: t.String(),
-            }),
-            query: t.Object({
-              status: t.Optional(t.String()),
-              page: t.Optional(t.String()),
-              limit: t.Optional(t.String()),
-            }),
-            detail: {
-              tags: ["bookings"],
-              summary: "Get bookings by property ID",
-              description: "Get bookings by property ID",
             },
           }
         )

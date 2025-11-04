@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { AuthGuard } from "@/modules/auth/components/auth-guard";
 import DashboardLayoutContainer from "@/routes/dashboard/layout";
 // import { GlobalSheets } from "@/components/global-sheets";
+
+export const metadata: Metadata = {
+  title: "Dashboard | Kaa",
+  description: "Dashboard for the Kaa Saas platform",
+};
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (

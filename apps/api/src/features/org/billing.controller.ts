@@ -17,7 +17,6 @@ export const billingController = new Elysia({
     .use(authPlugin)
 
     // Get invoices for tenant
-    .use(authPlugin)
     .get(
       "/invoices",
       async ({ user, query }) => {

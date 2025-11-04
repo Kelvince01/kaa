@@ -1,8 +1,11 @@
 import crypto from "node:crypto";
+import path from "node:path";
 // import { authRateLimit } from "~/plugins/rate-limit.plugin";
 import config from "@kaa/config/api";
 import { RefreshToken, ResetToken, User, VerificationToken } from "@kaa/models";
 import {
+  FileAccessLevel,
+  FileCategory,
   type IUser,
   SecurityEventType,
   ThreatLevel,
@@ -10,7 +13,7 @@ import {
 } from "@kaa/models/types";
 import {
   authService,
-  fileService,
+  filesV2Service,
   memberService,
   userService,
 } from "@kaa/services";
@@ -22,16 +25,13 @@ import {
   isMetaDataImg,
   logger,
   NotFoundError,
-  processFromBuffer,
-  uploadFile,
   verifyPassword,
 } from "@kaa/utils";
 import { randomUUIDv7 } from "bun";
 import { type Context, Elysia, t } from "elysia";
 import { ip } from "elysia-ip";
 // import type { TFunction } from "i18next";
-import mongoose from "mongoose";
-import ShortUniqueId from "short-unique-id";
+import type mongoose from "mongoose";
 import { SECURITY_CONFIG } from "~/config/security.config";
 import { jwtPlugin } from "~/plugins/security.plugin";
 import { SessionStore } from "~/services/session-store";
@@ -1131,8 +1131,6 @@ export const authController = new Elysia()
               try {
                 const fileBuffer = await body.avatar.arrayBuffer(); // Use arrayBuffer for binary data
 
-                const { randomUUID } = new ShortUniqueId({ length: 20 });
-
                 if (!(await isMetaDataImg(fileBuffer))) {
                   return {
                     status: "error",
@@ -1140,45 +1138,25 @@ export const authController = new Elysia()
                   };
                 }
 
-                const fileExtension =
-                  body.avatar.name.split(".").pop() || ".png";
-                const fileName = `${randomUUID()}.${fileExtension}`; // `${uuidv4()}.${fileExtension}`
-                // const metadata = {
-                // 	"Content-Type": body.avatar.type,
-                // 	"Content-Length": body.avatar.size.toString(), // Set the content length
-                // };
-
-                const processed = await processFromBuffer(
-                  Buffer.from(fileBuffer)
-                );
-
                 // Upload to storage
-                const file = await uploadFile(
-                  {
-                    originalname: fileName, // body.avatar.name,
-                    buffer: processed,
-                    mimetype: body.avatar.type,
-                    size: body.avatar.size,
-                  },
-                  {
-                    userId: user?.id,
-                    fileName: "profile-picture.jpg",
-                    public: true,
-                  }
-                );
+                const fileName = path.basename(body.avatar.name);
 
-                // Save file metadata to database
-                const fileData = {
-                  user: mongoose.Types.ObjectId.createFromHexString(user?.id),
-                  name: fileName, // body.avatar.name,
-                  path: file.path,
-                  url: file.url,
-                  size: file.size,
-                  mimeType: body.avatar.type,
+                const uploadOptions = {
+                  ownerId: user?.id,
+                  uploadedBy: user?.id,
+                  category: FileCategory.USER_AVATAR,
+                  accessLevel: FileAccessLevel.PUBLIC,
                   description: "User avatar",
+                  tags: ["user-avatar"],
+                  relatedEntityId: user?.id,
+                  relatedEntityType: "user",
                 };
 
-                const savedFile = await fileService.createFile(fileData);
+                const file = await filesV2Service.uploadFile(
+                  Buffer.from(fileBuffer),
+                  fileName,
+                  uploadOptions
+                );
 
                 // Update user with new profile picture URL
                 await User.findByIdAndUpdate(user?.id, {

@@ -1,7 +1,10 @@
+"use client";
+
 import { motion } from "framer-motion";
+import { useFeaturedProperties } from "@/modules/properties";
 import { PropertyCard } from "../properties/components/property-card";
 
-const properties = [
+const properties_ = [
   {
     image:
       "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80",
@@ -71,6 +74,10 @@ const properties = [
 ];
 
 export default function FeaturedProperties() {
+  const { data } = useFeaturedProperties();
+
+  const properties = data ?? [];
+
   return (
     <section className="bg-muted/30 py-20" id="properties">
       <div className="container mx-auto px-4">

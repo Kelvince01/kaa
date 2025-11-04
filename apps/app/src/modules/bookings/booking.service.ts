@@ -78,8 +78,9 @@ export const confirmBooking = async (
   id: string,
   checkInInstructions?: string
 ): Promise<BookingResponse> => {
-  const response = await httpClient.api.post(`/bookings/${id}/confirm`, {
-    checkInInstructions,
+  const response = await httpClient.api.put(`/bookings/${id}/status`, {
+    status: "confirmed",
+    reason: checkInInstructions,
   });
   return response.data;
 };

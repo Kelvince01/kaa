@@ -37,8 +37,9 @@ import { useTenantStats, useTenants } from "@/modules/tenants/tenant.queries";
 import type { Tenant } from "@/modules/tenants/tenant.type";
 import { TenantStatus } from "@/modules/tenants/tenant.type";
 
-export default function TenantsManagement() {
+export default function TenantsManagement({ property }: { property: string }) {
   const [queryParams, setQueryParams] = useState({
+    property,
     page: 1,
     limit: 10,
     sortBy: "createdAt",
@@ -53,7 +54,7 @@ export default function TenantsManagement() {
 
   // Queries and mutations
   const { data: tenantsData, isLoading } = useTenants(queryParams);
-  const { data: statsData } = useTenantStats();
+  const { data: statsData } = useTenantStats({ property });
   const deleteTenantMutation = useDeleteTenant();
   const verifyTenantMutation = useVerifyTenant();
 

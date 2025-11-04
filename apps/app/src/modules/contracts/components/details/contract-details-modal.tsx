@@ -44,6 +44,7 @@ import {
   Users,
 } from "lucide-react";
 import { useProperty } from "@/modules/properties/property.queries";
+import type { Tenant } from "@/modules/tenants";
 import { useTenants } from "@/modules/tenants/tenant.queries";
 import { formatCurrency } from "@/shared/utils/format.util";
 import { type Contract, ContractStatus } from "../../contract.type";
@@ -337,7 +338,8 @@ export function ContractDetailsModal({
                 <div className="space-y-4">
                   {Array.isArray(contract.tenants) &&
                     contract.tenants.map((tenantId, index) => {
-                      const tenant = getTenantInfo(tenantId as string);
+                      // const tenant = getTenantInfo(tenantId as string);
+                      const tenant = tenantId as Tenant;
                       if (!tenant) return null;
 
                       return (
@@ -614,7 +616,7 @@ export function ContractDetailsModal({
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 rounded-lg border p-3">
-                    <div className="h-2 w-2 flex-shrink-0 rounded-full bg-green-500" />
+                    <div className="h-2 w-2 shrink-0 rounded-full bg-green-500" />
                     <div className="flex-1">
                       <div className="font-medium">Contract Start</div>
                       <div className="text-muted-foreground text-sm">
@@ -624,7 +626,7 @@ export function ContractDetailsModal({
                   </div>
 
                   <div className="flex items-center gap-4 rounded-lg border p-3">
-                    <div className="h-2 w-2 flex-shrink-0 rounded-full bg-blue-500" />
+                    <div className="h-2 w-2 shrink-0 rounded-full bg-blue-500" />
                     <div className="flex-1">
                       <div className="font-medium">Current Status</div>
                       <div className="text-muted-foreground text-sm">
@@ -634,7 +636,7 @@ export function ContractDetailsModal({
                   </div>
 
                   <div className="flex items-center gap-4 rounded-lg border p-3">
-                    <div className="h-2 w-2 flex-shrink-0 rounded-full bg-orange-500" />
+                    <div className="h-2 w-2 shrink-0 rounded-full bg-orange-500" />
                     <div className="flex-1">
                       <div className="font-medium">Contract End</div>
                       <div className="text-muted-foreground text-sm">

@@ -1,4 +1,4 @@
-import { Contract, Property, Tenant, Unit } from "@kaa/models";
+import { Contract, Landlord, Property, Tenant, Unit } from "@kaa/models";
 import type { IProperty, ITenant, IUnit, IUser } from "@kaa/models/types";
 import {
   ContractStatus,
@@ -239,8 +239,12 @@ export class ContractService {
         { ...data, updatedAt: new Date() },
         { new: true, runValidators: true }
       ).populate([
-        { path: "landlord", select: "firstName lastName email phone" },
-        { path: "property", select: "title location" },
+        {
+          path: "landlord",
+          select:
+            "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone",
+        },
+        { path: "property", select: "title location media" },
         { path: "unit", select: "unitNumber unitType" },
         {
           path: "tenants",
@@ -281,10 +285,18 @@ export class ContractService {
   ): Promise<IContract> {
     try {
       const contract = await Contract.findById(contractId).populate([
-        { path: "landlord", select: "firstName lastName email phone address" },
-        { path: "property", select: "title location type" },
+        {
+          path: "landlord",
+          select:
+            "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone contactInfo.primaryAddress",
+        },
+        { path: "property", select: "title location type media" },
         { path: "unit", select: "unitNumber unitType bedrooms bathrooms size" },
-        { path: "tenants", select: "personalInfo address" },
+        {
+          path: "tenants",
+          select:
+            "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone address",
+        },
       ]);
 
       if (!contract) {
@@ -346,10 +358,17 @@ export class ContractService {
 
       // Add user-specific filter (non-admin users)
       if (userRole?.name !== "admin") {
-        filter.$or = [
-          { landlord: new mongoose.Types.ObjectId(userId) },
-          { tenants: { $in: [new mongoose.Types.ObjectId(userId)] } },
-        ];
+        if (userRole?.name === "landlord") {
+          const landlord = await Landlord.findOne({ user: userId });
+          if (landlord) {
+            filter.landlord = landlord.id;
+          }
+        } else if (userRole?.name === "tenant") {
+          const tenant = await Tenant.findOne({ user: userId });
+          if (tenant) {
+            filter.tenants = { $in: [tenant.id] };
+          }
+        }
       }
 
       // Add filters
@@ -400,15 +419,19 @@ export class ContractService {
       // Execute query
       const [contracts, total] = await Promise.all([
         Contract.find(filter)
-          // .select("tenants")
           .populate([
-            { path: "landlord", select: "firstName lastName email phone" },
-            { path: "property", select: "title location type pricing" },
+            {
+              path: "landlord",
+              select:
+                "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone",
+            },
+            { path: "property", select: "title location type pricing media" },
             { path: "unit", select: "unitNumber unitType" },
-            // {
-            // path: "tenants",
-            // select: "personalInfo.firstName personalInfo.lastName personalInfo.email",
-            // },
+            {
+              path: "tenants",
+              select:
+                "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone personalInfo.avatar",
+            },
           ])
           .sort(sort)
           .skip(skip)
@@ -497,8 +520,12 @@ export class ContractService {
         },
         { new: true }
       ).populate([
-        { path: "landlord", select: "firstName lastName email phone" },
-        { path: "property", select: "title location" },
+        {
+          path: "landlord",
+          select:
+            "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone",
+        },
+        { path: "property", select: "title location media" },
         { path: "unit", select: "unitNumber unitType" },
         {
           path: "tenants",
@@ -588,8 +615,12 @@ export class ContractService {
         },
         { new: true }
       ).populate([
-        { path: "landlord", select: "firstName lastName email phone" },
-        { path: "property", select: "title location" },
+        {
+          path: "landlord",
+          select:
+            "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone",
+        },
+        { path: "property", select: "title location media" },
         { path: "unit", select: "unitNumber unitType" },
         {
           path: "tenants",
@@ -676,8 +707,11 @@ export class ContractService {
       const contracts = await Contract.find({
         tenants: { $in: [new mongoose.Types.ObjectId(userId)] },
       })
-        .populate("property", "title location images")
-        .populate("landlord", "firstName lastName email phone")
+        .populate("property", "title location media")
+        .populate(
+          "landlord",
+          "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone"
+        )
         .sort({ createdAt: -1 });
 
       return contracts;
@@ -718,8 +752,12 @@ export class ContractService {
       // Get contracts
       const contracts = await Contract.find({ property: propertyId })
         .populate([
-          { path: "landlord", select: "firstName lastName email phone" },
-          { path: "property", select: "title location" },
+          {
+            path: "landlord",
+            select:
+              "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone",
+          },
+          { path: "property", select: "title location media" },
           { path: "unit", select: "unitNumber unitType" },
           {
             path: "tenants",
@@ -809,7 +847,7 @@ export class ContractService {
     // Fetch property
     const property = await Property.findById(data.propertyId).populate(
       "landlord",
-      "firstName lastName email phone address idNumber"
+      "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone contactInfo.primaryAddress personalInfo.nationalId"
     );
 
     if (!property) {
@@ -839,8 +877,15 @@ export class ContractService {
     return { property, unit, tenants };
   }
 
-  private validateUserPermissions(userId: string, property: IProperty): void {
-    if (property.landlord.toString() !== userId) {
+  private async validateUserPermissions(
+    userId: string,
+    property: IProperty
+  ): Promise<void> {
+    const landlord = await Landlord.findOne({ user: userId }).select(
+      "personalInfo.firstName"
+    );
+
+    if ((property.landlord as any).id !== landlord?.id) {
       throw new ContractError(
         "Not authorized to create contracts for this property",
         403
@@ -958,6 +1003,7 @@ export class ContractService {
       },
       createdAt: new Date(),
       updatedAt: new Date(),
+      createdBy: data.userId,
     });
 
     await contract.save();

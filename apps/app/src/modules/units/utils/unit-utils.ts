@@ -117,7 +117,7 @@ export const filterUnitsByStatus = (units: Unit[], status: UnitStatus) =>
 
 // Filter units by type
 export const filterUnitsByType = (units: Unit[], type: UnitType) =>
-  units.filter((unit) => unit.unitType === type);
+  units.filter((unit) => unit.type === type);
 
 // Search units by text
 export const searchUnits = (units: Unit[], searchTerm: string) => {
@@ -126,7 +126,7 @@ export const searchUnits = (units: Unit[], searchTerm: string) => {
     (unit) =>
       unit.unitNumber.toLowerCase().includes(lowercaseSearch) ||
       unit.description?.toLowerCase().includes(lowercaseSearch) ||
-      getUnitTypeDisplayName(unit.unitType)
+      getUnitTypeDisplayName(unit.type)
         .toLowerCase()
         .includes(lowercaseSearch) ||
       (typeof unit.property === "string"
@@ -347,7 +347,7 @@ export const getRentCollectionSummary = (unit: Unit) => {
 
 // Generate unit summary text
 export const generateUnitSummary = (unit: Unit) => {
-  const typeDisplay = getUnitTypeDisplayName(unit.unitType);
+  const typeDisplay = getUnitTypeDisplayName(unit.type);
   const rentDisplay = formatCurrency(unit.rent);
   const statusDisplay = getStatusDisplayName(unit.status);
 

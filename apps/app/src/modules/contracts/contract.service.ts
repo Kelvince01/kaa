@@ -22,7 +22,7 @@ import type {
 export const createContract = async (
   data: CreateContractInput
 ): Promise<ContractResponse> => {
-  const response = await httpClient.api.post("/contracts", data);
+  const response = await httpClient.api.post("/contracts/", data);
   return response.data;
 };
 
@@ -30,7 +30,7 @@ export const createContract = async (
 export const getContracts = async (
   params: ContractQueryParams = {}
 ): Promise<ContractListResponse> => {
-  const response = await httpClient.api.get("/contracts", { params });
+  const response = await httpClient.api.get("/contracts/", { params });
   return response.data;
 };
 
@@ -151,7 +151,7 @@ export const getContractTemplates = async (): Promise<{
   templates: any[];
   status: string;
 }> => {
-  const response = await httpClient.api.get("/contracts/templates");
+  const response = await httpClient.api.get("/contracts/templates/");
   return response.data;
 };
 
@@ -164,7 +164,7 @@ export const createContractTemplate = async (
   status: string;
   message?: string;
 }> => {
-  const response = await httpClient.api.post("/contracts/templates", data);
+  const response = await httpClient.api.post("/contracts/templates/", data);
   return response.data;
 };
 
@@ -221,7 +221,7 @@ export const createContractAmendment = async (
   }
 ): Promise<ContractResponse> => {
   const response = await httpClient.api.post(
-    `/contracts/${contractId}/amendments`,
+    `/contracts/${contractId}/amend`,
     amendmentData
   );
   return response.data;
@@ -229,11 +229,13 @@ export const createContractAmendment = async (
 
 // Approve contract amendment
 export const approveContractAmendment = async (
-  contractId: string,
+  // contractId: string,
   amendmentId: string
 ): Promise<ContractResponse> => {
   const response = await httpClient.api.post(
-    `/contracts/${contractId}/amendments/${amendmentId}/approve`
+    // `/contracts/${contractId}/amendments/${amendmentId}/approve`
+    `/contracts/amendments/${amendmentId}/approve`,
+    { approved: true, additionalNotes: "" }
   );
   return response.data;
 };

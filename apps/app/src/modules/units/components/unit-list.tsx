@@ -160,8 +160,8 @@ export function UnitList({
         break;
       case "unitType":
         filtered = filtered.sort((a, b) => {
-          const comparison = getUnitTypeDisplayName(a.unitType).localeCompare(
-            getUnitTypeDisplayName(b.unitType)
+          const comparison = getUnitTypeDisplayName(a.type).localeCompare(
+            getUnitTypeDisplayName(b.type)
           );
           return sortOrder === "desc" ? -comparison : comparison;
         });
@@ -510,7 +510,7 @@ export function UnitList({
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div>{getUnitTypeDisplayName(unit.unitType)}</div>
+                      <div>{getUnitTypeDisplayName(unit.type)}</div>
                       <div className="text-muted-foreground text-sm">
                         {unit.bedrooms} bed • {unit.bathrooms} bath
                       </div>
@@ -533,9 +533,7 @@ export function UnitList({
                     {unit.status === "occupied" && unit.currentTenant ? (
                       <div>
                         <div className="font-medium">
-                          {typeof unit.currentTenant === "string"
-                            ? unit.currentTenant
-                            : `${unit.currentTenant.personalInfo.firstName} ${unit.currentTenant.personalInfo.lastName}`}
+                          {`${unit.currentTenant.personalInfo.firstName} ${unit.currentTenant.personalInfo.lastName}`}
                         </div>
                         {unit.leaseStartDate && (
                           <div className="text-muted-foreground text-sm">

@@ -98,7 +98,7 @@ export function UnitCard({
             <p className="text-muted-foreground text-sm">{property?.title}</p>
             {!compact && (
               <p className="text-muted-foreground text-xs">
-                {getUnitTypeDisplayName(unit.unitType)}
+                {getUnitTypeDisplayName(unit.type)}
               </p>
             )}
           </div>

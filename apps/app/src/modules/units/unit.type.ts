@@ -48,7 +48,7 @@ export type Unit = {
   rent: number;
   depositAmount: number;
   description?: string;
-  unitType: UnitType;
+  type: UnitType;
   status: UnitStatus;
   amenities?: UnitAmenity[];
   utilities?: UnitUtility[];
@@ -83,7 +83,7 @@ export type UnitCreateInput = {
   rent: number;
   depositAmount: number;
   description?: string;
-  unitType: UnitType;
+  type: UnitType;
   amenities?: UnitAmenity[];
   utilities?: UnitUtility[];
   images?: Array<{

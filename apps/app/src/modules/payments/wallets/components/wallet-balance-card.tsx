@@ -159,7 +159,7 @@ export function WalletBalanceCard({
         <div className="space-y-1">
           <p className="text-muted-foreground text-sm">Available Balance</p>
           <p className="font-bold text-3xl tracking-tight">
-            {formatCurrency(balance)}
+            {balance ? formatCurrency(balance) : "KES 0.00"}
           </p>
         </div>
 

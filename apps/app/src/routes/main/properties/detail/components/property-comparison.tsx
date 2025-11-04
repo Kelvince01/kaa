@@ -34,10 +34,10 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useSimilarProperties } from "@/modules/properties/property.queries";
 import type { Property } from "@/modules/properties/property.type";
-import { UserRole, UserStatus } from "@/modules/users/user.type";
 import { formatCurrency } from "@/shared/utils/format.util";
 
 type PropertyComparisonProps = {
@@ -49,272 +49,6 @@ interface ComparisonProperty extends Property {
   isSelected: boolean;
 }
 
-// Mock similar properties for comparison
-const mockSimilarProperties: ComparisonProperty[] | any[] = [
-  {
-    _id: "prop1",
-    title: "Modern Downtown Apartment",
-    type: "apartment" as any,
-    details: {
-      rooms: 3,
-      furnishedStatus: "Furnished",
-      garden: true,
-      security: true,
-      bedrooms: 2,
-      bathrooms: 2,
-      size: 1200,
-      furnished: true,
-      parking: true,
-      generator: true,
-      internetReady: true,
-      petFriendly: true,
-      smokingAllowed: true,
-      sublettingAllowed: true,
-    },
-    pricing: {
-      rent: 85_000,
-      currency: "KES",
-      paymentFrequency: "monthly",
-      deposit: 170_000,
-      utilitiesIncluded: {
-        water: true,
-        electricity: true,
-        internet: false,
-        garbage: false,
-        security: false,
-      },
-      negotiable: false,
-    },
-    location: {
-      address: {
-        line1: "456 Urban Street",
-        town: "Nairobi",
-        postalCode: "00100",
-      },
-      county: "Nairobi",
-      constituency: "Nairobi West",
-      country: "Kenya",
-    },
-    status: "available",
-    features: ["wifi", "gym", "parking", "security"],
-    isSelected: false,
-    description: "A modern apartment in the heart of Nairobi",
-    memberId: "member1",
-    media: {
-      images: [
-        {
-          url: "https://via.placeholder.com/150",
-          caption: "A modern apartment in the heart of Nairobi",
-          isPrimary: true,
-        },
-      ],
-    },
-    available: true,
-    amenities: [
-      {
-        name: "wifi",
-        description: "High-speed internet",
-      },
-      {
-        name: "gym",
-        description: "Gym with modern equipment",
-      },
-    ],
-    availableFrom: "2025-01-01",
-    geolocation: {
-      type: "Point",
-      coordinates: [36.817_223, -1.286_389],
-    },
-    landlord: {
-      id: "landlord1",
-      memberId: "member1",
-      username: "landlord1",
-      firstName: "John",
-      lastName: "Doe",
-      email: "john.doe@example.com",
-      phone: "1234567890",
-      role: UserRole.LANDLORD,
-      status: UserStatus.ACTIVE,
-      isActive: true,
-      isVerified: true,
-      createdAt: "2025-01-01",
-      updatedAt: "2025-01-01",
-    },
-    createdAt: "2025-01-01",
-    updatedAt: "2025-01-01",
-  },
-  {
-    _id: "prop2",
-    title: "Cozy Garden Apartment",
-    type: "apartment",
-    details: {
-      bedrooms: 1,
-      bathrooms: 1,
-      size: 800,
-      furnished: false,
-      parking: false,
-      rooms: 2,
-      furnishedStatus: "Unfurnished",
-      garden: false,
-      security: false,
-      generator: false,
-      internetReady: false,
-      petFriendly: false,
-      smokingAllowed: false,
-      sublettingAllowed: false,
-      tags: ["garden", "pets", "wifi"],
-    },
-    pricing: {
-      rent: 55_000,
-      currency: "KES",
-      paymentFrequency: "monthly",
-      deposit: 110_000,
-      waterBill: "Included",
-      electricityBill: "Included",
-      utilitiesIncluded: ["wifi", "gym"],
-      negotiable: false,
-    },
-    location: {
-      address: {
-        line1: "789 Garden Road",
-        town: "Nairobi",
-        postalCode: "00200",
-      },
-      county: "Nairobi",
-      constituency: "Nairobi West",
-      country: "Kenya",
-    },
-    status: "available",
-    features: ["garden", "pets", "wifi"],
-    isSelected: false,
-    description: "A cozy garden apartment with a garden",
-    memberId: "member2",
-    media: {
-      photos: [
-        {
-          url: "https://via.placeholder.com/150",
-          caption: "A cozy garden apartment with a garden",
-          isPrimary: true,
-        },
-      ],
-    },
-    available: true,
-    amenities: [
-      {
-        name: "wifi",
-        description: "High-speed internet",
-      },
-    ],
-    availableFrom: "2025-01-01",
-    geolocation: {
-      type: "Point",
-      coordinates: [36.817_223, -1.286_389],
-    },
-    landlord: {
-      id: "landlord2",
-      memberId: "member2",
-      username: "landlord2",
-      firstName: "Jane",
-      lastName: "Doe",
-      email: "jane.doe@example.com",
-      phone: "1234567890",
-      role: UserRole.LANDLORD,
-      status: UserStatus.ACTIVE,
-      isActive: true,
-      isVerified: true,
-      createdAt: "2025-01-01",
-      updatedAt: "2025-01-01",
-    },
-    createdAt: "2025-01-01",
-    updatedAt: "2025-01-01",
-  },
-  {
-    _id: "prop3",
-    title: "Luxury Penthouse Suite",
-    type: "apartment",
-    details: {
-      bedrooms: 3,
-      bathrooms: 3,
-      size: 1800,
-      furnished: true,
-      parking: true,
-      rooms: 4,
-      furnishedStatus: "Semi-furnished",
-      garden: true,
-      security: true,
-      generator: true,
-      internetReady: true,
-      petFriendly: true,
-      smokingAllowed: true,
-      sublettingAllowed: true,
-      tags: ["pool", "gym", "concierge", "parking", "balcony"],
-    },
-    pricing: {
-      rent: 150_000,
-      currency: "KES",
-      paymentFrequency: "monthly",
-      deposit: 300_000,
-      waterBill: "Included",
-      electricityBill: "Included",
-      utilitiesIncluded: ["wifi", "gym"],
-      negotiable: false,
-    },
-    location: {
-      address: {
-        line1: "321 Elite Avenue",
-        town: "Nairobi",
-        postalCode: "00300",
-      },
-      county: "Nairobi",
-      constituency: "Nairobi West",
-      country: "Kenya",
-    },
-    status: "available",
-    features: ["pool", "gym", "concierge", "parking", "balcony"],
-    isSelected: false,
-    description: "A luxury penthouse suite with a pool, gym, and concierge",
-    memberId: "member3",
-    media: {
-      photos: [
-        {
-          url: "https://via.placeholder.com/150",
-          caption: "A luxury penthouse suite with a pool, gym, and concierge",
-          isPrimary: true,
-        },
-      ],
-    },
-    available: true,
-    amenities: [
-      {
-        name: "wifi",
-        description: "High-speed internet",
-      },
-    ],
-    availableFrom: "2025-01-01",
-    geolocation: {
-      type: "Point",
-      coordinates: [36.817_223, -1.286_389],
-    },
-    landlord: {
-      id: "landlord3",
-      memberId: "member3",
-      username: "landlord3",
-      firstName: "John",
-      lastName: "Doe",
-      email: "john.doe@example.com",
-      phone: "1234567890",
-      role: UserRole.LANDLORD,
-      status: UserStatus.ACTIVE,
-      isActive: true,
-      isVerified: true,
-      createdAt: "2025-01-01",
-      updatedAt: "2025-01-01",
-    },
-    createdAt: "2025-01-01",
-    updatedAt: "2025-01-01",
-  },
-];
-
 export function PropertyComparison({
   currentProperty,
   className,
@@ -323,9 +57,24 @@ export function PropertyComparison({
   const [comparisonProperties, setComparisonProperties] = useState<
     ComparisonProperty[]
   >([]);
-  const [availableProperties] = useState<ComparisonProperty[]>(
-    mockSimilarProperties
+  const [availableProperties, setAvailableProperties] = useState<
+    ComparisonProperty[]
+  >([]);
+  const { data: similarProperties } = useSimilarProperties(
+    currentProperty._id,
+    3
   );
+
+  useEffect(() => {
+    if (similarProperties) {
+      setAvailableProperties(
+        similarProperties?.map((property) => ({
+          ...property,
+          isSelected: false,
+        }))
+      );
+    }
+  }, [similarProperties]);
 
   const addToComparison = (property: ComparisonProperty) => {
     if (comparisonProperties.length >= 3) {

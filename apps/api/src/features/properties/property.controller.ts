@@ -12,14 +12,16 @@
 
 import {
   type IBaseProperty,
+  type IProperty,
   ListingType,
   PropertyStatus,
 } from "@kaa/models/types";
 import { AmenityService, propertyService } from "@kaa/services";
 import { clearCache, logger, slugify } from "@kaa/utils";
 import Elysia, { t } from "elysia";
-import mongoose from "mongoose";
+import mongoose, { type FilterQuery } from "mongoose";
 import * as prom from "prom-client";
+import { authPlugin } from "../auth/auth.plugin";
 // import { authPlugin } from "~/features/auth/auth.plugin";
 import { accessPlugin } from "../rbac/rbac.plugin";
 // import { rateLimitMiddleware } from "~/plugins/rate-limit.plugin";
@@ -76,7 +78,7 @@ export const propertyController = new Elysia({
         try {
           propertyOperationsCounter.inc({ operation: "list" });
 
-          const filters: any = {
+          const filters: FilterQuery<IProperty> = {
             page: query.page ? Number.parseInt(query.page, 10) : 1,
             limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
             sortBy: query.sortBy || "createdAt",
@@ -377,7 +379,7 @@ export const propertyController = new Elysia({
           }
 
           const limit = query.limit ? Number.parseInt(query.limit, 10) : 5;
-          const properties = await propertyService.getSimilarProperties_v2(
+          const properties = await propertyService.getSimilarProperties(
             params.id,
             limit
           );
@@ -385,7 +387,7 @@ export const propertyController = new Elysia({
           set.status = 200;
           return {
             status: "success",
-            data: properties,
+            properties,
           };
         } catch (error) {
           set.status = 500;
@@ -476,376 +478,372 @@ export const propertyController = new Elysia({
     /**
      * Create a new property
      */
-    .use(accessPlugin("properties", "create"))
-    .post(
-      "/",
-      async ({ set, body, user }) => {
-        try {
-          propertyOperationsCounter.inc({ operation: "create" });
+    .group("", (app) =>
+      app
+        .use(accessPlugin("properties", "create"))
+        .post(
+          "/",
+          async ({ set, body, user }) => {
+            try {
+              propertyOperationsCounter.inc({ operation: "create" });
 
-          // Ensure landlord is set to current user if not provided
-          /*const propertyData_ = {
-          ...body,
-          landlord: new mongoose.Types.ObjectId(body.landlord || user.id),
-          agent: body.agent
-            ? new mongoose.Types.ObjectId(body.agent)
-            : undefined,
-          organizationId: body.organizationId
-            ? new mongoose.Types.ObjectId(body.organizationId)
-            : undefined,
-          memberId: new mongoose.Types.ObjectId(body.memberId || user.memberId),
-          location: {
-            ...body.location,
-            nearbyTransport: body.location?.nearbyTransport || [],
-            walkingDistanceToRoad: body.location?.walkingDistanceToRoad || 0,
-            accessRoad: body.location?.accessRoad || "tarmac",
-            nearbyAmenities: body.location?.nearbyAmenities || [],
-          },
-          pricing: {
-            ...body.pricing,
-            paymentFrequency: body.pricing?.paymentFrequency || "monthly",
-          },
-        };*/
-
-          const propertyData: IBaseProperty = {
-            title: body.title,
-            description: body.description,
-            type: body.type,
-            slug: slugify(body.title),
-            landlord: new mongoose.Types.ObjectId(user.id),
-            status: PropertyStatus.DRAFT,
-            aiInsights: {
-              marketValue: 0,
-              rentPrediction: 0,
-              occupancyScore: 0,
-              investmentScore: 0,
-              maintenanceRisk: "low",
-              lastUpdated: new Date(),
-            },
-            utilities: {
-              electricity: {
-                provider: "KPLC",
-                meterNumber: "1234567890",
-                averageMonthlyBill: 0,
-              },
-              water: {
-                provider: "Nairobi Water",
-                meterNumber: "1234567890",
-                averageMonthlyBill: 0,
-              },
-              internet: {
-                available: true,
-                providers: ["Safaricom", "Airtel", "Vodafone"],
-              },
-              waste: {
-                collectionDay: "Monday",
-                provider: "Kahawa Waste Management",
-              },
-              // garbage: {
-              //   collectionDay: "",
-              //   provider: "",
-              // },
-            },
-            compliance: {
-              titleDeed: false,
-              occupancyCertificate: false,
-              fireCompliance: false,
-              environmentalCompliance: false,
-              countyApprovals: ["Building Permit", "Occupancy Certificate"],
-              insurancePolicy: "KPLC Insurance",
-              lastInspection: new Date("2025-01-01"),
-            },
-            listingType: ListingType.RENT,
-            specifications: {
-              bedrooms: body.bedrooms,
-              bathrooms: body.bathrooms,
-              furnished: body.furnished,
-              totalArea: body.totalArea,
-              condition: body.condition,
-              halfBaths: 0, //  body.halfBaths,
-              kitchens: 1, //  body.kitchens,
-              livingRooms: 1, //  body.livingRooms,
-              diningRooms: 0, //  body.diningRooms,
-              floors: 1, //  body.floors,
-            },
-            location: {
-              country: "Kenya",
-              county: body.county,
-              constituency: "Westlands",
-              ward: "Westlands",
-              estate: body.estate,
-              address: {
-                line1: body.address,
-                town: "Nairobi",
-                postalCode: "00100",
-              },
-              coordinates: {
-                latitude: body.coordinates.latitude,
-                longitude: body.coordinates.longitude,
-              },
-              nearbyTransport: ["matatu", "bus", "train"],
-              walkingDistanceToRoad: 0,
-              accessRoad: "tarmac",
-              nearbyAmenities: ["school", "hospital", "shopping", "church"],
-            },
-            geolocation: {
-              type: "Point",
-              coordinates: [
-                body.coordinates.longitude,
-                body.coordinates.latitude,
-              ],
-            },
-            amenities: {
-              water: true,
-              electricity: true,
-              parking: true,
-              security: true,
-              generator: true,
-              internet: true,
-              lift: true,
-              compound: true,
-              gate: true,
-              perimeter: true,
-              cctv: true,
-              garden: true,
-              swimmingPool: true,
-              gym: true,
-              solarPower: true,
-              dstv: true,
-              cableTv: true,
-              storeRoom: true,
-              servantQuarter: true,
-              studyRoom: true,
-              balcony: true,
-              laundry: true,
-              cleaning: true,
-              caretaker: true,
-              borehole: true,
-            },
-            pricing: {
-              rent: body.rent,
-              deposit: body.deposit,
-              serviceFee: body.serviceFee,
-              currency: "KES",
-              paymentFrequency: body.paymentFrequency || "monthly",
-              advanceMonths: body.advanceMonths || 1,
-              depositMonths: body.depositMonths || 2,
-              utilitiesIncluded: {
-                water: true,
-                electricity: true,
-                internet: true,
-                garbage: true,
-                security: true,
-              },
-              negotiable: false,
-            },
-            rules: {
-              petsAllowed: body.petsAllowed,
-              minimumLease: body.minimumLease,
-              smokingAllowed: false,
-              partiesAllowed: false,
-              childrenAllowed: true,
-              creditCheckRequired: false,
-              employmentVerification: false,
-              previousLandlordReference: false,
-              customRules: [],
-            },
-            availability: {
-              isAvailable: true,
-              viewingDays: [
-                {
-                  day: "monday",
-                  startTime: "09:00",
-                  endTime: "17:00",
+              const propertyData: IBaseProperty = {
+                title: body.title,
+                description: body.description,
+                type: body.type,
+                slug: slugify(body.title),
+                // Ensure landlord is set to current user if not provided
+                landlord: new mongoose.Types.ObjectId(user.id),
+                // landlord: new mongoose.Types.ObjectId(body.landlord || user.id),
+                // agent: body.agent
+                //   ? new mongoose.Types.ObjectId(body.agent)
+                //   : undefined,
+                // organizationId: body.organizationId
+                //   ? new mongoose.Types.ObjectId(body.organizationId)
+                //   : undefined,
+                // memberId: new mongoose.Types.ObjectId(
+                //   body.memberId || user.memberId
+                // ),
+                status: PropertyStatus.DRAFT,
+                aiInsights: {
+                  marketValue: 0,
+                  rentPrediction: 0,
+                  occupancyScore: 0,
+                  investmentScore: 0,
+                  maintenanceRisk: "low",
+                  lastUpdated: new Date(),
                 },
-              ],
-              viewingContact: {
-                name: body.viewingContact.name,
-                phone: body.viewingContact.phone,
-                preferredMethod: "call",
-              },
-              availableFrom: body.availableFrom
-                ? new Date(body.availableFrom)
-                : undefined,
+                utilities: {
+                  electricity: {
+                    provider: "KPLC",
+                    meterNumber: "1234567890",
+                    averageMonthlyBill: 0,
+                  },
+                  water: {
+                    provider: "Nairobi Water",
+                    meterNumber: "1234567890",
+                    averageMonthlyBill: 0,
+                  },
+                  internet: {
+                    available: true,
+                    providers: ["Safaricom", "Airtel", "Vodafone"],
+                  },
+                  waste: {
+                    collectionDay: "Monday",
+                    provider: "Kahawa Waste Management",
+                  },
+                  // garbage: {
+                  //   collectionDay: "",
+                  //   provider: "",
+                  // },
+                },
+                compliance: {
+                  titleDeed: false,
+                  occupancyCertificate: false,
+                  fireCompliance: false,
+                  environmentalCompliance: false,
+                  countyApprovals: ["Building Permit", "Occupancy Certificate"],
+                  insurancePolicy: "KPLC Insurance",
+                  lastInspection: new Date("2025-01-01"),
+                },
+                listingType: ListingType.RENT,
+                specifications: {
+                  bedrooms: body.bedrooms,
+                  bathrooms: body.bathrooms,
+                  furnished: body.furnished,
+                  totalArea: body.totalArea,
+                  condition: body.condition,
+                  halfBaths: 0, //  body.halfBaths,
+                  kitchens: 1, //  body.kitchens,
+                  livingRooms: 1, //  body.livingRooms,
+                  diningRooms: 0, //  body.diningRooms,
+                  floors: 1, //  body.floors,
+                },
+                location: {
+                  country: "Kenya",
+                  county: body.county,
+                  constituency: "Westlands",
+                  ward: "Westlands",
+                  estate: body.estate,
+                  address: {
+                    line1: body.address,
+                    town: "Nairobi",
+                    postalCode: "00100",
+                  },
+                  coordinates: {
+                    latitude: body.coordinates.latitude,
+                    longitude: body.coordinates.longitude,
+                  },
+                  nearbyTransport: ["matatu", "bus", "train"],
+                  walkingDistanceToRoad: 0,
+                  accessRoad: "tarmac",
+                  nearbyAmenities: ["school", "hospital", "shopping", "church"],
+
+                  // nearbyTransport: body.location?.nearbyTransport || [],
+                  // walkingDistanceToRoad: body.location?.walkingDistanceToRoad || 0,
+                  // accessRoad: body.location?.accessRoad || "tarmac",
+                  // nearbyAmenities: body.location?.nearbyAmenities || [],
+                },
+                geolocation: {
+                  type: "Point",
+                  coordinates: [
+                    body.coordinates.longitude,
+                    body.coordinates.latitude,
+                  ],
+                },
+                amenities: {
+                  water: true,
+                  electricity: true,
+                  parking: true,
+                  security: true,
+                  generator: true,
+                  internet: true,
+                  lift: true,
+                  compound: true,
+                  gate: true,
+                  perimeter: true,
+                  cctv: true,
+                  garden: true,
+                  swimmingPool: true,
+                  gym: true,
+                  solarPower: true,
+                  dstv: true,
+                  cableTv: true,
+                  storeRoom: true,
+                  servantQuarter: true,
+                  studyRoom: true,
+                  balcony: true,
+                  laundry: true,
+                  cleaning: true,
+                  caretaker: true,
+                  borehole: true,
+                },
+                pricing: {
+                  rent: body.rent,
+                  deposit: body.deposit,
+                  serviceFee: body.serviceFee,
+                  currency: "KES",
+                  paymentFrequency: body.paymentFrequency || "monthly",
+                  advanceMonths: body.advanceMonths || 1,
+                  depositMonths: body.depositMonths || 2,
+                  utilitiesIncluded: {
+                    water: true,
+                    electricity: true,
+                    internet: true,
+                    garbage: true,
+                    security: true,
+                  },
+                  negotiable: false,
+                },
+                rules: {
+                  petsAllowed: body.petsAllowed,
+                  minimumLease: body.minimumLease,
+                  smokingAllowed: false,
+                  partiesAllowed: false,
+                  childrenAllowed: true,
+                  creditCheckRequired: false,
+                  employmentVerification: false,
+                  previousLandlordReference: false,
+                  customRules: [],
+                },
+                availability: {
+                  isAvailable: true,
+                  viewingDays: [
+                    {
+                      day: "monday",
+                      startTime: "09:00",
+                      endTime: "17:00",
+                    },
+                  ],
+                  viewingContact: {
+                    name: body.viewingContact.name,
+                    phone: body.viewingContact.phone,
+                    preferredMethod: "call",
+                  },
+                  availableFrom: body.availableFrom
+                    ? new Date(body.availableFrom)
+                    : undefined,
+                },
+                media: {
+                  images: body.images.map((image) => ({
+                    id: image,
+                    url: image,
+                    thumbnailUrl: image,
+                    caption: image,
+                    isPrimary: true,
+                    order: 0,
+                    uploadedAt: new Date(),
+                  })),
+                },
+                tags: body.tags || [],
+                featured: false,
+                verified: false,
+                governingLaw: "Laws of Kenya",
+                jurisdiction: "Kenya",
+                moderationStatus: "pending",
+                lastUpdatedAt: new Date(),
+                isPromoted: false,
+                stats: {
+                  views: 0,
+                  inquiries: 0,
+                  applications: 0,
+                  bookmarks: 0,
+                },
+              };
+
+              const property =
+                await propertyService.createProperty(propertyData);
+
+              // Clear cache
+              await clearCache("properties:*");
+
+              set.status = 201;
+              return {
+                status: "success",
+                data: property,
+              };
+            } catch (error) {
+              const err = error as Error;
+              set.status = err.message.includes("required") ? 400 : 500;
+              return {
+                status: "error",
+                message: err.message,
+              };
+            }
+          },
+          {
+            body: createPropertySchema,
+            detail: {
+              summary: "Create a new property",
+              description: "Create a new property listing",
+              tags: ["properties"],
             },
-            media: {
-              images: body.images.map((image) => ({
-                id: image,
-                url: image,
-                thumbnailUrl: image,
-                caption: image,
-                isPrimary: true,
-                order: 0,
-                uploadedAt: new Date(),
-              })),
+          }
+        )
+
+        /**
+         * Update a property
+         */
+        .use(accessPlugin("properties", "update"))
+        .patch(
+          "/:id",
+          async ({ set, params, body, user }) => {
+            try {
+              propertyOperationsCounter.inc({ operation: "update" });
+
+              if (!mongoose.Types.ObjectId.isValid(params.id)) {
+                set.status = 400;
+                return {
+                  status: "error",
+                  message: "Invalid property ID",
+                };
+              }
+
+              const property = await propertyService.updateProperty(
+                params.id,
+                body as any,
+                user.id
+              );
+
+              // Clear cache
+              await clearCache(`property:${params.id}`);
+              await clearCache("properties:*");
+
+              set.status = 200;
+              return {
+                status: "success",
+                property,
+              };
+            } catch (error) {
+              const err = error as Error;
+              let status = 500;
+              if (err.message.includes("not found")) status = 404;
+              if (err.message.includes("permission")) status = 403;
+
+              set.status = status;
+              return {
+                status: "error",
+                message: err.message,
+              };
+            }
+          },
+          {
+            params: t.Object({
+              id: t.String(),
+            }),
+            body: updatePropertySchema,
+            detail: {
+              summary: "Update a property",
+              description: "Update an existing property",
+              tags: ["properties"],
             },
-            tags: body.tags || [],
-            featured: false,
-            verified: false,
-            governingLaw: "Laws of Kenya",
-            jurisdiction: "Kenya",
-            moderationStatus: "pending",
-            lastUpdatedAt: new Date(),
-            isPromoted: false,
-            stats: {
-              views: 0,
-              inquiries: 0,
-              applications: 0,
-              bookmarks: 0,
+          }
+        )
+
+        /**
+         * Delete a property (soft delete)
+         */
+        .use(accessPlugin("properties", "delete"))
+        .delete(
+          "/:id",
+          async ({ set, params, user }) => {
+            try {
+              propertyOperationsCounter.inc({ operation: "delete" });
+
+              if (!mongoose.Types.ObjectId.isValid(params.id)) {
+                set.status = 400;
+                return {
+                  status: "error",
+                  message: "Invalid property ID",
+                };
+              }
+
+              const result = await propertyService.deleteProperty(
+                params.id,
+                user.id
+              );
+
+              if (!result) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Property not found",
+                };
+              }
+
+              // Clear cache
+              await clearCache(`property:${params.id}`);
+              await clearCache("properties:*");
+
+              set.status = 200;
+              return {
+                status: "success",
+                message: "Property deleted successfully",
+              };
+            } catch (error) {
+              const err = error as Error;
+              let status = 500;
+              if (err.message.includes("not found")) status = 404;
+              if (err.message.includes("permission")) status = 403;
+
+              set.status = status;
+              return {
+                status: "error",
+                message: err.message,
+              };
+            }
+          },
+          {
+            params: t.Object({
+              id: t.String(),
+            }),
+            detail: {
+              summary: "Delete a property",
+              description: "Soft delete a property (marks as inactive)",
+              tags: ["properties"],
             },
-          };
-
-          const property = await propertyService.createProperty(propertyData);
-
-          // Clear cache
-          await clearCache("properties:*");
-
-          set.status = 201;
-          return {
-            status: "success",
-            data: property,
-          };
-        } catch (error) {
-          const err = error as Error;
-          set.status = err.message.includes("required") ? 400 : 500;
-          return {
-            status: "error",
-            message: err.message,
-          };
-        }
-      },
-      {
-        body: createPropertySchema,
-        detail: {
-          summary: "Create a new property",
-          description: "Create a new property listing",
-          tags: ["properties"],
-        },
-      }
-    )
-
-    /**
-     * Update a property
-     */
-    .use(accessPlugin("properties", "update"))
-    .patch(
-      "/:id",
-      async ({ set, params, body, user }) => {
-        try {
-          propertyOperationsCounter.inc({ operation: "update" });
-
-          if (!mongoose.Types.ObjectId.isValid(params.id)) {
-            set.status = 400;
-            return {
-              status: "error",
-              message: "Invalid property ID",
-            };
           }
-
-          const property = await propertyService.updateProperty(
-            params.id,
-            body as any,
-            user.id
-          );
-
-          // Clear cache
-          await clearCache(`property:${params.id}`);
-          await clearCache("properties:*");
-
-          set.status = 200;
-          return {
-            status: "success",
-            property,
-          };
-        } catch (error) {
-          const err = error as Error;
-          let status = 500;
-          if (err.message.includes("not found")) status = 404;
-          if (err.message.includes("permission")) status = 403;
-
-          set.status = status;
-          return {
-            status: "error",
-            message: err.message,
-          };
-        }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        body: updatePropertySchema,
-        detail: {
-          summary: "Update a property",
-          description: "Update an existing property",
-          tags: ["properties"],
-        },
-      }
-    )
-
-    /**
-     * Delete a property (soft delete)
-     */
-    .use(accessPlugin("properties", "delete"))
-    .delete(
-      "/:id",
-      async ({ set, params, user }) => {
-        try {
-          propertyOperationsCounter.inc({ operation: "delete" });
-
-          if (!mongoose.Types.ObjectId.isValid(params.id)) {
-            set.status = 400;
-            return {
-              status: "error",
-              message: "Invalid property ID",
-            };
-          }
-
-          const result = await propertyService.deleteProperty(
-            params.id,
-            user.id
-          );
-
-          if (!result) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Property not found",
-            };
-          }
-
-          // Clear cache
-          await clearCache(`property:${params.id}`);
-          await clearCache("properties:*");
-
-          set.status = 200;
-          return {
-            status: "success",
-            message: "Property deleted successfully",
-          };
-        } catch (error) {
-          const err = error as Error;
-          let status = 500;
-          if (err.message.includes("not found")) status = 404;
-          if (err.message.includes("permission")) status = 403;
-
-          set.status = status;
-          return {
-            status: "error",
-            message: err.message,
-          };
-        }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        detail: {
-          summary: "Delete a property",
-          description: "Soft delete a property (marks as inactive)",
-          tags: ["properties"],
-        },
-      }
+        )
     )
 
     /**
@@ -993,6 +991,7 @@ export const propertyController = new Elysia({
     /**
      * Get personalized property recommendations
      */
+    .use(authPlugin)
     .get(
       "/recommendations/for-me",
       async ({ set, user, query }) => {

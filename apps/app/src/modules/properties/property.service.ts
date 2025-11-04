@@ -33,8 +33,8 @@ export const getProperty = async (id: string): Promise<Property> => {
 
 // Get featured properties
 export const getFeaturedProperties = async (): Promise<Property[]> => {
-  const response = await httpClient.api.get("/properties/featured");
-  return response.data.properties;
+  const response = await httpClient.api.get("/properties/featured/list");
+  return response.data.data;
 };
 
 // Get properties by landlord
@@ -215,6 +215,20 @@ export const getNearbyProperties = async (
     params: { lat, lng, radius, ...filters },
   });
   return response.data;
+};
+
+// Get similar properties
+export const getSimilarProperties = async (
+  propertyId: string,
+  limit = 5
+): Promise<Property[]> => {
+  const response = await httpClient.api.get(
+    `/properties/${propertyId}/similar`,
+    {
+      params: { limit },
+    }
+  );
+  return response.data.properties;
 };
 
 // =============================================================================

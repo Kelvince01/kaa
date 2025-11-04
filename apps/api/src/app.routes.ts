@@ -12,7 +12,6 @@ import { commRoutes } from "./features/comms/comm.routes";
 import { contractController } from "./features/contracts/contract.controller";
 import { documentController } from "./features/documents/document.controller";
 import { legalDocumentController } from "./features/documents/legal-document.controller";
-import { fileController } from "./features/files/file.controller";
 import { fileV2Controller } from "./features/files/file-v2.controller";
 import { financialController } from "./features/financials/financial.controller";
 import { complianceController } from "./features/legal/compliance.controller";
@@ -70,7 +69,6 @@ const routes = new Elysia({ prefix: "api/v1" })
   .use(reviewController)
   .use(locationsController)
   .use(aiController)
-  .use(fileController)
   .use(fileV2Controller)
   .use(documentController)
   .use(legalDocumentController)

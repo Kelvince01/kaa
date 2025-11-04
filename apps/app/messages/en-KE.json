@@ -791,7 +791,7 @@
       "empty_state": "You don't have any units yet.",
       "filters": {},
       "status": {
-        "available": "Available",
+        "vacant": "Vacant",
         "occupied": "Occupied",
         "maintenance": "Maintenance",
         "reserved": "Reserved",

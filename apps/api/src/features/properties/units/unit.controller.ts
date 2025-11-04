@@ -1,11 +1,12 @@
 // import { triggerWebhooks } from "~/features/misc/webhooks/webhooks.service";
 import { Property, Tenant, Unit } from "@kaa/models";
 import { type IUnit, UnitStatus } from "@kaa/models/types";
+import { landlordService } from "@kaa/services";
 import { clearCache } from "@kaa/utils";
 import Elysia, { t } from "elysia";
 import mongoose, { type FilterQuery } from "mongoose";
 import * as prom from "prom-client";
-import { tenantPlugin } from "~/features/users/tenants/tenant.plugin";
+import { optionalTenantPlugin } from "~/features/users/tenants/tenant.plugin";
 import {
   assignTenantSchema,
   createUnitSchema,
@@ -38,7 +39,6 @@ const unitOperationsCounter = new prom.Counter({
 
 export const unitController = new Elysia().group("units", (app) =>
   app
-    .use(tenantPlugin)
     .get(
       "/",
       async ({ query, set }) => {
@@ -48,12 +48,6 @@ export const unitController = new Elysia().group("units", (app) =>
           const skip = (page - 1) * limit;
 
           const filter: FilterQuery<IUnit> = {};
-
-          if (query.property) {
-            filter.property = new mongoose.Types.ObjectId(
-              query.property as string
-            );
-          }
 
           // Filter by property
           if (query.property) {
@@ -123,7 +117,7 @@ export const unitController = new Elysia().group("units", (app) =>
             .sort(sort as any)
             .skip(skip)
             .limit(limit)
-            .populate("property", "title location")
+            .populate("property", "title location media")
             .populate("currentTenant", "personalInfo")
             .lean();
 
@@ -299,795 +293,829 @@ export const unitController = new Elysia().group("units", (app) =>
         },
       }
     )
-    .post(
-      "/",
-      async ({ body, tenant, set }) => {
-        try {
-          const unitData = body;
+    .group("", (app) =>
+      app
+        .use(optionalTenantPlugin)
+        .post(
+          "/",
+          async ({ body, set, user }) => {
+            try {
+              const unitData = body;
 
-          // Verify the property exists and belongs to the user
-          const property = await Property.findById(unitData.property);
+              // Verify the property exists and belongs to the user
+              const property = await Property.findById(unitData.property);
 
-          if (!property) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Property not found",
-            };
-          }
+              if (!property) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Property not found",
+                };
+              }
 
-          // Check if the user is the landlord of the property
-          if (
-            (property.landlord as mongoose.Types.ObjectId).toString() !==
-            tenant?.id?.toString()
-          ) {
-            set.status = 403;
-            return {
-              status: "error",
-              message:
-                "You do not have permission to add units to this property",
-            };
-          }
+              const landlord = await landlordService.getLandlordBy({
+                userId: user.id,
+              });
 
-          // Check if a unit with the same number already exists in this property
-          const existingUnit = await Unit.findOne({
-            property: unitData.property,
-            unitNumber: unitData.unitNumber,
-          });
+              // Check if the user is the landlord of the property
+              if (property.landlord.toString() !== landlord?.id) {
+                set.status = 403;
+                return {
+                  status: "error",
+                  message:
+                    "You do not have permission to add units to this property",
+                };
+              }
 
-          if (existingUnit) {
-            set.status = 400;
-            return {
-              status: "error",
-              message:
-                "A unit with this number already exists in this property",
-            };
-          }
+              // Check if a unit with the same number already exists in this property
+              const existingUnit = await Unit.findOne({
+                property: unitData.property,
+                unitNumber: unitData.unitNumber,
+              });
 
-          // Create the unit
-          const newUnit = await Unit.create(unitData);
+              if (existingUnit) {
+                set.status = 400;
+                return {
+                  status: "error",
+                  message:
+                    "A unit with this number already exists in this property",
+                };
+              }
 
-          // Increment unit operations counter
-          unitOperationsCounter.inc({ operation: "create" });
+              // Create the unit
+              const newUnit = await Unit.create(unitData);
 
-          // Clear cache
-          await clearCache(`property:${unitData.property}:units`);
+              // Increment unit operations counter
+              unitOperationsCounter.inc({ operation: "create" });
 
-          // Trigger webhooks
-          // await triggerWebhooks(user.memberId as string, "unit.created", newUnit);
+              // Clear cache
+              await clearCache(`property:${unitData.property}:units`);
 
-          // Notify property owner
-          // notifyUser((property.landlord as ObjectId).toString(), {
-          // 	title: "New Unit Added",
-          // 	message: `Unit ${newUnit.unitNumber} has been added to your property ${property.title}`,
-          // 	type: "unit",
-          // 	data: { unitId: newUnit._id },
-          // });
+              // Trigger webhooks
+              // await triggerWebhooks(user.memberId as string, "unit.created", newUnit);
 
-          set.status = 201;
-          return {
-            status: "success",
-            data: newUnit,
-            message: "Unit created successfully",
-          };
-        } catch (error) {
-          set.status = 500;
-          return {
-            status: "error",
-            message: "Failed to create unit",
-          };
-        }
-      },
-      {
-        body: createUnitSchema,
-        detail: {
-          tags: ["units"],
-          summary: "Create unit",
-          description: "Create unit",
-        },
-      }
-    )
-    .patch(
-      "/:id",
-      async ({ params, body, tenant, set }) => {
-        try {
-          const { id } = params;
-          const updateData = body;
+              // Notify property owner
+              // notifyUser((property.landlord as ObjectId).toString(), {
+              // 	title: "New Unit Added",
+              // 	message: `Unit ${newUnit.unitNumber} has been added to your property ${property.title}`,
+              // 	type: "unit",
+              // 	data: { unitId: newUnit._id },
+              // });
 
-          const unit = await Unit.findById(id);
-
-          if (!unit) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Unit not found",
-            };
-          }
-
-          const property = await Property.findById(unit?.property);
-
-          if (!property) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Property not found",
-            };
-          }
-
-          if (
-            (property.landlord as mongoose.Types.ObjectId).toString() !==
-            tenant?.id?.toString()
-          ) {
-            set.status = 403;
-            return {
-              status: "error",
-              message: "You do not have permission to update this unit",
-            };
-          }
-
-          if (
-            updateData?.unitNumber &&
-            updateData.unitNumber !== unit?.unitNumber
-          ) {
-            const existingUnit = await Unit.findOne({
-              property: unit?.property,
-              unitNumber: updateData.unitNumber,
-              _id: { $ne: id },
-            });
-
-            if (existingUnit) {
-              set.status = 400;
+              set.status = 201;
+              return {
+                status: "success",
+                data: newUnit,
+                message: "Unit created successfully",
+              };
+            } catch (error) {
+              set.status = 500;
               return {
                 status: "error",
-                message:
-                  "A unit with this number already exists in this property",
+                message: "Failed to create unit",
               };
             }
-          }
-
-          // Update the unit
-          const updatedUnit = await Unit.findByIdAndUpdate(id, updateData, {
-            new: true,
-            runValidators: true,
-          })
-            .populate("property", "title location address")
-            .populate("currentTenant", "firstName lastName email phone");
-
-          if (!updatedUnit) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Unit not found",
-            };
-          }
-
-          // Increment unit operations counter
-          unitOperationsCounter.inc({ operation: "update" });
-
-          // Clear cache
-          await clearCache(`property:${unit?.property}:units`);
-          await clearCache(`unit:${id}`);
-
-          // Trigger webhooks
-          // await triggerWebhooks(user.memberId as string, "unit.updated", updatedUnit);
-
-          return {
-            status: "success",
-            data: updatedUnit,
-            message: "Unit updated successfully",
-          };
-        } catch (error) {
-          set.status = 500;
-          return {
-            status: "error",
-            message: "Failed to update unit",
-          };
-        }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        body: updateUnitSchema,
-        detail: {
-          tags: ["units"],
-          summary: "Update unit",
-          description: "Update unit",
-        },
-      }
-    )
-    .delete(
-      "/:id",
-      async ({ params, tenant, set }) => {
-        try {
-          const { id } = params;
-
-          const unit = await Unit.findById(id);
-
-          if (!unit) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Unit not found",
-            };
-          }
-
-          const property = await Property.findById(unit?.property);
-
-          if (!property) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Property not found",
-            };
-          }
-
-          if (
-            (property.landlord as mongoose.Types.ObjectId).toString() !==
-            tenant?.id?.toString()
-          ) {
-            set.status = 403;
-            return {
-              status: "error",
-              message: "You do not have permission to delete this unit",
-            };
-          }
-
-          if (unit?.status === UnitStatus.OCCUPIED) {
-            set.status = 400;
-            return {
-              status: "error",
-              message:
-                "Cannot delete an occupied unit. Please vacate the unit first.",
-            };
-          }
-
-          // Delete the unit
-          await Unit.findByIdAndDelete(id);
-
-          // Increment unit operations counter
-          unitOperationsCounter.inc({ operation: "delete" });
-
-          // Clear cache
-          await clearCache(`property:${unit?.property}:units`);
-          await clearCache(`unit:${id}`);
-
-          // Trigger webhooks
-          // await triggerWebhooks(user.memberId as string, "unit.deleted", unit);
-
-          return {
-            status: "success",
-            message: "Unit deleted successfully",
-          };
-        } catch (error) {
-          set.status = 500;
-          return {
-            status: "error",
-            message: "Failed to delete unit",
-          };
-        }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        detail: {
-          tags: ["units"],
-          summary: "Delete unit",
-          description: "Delete unit",
-        },
-      }
-    )
-    .post(
-      "/:id/tenant",
-      async ({ params, body, tenant, set }) => {
-        try {
-          const { id } = params;
-          const { tenantId, leaseStartDate, leaseEndDate, depositPaid, notes } =
-            body;
-
-          const unit = await Unit.findById(id);
-
-          if (!unit) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Unit not found",
-            };
-          }
-
-          const property = await Property.findById(unit?.property);
-
-          if (!property) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Property not found",
-            };
-          }
-
-          if (
-            (property.landlord as mongoose.Types.ObjectId).toString() !==
-            tenant?.id?.toString()
-          ) {
-            set.status = 403;
-            return {
-              status: "error",
-              message:
-                "You do not have permission to assign tenants to this unit",
-            };
-          }
-
-          if (unit?.status === UnitStatus.OCCUPIED && unit?.currentTenant) {
-            set.status = 400;
-            return {
-              status: "error",
-              message: "This unit is already occupied",
-            };
-          }
-
-          const tenantObj = await Tenant.findById(tenantId);
-
-          if (!tenantObj) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Tenant not found",
-            };
-          }
-
-          // Update the unit with tenant information
-          const updatedUnit = await Unit.findByIdAndUpdate(
-            id,
-            {
-              currentTenant: tenantId,
-              status: UnitStatus.OCCUPIED,
-              leaseStartDate: new Date(leaseStartDate),
-              leaseEndDate: new Date(leaseEndDate),
-              notes: notes || unit?.notes,
+          },
+          {
+            body: createUnitSchema,
+            detail: {
+              tags: ["units"],
+              summary: "Create unit",
+              description: "Create unit",
             },
-            {
-              new: true,
-              runValidators: true,
+          }
+        )
+        .patch(
+          "/:id",
+          async ({ params, body, user, set }) => {
+            try {
+              const { id } = params;
+              const updateData = body;
+
+              const unit = await Unit.findById(id);
+
+              if (!unit) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Unit not found",
+                };
+              }
+
+              const property = await Property.findById(unit?.property);
+
+              if (!property) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Property not found",
+                };
+              }
+
+              const landlord = await landlordService.getLandlordBy({
+                userId: user.id,
+              });
+
+              if (property.landlord.toString() !== landlord?.id) {
+                set.status = 403;
+                return {
+                  status: "error",
+                  message: "You do not have permission to update this unit",
+                };
+              }
+
+              if (
+                updateData?.unitNumber &&
+                updateData.unitNumber !== unit?.unitNumber
+              ) {
+                const existingUnit = await Unit.findOne({
+                  property: unit?.property,
+                  unitNumber: updateData.unitNumber,
+                  _id: { $ne: id },
+                });
+
+                if (existingUnit) {
+                  set.status = 400;
+                  return {
+                    status: "error",
+                    message:
+                      "A unit with this number already exists in this property",
+                  };
+                }
+              }
+
+              // Update the unit
+              const updatedUnit = await Unit.findByIdAndUpdate(id, updateData, {
+                new: true,
+                runValidators: true,
+              })
+                .populate("property", "title location media")
+                .populate(
+                  "currentTenant",
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone"
+                );
+
+              if (!updatedUnit) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Unit not found",
+                };
+              }
+
+              // Increment unit operations counter
+              unitOperationsCounter.inc({ operation: "update" });
+
+              // Clear cache
+              await clearCache(`property:${unit?.property}:units`);
+              await clearCache(`unit:${id}`);
+
+              // Trigger webhooks
+              // await triggerWebhooks(user.memberId as string, "unit.updated", updatedUnit);
+
+              return {
+                status: "success",
+                data: updatedUnit,
+                message: "Unit updated successfully",
+              };
+            } catch (error) {
+              set.status = 500;
+              return {
+                status: "error",
+                message: "Failed to update unit",
+              };
             }
-          )
-            .populate("property", "title location address")
-            .populate("currentTenant", "firstName lastName email phone");
-
-          if (!updatedUnit) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Unit not found",
-            };
-          }
-
-          // Increment unit operations counter
-          unitOperationsCounter.inc({ operation: "assign_tenant" });
-
-          // Clear cache
-          await clearCache(`property:${unit?.property}:units`);
-          await clearCache(`unit:${id}`);
-
-          // Trigger webhooks
-          // await triggerWebhooks(user.memberId as string, "unit.tenant_assigned", updatedUnit);
-
-          // Notify tenant
-          // notifyUser(tenantId, {
-          // 	title: "Unit Assignment",
-          // 	message: `You have been assigned to Unit ${unit?.unitNumber} at ${(property as any).title}`,
-          // 	type: "unit",
-          // 	data: { unitId: unit?._id, propertyId: property?._id },
-          // });
-
-          // // Broadcast to property dashboard
-          // broadcast({
-          // 	type: "unit_updated",
-          // 	data: {
-          // 		unitId: unit?._id,
-          // 		status: UnitStatus.OCCUPIED,
-          // 	},
-          // });
-
-          return {
-            status: "success",
-            data: updatedUnit,
-            message: "Tenant assigned successfully",
-          };
-        } catch (error) {
-          set.status = 500;
-          return {
-            status: "error",
-            message: "Failed to assign tenant",
-          };
-        }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        body: assignTenantSchema,
-        detail: {
-          tags: ["units"],
-          summary: "Assign tenant",
-          description: "Assign tenant",
-        },
-      }
-    )
-    .delete(
-      "/:id/tenant",
-      async ({ params, tenant, set }) => {
-        try {
-          const { id } = params;
-
-          const unit = await Unit.findById(id);
-
-          if (!unit) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Unit not found",
-            };
-          }
-
-          // Get the property to check ownership
-          const property = await Property.findById(unit?.property);
-
-          if (!property) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Property not found",
-            };
-          }
-
-          if (
-            (property.landlord as mongoose.Types.ObjectId).toString() !==
-            tenant?.id?.toString()
-          ) {
-            set.status = 403;
-            return {
-              status: "error",
-              message:
-                "You do not have permission to remove tenants from this unit",
-            };
-          }
-
-          // Check if the unit has a tenant
-          if (unit?.status !== UnitStatus.OCCUPIED || !unit?.currentTenant) {
-            set.status = 400;
-            return {
-              status: "error",
-              message: "This unit does not have a tenant assigned",
-            };
-          }
-
-          // Store tenant ID for notification
-          const tenantId = unit?.currentTenant;
-
-          // Remove tenant from the unit
-          const updatedUnit = await Unit.findByIdAndUpdate(
-            id,
-            {
-              currentTenant: null,
-              status: UnitStatus.VACANT,
-              leaseStartDate: null,
-              leaseEndDate: null,
+          },
+          {
+            params: t.Object({
+              id: t.String(),
+            }),
+            body: updateUnitSchema,
+            detail: {
+              tags: ["units"],
+              summary: "Update unit",
+              description: "Update unit",
             },
-            {
-              new: true,
-              runValidators: true,
+          }
+        )
+        .delete(
+          "/:id",
+          async ({ params, user, set }) => {
+            try {
+              const { id } = params;
+
+              const unit = await Unit.findById(id);
+
+              if (!unit) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Unit not found",
+                };
+              }
+
+              const property = await Property.findById(unit?.property);
+
+              if (!property) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Property not found",
+                };
+              }
+
+              const landlord = await landlordService.getLandlordBy({
+                userId: user.id,
+              });
+
+              if (property.landlord.toString() !== landlord?.id) {
+                set.status = 403;
+                return {
+                  status: "error",
+                  message: "You do not have permission to delete this unit",
+                };
+              }
+
+              if (unit?.status === UnitStatus.OCCUPIED) {
+                set.status = 400;
+                return {
+                  status: "error",
+                  message:
+                    "Cannot delete an occupied unit. Please vacate the unit first.",
+                };
+              }
+
+              // Delete the unit
+              await Unit.findByIdAndDelete(id);
+
+              // Increment unit operations counter
+              unitOperationsCounter.inc({ operation: "delete" });
+
+              // Clear cache
+              await clearCache(`property:${unit?.property}:units`);
+              await clearCache(`unit:${id}`);
+
+              // Trigger webhooks
+              // await triggerWebhooks(user.memberId as string, "unit.deleted", unit);
+
+              return {
+                status: "success",
+                message: "Unit deleted successfully",
+              };
+            } catch (error) {
+              set.status = 500;
+              return {
+                status: "error",
+                message: "Failed to delete unit",
+              };
             }
-          )
-            .populate("property", "title location address")
-            .populate("currentTenant", "firstName lastName email phone");
-
-          if (!updatedUnit) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Unit not found",
-            };
-          }
-
-          // Increment unit operations counter
-          unitOperationsCounter.inc({ operation: "remove_tenant" });
-
-          // Clear cache
-          await clearCache(`property:${unit?.property}:units`);
-          await clearCache(`unit:${id}`);
-
-          // Trigger webhooks
-          // await triggerWebhooks(user.memberId as string, "unit.tenant_removed", updatedUnit);
-
-          // Notify tenant
-          // notifyUser(tenantId?.toString() || "", {
-          // 	title: "Unit Vacated",
-          // 	message: `You have been removed from Unit ${unit?.unitNumber} at ${(property as any).title}`,
-          // 	type: "unit",
-          // 	data: { unitId: unit?._id, propertyId: property?._id },
-          // });
-
-          // // Broadcast to property dashboard
-          // broadcast({
-          // 	type: "unit_updated",
-          // 	data: {
-          // 		unitId: unit?._id,
-          // 		status: UnitStatus.VACANT,
-          // 	},
-          // });
-
-          return {
-            status: "success",
-            data: updatedUnit,
-            message: "Tenant removed successfully",
-          };
-        } catch (error) {
-          set.status = 500;
-          return {
-            status: "error",
-            message: "Failed to remove tenant",
-          };
-        }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        detail: {
-          tags: ["units"],
-          summary: "Remove tenant",
-          description: "Remove tenant",
-        },
-      }
-    )
-    .patch(
-      "/:id/status",
-      async ({ params, body, tenant, set }) => {
-        try {
-          const { id } = params;
-          const { status, notes } = body;
-
-          const unit = await Unit.findById(id);
-
-          if (!unit) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Unit not found",
-            };
-          }
-
-          const property = await Property.findById(unit?.property);
-
-          if (!property) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Property not found",
-            };
-          }
-
-          if (
-            (property.landlord as mongoose.Types.ObjectId).toString() !==
-            tenant?.id?.toString()
-          ) {
-            set.status = 403;
-            return {
-              status: "error",
-              message:
-                "You do not have permission to update this unit's status",
-            };
-          }
-
-          if (status === UnitStatus.OCCUPIED && !unit?.currentTenant) {
-            set.status = 400;
-            return {
-              status: "error",
-              message:
-                "Cannot set status to OCCUPIED without assigning a tenant first",
-            };
-          }
-
-          if (status === UnitStatus.VACANT && unit?.currentTenant) {
-            set.status = 400;
-            return {
-              status: "error",
-              message:
-                "Cannot set status to VACANT while a tenant is assigned. Remove the tenant first.",
-            };
-          }
-
-          // Update the unit status
-          const updatedUnit = await Unit.findByIdAndUpdate(
-            id,
-            {
-              status,
-              notes: notes || unit?.notes,
+          },
+          {
+            params: t.Object({
+              id: t.String(),
+            }),
+            detail: {
+              tags: ["units"],
+              summary: "Delete unit",
+              description: "Delete unit",
             },
-            {
-              new: true,
-              runValidators: true,
+          }
+        )
+        .post(
+          "/:id/tenant",
+          async ({ params, body, user, set }) => {
+            try {
+              const { id } = params;
+              const {
+                tenantId,
+                leaseStartDate,
+                leaseEndDate,
+                depositPaid,
+                notes,
+              } = body;
+
+              const unit = await Unit.findById(id);
+
+              if (!unit) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Unit not found",
+                };
+              }
+
+              const property = await Property.findById(unit?.property);
+
+              if (!property) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Property not found",
+                };
+              }
+
+              const landlord = await landlordService.getLandlordBy({
+                userId: user.id,
+              });
+
+              if (property.landlord.toString() !== landlord?.id) {
+                set.status = 403;
+                return {
+                  status: "error",
+                  message:
+                    "You do not have permission to assign tenants to this unit",
+                };
+              }
+
+              if (unit?.status === UnitStatus.OCCUPIED && unit?.currentTenant) {
+                set.status = 400;
+                return {
+                  status: "error",
+                  message: "This unit is already occupied",
+                };
+              }
+
+              const tenantObj = await Tenant.findById(tenantId);
+
+              if (!tenantObj) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Tenant not found",
+                };
+              }
+
+              // Update the unit with tenant information
+              const updatedUnit = await Unit.findByIdAndUpdate(
+                id,
+                {
+                  currentTenant: tenantId,
+                  status: UnitStatus.OCCUPIED,
+                  leaseStartDate: new Date(leaseStartDate),
+                  leaseEndDate: new Date(leaseEndDate),
+                  notes: notes || unit?.notes,
+                },
+                {
+                  new: true,
+                  runValidators: true,
+                }
+              )
+                .populate("property", "title location media")
+                .populate(
+                  "currentTenant",
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone"
+                );
+
+              if (!updatedUnit) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Unit not found",
+                };
+              }
+
+              // Increment unit operations counter
+              unitOperationsCounter.inc({ operation: "assign_tenant" });
+
+              // Clear cache
+              await clearCache(`property:${unit?.property}:units`);
+              await clearCache(`unit:${id}`);
+
+              // Trigger webhooks
+              // await triggerWebhooks(user.memberId as string, "unit.tenant_assigned", updatedUnit);
+
+              // Notify tenant
+              // notifyUser(tenantId, {
+              // 	title: "Unit Assignment",
+              // 	message: `You have been assigned to Unit ${unit?.unitNumber} at ${(property as any).title}`,
+              // 	type: "unit",
+              // 	data: { unitId: unit?._id, propertyId: property?._id },
+              // });
+
+              // // Broadcast to property dashboard
+              // broadcast({
+              // 	type: "unit_updated",
+              // 	data: {
+              // 		unitId: unit?._id,
+              // 		status: UnitStatus.OCCUPIED,
+              // 	},
+              // });
+
+              return {
+                status: "success",
+                data: updatedUnit,
+                message: "Tenant assigned successfully",
+              };
+            } catch (error) {
+              set.status = 500;
+              return {
+                status: "error",
+                message: "Failed to assign tenant",
+              };
             }
-          )
-            .populate("property", "title location address")
-            .populate("currentTenant", "firstName lastName email phone");
-
-          if (!updatedUnit) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Unit not found",
-            };
+          },
+          {
+            params: t.Object({
+              id: t.String(),
+            }),
+            body: assignTenantSchema,
+            detail: {
+              tags: ["units"],
+              summary: "Assign tenant",
+              description: "Assign tenant",
+            },
           }
+        )
+        .delete(
+          "/:id/tenant",
+          async ({ params, user, set }) => {
+            try {
+              const { id } = params;
 
-          // Increment unit operations counter
-          unitOperationsCounter.inc({ operation: "update_status" });
+              const unit = await Unit.findById(id);
 
-          // Clear cache
-          await clearCache(`property:${unit?.property}:units`);
-          await clearCache(`unit:${id}`);
+              if (!unit) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Unit not found",
+                };
+              }
 
-          // Trigger webhooks
-          // await triggerWebhooks(user.memberId as string, "unit.status_updated", updatedUnit);
+              // Get the property to check ownership
+              const property = await Property.findById(unit?.property);
 
-          // Broadcast to property dashboard
-          // broadcast({
-          // 	type: "unit_updated",
-          // 	data: {
-          // 		unitId: unit?._id,
-          // 		status,
-          // 	},
-          // });
+              if (!property) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Property not found",
+                };
+              }
 
-          return {
-            status: "success",
-            data: updatedUnit,
-            message: "Unit status updated successfully",
-          };
-        } catch (error) {
-          set.status = 500;
-          return {
-            status: "error",
-            message: "Failed to update unit status",
-          };
-        }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        body: updateUnitStatusSchema,
-        detail: {
-          tags: ["units"],
-          summary: "Update unit status",
-          description: "Update unit status",
-        },
-      }
-    )
-    .patch(
-      "/:id/meter-readings",
-      async ({ params, body, tenant, set }) => {
-        try {
-          const { id } = params;
-          const {
-            waterMeterReading,
-            electricityMeterReading,
-            readingDate,
-            notes,
-          } = body;
+              const landlord = await landlordService.getLandlordBy({
+                userId: user.id,
+              });
 
-          const unit = await Unit.findById(id);
+              if (property.landlord.toString() !== landlord?.id) {
+                set.status = 403;
+                return {
+                  status: "error",
+                  message:
+                    "You do not have permission to remove tenants from this unit",
+                };
+              }
 
-          if (!unit) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Unit not found",
-            };
+              // Check if the unit has a tenant
+              if (
+                unit?.status !== UnitStatus.OCCUPIED ||
+                !unit?.currentTenant
+              ) {
+                set.status = 400;
+                return {
+                  status: "error",
+                  message: "This unit does not have a tenant assigned",
+                };
+              }
+
+              // Store tenant ID for notification
+              const tenantId = unit?.currentTenant;
+
+              // Remove tenant from the unit
+              const updatedUnit = await Unit.findByIdAndUpdate(
+                id,
+                {
+                  currentTenant: null,
+                  status: UnitStatus.VACANT,
+                  leaseStartDate: null,
+                  leaseEndDate: null,
+                },
+                {
+                  new: true,
+                  runValidators: true,
+                }
+              )
+                .populate("property", "title location media")
+                .populate(
+                  "currentTenant",
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone"
+                );
+
+              if (!updatedUnit) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Unit not found",
+                };
+              }
+
+              // Increment unit operations counter
+              unitOperationsCounter.inc({ operation: "remove_tenant" });
+
+              // Clear cache
+              await clearCache(`property:${unit?.property}:units`);
+              await clearCache(`unit:${id}`);
+
+              // Trigger webhooks
+              // await triggerWebhooks(user.memberId as string, "unit.tenant_removed", updatedUnit);
+
+              // Notify tenant
+              // notifyUser(tenantId?.toString() || "", {
+              // 	title: "Unit Vacated",
+              // 	message: `You have been removed from Unit ${unit?.unitNumber} at ${(property as any).title}`,
+              // 	type: "unit",
+              // 	data: { unitId: unit?._id, propertyId: property?._id },
+              // });
+
+              // // Broadcast to property dashboard
+              // broadcast({
+              // 	type: "unit_updated",
+              // 	data: {
+              // 		unitId: unit?._id,
+              // 		status: UnitStatus.VACANT,
+              // 	},
+              // });
+
+              return {
+                status: "success",
+                data: updatedUnit,
+                message: "Tenant removed successfully",
+              };
+            } catch (error) {
+              set.status = 500;
+              return {
+                status: "error",
+                message: "Failed to remove tenant",
+              };
+            }
+          },
+          {
+            params: t.Object({
+              id: t.String(),
+            }),
+            detail: {
+              tags: ["units"],
+              summary: "Remove tenant",
+              description: "Remove tenant",
+            },
           }
+        )
+        .patch(
+          "/:id/status",
+          async ({ params, body, user, set }) => {
+            try {
+              const { id } = params;
+              const { status, notes } = body;
 
-          const property = await Property.findById(unit?.property);
+              const unit = await Unit.findById(id);
 
-          if (!property) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Property not found",
-            };
+              if (!unit) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Unit not found",
+                };
+              }
+
+              const property = await Property.findById(unit?.property);
+
+              if (!property) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Property not found",
+                };
+              }
+
+              const landlord = await landlordService.getLandlordBy({
+                userId: user.id,
+              });
+
+              if (property.landlord.toString() !== landlord?.id) {
+                set.status = 403;
+                return {
+                  status: "error",
+                  message:
+                    "You do not have permission to update this unit's status",
+                };
+              }
+
+              if (status === UnitStatus.OCCUPIED && !unit?.currentTenant) {
+                set.status = 400;
+                return {
+                  status: "error",
+                  message:
+                    "Cannot set status to OCCUPIED without assigning a tenant first",
+                };
+              }
+
+              if (status === UnitStatus.VACANT && unit?.currentTenant) {
+                set.status = 400;
+                return {
+                  status: "error",
+                  message:
+                    "Cannot set status to VACANT while a tenant is assigned. Remove the tenant first.",
+                };
+              }
+
+              // Update the unit status
+              const updatedUnit = await Unit.findByIdAndUpdate(
+                id,
+                {
+                  status,
+                  notes: notes || unit?.notes,
+                },
+                {
+                  new: true,
+                  runValidators: true,
+                }
+              )
+                .populate("property", "title location media")
+                .populate(
+                  "currentTenant",
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone"
+                );
+
+              if (!updatedUnit) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Unit not found",
+                };
+              }
+
+              // Increment unit operations counter
+              unitOperationsCounter.inc({ operation: "update_status" });
+
+              // Clear cache
+              await clearCache(`property:${unit?.property}:units`);
+              await clearCache(`unit:${id}`);
+
+              // Trigger webhooks
+              // await triggerWebhooks(user.memberId as string, "unit.status_updated", updatedUnit);
+
+              // Broadcast to property dashboard
+              // broadcast({
+              // 	type: "unit_updated",
+              // 	data: {
+              // 		unitId: unit?._id,
+              // 		status,
+              // 	},
+              // });
+
+              return {
+                status: "success",
+                data: updatedUnit,
+                message: "Unit status updated successfully",
+              };
+            } catch (error) {
+              set.status = 500;
+              return {
+                status: "error",
+                message: "Failed to update unit status",
+              };
+            }
+          },
+          {
+            params: t.Object({
+              id: t.String(),
+            }),
+            body: updateUnitStatusSchema,
+            detail: {
+              tags: ["units"],
+              summary: "Update unit status",
+              description: "Update unit status",
+            },
           }
+        )
+        .patch(
+          "/:id/meter-readings",
+          async ({ params, body, user, set }) => {
+            try {
+              const { id } = params;
+              const {
+                waterMeterReading,
+                electricityMeterReading,
+                readingDate,
+                notes,
+              } = body;
 
-          if (
-            (property.landlord as mongoose.Types.ObjectId).toString() !==
-            tenant?.id?.toString()
-          ) {
-            set.status = 403;
-            return {
-              status: "error",
-              message:
-                "You do not have permission to update meter readings for this unit",
-            };
+              const unit = await Unit.findById(id);
+
+              if (!unit) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Unit not found",
+                };
+              }
+
+              const property = await Property.findById(unit?.property);
+
+              if (!property) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Property not found",
+                };
+              }
+
+              const landlord = await landlordService.getLandlordBy({
+                userId: user.id,
+              });
+
+              if (property.landlord.toString() !== landlord?.id) {
+                set.status = 403;
+                return {
+                  status: "error",
+                  message:
+                    "You do not have permission to update meter readings for this unit",
+                };
+              }
+
+              const updateData: Record<string, any> = {
+                lastMeterReadingDate: new Date(readingDate),
+              };
+
+              if (waterMeterReading !== undefined) {
+                updateData.waterMeterReading = waterMeterReading;
+              }
+
+              if (electricityMeterReading !== undefined) {
+                updateData.electricityMeterReading = electricityMeterReading;
+              }
+
+              if (notes) {
+                updateData.notes = notes;
+              }
+
+              const updatedUnit = await Unit.findByIdAndUpdate(id, updateData, {
+                new: true,
+                runValidators: true,
+              })
+                .populate("property", "title location media")
+                .populate(
+                  "currentTenant",
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone"
+                )
+                .lean();
+
+              if (!updatedUnit) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Unit not found",
+                };
+              }
+
+              // Increment unit operations counter
+              unitOperationsCounter.inc({ operation: "update_meter_readings" });
+
+              // Clear cache
+              await clearCache(`property:${unit?.property}:units`);
+              await clearCache(`unit:${id}`);
+
+              // Trigger webhooks
+              // await triggerWebhooks(
+              // 	user.memberId as string,
+              // 	"unit.meter_readings_updated",
+              // 	updatedUnit
+              // );
+
+              // Notify tenant if unit is occupied
+              // if (updatedUnit?.currentTenant) {
+              // 	notifyUser(updatedUnit.currentTenant.toString(), {
+              // 		title: "Meter Readings Updated",
+              // 		message: `Meter readings for your unit ${updatedUnit.unitNumber} at ${property?.title} have been updated`,
+              // 		type: "unit",
+              // 		data: { unitId: updatedUnit._id, propertyId: property?._id },
+              // 	});
+              // }
+
+              return {
+                status: "success",
+                data: updatedUnit,
+                message: "Unit meter readings updated successfully",
+              };
+            } catch (error) {
+              set.status = 500;
+              return {
+                status: "error",
+                message: "Failed to update unit meter readings",
+              };
+            }
+          },
+          {
+            params: t.Object({
+              id: t.String(),
+            }),
+            body: updateMeterReadingsSchema,
+            detail: {
+              tags: ["units"],
+              summary: "Update unit meter readings",
+              description: "Update unit meter readings",
+            },
           }
-
-          const updateData: Record<string, any> = {
-            lastMeterReadingDate: new Date(readingDate),
-          };
-
-          if (waterMeterReading !== undefined) {
-            updateData.waterMeterReading = waterMeterReading;
-          }
-
-          if (electricityMeterReading !== undefined) {
-            updateData.electricityMeterReading = electricityMeterReading;
-          }
-
-          if (notes) {
-            updateData.notes = notes;
-          }
-
-          const updatedUnit = await Unit.findByIdAndUpdate(id, updateData, {
-            new: true,
-            runValidators: true,
-          })
-            .populate("property", "title location address")
-            .populate("currentTenant", "firstName lastName email phone")
-            .lean();
-
-          if (!updatedUnit) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Unit not found",
-            };
-          }
-
-          // Increment unit operations counter
-          unitOperationsCounter.inc({ operation: "update_meter_readings" });
-
-          // Clear cache
-          await clearCache(`property:${unit?.property}:units`);
-          await clearCache(`unit:${id}`);
-
-          // Trigger webhooks
-          // await triggerWebhooks(
-          // 	user.memberId as string,
-          // 	"unit.meter_readings_updated",
-          // 	updatedUnit
-          // );
-
-          // Notify tenant if unit is occupied
-          // if (updatedUnit?.currentTenant) {
-          // 	notifyUser(updatedUnit.currentTenant.toString(), {
-          // 		title: "Meter Readings Updated",
-          // 		message: `Meter readings for your unit ${updatedUnit.unitNumber} at ${property?.title} have been updated`,
-          // 		type: "unit",
-          // 		data: { unitId: updatedUnit._id, propertyId: property?._id },
-          // 	});
-          // }
-
-          return {
-            status: "success",
-            data: updatedUnit,
-            message: "Unit meter readings updated successfully",
-          };
-        } catch (error) {
-          set.status = 500;
-          return {
-            status: "error",
-            message: "Failed to update unit meter readings",
-          };
-        }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        body: updateMeterReadingsSchema,
-        detail: {
-          tags: ["units"],
-          summary: "Update unit meter readings",
-          description: "Update unit meter readings",
-        },
-      }
+        )
     )
 );

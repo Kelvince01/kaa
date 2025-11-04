@@ -499,10 +499,10 @@ export const useFavouriteStore = create<FavouriteStore>()(
 
           return {
             ...(filters.searchTerm && { search: filters.searchTerm }),
-            ...(filters.propertyTypeFilter.length > 0 && {
+            ...(filters.propertyTypeFilter?.length > 0 && {
               propertyType: filters.propertyTypeFilter[0],
             }),
-            ...(filters.locationFilter.length > 0 && {
+            ...(filters.locationFilter?.length > 0 && {
               location: filters.locationFilter[0],
             }),
             ...(filters.priceRange?.min && {

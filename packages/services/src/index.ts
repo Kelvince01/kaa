@@ -9,7 +9,6 @@ export * from "./compliance.service";
 export * from "./contracts";
 export * from "./documents/legal-document.service";
 export * from "./documents/verification.service";
-export * as fileService from "./files/file.service";
 export * from "./files/file-v2.service";
 export * from "./financial.service";
 export * from "./location.service";

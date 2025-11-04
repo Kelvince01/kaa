@@ -12,6 +12,8 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { VirtualTour } from "@kaa/models";
 import {
+  FileAccessLevel,
+  FileCategory,
   type Hotspot,
   type IVirtualTour,
   type MediaUploadRequest,
@@ -23,12 +25,12 @@ import {
   TourStatus,
   TourType,
 } from "@kaa/models/types";
-import { deleteFile, redisClient, uploadFile } from "@kaa/utils";
+import { deleteFile, redisClient } from "@kaa/utils";
 import axios, { type AxiosInstance } from "axios";
-import mongoose, { Types } from "mongoose";
+import mongoose from "mongoose";
 import type { RedisClientType } from "redis";
 import sharp from "sharp";
-import { createFile } from "../files/file.service";
+import { filesV2Service } from "../files/file-v2.service";
 // Import service orchestrator
 import { VirtualTourServicesOrchestrator } from "./virtual-tour-services.orchestrator";
 import { KENYA_TOUR_CONSTANTS } from "./virtual-tours.constants";
@@ -749,55 +751,25 @@ export class VirtualToursService extends EventEmitter {
     try {
       const fileBuffer = await fs.readFile(filePath);
       const fileName = path.basename(filePath);
-      const mimeType = this.getMimeType(fileName);
 
-      // Use the existing storage utility
-      const fileInfo = await uploadFile(
-        {
-          originalname: fileName,
-          buffer: fileBuffer,
-          mimetype: mimeType,
-          size: fileBuffer.length,
-        },
-        {
-          fileName,
-          userId,
-          public: true,
-        }
+      const uploadOptions = {
+        ownerId: userId,
+        uploadedBy: userId,
+        category: FileCategory.VIRTUAL_TOUR,
+        accessLevel: FileAccessLevel.PUBLIC,
+      };
+
+      const file = await filesV2Service.uploadFile(
+        fileBuffer,
+        fileName,
+        uploadOptions
       );
 
-      // Create file record
-      await createFile({
-        url: fileInfo.url,
-        cdnUrl: fileInfo.cdnUrl,
-        path: fileInfo.path,
-        name: fileName,
-        mimeType,
-        size: fileInfo.size,
-        isPublic: true,
-        user: new Types.ObjectId(userId),
-      });
-
-      return fileInfo.cdnUrl || fileInfo.url;
+      return file.url;
     } catch (error) {
       console.error("Storage upload error:", error);
       throw new Error("Failed to upload to storage");
     }
-  }
-
-  private getMimeType(fileName: string): string {
-    const ext = path.extname(fileName).toLowerCase();
-    const mimeTypes: Record<string, string> = {
-      ".jpg": "image/jpeg",
-      ".jpeg": "image/jpeg",
-      ".png": "image/png",
-      ".webp": "image/webp",
-      ".mp4": "video/mp4",
-      ".webm": "video/webm",
-      ".gltf": "model/gltf+json",
-      ".glb": "application/octet-stream",
-    };
-    return mimeTypes[ext] || "application/octet-stream";
   }
 
   private async deleteMediaFile(url: string): Promise<void> {

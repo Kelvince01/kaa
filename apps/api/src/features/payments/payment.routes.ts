@@ -19,11 +19,11 @@ export const paymentRoutes = new Elysia({
   },
 }).group("/payments", (app) =>
   app
+    .use(walletController)
     .use(paymentController)
     .use(paymentMethodController)
     .use(mpesaController)
     .use(airtelMoneyController)
     .use(stripeController)
-    .use(walletController)
     .use(recurringPaymentsController)
 );

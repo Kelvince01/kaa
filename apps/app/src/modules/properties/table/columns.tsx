@@ -25,6 +25,7 @@ import {
   Ruler,
   XCircle,
 } from "lucide-react";
+import Link from "next/link";
 import type * as React from "react";
 import { toast } from "sonner";
 import { DataTableColumnHeader } from "@/components/ui/data-table/data-table-column-header";
@@ -247,6 +248,16 @@ export function getPropertiesTableColumns({
                 }}
               >
                 Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href={`/dashboard/properties/${property._id}/units`}>
+                  View Units
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href={`/dashboard/properties/${property._id}/tenants`}>
+                  View Tenants
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

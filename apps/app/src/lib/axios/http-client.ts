@@ -27,7 +27,7 @@ const sanitizer = new DataSanitizer({
   enableInputSanitization: httpClientConfig.security.enableSanitization,
   enableOutputSanitization: httpClientConfig.security.enableSanitization,
   allowedHtmlTags: [], // No HTML allowed by default
-  maxStringLength: 10_000,
+  maxStringLength: 10_000_000,
   maxObjectDepth: 10,
 });
 

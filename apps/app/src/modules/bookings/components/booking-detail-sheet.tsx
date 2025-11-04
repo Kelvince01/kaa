@@ -20,16 +20,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@kaa/ui/components/tabs";
-import {
-  Calendar,
-  Check,
-  Clock,
-  Home,
-  Mail,
-  MapPin,
-  MessageSquare,
-  X,
-} from "lucide-react";
+import { Calendar, Check, Clock, Home, Mail, MapPin, X } from "lucide-react";
 import Image from "next/image";
 import type * as React from "react";
 import { toast } from "sonner";
@@ -163,7 +154,7 @@ export function BookingDetailSheet({
                     Total Amount
                   </p>
                   <p className="font-semibold text-lg">
-                    £{booking.totalAmount.toFixed(2)}
+                    KES {booking.totalAmount.toFixed(2)}
                   </p>
                 </div>
               )}
@@ -206,7 +197,9 @@ export function BookingDetailSheet({
                       </div>
                       {booking.property.pricing && (
                         <p className="font-medium text-sm">
-                          £{booking.property.pricing.rentAmount} pcm
+                          {booking.property.pricing.currency}{" "}
+                          {booking.property.pricing.rent}{" "}
+                          {booking.property.pricing.paymentFrequency}
                         </p>
                       )}
                     </div>
@@ -229,29 +222,30 @@ export function BookingDetailSheet({
               {booking.tenant ? (
                 <div className="flex items-start gap-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
-                    {booking.tenant.avatar ? (
+                    {booking.tenant.personalInfo.avatar ? (
                       <Image
-                        alt={`${booking.tenant.firstName} ${booking.tenant.lastName}`}
+                        alt={`${booking.tenant.personalInfo.firstName} ${booking.tenant.personalInfo.lastName}`}
                         className="h-12 w-12 rounded-full"
                         height={48}
-                        src={booking.tenant.avatar}
+                        src={booking.tenant.personalInfo.avatar}
                         width={48}
                       />
                     ) : (
                       <span className="font-medium">
-                        {booking.tenant.firstName?.[0]}
-                        {booking.tenant.lastName?.[0]}
+                        {booking.tenant.personalInfo.firstName?.[0]}
+                        {booking.tenant.personalInfo.lastName?.[0]}
                       </span>
                     )}
                   </div>
                   <div className="flex-1 space-y-2">
                     <div>
                       <p className="font-semibold">
-                        {booking.tenant.firstName} {booking.tenant.lastName}
+                        {booking.tenant.personalInfo.firstName}{" "}
+                        {booking.tenant.personalInfo.lastName}
                       </p>
                       <div className="flex items-center gap-2 text-muted-foreground text-sm">
                         <Mail className="h-4 w-4" />
-                        <span>{booking.tenant.email}</span>
+                        <span>{booking.tenant.personalInfo.email}</span>
                       </div>
                     </div>
                   </div>
@@ -267,12 +261,14 @@ export function BookingDetailSheet({
           {/* Additional Details */}
           <Tabs className="w-full" defaultValue="details">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
-              <TabsTrigger value="messages">Messages</TabsTrigger>
+              <TabsTrigger value="notes">Notes</TabsTrigger>
+              <TabsTrigger value="additional-attendees">
+                Additional Attendees
+              </TabsTrigger>
+              <TabsTrigger value="reminders">Reminders</TabsTrigger>
             </TabsList>
 
-            <TabsContent className="space-y-4" value="details">
+            <TabsContent className="space-y-4" value="notes">
               {booking.notes && (
                 <Card>
                   <CardHeader>
@@ -313,38 +309,34 @@ export function BookingDetailSheet({
               )}
             </TabsContent>
 
-            <TabsContent className="space-y-4" value="timeline">
-              {booking.reminders && booking.reminders.length > 0 ? (
+            <TabsContent className="space-y-4" value="additional-attendees">
+              {booking.additionalAttendees &&
+              booking.additionalAttendees.length > 0 ? (
                 <div className="space-y-4">
-                  {booking.reminders.map((event) => (
-                    <div className="flex gap-4" key={event.sentAt}>
-                      {/* <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
-												{event.status === "completed" && (
-													<Check className="h-4 w-4 text-green-600" />
-												)}
-												{event.status === "error" && <X className="h-4 w-4 text-red-600" />}
-												{event.status === "in_progress" && (
-													<Clock className="h-4 w-4 text-blue-600" />
-												)}
-											</div>
-											<div className="flex-1">
-												<p className="font-medium">{event.title}</p>
-												{event.description && (
-													<p className="text-muted-foreground text-sm">{event.description}</p>
-												)}
-												<p className="text-muted-foreground text-xs">{formatDate(event.date)}</p>
-											</div> */}
+                  {booking.additionalAttendees.map((additionalAttendee) => (
+                    <div
+                      className="flex gap-4"
+                      key={`${additionalAttendee.name}-${additionalAttendee.relationship}`}
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">{additionalAttendee.name}</p>
+                        {additionalAttendee.relationship && (
+                          <p className="text-muted-foreground text-sm">
+                            {additionalAttendee.relationship}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="text-muted-foreground">
-                  No timeline events available
+                  No additional attendees available
                 </p>
               )}
             </TabsContent>
 
-            <TabsContent className="space-y-4" value="messages">
+            <TabsContent className="space-y-4" value="reminders">
               {booking.reminders && booking.reminders.length > 0 ? (
                 <div className="space-y-4">
                   {booking.reminders.map((reminder) => (
@@ -352,20 +344,15 @@ export function BookingDetailSheet({
                       <CardContent className="pt-4">
                         <div className="flex items-start gap-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
-                            <MessageSquare className="h-4 w-4" />
+                            <Clock className="h-4 w-4" />
                           </div>
                           <div className="flex-1">
-                            {/* <div className="flex items-center justify-between">
-															<p className="font-medium">
-																{typeof message.sender === "string"
-																	? message.sender
-																	: `${message.sender.firstName} ${message.sender.lastName}`}
-															</p>
-															<p className="text-muted-foreground text-xs">
-																{formatDate(message.createdAt)}
-															</p>
-														</div>
-														<p className="mt-1 text-sm">{message.content}</p> */}
+                            <div className="flex items-center justify-between">
+                              <p className="font-medium">{reminder.method}</p>
+                              <p className="text-muted-foreground text-xs">
+                                {formatDate(reminder.sentAt)}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
@@ -373,7 +360,7 @@ export function BookingDetailSheet({
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground">No messages available</p>
+                <p className="text-muted-foreground">No reminders available</p>
               )}
             </TabsContent>
           </Tabs>

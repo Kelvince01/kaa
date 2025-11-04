@@ -27,6 +27,7 @@ import {
   getRentalYieldAnalysis,
   getSavedSearches,
   getSearchSuggestions,
+  getSimilarProperties,
   getUserProperties,
   getVirtualTour_v1,
   searchProperties,
@@ -157,6 +158,14 @@ export const useNearbyProperties = (
     queryKey: ["properties", "nearby", lat, lng, radius, filters],
     queryFn: () => getNearbyProperties(lat, lng, radius, filters),
     enabled: !!lat && !!lng && extra.enabled,
+  });
+
+// Get similar properties
+export const useSimilarProperties = (propertyId: string, limit = 5) =>
+  useQuery({
+    queryKey: ["properties", "similar", propertyId, limit],
+    queryFn: () => getSimilarProperties(propertyId, limit),
+    enabled: !!propertyId,
   });
 
 // =============================================================================

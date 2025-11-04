@@ -42,13 +42,14 @@ import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import SignatureCanvas from "react-signature-canvas";
 import { toast } from "sonner";
-import { useSignContract } from "../../contract.queries";
 import {
   type ContractSigningFormData,
   contractSigningSchema,
 } from "../../contract.schema";
 import type { Contract } from "../../contract.type";
 
+// Move the hook import inline to the function to avoid accidental use in non-component context
+// (This alone does not resolve an invalid hook call, but helps ensure they're always called in a React component function)
 type SignatureModalProps = {
   contract: Contract | null;
   open: boolean;
@@ -62,6 +63,11 @@ export function SignatureModal({
   onClose,
   onSuccess,
 }: SignatureModalProps) {
+  // MOVE useSignContract HOOK HERE to avoid invalid hook call
+  // This ensures that the hook is only called when this component is rendered, not on external function or in improper place
+  const { useSignContract } = require("../../contract.queries");
+  const signContractMutation = useSignContract();
+
   const [signatureType, setSignatureType] = useState<
     "digital" | "electronic" | "wet"
   >("digital");
@@ -72,8 +78,6 @@ export function SignatureModal({
 
   const signaturePadRef = useRef<SignatureCanvas>(null);
   const witnessPadRef = useRef<SignatureCanvas>(null);
-
-  const signContractMutation = useSignContract();
 
   const form = useForm<ContractSigningFormData>({
     resolver: zodResolver(contractSigningSchema),

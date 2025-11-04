@@ -36,7 +36,7 @@ export interface ITenant extends Document {
   user: Types.ObjectId; // Reference to User model
   property: Types.ObjectId; // Reference to Property model
   unit: Types.ObjectId; // Reference to Unit model
-  contract: Types.ObjectId; // Reference to Lease model
+  contract?: Types.ObjectId; // Reference to Lease model
 
   // Enhanced tenant classification
   tenantType: TenantType;
@@ -236,7 +236,7 @@ export type CreateTenantDto = {
   user?: Types.ObjectId;
   property: Types.ObjectId;
   unit: Types.ObjectId;
-  contract: Types.ObjectId;
+  contract?: Types.ObjectId;
   tenantType: TenantType;
   priority?: TenantPriority;
   startDate: Date;

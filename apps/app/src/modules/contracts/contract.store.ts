@@ -36,7 +36,7 @@ type ContractFormState = {
  * Contract filters and search state
  */
 type ContractFiltersState = {
-  searchTerm: string;
+  searchTerm?: string;
   statusFilter: ContractStatus[];
   typeFilter: ContractType[];
   propertyFilter: string[];
@@ -459,14 +459,14 @@ export const useContractStore = create<ContractStore>()(
           const filters = get().filters;
           let count = 0;
 
-          if (filters.searchTerm.trim()) count++;
-          if (filters.statusFilter.length > 0) count++;
-          if (filters.typeFilter.length > 0) count++;
-          if (filters.propertyFilter.length > 0) count++;
-          if (filters.tenantFilter.length > 0) count++;
+          if (filters.searchTerm?.trim()) count++;
+          if (filters.statusFilter?.length > 0) count++;
+          if (filters.typeFilter?.length > 0) count++;
+          if (filters.propertyFilter?.length > 0) count++;
+          if (filters.tenantFilter?.length > 0) count++;
           if (filters.dateRange) count++;
           if (filters.rentRange?.min || filters.rentRange?.max) count++;
-          if (filters.tagsFilter.length > 0) count++;
+          if (filters.tagsFilter?.length > 0) count++;
           if (filters.showArchived) count++;
 
           return count;

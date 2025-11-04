@@ -52,8 +52,8 @@ export const searchTenants = async (
 };
 
 // Get tenant statistics
-export const getTenantStats = async (): Promise<any> => {
-  const response = await httpClient.api.get("/tenants/stats");
+export const getTenantStats = async (params: any = {}): Promise<any> => {
+  const response = await httpClient.api.get("/tenants/stats", { params });
   return response.data;
 };
 

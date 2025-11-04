@@ -17,8 +17,8 @@ export const useTenant = (id: string) =>
   });
 
 // Get tenant statistics
-export const useTenantStats = () =>
+export const useTenantStats = ({ property }: { property: string }) =>
   useQuery({
     queryKey: ["tenants", "stats"],
-    queryFn: tenantService.getTenantStats,
+    queryFn: () => tenantService.getTenantStats({ property }),
   });

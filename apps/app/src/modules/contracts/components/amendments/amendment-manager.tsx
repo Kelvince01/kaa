@@ -54,7 +54,7 @@ import {
   Trash2,
   XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -79,6 +79,7 @@ import {
 // Mock amendments data
 const mockAmendments: ContractAmendment[] = [
   {
+    _id: "amend-1",
     amendmentDate: "2025-01-20T10:30:00Z",
     amendmentReason: "Rent increase due to market conditions",
     changes: [
@@ -89,6 +90,7 @@ const mockAmendments: ContractAmendment[] = [
     status: "pending",
   },
   {
+    _id: "amend-2",
     amendmentDate: "2024-12-15T14:20:00Z",
     amendmentReason: "Update utility billing arrangement",
     changes: [
@@ -99,6 +101,7 @@ const mockAmendments: ContractAmendment[] = [
     status: "approved",
   },
   {
+    _id: "amend-3",
     amendmentDate: "2024-11-10T09:15:00Z",
     amendmentReason: "Pet policy update",
     changes: [{ field: "petsAllowed", oldValue: "false", newValue: "true" }],
@@ -136,6 +139,12 @@ export function AmendmentManager({
       changes: [],
     },
   });
+
+  useEffect(() => {
+    if (changes.length > 0) {
+      form.setValue("changes", changes);
+    }
+  }, [changes, form]);
 
   // Use contracts module hooks
   const { data: contractsData, isLoading } = useContracts({
@@ -241,7 +250,7 @@ export function AmendmentManager({
         amendmentDate: new Date().toISOString(),
         amendmentReason: amendmentData.amendmentReason,
         changes: amendmentData.changes,
-        amendedBy: "current-user", // Replace with actual user ID
+        amendedBy: user?.id,
         status: "pending",
       } as ContractAmendment;
 
@@ -255,14 +264,11 @@ export function AmendmentManager({
   };
 
   // Approve amendment
-  const approveAmendment = async (
-    _amendment: ContractAmendment,
-    index: number
-  ) => {
+  const approveAmendment = async (amendment: ContractAmendment) => {
     try {
       await approveAmendmentMutation.mutateAsync({
-        contractId: contract._id,
-        amendmentId: `amendment-${index}`, // Mock ID
+        // contractId: contract._id,
+        amendmentId: amendment._id, // Mock ID
       });
 
       toast.success("Amendment approved successfully!");
@@ -523,9 +529,7 @@ export function AmendmentManager({
                             <div className="flex gap-2 pt-2">
                               <Button
                                 disabled={approveAmendmentMutation.isPending}
-                                onClick={() =>
-                                  approveAmendment(amendment, index)
-                                }
+                                onClick={() => approveAmendment(amendment)}
                                 size="sm"
                               >
                                 <CheckCircle className="mr-2 h-4 w-4" />

@@ -11,6 +11,7 @@ export const useCreateApplication = () =>
     mutationFn: applicationService.createApplication,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
+      toast.success("Application created successfully");
     },
   });
 

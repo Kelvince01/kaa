@@ -52,7 +52,7 @@ export const createTenantSchema = t.Object({
   user: t.Optional(t.String()),
   property: t.String({ minLength: 1 }),
   unit: t.String({ minLength: 1 }),
-  contract: t.String({ minLength: 1 }),
+  contract: t.Optional(t.String()), // { minLength: 1 }
   tenantType: t.Enum(TenantType),
   personalInfo: personalInfoSchema,
   startDate: t.String({ format: "date" }),

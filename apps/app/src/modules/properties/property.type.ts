@@ -252,6 +252,7 @@ export interface RecentlyViewedProperty extends Property {
 // App-specific search params, extending models
 export type PropertySearchParams = PropertySearchFilters & {
   query?: string;
+  landlordId?: string;
   location?: string;
   lat?: number;
   lng?: number;

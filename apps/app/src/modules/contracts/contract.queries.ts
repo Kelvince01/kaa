@@ -32,8 +32,8 @@ export const contractKeys = {
   byUnit: (unitId: string) => [...contractKeys.all, "by-unit", unitId] as const,
   auditLogs: (contractId: string) =>
     [...contractKeys.all, "audit-logs", contractId] as const,
-  amendmentHistory: (contractId: string) =>
-    [...contractKeys.all, "amendment-history", contractId] as const,
+  amendmentHistory: (amendmentId: string) =>
+    [...contractKeys.all, "amendment-history", amendmentId] as const,
   pendingAmendments: () => [...contractKeys.all, "pending-amendments"] as const,
 };
 
@@ -377,19 +377,19 @@ export const useCreateContractAmendment = () =>
 export const useApproveContractAmendment = () => {
   return useMutation({
     mutationFn: ({
-      contractId,
+      // contractId,
       amendmentId,
     }: {
-      contractId: string;
+      // contractId: string;
       amendmentId: string;
-    }) => contractService.approveContractAmendment(contractId, amendmentId),
+    }) => contractService.approveContractAmendment(amendmentId),
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({
-        queryKey: contractKeys.detail(variables.contractId),
+        queryKey: contractKeys.detail(_.contract?._id ?? ""),
       });
       // Invalidate amendment history and pending amendments
       await queryClient.invalidateQueries({
-        queryKey: contractKeys.amendmentHistory(variables.contractId),
+        queryKey: contractKeys.amendmentHistory(variables.amendmentId),
       });
       await queryClient.invalidateQueries({
         queryKey: contractKeys.pendingAmendments(),

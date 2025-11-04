@@ -34,7 +34,7 @@ const unitFormSchema = z.object({
     message: "Unit number is required.",
   }),
   description: z.string().optional(),
-  unitType: z.enum(UnitType),
+  type: z.enum(UnitType),
   bedrooms: z.number().min(0, "Bedrooms must be 0 or more"),
   bathrooms: z.number().min(1, "Must have at least 1 bathroom"),
   rent: z.number().min(0, "Rent must be positive"),
@@ -78,7 +78,7 @@ export function UnitForm({
     resolver: zodResolver(unitFormSchema),
     defaultValues: {
       unitNumber: initialData ? initialData.unitNumber : "",
-      unitType: initialData ? initialData.unitType : UnitType.STUDIO,
+      type: initialData ? initialData.type : UnitType.STUDIO,
       rent: initialData ? initialData.rent : 0,
       depositAmount: initialData ? initialData.depositAmount : 0,
       size: initialData ? initialData.size : 0,
@@ -156,7 +156,7 @@ export function UnitForm({
 
             <FormField
               control={form.control}
-              name="unitType"
+              name="type"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t("unit_type")}</FormLabel>
@@ -205,8 +205,8 @@ export function UnitForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="available">
-                        {t("status.available")}
+                      <SelectItem value="vacant">
+                        {t("status.vacant")}
                       </SelectItem>
                       <SelectItem value="occupied">
                         {t("status.occupied")}
@@ -216,6 +216,9 @@ export function UnitForm({
                       </SelectItem>
                       <SelectItem value="reserved">
                         {t("status.reserved")}
+                      </SelectItem>
+                      <SelectItem value="unavailable">
+                        {t("status.unavailable")}
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -275,7 +278,13 @@ export function UnitForm({
                 <FormItem>
                   <FormLabel>{t("bedrooms")}</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) =>
+                        field.onChange(Number.parseInt(e.target.value, 10))
+                      }
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -289,7 +298,13 @@ export function UnitForm({
                 <FormItem>
                   <FormLabel>{t("bathrooms")}</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) =>
+                        field.onChange(Number.parseInt(e.target.value, 10))
+                      }
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -303,7 +318,13 @@ export function UnitForm({
                 <FormItem>
                   <FormLabel>{t("floor")}</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) =>
+                        field.onChange(Number.parseInt(e.target.value, 10))
+                      }
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -363,7 +384,13 @@ export function UnitForm({
                 <FormItem>
                   <FormLabel>{t("rent_due_day")}</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) =>
+                        field.onChange(Number.parseInt(e.target.value, 10))
+                      }
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

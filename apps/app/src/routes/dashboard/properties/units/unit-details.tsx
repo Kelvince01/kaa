@@ -155,7 +155,7 @@ export function UnitDetails({
           <CardContent>
             <div className="font-bold text-2xl">{unit.bedrooms}</div>
             <p className="text-muted-foreground text-xs">
-              {getUnitTypeDisplayName(unit.unitType)} • {unit.bathrooms} bath
+              {getUnitTypeDisplayName(unit.type)} • {unit.bathrooms} bath
             </p>
           </CardContent>
         </Card>

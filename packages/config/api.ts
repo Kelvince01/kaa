@@ -97,6 +97,30 @@ type Config = {
       sizes: number[];
     };
   };
+  storage: {
+    provider: "cloudinary" | "google_storage" | "vercel_blob" | "aws_s3";
+  };
+  cloudinary: {
+    enabled: boolean;
+    cloudName: string;
+    apiKey: string;
+    apiSecret: string;
+    folder: string;
+  };
+  vercel: {
+    blob: {
+      enabled: boolean;
+      token: string;
+      prefix: string;
+    };
+  };
+  s3: {
+    enabled: boolean;
+    bucket: string;
+    region: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+  };
   openai: {
     apiKey: string;
   };
@@ -257,6 +281,33 @@ const config: Config = {
         .split(",")
         .map(Number),
     },
+  },
+  storage: {
+    provider: env
+      .get("STORAGE_PROVIDER")
+      .default("cloudinary")
+      .asEnum(["cloudinary", "google_storage", "vercel_blob", "aws_s3"]),
+  },
+  vercel: {
+    blob: {
+      enabled: env.get("VERCEL_BLOB_ENABLED").default("false").asBoolStrict(),
+      token: env.get("VERCEL_BLOB_TOKEN").default("").asString(),
+      prefix: env.get("VERCEL_BLOB_PREFIX").default("").asString(),
+    },
+  },
+  s3: {
+    enabled: env.get("S3_ENABLED").default("false").asBoolStrict(),
+    bucket: env.get("S3_BUCKET").default("").asString(),
+    region: env.get("S3_REGION").default("").asString(),
+    accessKeyId: env.get("S3_ACCESS_KEY_ID").default("").asString(),
+    secretAccessKey: env.get("S3_SECRET_ACCESS_KEY").default("").asString(),
+  },
+  cloudinary: {
+    enabled: env.get("CLOUDINARY_ENABLED").default("false").asBoolStrict(),
+    cloudName: env.get("CLOUDINARY_CLOUD_NAME").default("").asString(),
+    apiKey: env.get("CLOUDINARY_API_KEY").default("").asString(),
+    apiSecret: env.get("CLOUDINARY_API_SECRET").default("").asString(),
+    folder: env.get("CLOUDINARY_FOLDER").default("").asString(),
   },
   openai: {
     apiKey: env.get("OPENAI_API_KEY").default("").asString(),

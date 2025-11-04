@@ -19,69 +19,33 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSimilarProperties } from "@/modules/properties/property.queries";
 import type { Property } from "@/modules/properties/property.type";
 import { formatCurrency } from "@/shared/utils/format.util";
 
 type SimilarPropertiesProps = {
-  properties: Property[];
   currentPropertyId: string;
-  currentProperty?: Property;
   className?: string;
 };
 
 export function SimilarProperties({
-  properties,
   currentPropertyId,
-  currentProperty,
   className,
 }: SimilarPropertiesProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [similarProperties, setSimilarProperties] =
-    useState<Property[]>(properties);
-  const [error, setError] = useState<string | null>(null);
-  // const {} = useSimilarProperties();
-
-  // Generate mock similar properties if the provided array is empty
-  useEffect(() => {
-    if (properties.length === 0 && currentProperty) {
-      setIsLoading(true);
-      // Simulate API call delay
-      const timer = setTimeout(() => {
-        const mockProperties = generateMockSimilarProperties(
-          currentProperty,
-          currentPropertyId
-        );
-        setSimilarProperties(mockProperties);
-        setIsLoading(false);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-    setSimilarProperties(
-      properties
-        .filter((property) => property._id !== currentPropertyId)
-        .slice(0, 6)
-    );
-  }, [properties, currentProperty, currentPropertyId]);
+  const {
+    data: similarProperties,
+    isLoading,
+    error,
+    refetch,
+  } = useSimilarProperties(currentPropertyId, 6);
 
   const handleRefresh = () => {
-    if (currentProperty) {
-      setIsLoading(true);
-      setError(null);
-      const timer = setTimeout(() => {
-        const mockProperties = generateMockSimilarProperties(
-          currentProperty,
-          currentPropertyId
-        );
-        setSimilarProperties(mockProperties);
-        setIsLoading(false);
-      }, 1000);
-    }
+    refetch();
   };
 
   // Filter out the current property and limit to 6 similar properties
   const displayProperties = similarProperties
-    .filter((property) => property._id !== currentPropertyId)
+    ?.filter((property) => property._id !== currentPropertyId)
     .slice(0, 6);
 
   if (isLoading) {
@@ -114,7 +78,7 @@ export function SimilarProperties({
     );
   }
 
-  if (displayProperties.length === 0) {
+  if (displayProperties?.length === 0) {
     return (
       <div className={cn("space-y-4", className)}>
         <div className="mb-6 flex items-center justify-between">
@@ -151,7 +115,7 @@ export function SimilarProperties({
         <div className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
           <h2 className="font-bold text-xl">Similar Properties</h2>
-          <Badge variant="secondary">{similarProperties.length}</Badge>
+          <Badge variant="secondary">{similarProperties?.length}</Badge>
         </div>
         <Button asChild size="sm" variant="outline">
           <Link href="/properties">View All</Link>
@@ -160,7 +124,7 @@ export function SimilarProperties({
 
       {/* Properties Grid */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {similarProperties.map((property) => (
+        {similarProperties?.map((property) => (
           <PropertyCard key={property._id} property={property} />
         ))}
       </div>
@@ -344,238 +308,4 @@ function PropertyCard({ property }: PropertyCardProps) {
       </Link>
     </Card>
   );
-}
-
-// Mock data generation function
-function generateMockSimilarProperties(
-  currentProperty: Property,
-  _currentPropertyId: string
-): Property[] {
-  const mockProperties: Property[] = [
-    {
-      ...currentProperty,
-      _id: "mock-1",
-      title: "Modern 2BR Apartment in Kilimani",
-      pricing: {
-        ...currentProperty.pricing,
-        rent: currentProperty.pricing.rent * 0.9,
-      },
-      location: {
-        ...currentProperty.location,
-        address: {
-          ...currentProperty.location.address,
-          line1: "Muthangari Gardens",
-        },
-      },
-      media: {
-        ...currentProperty.media,
-        images: [
-          {
-            id: "mock-1",
-            order: 0,
-            uploadedAt: new Date(),
-            url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-            caption: "Modern apartment",
-            isPrimary: true,
-          },
-        ],
-      },
-      status: "available" as any,
-      isFavorited: false,
-    },
-    {
-      ...currentProperty,
-      _id: "mock-2",
-      title: "Spacious Garden Apartment",
-      pricing: {
-        ...currentProperty.pricing,
-        rent: currentProperty.pricing.rent * 1.1,
-      },
-      specifications: {
-        ...currentProperty.specifications,
-        bedrooms: (currentProperty.specifications.bedrooms || 2) + 1,
-        // garden: true,
-      },
-      location: {
-        ...currentProperty.location,
-        address: {
-          ...currentProperty.location.address,
-          line1: "Riverside Drive",
-        },
-      },
-      media: {
-        ...currentProperty.media,
-        images: [
-          {
-            id: "mock-2",
-            order: 0,
-            uploadedAt: new Date(),
-            url: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-            caption: "Garden apartment",
-            isPrimary: true,
-          },
-        ],
-      },
-      status: "available" as any,
-      isFavorited: true,
-    },
-    {
-      ...currentProperty,
-      _id: "mock-3",
-      title: "Luxury Penthouse with City View",
-      type: "apartment" as any,
-      pricing: {
-        ...currentProperty.pricing,
-        rent: currentProperty.pricing.rent * 1.5,
-      },
-      specifications: {
-        ...currentProperty.specifications,
-        bedrooms: (currentProperty.specifications.bedrooms || 2) + 1,
-        bathrooms: (currentProperty.specifications.bathrooms || 1) + 1,
-        totalArea: (currentProperty.specifications.totalArea || 1000) * 1.3,
-        furnished: true,
-      },
-      location: {
-        ...currentProperty.location,
-        address: {
-          ...currentProperty.location.address,
-          line1: "Upper Hill Heights",
-        },
-      },
-      media: {
-        ...currentProperty.media,
-        images: [
-          {
-            id: "mock-3",
-            order: 0,
-            uploadedAt: new Date(),
-            url: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-            caption: "Luxury penthouse",
-            isPrimary: true,
-          },
-        ],
-      },
-      status: "available" as any,
-      isFavorited: false,
-    },
-    {
-      ...currentProperty,
-      _id: "mock-4",
-      title: "Cozy Studio Near CBD",
-      type: "studio" as any,
-      pricing: {
-        ...currentProperty.pricing,
-        rent: currentProperty.pricing.rent * 0.6,
-      },
-      specifications: {
-        ...currentProperty.specifications,
-        bedrooms: 0,
-        bathrooms: 1,
-        totalArea: (currentProperty.specifications.totalArea || 1000) * 0.5,
-        furnished: "fully_furnished" as any,
-      },
-      location: {
-        ...currentProperty.location,
-        address: {
-          ...currentProperty.location.address,
-          line1: "Westlands Square",
-        },
-      },
-      media: {
-        ...currentProperty.media,
-        images: [
-          {
-            id: "mock-4",
-            order: 0,
-            uploadedAt: new Date(),
-            url: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-            caption: "Cozy studio",
-            isPrimary: true,
-          },
-        ],
-      },
-      status: "available" as any,
-      isFavorited: false,
-    },
-    {
-      ...currentProperty,
-      _id: "mock-5",
-      title: "Family House with Parking",
-      type: "house" as any,
-      pricing: {
-        ...currentProperty.pricing,
-        rent: currentProperty.pricing.rent * 1.3,
-      },
-      specifications: {
-        ...currentProperty.specifications,
-        bedrooms: (currentProperty.specifications.bedrooms || 2) + 2,
-        bathrooms: (currentProperty.specifications.bathrooms || 1) + 1,
-        totalArea: (currentProperty.specifications.totalArea || 1000) * 1.5,
-      },
-      location: {
-        ...currentProperty.location,
-        address: {
-          ...currentProperty.location.address,
-          line1: "Karen Blixen",
-          town: "Karen",
-        },
-      },
-      media: {
-        ...currentProperty.media,
-        images: [
-          {
-            id: "mock-5",
-            order: 0,
-            uploadedAt: new Date(),
-            url: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-            caption: "Family house",
-            isPrimary: true,
-          },
-        ],
-      },
-      status: "available" as any,
-      isFavorited: false,
-    },
-    {
-      ...currentProperty,
-      _id: "mock-6",
-      title: "Budget-Friendly Flat",
-      type: "flat" as any,
-      pricing: {
-        ...currentProperty.pricing,
-        rent: currentProperty.pricing.rent * 0.7,
-      },
-      specifications: {
-        ...currentProperty.specifications,
-        bedrooms: currentProperty.specifications.bedrooms || 2,
-        bathrooms: 1,
-        totalArea: (currentProperty.specifications.totalArea || 1000) * 0.8,
-        // furnished: false,
-      },
-      location: {
-        ...currentProperty.location,
-        address: {
-          ...currentProperty.location.address,
-          line1: "Ngong Road Estate",
-        },
-      },
-      media: {
-        ...currentProperty.media,
-        images: [
-          {
-            id: "mock-6",
-            order: 0,
-            uploadedAt: new Date(),
-            url: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-            caption: "Budget flat",
-            isPrimary: true,
-          },
-        ],
-      },
-      status: "available" as any,
-      isFavorited: false,
-    },
-  ];
-
-  return mockProperties;
 }

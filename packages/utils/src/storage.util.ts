@@ -14,7 +14,16 @@ type FileUploadOptions = {
   };
 };
 
+enum StorageProvider {
+  VERCEL_BLOB = "vercel_blob",
+  AWS_S3 = "aws_s3",
+  CLOUDINARY = "cloudinary",
+  GOOGLE_STORAGE = "google_storage",
+  LOCAL = "local",
+}
+
 type FileInfo = {
+  provider: StorageProvider;
   url: string;
   path: string;
   size: number;
@@ -61,6 +70,7 @@ export const uploadFile = async (
     const cdnUrl = generateCdnUrl(blob.url, options.optimization);
 
     return {
+      provider: StorageProvider.VERCEL_BLOB,
       url: blob.url,
       path: blob.pathname,
       size: file.size,
@@ -106,7 +116,7 @@ export const deleteFile = async (
 export const downloadFile = async (url: string): Promise<Buffer | null> => {
   try {
     // Fetch the file from the blob URL
-    const downloadUrl = getDownloadUrl(url);
+    const downloadUrl = await getDownloadUrl(url);
     const response = await fetch(downloadUrl);
 
     if (!response.ok) {
@@ -124,6 +134,18 @@ export const downloadFile = async (url: string): Promise<Buffer | null> => {
   } catch (error) {
     console.error("Download file error:", (error as Error).message);
     throw new AppError("Failed to download file from cloud storage", 500);
+  }
+};
+
+export const getVercelBlobDownloadUrl = async (
+  path: string
+): Promise<string> => {
+  try {
+    const downloadUrl = await getDownloadUrl(path);
+    return downloadUrl;
+  } catch (error) {
+    console.error("Get download URL error:", error);
+    throw new AppError("Failed to get download URL", 500);
   }
 };
 

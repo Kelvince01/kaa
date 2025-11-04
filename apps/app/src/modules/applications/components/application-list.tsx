@@ -82,9 +82,9 @@ const StatusBadge = ({ status }: { status: string }) => {
 const ApplicationList = () => {
   const { user } = useAuthStore();
   const isLandlord = user?.role === "landlord";
-  const [filter, setFilter] = useState<string>("all");
+  const [status, setStatus] = useState<ApplicationStatus | null>(null);
 
-  const { data, isLoading, error } = useApplications({ status: null });
+  const { data, isLoading, error } = useApplications({ status });
 
   const mockApplications: Application[] = [
     {
@@ -370,12 +370,6 @@ const ApplicationList = () => {
     },
   ];
 
-  // Filter applications based on status
-  const filteredApplications =
-    filter === "all"
-      ? mockApplications // data?.items
-      : mockApplications.filter((app: Application) => app.status === filter);
-
   // Format date
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString("en-KE", {
@@ -408,44 +402,44 @@ const ApplicationList = () => {
           <div className="flex space-x-2">
             <button
               className={`rounded-md px-3 py-2 font-medium text-sm ${
-                filter === "all"
+                status === null
                   ? "bg-primary-100 text-primary-700"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
-              onClick={() => setFilter("all")}
+              onClick={() => setStatus(null)}
               type="button"
             >
               All
             </button>
             <button
               className={`rounded-md px-3 py-2 font-medium text-sm ${
-                filter === "submitted"
+                status === ApplicationStatus.submitted
                   ? "bg-blue-100 text-blue-700"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
-              onClick={() => setFilter("submitted")}
+              onClick={() => setStatus(ApplicationStatus.submitted)}
               type="button"
             >
               Submitted
             </button>
             <button
               className={`rounded-md px-3 py-2 font-medium text-sm ${
-                filter === "in_review"
+                status === ApplicationStatus.in_review
                   ? "bg-yellow-100 text-yellow-700"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
-              onClick={() => setFilter("in_review")}
+              onClick={() => setStatus(ApplicationStatus.in_review)}
               type="button"
             >
               In Review
             </button>
             <button
               className={`rounded-md px-3 py-2 font-medium text-sm ${
-                filter === "approved"
+                status === ApplicationStatus.approved
                   ? "bg-green-100 text-green-700"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
-              onClick={() => setFilter("approved")}
+              onClick={() => setStatus(ApplicationStatus.approved)}
               type="button"
             >
               Approved
@@ -454,16 +448,16 @@ const ApplicationList = () => {
         </div>
       </div>
       {/* Applications list */}
-      {filteredApplications?.length === 0 ? (
+      {data?.items?.length === 0 ? (
         <div className="rounded-md border border-gray-200 bg-white p-6 text-center shadow-sm">
           <File className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 font-medium text-gray-900 text-sm">
             No applications found
           </h3>
           <p className="mt-1 text-gray-500 text-sm">
-            {filter === "all"
+            {status === null
               ? "You haven't submitted any applications yet."
-              : `You don't have any applications with "${filter}" status.`}
+              : `You don't have any applications with "${status}" status.`}
           </p>
           {!isLandlord && (
             <div className="mt-6">
@@ -479,7 +473,7 @@ const ApplicationList = () => {
       ) : (
         <div className="overflow-hidden bg-white shadow sm:rounded-md">
           <ul className="divide-y divide-gray-200">
-            {filteredApplications?.map((application: Application) => (
+            {data?.items?.map((application: Application) => (
               <li key={application._id}>
                 <Link
                   className="block hover:bg-gray-50"

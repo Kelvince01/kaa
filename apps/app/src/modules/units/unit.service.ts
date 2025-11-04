@@ -10,13 +10,13 @@ import type {
 export const createUnit = async (
   data: UnitCreateInput
 ): Promise<UnitResponse> => {
-  const response = await httpClient.api.post("/units", data);
+  const response = await httpClient.api.post("/units/", data);
   return response.data;
 };
 
 // Get all units (with optional filters)
 export const getUnits = async (params: any = {}): Promise<UnitListResponse> => {
-  const response = await httpClient.api.get("/units", { params });
+  const response = await httpClient.api.get("/units/", { params });
   return response.data;
 };
 

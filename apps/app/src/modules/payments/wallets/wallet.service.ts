@@ -18,7 +18,7 @@ import type {
  * Get wallet balance
  */
 export const getWalletBalance = async (): Promise<WalletBalanceResponse> => {
-  const response = await httpClient.api.get("/payments/wallets");
+  const response = await httpClient.api.get("/payments/wallets/");
   return response.data;
 };
 

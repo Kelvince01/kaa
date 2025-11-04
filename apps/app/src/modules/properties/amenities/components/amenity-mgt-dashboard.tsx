@@ -10,6 +10,12 @@ import {
   CardTitle,
 } from "@kaa/ui/components/card";
 import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@kaa/ui/components/chart";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -39,8 +45,6 @@ import {
   Cell,
   Pie,
   PieChart,
-  ResponsiveContainer,
-  Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
@@ -57,8 +61,6 @@ import { CreateAmenityForm } from "./create-amenity-form";
 type AmenityManagementDashboardProps = {
   county?: string;
 };
-
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 export function AmenityManagementDashboard({
   county,
@@ -87,22 +89,29 @@ export function AmenityManagementDashboard({
     }
   };
 
+  // Chart configurations
+  const approvalChartConfig: ChartConfig = {
+    pending: {
+      label: "Pending",
+      color: "var(--chart-3)",
+    },
+    approved: {
+      label: "Approved",
+      color: "var(--chart-2)",
+    },
+    rejected: {
+      label: "Rejected",
+      color: "var(--chart-1)",
+    },
+  };
+
   // Prepare chart data
   const approvalChartData = approvalStats
     ? [
-        { name: "Pending", value: approvalStats.pending, color: "#FFBB28" },
-        { name: "Approved", value: approvalStats.approved, color: "#00C49F" },
-        { name: "Rejected", value: approvalStats.rejected, color: "#FF8042" },
+        { name: "pending", value: approvalStats.pending },
+        { name: "approved", value: approvalStats.approved },
+        { name: "rejected", value: approvalStats.rejected },
       ]
-    : [];
-
-  const sourceChartData = autoDiscoveryStats
-    ? Object.entries(autoDiscoveryStats.sourceBreakdown).map(
-        ([source, count]) => ({
-          name: source.replace(/_/g, " "),
-          value: count,
-        })
-      )
     : [];
 
   const categoryChartData = autoDiscoveryStats
@@ -113,6 +122,29 @@ export function AmenityManagementDashboard({
         })
       )
     : [];
+
+  // Generate category chart config dynamically
+  const categoryChartConfig: ChartConfig =
+    autoDiscoveryStats &&
+    Object.keys(autoDiscoveryStats.categoryCounts).length > 0
+      ? Object.keys(autoDiscoveryStats.categoryCounts).reduce(
+          (acc, category, index) => {
+            const colors = [
+              "var(--chart-1)",
+              "var(--chart-2)",
+              "var(--chart-3)",
+              "var(--chart-4)",
+              "var(--chart-5)",
+            ];
+            acc[category.toLowerCase()] = {
+              label: category.charAt(0).toUpperCase() + category.slice(1),
+              color: colors[index % colors.length],
+            };
+            return acc;
+          },
+          {} as ChartConfig
+        )
+      : {};
 
   return (
     <div className="space-y-6">
@@ -426,28 +458,39 @@ export function AmenityManagementDashboard({
               </CardHeader>
               <CardContent>
                 {approvalChartData.length > 0 ? (
-                  <ResponsiveContainer height={300} width="100%">
+                  <ChartContainer
+                    className="h-[300px] w-full"
+                    config={approvalChartConfig}
+                  >
                     <PieChart>
                       <Pie
                         cx="50%"
                         cy="50%"
                         data={approvalChartData}
                         dataKey="value"
-                        fill="#8884d8"
-                        label={({ name, value }) => `${name}: ${value}`}
+                        label={({ name, value }) => {
+                          const label =
+                            approvalChartConfig[
+                              name as keyof typeof approvalChartConfig
+                            ]?.label || name;
+                          return `${label}: ${value}`;
+                        }}
                         labelLine={false}
+                        nameKey="name"
                         outerRadius={80}
                       >
                         {approvalChartData.map((entry, index) => (
                           <Cell
-                            fill={entry.color}
+                            fill={`var(--color-${entry.name})`}
                             key={`cell-${index.toString()}`}
                           />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <ChartTooltip
+                        content={<ChartTooltipContent hideLabel />}
+                      />
                     </PieChart>
-                  </ResponsiveContainer>
+                  </ChartContainer>
                 ) : (
                   <div className="flex h-[300px] items-center justify-center text-muted-foreground">
                     No data available
@@ -462,8 +505,12 @@ export function AmenityManagementDashboard({
                 <CardTitle>Amenities by Category</CardTitle>
               </CardHeader>
               <CardContent>
-                {categoryChartData.length > 0 ? (
-                  <ResponsiveContainer height={300} width="100%">
+                {categoryChartData.length > 0 &&
+                Object.keys(categoryChartConfig).length > 0 ? (
+                  <ChartContainer
+                    className="h-[300px] w-full"
+                    config={categoryChartConfig}
+                  >
                     <BarChart data={categoryChartData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis
@@ -474,10 +521,10 @@ export function AmenityManagementDashboard({
                         textAnchor="end"
                       />
                       <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="value" fill="#8884d8" />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="value" fill="var(--chart-1)" />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </ChartContainer>
                 ) : (
                   <div className="flex h-[300px] items-center justify-center text-muted-foreground">
                     No data available

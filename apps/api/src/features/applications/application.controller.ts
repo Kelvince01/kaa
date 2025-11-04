@@ -1,6 +1,7 @@
 import {
   Application,
   Document,
+  Landlord,
   Notification,
   Property,
   Tenant,
@@ -9,17 +10,363 @@ import {
 import {
   ApplicationStatus,
   type IApplication,
+  type ILandlord,
+  type ITenant,
   NotificationCategory,
   TimelineEventStatus,
 } from "@kaa/models/types";
 import Elysia, { t } from "elysia";
 import mongoose, { type FilterQuery } from "mongoose";
+import { authPlugin } from "~/features/auth/auth-v2.plugin";
 import { accessPlugin } from "~/features/rbac/rbac.plugin";
-import { tenantPlugin } from "~/features/users/tenants/tenant.plugin";
+import { optionalTenantPlugin } from "~/features/users/tenants/tenant.plugin";
 
 export const applicationController = new Elysia().group("applications", (app) =>
   app
-    .use(tenantPlugin)
+    .group("", (app) =>
+      app
+        .use(accessPlugin("applications", "read"))
+        .use(authPlugin)
+        .get(
+          "/",
+          async ({ user, query, role, set }) => {
+            try {
+              const { status, propertyId, page = 1, limit = 10 } = query;
+
+              // Build query based on user role
+              const queryFilter: FilterQuery<IApplication> = {};
+
+              const tenantObj: ITenant | null = await Tenant.findOne({
+                user: user.id,
+              });
+              const landlordObj: ILandlord | null = await Landlord.findOne({
+                user: user.id,
+              });
+
+              if (role.name === "tenant") {
+                queryFilter.tenant = new mongoose.Types.ObjectId(tenantObj?.id);
+              } else if (role.name === "landlord") {
+                queryFilter.landlord = new mongoose.Types.ObjectId(
+                  landlordObj?.id
+                );
+              }
+
+              // Add status filter if provided
+              if (
+                status &&
+                Object.values(ApplicationStatus).includes(
+                  status as ApplicationStatus
+                )
+              ) {
+                queryFilter.status = status;
+              }
+
+              // Add property filter if provided
+              if (propertyId) {
+                queryFilter.property = propertyId;
+              }
+
+              // Calculate pagination
+              const skip = (Number(page) - 1) * Number(limit);
+
+              // Get total count
+              const total = await Application.countDocuments(query);
+
+              // Get applications with pagination
+              const applications = await Application.find(query)
+                .populate(
+                  "property",
+                  "title location.address media.images pricing.rent"
+                )
+                .populate(
+                  "tenant",
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email"
+                )
+                .populate("landlord", "personalInfo.firstName")
+                .populate("documents", "name type category")
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(Number(limit));
+
+              return {
+                status: "success",
+                items: applications,
+                pagination: {
+                  pages: Math.ceil(total / Number(limit)),
+                  total,
+                  page,
+                  limit,
+                },
+              };
+            } catch (error) {
+              set.status = 500;
+              return {
+                status: "error",
+                message: "Failed to get applications",
+              };
+            }
+          },
+          {
+            requireAuth: true,
+            // requireAccess: ["applications", "read"],
+            query: t.Object({
+              status: t.Optional(
+                t.String({ description: "Filter by application status" })
+              ),
+              propertyId: t.Optional(
+                t.String({ description: "Filter by property ID" })
+              ),
+              page: t.Optional(
+                t.Numeric({
+                  default: 1,
+                  description: "Page number for pagination",
+                })
+              ),
+              limit: t.Optional(
+                t.Numeric({
+                  default: 10,
+                  description: "Number of items per page",
+                })
+              ),
+            }),
+            detail: {
+              tags: ["applications"],
+              summary: "Get all applications",
+              description: "Get all applications",
+              security: [{ bearerAuth: [] }],
+            },
+          }
+        )
+        .use(accessPlugin("applications", "read"))
+        .get(
+          "/:id",
+          async ({ params, user, set, role }) => {
+            try {
+              const { id } = params;
+
+              // Find application with full population
+              const application = await Application.findById(id)
+                .populate("property")
+                .populate(
+                  "tenant",
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone"
+                )
+                .populate("documents")
+                .populate(
+                  "landlord",
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone"
+                )
+                .populate({
+                  path: "messages",
+                  options: { sort: { createdAt: -1 } },
+                });
+
+              if (!application) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Application not found",
+                };
+              }
+
+              const tenantObj: ITenant | null = await Tenant.findOne({
+                user: user.id,
+              });
+              const landlordObj: ILandlord | null = await Landlord.findOne({
+                user: user.id,
+              });
+
+              // Check permissions
+              const isTenant = application.tenant.id === tenantObj?.id;
+              const isLandlord = application.landlord?.id === landlordObj?.id;
+              const isAdmin = role.name === "admin";
+
+              if (!(isTenant || isLandlord || isAdmin)) {
+                set.status = 403;
+                return {
+                  status: "error",
+                  message:
+                    "You do not have permission to view this application",
+                };
+              }
+
+              return {
+                status: "success",
+                data: application,
+              };
+            } catch (error) {
+              set.status = 500;
+              return {
+                status: "error",
+                message: "Failed to get application",
+              };
+            }
+          },
+          {
+            params: t.Object({
+              id: t.String(),
+            }),
+            detail: {
+              tags: ["applications"],
+              summary: "Get an application by ID",
+              description: "Get an application by ID",
+              security: [{ bearerAuth: [] }],
+            },
+          }
+        )
+        .use(accessPlugin("applications", "update"))
+        .patch(
+          "/:id/status",
+          async ({ params, body, user, set, role }) => {
+            try {
+              const { id } = params;
+              const { status, reason } = body;
+
+              // Validate status
+              if (
+                !(status && Object.values(ApplicationStatus).includes(status))
+              ) {
+                set.status = 400;
+                return {
+                  status: "error",
+                  message: "Invalid status",
+                };
+              }
+
+              // Find application
+              const application = await Application.findById(id);
+              if (!application) {
+                set.status = 404;
+                return {
+                  status: "error",
+                  message: "Application not found",
+                };
+              }
+
+              // Check permissions
+              const isLandlord =
+                application.landlord &&
+                application.landlord.toString() === user.id;
+              const isAdmin = role.name === "admin";
+
+              if (!(isLandlord || isAdmin)) {
+                set.status = 403;
+                return {
+                  status: "error",
+                  message:
+                    "You do not have permission to update this application",
+                };
+              }
+
+              // If rejecting, require a reason
+              if (status === ApplicationStatus.REJECTED && !reason) {
+                set.status = 400;
+                return {
+                  status: "error",
+                  message: "Reason is required when rejecting an application",
+                };
+              }
+
+              // Update application status
+              application.status = status;
+
+              // Set additional fields based on status
+              if (status === ApplicationStatus.REJECTED) {
+                application.rejectionReason = reason;
+                application.timeline.push({
+                  title: "Application Rejected",
+                  description: reason || "No reason provided",
+                  date: new Date(),
+                  status: TimelineEventStatus.ERROR,
+                  actor: new mongoose.Types.ObjectId(user.id),
+                });
+              } else if (status === ApplicationStatus.APPROVED) {
+                application.approvedBy = new mongoose.Types.ObjectId(user.id);
+                application.approvedAt = new Date();
+                application.timeline.push({
+                  title: "Application Approved",
+                  description: "Your application has been approved",
+                  date: new Date(),
+                  status: TimelineEventStatus.COMPLETED,
+                  actor: new mongoose.Types.ObjectId(user.id),
+                });
+              } else if (status === ApplicationStatus.IN_REVIEW) {
+                application.timeline.push({
+                  title: "Application Under Review",
+                  description: "Your application is being reviewed",
+                  date: new Date(),
+                  status: TimelineEventStatus.IN_PROGRESS,
+                  actor: new mongoose.Types.ObjectId(user.id),
+                });
+              }
+
+              await application.save();
+
+              // Notify tenant about status change
+              const tenant = await User.findById(application.tenant);
+              const property = await Property.findById(application.property);
+
+              if (tenant) {
+                await Notification.create({
+                  user: application.tenant,
+                  title: `Application ${status === ApplicationStatus.APPROVED ? "Approved" : status === ApplicationStatus.REJECTED ? "Rejected" : "Updated"}`,
+                  message: `Your application for ${property?.title || "a property"} has been ${status === ApplicationStatus.APPROVED ? "approved" : status === ApplicationStatus.REJECTED ? "rejected" : `updated to ${status}`}.`,
+                  type: NotificationCategory.APPLICATION,
+                  data: {
+                    applicationId: application._id,
+                    propertyId: application.property,
+                    status,
+                  },
+                  createdAt: new Date(),
+                });
+              }
+
+              return {
+                status: "success",
+                data: await application.populate([
+                  {
+                    path: "property",
+                    select: "title location.address media.images pricing.rent",
+                  },
+                  {
+                    path: "tenant",
+                    select:
+                      "personalInfo.firstName personalInfo.lastName personalInfo.email",
+                  },
+                  { path: "documents" },
+                  {
+                    path: "landlord",
+                    select:
+                      "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone",
+                  },
+                ]),
+              };
+            } catch (error) {
+              set.status = 500;
+              return {
+                status: "error",
+                message: "Failed to update application status",
+              };
+            }
+          },
+          {
+            params: t.Object({
+              id: t.String(),
+            }),
+            body: t.Object({
+              status: t.Enum(ApplicationStatus),
+              reason: t.Optional(t.String()),
+            }),
+            detail: {
+              tags: ["applications"],
+              summary: "Update an application status",
+              description: "Update an application status",
+              security: [{ bearerAuth: [] }],
+            },
+          }
+        )
+    )
+    .use(optionalTenantPlugin)
     /**
      * Create a new application
      */
@@ -27,7 +374,25 @@ export const applicationController = new Elysia().group("applications", (app) =>
       "/",
       async ({ set, body, tenant }) => {
         try {
-          const { property, moveInDate, offerAmount, notes, documents } = body;
+          const {
+            property,
+            moveInDate,
+            offerAmount,
+            notes,
+            documents,
+            tenant: tenantId,
+          } = body;
+
+          const _tenantId = tenant?.id || tenantId;
+
+          const tenantObj = await Tenant.findById(_tenantId);
+          if (!tenantObj) {
+            set.status = 400;
+            return {
+              status: "error",
+              message: "Tenant not found",
+            };
+          }
 
           // Check if property exists
           const propertyExists = await Property.findById(property);
@@ -42,7 +407,7 @@ export const applicationController = new Elysia().group("applications", (app) =>
           // Check if user already has an active application for this property
           const existingApplication = await Application.findOne({
             property,
-            tenant: tenant.id,
+            tenant: tenantObj.id,
             status: {
               $nin: [ApplicationStatus.WITHDRAWN, ApplicationStatus.REJECTED],
             },
@@ -60,7 +425,7 @@ export const applicationController = new Elysia().group("applications", (app) =>
           // Create new application
           const application = new Application({
             property,
-            tenant: tenant.id,
+            tenant: tenantObj.id,
             moveInDate: new Date(moveInDate),
             offerAmount,
             notes,
@@ -75,7 +440,7 @@ export const applicationController = new Elysia().group("applications", (app) =>
                   "Application has been created and is in draft status",
                 date: new Date(),
                 status: TimelineEventStatus.COMPLETED,
-                actor: tenant.id,
+                actor: tenantObj.id,
               },
             ],
           });
@@ -86,8 +451,12 @@ export const applicationController = new Elysia().group("applications", (app) =>
           return {
             status: "success",
             data: await application.populate([
-              { path: "property", select: "title address media pricing" },
-              { path: "tenant", select: "firstName lastName email" },
+              { path: "property", select: "title location media pricing" },
+              {
+                path: "tenant",
+                select:
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email",
+              },
             ]),
           };
         } catch (error) {
@@ -100,6 +469,7 @@ export const applicationController = new Elysia().group("applications", (app) =>
       },
       {
         body: t.Object({
+          tenant: t.Optional(t.String()),
           property: t.String(),
           moveInDate: t.String(),
           offerAmount: t.Number(),
@@ -135,7 +505,7 @@ export const applicationController = new Elysia().group("applications", (app) =>
           }
 
           // Check if user is the tenant who created the application
-          if (application.tenant.toString() !== tenant.id) {
+          if (application.tenant.toString() !== tenant?.id) {
             set.status = 403;
             return {
               status: "error",
@@ -191,8 +561,12 @@ export const applicationController = new Elysia().group("applications", (app) =>
           return {
             status: "success",
             data: await application.populate([
-              { path: "property", select: "title address media pricing" },
-              { path: "tenant", select: "firstName lastName email" },
+              { path: "property", select: "title location media pricing" },
+              {
+                path: "tenant",
+                select:
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email",
+              },
               { path: "documents" },
             ]),
           };
@@ -216,386 +590,103 @@ export const applicationController = new Elysia().group("applications", (app) =>
         },
       }
     )
-    .use(accessPlugin("applications", "read"))
-    .get(
-      "/",
-      async ({ user, query, role, set }) => {
-        try {
-          const { status, propertyId, page = 1, limit = 10 } = query;
+    .group("", (app) =>
+      app.use(accessPlugin("applications", "update")).put(
+        "/:id",
+        async ({ params, body, user, set, tenant }) => {
+          try {
+            const { id } = params;
+            const { moveInDate, offerAmount, notes, documents } = body;
 
-          // Build query based on user role
-          const queryFilter: FilterQuery<IApplication> = {};
+            // Find application
+            const application = await Application.findById(id);
+            if (!application) {
+              set.status = 404;
+              return {
+                status: "error",
+                message: "Application not found",
+              };
+            }
 
-          if (role.name === "tenant") {
-            queryFilter.tenant = user.id;
-          } else if (role.name === "landlord") {
-            queryFilter.landlord = user.id;
-          }
+            // Check if user is the tenant who created the application
+            if (application.tenant.toString() !== tenant?.id) {
+              set.status = 403;
+              return {
+                status: "error",
+                message:
+                  "You do not have permission to update this application",
+              };
+            }
 
-          // Add status filter if provided
-          if (
-            status &&
-            Object.values(ApplicationStatus).includes(
-              status as ApplicationStatus
-            )
-          ) {
-            queryFilter.status = status;
-          }
+            // Check if application is in draft status
+            if (application.status !== ApplicationStatus.DRAFT) {
+              set.status = 400;
+              return {
+                status: "error",
+                message: "Only draft applications can be updated",
+              };
+            }
 
-          // Add property filter if provided
-          if (propertyId) {
-            queryFilter.property = propertyId;
-          }
+            // Update fields
+            if (moveInDate) application.moveInDate = new Date(moveInDate);
+            if (offerAmount !== undefined)
+              application.offerAmount = offerAmount;
+            if (notes !== undefined) application.notes = notes;
+            if (documents)
+              application.documents = documents.map(
+                (id: string) => new mongoose.Types.ObjectId(id)
+              );
 
-          // Calculate pagination
-          const skip = (Number(page) - 1) * Number(limit);
-
-          // Get total count
-          const total = await Application.countDocuments(query);
-
-          // Get applications with pagination
-          const applications = await Application.find(query)
-            .populate("property", "title address media pricing")
-            .populate("tenant", "firstName lastName email")
-            .populate("documents")
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(Number(limit));
-
-          return {
-            status: "success",
-            items: applications,
-            pagination: {
-              pages: Math.ceil(total / Number(limit)),
-              total,
-              page,
-              limit,
-            },
-          };
-        } catch (error) {
-          set.status = 500;
-          return {
-            status: "error",
-            message: "Failed to get applications",
-          };
-        }
-      },
-      {
-        query: t.Object({
-          status: t.Optional(
-            t.String({ description: "Filter by application status" })
-          ),
-          propertyId: t.Optional(
-            t.String({ description: "Filter by property ID" })
-          ),
-          page: t.Optional(
-            t.Numeric({ default: 1, description: "Page number for pagination" })
-          ),
-          limit: t.Optional(
-            t.Numeric({ default: 10, description: "Number of items per page" })
-          ),
-        }),
-        detail: {
-          tags: ["applications"],
-          summary: "Get all applications",
-          description: "Get all applications",
-          security: [{ bearerAuth: [] }],
-        },
-      }
-    )
-    .use(accessPlugin("applications", "read"))
-    .get(
-      "/:id",
-      async ({ params, user, set, role }) => {
-        try {
-          const { id } = params;
-
-          // Find application with full population
-          const application = await Application.findById(id)
-            .populate("property")
-            .populate("tenant", "firstName lastName email phone")
-            .populate("documents")
-            .populate("landlord", "firstName lastName email phone")
-            .populate({
-              path: "messages",
-              options: { sort: { createdAt: -1 } },
-            });
-
-          if (!application) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Application not found",
-            };
-          }
-
-          // Check permissions
-          const isTenant =
-            (application.tenant as mongoose.Types.ObjectId)._id.toString() ===
-            user.id;
-          const isLandlord =
-            (application.landlord as mongoose.Types.ObjectId)._id.toString() ===
-            user.id;
-          const isAdmin = role.name === "admin";
-
-          if (!(isTenant || isLandlord || isAdmin)) {
-            set.status = 403;
-            return {
-              status: "error",
-              message: "You do not have permission to view this application",
-            };
-          }
-
-          return {
-            status: "success",
-            data: application,
-          };
-        } catch (error) {
-          set.status = 500;
-          return {
-            status: "error",
-            message: "Failed to get application",
-          };
-        }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        detail: {
-          tags: ["applications"],
-          summary: "Get an application by ID",
-          description: "Get an application by ID",
-          security: [{ bearerAuth: [] }],
-        },
-      }
-    )
-    .use(accessPlugin("applications", "update"))
-    .patch(
-      "/:id/status",
-      async ({ params, body, user, set, role }) => {
-        try {
-          const { id } = params;
-          const { status, reason } = body;
-
-          // Validate status
-          if (!(status && Object.values(ApplicationStatus).includes(status))) {
-            set.status = 400;
-            return {
-              status: "error",
-              message: "Invalid status",
-            };
-          }
-
-          // Find application
-          const application = await Application.findById(id);
-          if (!application) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Application not found",
-            };
-          }
-
-          // Check permissions
-          const isLandlord =
-            application.landlord && application.landlord.toString() === user.id;
-          const isAdmin = role.name === "admin";
-
-          if (!(isLandlord || isAdmin)) {
-            set.status = 403;
-            return {
-              status: "error",
-              message: "You do not have permission to update this application",
-            };
-          }
-
-          // If rejecting, require a reason
-          if (status === ApplicationStatus.REJECTED && !reason) {
-            set.status = 400;
-            return {
-              status: "error",
-              message: "Reason is required when rejecting an application",
-            };
-          }
-
-          // Update application status
-          application.status = status;
-
-          // Set additional fields based on status
-          if (status === ApplicationStatus.REJECTED) {
-            application.rejectionReason = reason;
+            // Add timeline event
             application.timeline.push({
-              title: "Application Rejected",
-              description: reason || "No reason provided",
-              date: new Date(),
-              status: TimelineEventStatus.ERROR,
-              actor: new mongoose.Types.ObjectId(user.id),
-            });
-          } else if (status === ApplicationStatus.APPROVED) {
-            application.approvedBy = new mongoose.Types.ObjectId(user.id);
-            application.approvedAt = new Date();
-            application.timeline.push({
-              title: "Application Approved",
-              description: "Your application has been approved",
+              title: "Application Updated",
+              description: "Application details were updated",
               date: new Date(),
               status: TimelineEventStatus.COMPLETED,
               actor: new mongoose.Types.ObjectId(user.id),
             });
-          } else if (status === ApplicationStatus.IN_REVIEW) {
-            application.timeline.push({
-              title: "Application Under Review",
-              description: "Your application is being reviewed",
-              date: new Date(),
-              status: TimelineEventStatus.IN_PROGRESS,
-              actor: new mongoose.Types.ObjectId(user.id),
-            });
+
+            await application.save();
+
+            // Return updated application
+            return {
+              status: "success",
+              data: await application.populate([
+                { path: "property", select: "title location media pricing" },
+                {
+                  path: "tenant",
+                  select:
+                    "personalInfo.firstName personalInfo.lastName personalInfo.email",
+                },
+                { path: "documents" },
+              ]),
+            };
+          } catch (error) {
+            set.status = 500;
+            return {
+              status: "error",
+              message: "Failed to update application",
+            };
           }
-
-          await application.save();
-
-          // Notify tenant about status change
-          const tenant = await User.findById(application.tenant);
-          const property = await Property.findById(application.property);
-
-          if (tenant) {
-            await Notification.create({
-              user: application.tenant,
-              title: `Application ${status === ApplicationStatus.APPROVED ? "Approved" : status === ApplicationStatus.REJECTED ? "Rejected" : "Updated"}`,
-              message: `Your application for ${property?.title || "a property"} has been ${status === ApplicationStatus.APPROVED ? "approved" : status === ApplicationStatus.REJECTED ? "rejected" : `updated to ${status}`}.`,
-              type: NotificationCategory.APPLICATION,
-              data: {
-                applicationId: application._id,
-                propertyId: application.property,
-                status,
-              },
-              createdAt: new Date(),
-            });
-          }
-
-          return {
-            status: "success",
-            data: await application.populate([
-              { path: "property", select: "title address media pricing" },
-              { path: "tenant", select: "firstName lastName email" },
-              { path: "documents" },
-              { path: "landlord", select: "firstName lastName email" },
-            ]),
-          };
-        } catch (error) {
-          set.status = 500;
-          return {
-            status: "error",
-            message: "Failed to update application status",
-          };
-        }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        body: t.Object({
-          status: t.Enum(ApplicationStatus),
-          reason: t.Optional(t.String()),
-        }),
-        detail: {
-          tags: ["applications"],
-          summary: "Update an application status",
-          description: "Update an application status",
-          security: [{ bearerAuth: [] }],
         },
-      }
-    )
-    .use(accessPlugin("applications", "update"))
-    .put(
-      "/:id",
-      async ({ params, body, user, set, tenant }) => {
-        try {
-          const { id } = params;
-          const { moveInDate, offerAmount, notes, documents } = body;
-
-          // Find application
-          const application = await Application.findById(id);
-          if (!application) {
-            set.status = 404;
-            return {
-              status: "error",
-              message: "Application not found",
-            };
-          }
-
-          // Check if user is the tenant who created the application
-          if (application.tenant.toString() !== tenant.id) {
-            set.status = 403;
-            return {
-              status: "error",
-              message: "You do not have permission to update this application",
-            };
-          }
-
-          // Check if application is in draft status
-          if (application.status !== ApplicationStatus.DRAFT) {
-            set.status = 400;
-            return {
-              status: "error",
-              message: "Only draft applications can be updated",
-            };
-          }
-
-          // Update fields
-          if (moveInDate) application.moveInDate = new Date(moveInDate);
-          if (offerAmount !== undefined) application.offerAmount = offerAmount;
-          if (notes !== undefined) application.notes = notes;
-          if (documents)
-            application.documents = documents.map(
-              (id: string) => new mongoose.Types.ObjectId(id)
-            );
-
-          // Add timeline event
-          application.timeline.push({
-            title: "Application Updated",
-            description: "Application details were updated",
-            date: new Date(),
-            status: TimelineEventStatus.COMPLETED,
-            actor: new mongoose.Types.ObjectId(user.id),
-          });
-
-          await application.save();
-
-          // Return updated application
-          return {
-            status: "success",
-            data: await application.populate([
-              { path: "property", select: "title address media pricing" },
-              { path: "tenant", select: "firstName lastName email" },
-              { path: "documents" },
-            ]),
-          };
-        } catch (error) {
-          set.status = 500;
-          return {
-            status: "error",
-            message: "Failed to update application",
-          };
+        {
+          params: t.Object({
+            id: t.String(),
+          }),
+          body: t.Object({
+            moveInDate: t.Optional(t.String()),
+            offerAmount: t.Optional(t.Number()),
+            notes: t.Optional(t.String()),
+            documents: t.Optional(t.Array(t.String())),
+          }),
+          detail: {
+            tags: ["applications"],
+            summary: "Update an application",
+            description: "Update an application",
+            security: [{ bearerAuth: [] }],
+          },
         }
-      },
-      {
-        params: t.Object({
-          id: t.String(),
-        }),
-        body: t.Object({
-          moveInDate: t.Optional(t.String()),
-          offerAmount: t.Optional(t.Number()),
-          notes: t.Optional(t.String()),
-          documents: t.Optional(t.Array(t.String())),
-        }),
-        detail: {
-          tags: ["applications"],
-          summary: "Update an application",
-          description: "Update an application",
-          security: [{ bearerAuth: [] }],
-        },
-      }
+      )
     )
     .post(
       "/:id/withdraw",
@@ -614,7 +705,7 @@ export const applicationController = new Elysia().group("applications", (app) =>
           }
 
           // Check if user is the tenant who created the application
-          if (application.tenant.toString() !== tenant.id) {
+          if (application.tenant.toString() !== tenant?.id) {
             set.status = 403;
             return {
               status: "error",
@@ -671,8 +762,12 @@ export const applicationController = new Elysia().group("applications", (app) =>
           return {
             status: "success",
             data: await application.populate([
-              { path: "property", select: "title address media pricing" },
-              { path: "tenant", select: "firstName lastName email" },
+              { path: "property", select: "title location media pricing" },
+              {
+                path: "tenant",
+                select:
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email",
+              },
               { path: "documents" },
             ]),
           };
@@ -714,7 +809,7 @@ export const applicationController = new Elysia().group("applications", (app) =>
           }
 
           // Check if user is the tenant who created the application
-          if (application.tenant.toString() !== tenant.id) {
+          if (application.tenant.toString() !== tenant?.id) {
             set.status = 403;
             return {
               status: "error",
@@ -776,8 +871,12 @@ export const applicationController = new Elysia().group("applications", (app) =>
           return {
             status: "success",
             data: await application.populate([
-              { path: "property", select: "title address media pricing" },
-              { path: "tenant", select: "firstName lastName email" },
+              { path: "property", select: "title location media pricing" },
+              {
+                path: "tenant",
+                select:
+                  "personalInfo.firstName personalInfo.lastName personalInfo.email",
+              },
               { path: "documents" },
             ]),
           };
@@ -821,7 +920,7 @@ export const applicationController = new Elysia().group("applications", (app) =>
           }
 
           // Check if user is the tenant who created the application
-          if (application.tenant.toString() !== tenant.id) {
+          if (application.tenant.toString() !== tenant?.id) {
             set.status = 403;
             return {
               status: "error",
@@ -873,7 +972,7 @@ export const applicationController = new Elysia().group("applications", (app) =>
         try {
           // Aggregate counts of applications by status for the current tenant
           const statusCounts = await Application.aggregate([
-            { $match: { tenant: new mongoose.Types.ObjectId(tenant.id) } },
+            { $match: { tenant: new mongoose.Types.ObjectId(tenant?.id) } },
             {
               $group: {
                 _id: "$status",
@@ -926,7 +1025,7 @@ export const applicationController = new Elysia().group("applications", (app) =>
         try {
           // Aggregate min and max offerAmount for the current tenant's applications
           const result = await Application.aggregate([
-            { $match: { tenant: new mongoose.Types.ObjectId(tenant.id) } },
+            { $match: { tenant: new mongoose.Types.ObjectId(tenant?.id) } },
             {
               $group: {
                 _id: null,

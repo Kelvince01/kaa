@@ -3,8 +3,13 @@
  * Handles contract amendments, modifications, and amendment workflows
  */
 
-import { Contract } from "@kaa/models";
-import { ContractStatus, type IContract } from "@kaa/models/types";
+import { Contract, Landlord, Tenant } from "@kaa/models";
+import {
+  ContractStatus,
+  type IContract,
+  type ILandlord,
+  type ITenant,
+} from "@kaa/models/types";
 import { logger } from "@kaa/utils";
 import mongoose from "mongoose";
 import {
@@ -106,8 +111,12 @@ export class ContractAmendmentService {
         },
         { new: true }
       ).populate([
-        { path: "landlord", select: "firstName lastName email phone" },
-        { path: "property", select: "name location" },
+        {
+          path: "landlord",
+          select:
+            "personalInfo.firstName personalInfo.lastName personalInfo.email personalInfo.phone",
+        },
+        { path: "property", select: "title location media" },
         { path: "unit", select: "unitNumber type" },
         { path: "tenants", select: "personalInfo" },
       ]);
@@ -427,18 +436,21 @@ export class ContractAmendmentService {
    * Private helper methods
    */
 
-  private validateAmendmentEligibility(
+  private async validateAmendmentEligibility(
     contract: IContract,
     userId: string
-  ): void {
+  ): Promise<void> {
     if (contract.status !== ContractStatus.ACTIVE) {
       throw new ContractValidationError("Only active contracts can be amended");
     }
 
+    const landlord: ILandlord | null = await Landlord.findOne({ user: userId });
+    const tenant: ITenant | null = await Tenant.findOne({ user: userId });
+
     // Check if user has permission to amend
     const canAmend =
-      contract.landlord.toString() === userId ||
-      contract.tenants.some((t) => t.toString() === userId);
+      contract.landlord.toString() === landlord?.id ||
+      contract.tenants.some((t) => t.toString() === tenant?.id);
 
     if (!canAmend) {
       throw new ContractError("Not authorized to amend this contract", 403);

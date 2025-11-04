@@ -266,14 +266,27 @@ export class ContractPDFService {
     doc.moveDown(0.5);
 
     const landlord = property.landlord as any;
-    this.addKeyValue(doc, "Name", `${landlord.firstName} ${landlord.lastName}`);
-    this.addKeyValue(doc, "ID Number", landlord.idNumber || "Not provided");
-    this.addKeyValue(doc, "Email", landlord.email);
-    this.addKeyValue(doc, "Phone", landlord.phone || "Not provided");
+
+    this.addKeyValue(
+      doc,
+      "Name",
+      `${landlord.personalInfo.firstName} ${landlord.personalInfo.lastName}`
+    );
+    this.addKeyValue(
+      doc,
+      "ID Number",
+      landlord.personalInfo.nationalId || "Not provided"
+    );
+    this.addKeyValue(doc, "Email", landlord.personalInfo.email);
+    this.addKeyValue(
+      doc,
+      "Phone",
+      landlord.personalInfo.phone || "Not provided"
+    );
 
     if (landlord.address) {
       const formattedAddress = AddressHelpers.formatKenyanAddress(
-        landlord.address
+        landlord.contactInfo.primaryAddress
       );
       this.addKeyValue(doc, "Address", formattedAddress);
     }
@@ -540,31 +553,59 @@ export class ContractPDFService {
    * Add document footer
    */
   private addDocumentFooter(doc: PDFKit.PDFDocument): void {
-    const pages = doc.bufferedPageRange();
+    try {
+      const pageRange = doc.bufferedPageRange();
 
-    for (let i = 0; i < pages.count; i++) {
-      doc.switchToPage(i);
+      // Ensure we have a valid range
+      if (!pageRange || pageRange.count === 0) {
+        return;
+      }
 
-      // Add page number
-      doc
-        .fontSize(10)
-        .font("Helvetica")
-        .text(`Page ${i + 1} of ${pages.count}`, 50, doc.page.height - 50, {
-          align: "center",
-        });
+      const startPage = pageRange.start ?? 0;
+      const endPage = startPage + (pageRange.count ?? 1) - 1;
+      const totalPages = pageRange.count ?? 1;
 
-      // Add generation timestamp
-      doc
-        .fontSize(8)
-        .fillColor("gray")
-        .text(
-          `Generated on ${new Date().toLocaleString("en-KE")}`,
-          50,
-          doc.page.height - 30,
-          {
-            align: "center",
-          }
-        );
+      // Add footer to each buffered page
+      for (let i = startPage; i <= endPage; i++) {
+        try {
+          doc.switchToPage(i);
+
+          const pageNum = i - startPage + 1;
+
+          // Add page number
+          doc
+            .fontSize(10)
+            .font("Helvetica")
+            .fillColor("black")
+            .text(
+              `Page ${pageNum} of ${totalPages}`,
+              50,
+              doc.page.height - 50,
+              {
+                align: "center",
+              }
+            );
+
+          // Add generation timestamp
+          doc
+            .fontSize(8)
+            .fillColor("gray")
+            .text(
+              `Generated on ${new Date().toLocaleString("en-KE")}`,
+              50,
+              doc.page.height - 30,
+              {
+                align: "center",
+              }
+            );
+        } catch {
+          // Skip pages that aren't accessible
+        }
+      }
+    } catch (error) {
+      // Silently fail if footer can't be added
+      // This is a non-critical feature
+      logger.warn("Failed to add document footer", { error });
     }
   }
 

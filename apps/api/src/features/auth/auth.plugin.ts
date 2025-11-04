@@ -9,6 +9,7 @@ import { rolePlugin } from "../rbac/rbac.plugin";
 export const authPlugin = (app: Elysia) =>
   app
     .use(jwtPlugin)
+    // .use(refreshJwtPlugin)
     .use(bearer())
     .derive(
       async ({ jwt, cookie: { access_token }, set, bearer: bearerToken }) => {

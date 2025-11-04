@@ -23,6 +23,7 @@ import { DeleteApplicationsDialog } from "../components/delete-applications-dial
 import { UpdateApplicationSheet } from "../components/update-application-sheet";
 import { ApplicationsTableActionBar } from "./action-bar";
 import { getApplicationsTableColumns } from "./columns";
+import { ApplicationsTableToolbarActions } from "./toolbar-actions";
 
 type ApplicationsTableProps = {
   params: Promise<SearchParams>;
@@ -36,7 +37,7 @@ export function ApplicationsTable({ params }: ApplicationsTableProps) {
   const validFilters = getValidFilters(search.filters);
 
   const { data } = useApplications({
-    // status: search.status,
+    status: search.status,
     page: search.page,
     limit: search.perPage,
   });
@@ -93,6 +94,7 @@ export function ApplicationsTable({ params }: ApplicationsTableProps) {
       >
         {enableAdvancedFilter ? (
           <DataTableAdvancedToolbar table={table}>
+            <ApplicationsTableToolbarActions table={table} />
             <DataTableSortList align="start" table={table} />
             {filterFlag === "advancedFilters" ? (
               <DataTableFilterList

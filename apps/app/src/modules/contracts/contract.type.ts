@@ -6,29 +6,29 @@ import type { User } from "../users/user.type";
  * Contract status enumeration
  */
 export enum ContractStatus {
-  DRAFT = "DRAFT",
-  PENDING = "PENDING",
+  DRAFT = "draft",
+  PENDING = "pending",
   ACTIVE = "active",
-  SIGNED = "SIGNED",
-  RENEWED = "RENEWED",
-  SUSPENDED = "SUSPENDED",
-  TERMINATED = "TERMINATED",
-  EXPIRED = "EXPIRED",
-  CANCELLED = "CANCELLED",
+  SIGNED = "signed",
+  RENEWED = "renewed",
+  SUSPENDED = "suspended",
+  TERMINATED = "terminated",
+  EXPIRED = "expired",
+  CANCELLED = "cancelled",
 }
 
 /**
  * Contract type enumeration
  */
 export enum ContractType {
-  ASSURED_SHORTHAND_TENANCY = "ASSURED_SHORTHAND_TENANCY",
-  ASSURED_TENANCY = "ASSURED_TENANCY",
-  COMMERCIAL_LEASE = "COMMERCIAL_LEASE",
-  STUDENT_ACCOMMODATION = "STUDENT_ACCOMMODATION",
-  HOLIDAY_LET = "HOLIDAY_LET",
-  ROOM_RENTAL = "ROOM_RENTAL",
-  COMPANY_LET = "COMPANY_LET",
-  CUSTOM = "CUSTOM",
+  ASSURED_SHORTHAND_TENANCY = "assured_shorthand_tenancy",
+  ASSURED_TENANCY = "assured_tenancy",
+  COMMERCIAL_LEASE = "commercial_lease",
+  STUDENT_ACCOMMODATION = "student_accommodation",
+  HOLIDAY_LET = "holiday_let",
+  ROOM_RENTAL = "room_rental",
+  COMPANY_LET = "company_let",
+  CUSTOM = "custom",
 }
 
 export enum PropertyType {
@@ -158,6 +158,7 @@ export type ContractTerm = {
  * Contract amendment interface
  */
 export type ContractAmendment = {
+  _id: string;
   amendmentDate: string;
   amendmentReason: string;
   changes: Array<{

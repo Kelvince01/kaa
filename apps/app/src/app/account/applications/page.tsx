@@ -1,39 +1,18 @@
-import * as React from "react";
-import { Shell } from "@/components/shell";
-import { DataTableSkeleton } from "@/components/ui/data-table/data-table-skeleton";
-import { FeatureFlagsProvider } from "@/components/ui/data-table/feature-flags-provider";
-import { ApplicationsTable } from "@/modules/applications/table";
-import type { SearchParams } from "@/shared/types";
+import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 
-type ApplicationPageProps = {
-  searchParams: Promise<SearchParams>;
+const ApplicationsClient = dynamic(
+  () => import("@/routes/account/applications"),
+  {
+    ssr: true,
+  }
+);
+
+export const metadata: Metadata = {
+  title: "My Applications | Account",
+  description: "Track and manage your rental property applications.",
 };
 
-export default function ApplicationsPage(props: ApplicationPageProps) {
-  return (
-    <Shell className="gap-2">
-      <FeatureFlagsProvider>
-        <React.Suspense
-          fallback={
-            <DataTableSkeleton
-              cellWidths={[
-                "10rem",
-                "30rem",
-                "10rem",
-                "10rem",
-                "6rem",
-                "6rem",
-                "6rem",
-              ]}
-              columnCount={7}
-              filterCount={2}
-              shrinkZero
-            />
-          }
-        >
-          <ApplicationsTable params={props.searchParams} />
-        </React.Suspense>
-      </FeatureFlagsProvider>
-    </Shell>
-  );
+export default function ApplicationsPage() {
+  return <ApplicationsClient />;
 }

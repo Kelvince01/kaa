@@ -17,13 +17,23 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { File, FileAnalytics, FileProcessingJob } from "@kaa/models/file.model";
+// import { v2 as cloudinary } from "cloudinary";
+import config from "@kaa/config/api";
 import {
+  File,
+  FileAccessLog,
+  FileAnalytics,
+  FileProcessingJob,
+} from "@kaa/models";
+import {
+  FILE_CONSTANTS,
   FileAccessLevel,
   FileCategory,
   FileStatus,
   FileType,
+  type IBulkFileOperation,
   type IFile,
+  type IFileAnalytics,
   // type IFileAnalytics,
   // type IFileProcessingJob,
   type IFileProcessingOptions,
@@ -34,18 +44,22 @@ import {
   type IFileUsageStats,
   type IFileValidationResult,
   ImageOperation,
-  KENYA_FILE_CONSTANTS,
   StorageProvider,
-} from "@kaa/models/file.type";
+} from "@kaa/models/types";
 import {
   BadRequestError,
+  clearCache,
+  deleteFile,
+  getVercelBlobDownloadUrl,
   InternalServerError,
   logger,
   NotFoundError,
+  processFromBuffer,
+  uploadFile,
 } from "@kaa/utils";
 import NodeClam from "clamscan";
 import * as mime from "mime-types";
-import type mongoose from "mongoose";
+import mongoose, { type FilterQuery } from "mongoose";
 import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 
@@ -104,6 +118,17 @@ export class FilesService {
 
   // ==================== FILE UPLOAD ====================
 
+  // Create a new file
+  createFile = async (fileData: Partial<IFile>): Promise<IFile> => {
+    try {
+      const newFile = new File(fileData);
+      return await newFile.save();
+    } catch (error) {
+      console.error(`Error creating file: ${error}`);
+      throw new Error("Failed to create file metadata");
+    }
+  };
+
   /**
    * Upload file with comprehensive validation and processing
    */
@@ -135,38 +160,64 @@ export class FilesService {
       const category =
         options.category || this.detectCategory(type, originalName);
 
-      // Upload to S3
-      const uploadResult = await this.uploadToS3(
-        buffer,
-        fileName,
-        mimeType,
-        options
-      );
+      let uploadResult: IFileStorageInfo | null = null;
+      if (config.storage.provider === StorageProvider.AWS_S3) {
+        // Upload to S3
+        uploadResult = await this.uploadToS3(
+          buffer,
+          fileName,
+          mimeType,
+          options
+        );
+      }
+
+      if (config.storage.provider === StorageProvider.VERCEL_BLOB) {
+        const processed = await processFromBuffer(Buffer.from(buffer));
+
+        // Upload to storage
+        uploadResult = await uploadFile(
+          {
+            originalname: fileName,
+            buffer: processed,
+            mimetype: mimeType,
+            size: buffer.length,
+          },
+          {
+            userId: options.ownerId,
+            public: false,
+          }
+        );
+      }
 
       // Create file record
       const fileData: Partial<IFile> = {
         originalName,
         fileName,
+        description: options.description,
         mimeType,
         type,
         category,
         size: buffer.length,
         provider: StorageProvider.AWS_S3,
-        bucket: uploadResult.bucket,
-        key: uploadResult.key,
-        url: uploadResult.url,
-        cdnUrl: uploadResult.cdnUrl,
+        bucket: uploadResult?.bucket,
+        key: uploadResult?.key,
+        url: uploadResult?.url,
+        cdnUrl: uploadResult?.cdnUrl,
         metadata: {
           ...metadata,
           checksum,
         },
         accessLevel: options.accessLevel || FileAccessLevel.PRIVATE,
-        ownerId: options.ownerId,
-        organizationId: options.organizationId,
+        ownerId: new mongoose.Types.ObjectId(options.ownerId),
+        organizationId: options.organizationId
+          ? new mongoose.Types.ObjectId(options.organizationId)
+          : undefined,
         status: FileStatus.UPLOADING,
         relatedEntityId: options.relatedEntityId,
         relatedEntityType: options.relatedEntityType,
-        uploadedBy: options.uploadedBy || options.ownerId,
+        uploadedBy: new mongoose.Types.ObjectId(
+          options.uploadedBy || options.ownerId
+        ),
         uploadedAt: new Date(),
         ipAddress: options.ipAddress,
         userAgent: options.userAgent,
@@ -305,6 +356,21 @@ export class FilesService {
     return results;
   }
 
+  getMimeType(fileName: string): string {
+    const ext = path.extname(fileName).toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      ".jpg": "image/jpeg",
+      ".jpeg": "image/jpeg",
+      ".png": "image/png",
+      ".webp": "image/webp",
+      ".mp4": "video/mp4",
+      ".webm": "video/webm",
+      ".gltf": "model/gltf+json",
+      ".glb": "application/octet-stream",
+    };
+    return mimeTypes[ext] || "application/octet-stream";
+  }
+
   /**
    * Execute image processing operation
    */
@@ -402,9 +468,9 @@ export class FilesService {
         processedBuffer,
         outputFileName,
         {
-          ownerId: file.ownerId,
-          organizationId: file.organizationId,
-          uploadedBy: file.uploadedBy,
+          ownerId: file.ownerId.toString(),
+          organizationId: file.organizationId?.toString(),
+          uploadedBy: file.uploadedBy.toString(),
           category: file.category,
           accessLevel: file.accessLevel,
           parentFileId: file.id.toString(),
@@ -683,6 +749,26 @@ export class FilesService {
   }
 
   /**
+   * Get file by user ID
+   */
+  async getFileByUserId(userId: string): Promise<IFile> {
+    const file = await File.findOne({ ownerId: userId });
+    if (!file) {
+      throw new NotFoundError("File not found");
+    }
+
+    // Check access permissions
+    if (!this.checkAccess(file, userId)) {
+      throw new BadRequestError("Access denied");
+    }
+
+    // Track view
+    await file.trackAccess("view");
+
+    return file;
+  }
+
+  /**
    * Generate presigned URL for file download
    */
   async getDownloadUrl(
@@ -692,14 +778,22 @@ export class FilesService {
   ): Promise<string> {
     const file = await this.getFile(fileId, userId);
 
-    // Generate presigned URL
-    const command = new GetObjectCommand({
-      Bucket: file.bucket,
-      Key: file.key,
-      ResponseContentDisposition: `attachment; filename="${encodeURIComponent(file.originalName)}"`,
-    });
+    let url = "";
 
-    const url = await getSignedUrl(this.s3, command, { expiresIn });
+    if (file.provider === StorageProvider.VERCEL_BLOB) {
+      url = await getVercelBlobDownloadUrl(file.path ?? "");
+    }
+
+    if (file.provider === StorageProvider.AWS_S3) {
+      // Generate presigned URL
+      const command = new GetObjectCommand({
+        Bucket: file.bucket,
+        Key: file.key,
+        ResponseContentDisposition: `attachment; filename="${encodeURIComponent(file.originalName)}"`,
+      });
+
+      url = await getSignedUrl(this.s3, command, { expiresIn });
+    }
 
     // Track download
     await file.trackAccess("download");
@@ -717,6 +811,8 @@ export class FilesService {
     const {
       search,
       type,
+      accessLevel,
+      mimeType,
       category,
       status,
       ownerId,
@@ -733,101 +829,144 @@ export class FilesService {
       page = 1,
       limit = 20,
     } = query;
+    try {
+      // Build query filter
+      const filter: FilterQuery<IFile> = {};
 
-    // Build query filter
-    const filter: any = {};
-
-    // Access control - user can only see their files or organization files
-    if (organizationId) {
-      filter.organizationId = organizationId;
-    } else {
-      filter.ownerId = userId;
-    }
-
-    // Apply filters
-    if (search) {
-      filter.$text = { $search: search };
-    }
-
-    if (type) {
-      filter.type = Array.isArray(type) ? { $in: type } : type;
-    }
-
-    if (category) {
-      filter.category = Array.isArray(category) ? { $in: category } : category;
-    }
-
-    if (status) {
-      filter.status = Array.isArray(status) ? { $in: status } : status;
-    } else {
-      filter.status = { $ne: FileStatus.DELETED }; // Hide deleted files by default
-    }
-
-    if (ownerId) {
-      filter.ownerId = ownerId;
-    }
-
-    if (tags && tags.length > 0) {
-      filter.tags = { $in: tags };
-    }
-
-    if (dateFrom || dateTo) {
-      filter.createdAt = {};
-      if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
-      if (dateTo) filter.createdAt.$lte = new Date(dateTo);
-    }
-
-    if (sizeMin || sizeMax) {
-      filter.size = {};
-      if (sizeMin) filter.size.$gte = sizeMin;
-      if (sizeMax) filter.size.$lte = sizeMax;
-    }
-
-    // Kenya-specific filters
-    if (county) {
-      filter["kenyaMetadata.county"] = county;
-    }
-
-    if (hasGps !== undefined) {
-      if (hasGps) {
-        filter["kenyaMetadata.gpsCoordinates.latitude"] = { $exists: true };
-        filter["kenyaMetadata.gpsCoordinates.longitude"] = { $exists: true };
+      // Access control - user can only see their files or organization files
+      if (organizationId) {
+        filter.organizationId = new mongoose.Types.ObjectId(organizationId);
       } else {
-        filter.$or = [
-          { "kenyaMetadata.gpsCoordinates.latitude": { $exists: false } },
-          { "kenyaMetadata.gpsCoordinates.longitude": { $exists: false } },
-        ];
+        filter.ownerId = new mongoose.Types.ObjectId(userId);
       }
+
+      // Apply filters
+      if (search) {
+        filter.$text = { $search: search };
+      }
+
+      if (type) {
+        filter.type = Array.isArray(type) ? { $in: type } : type;
+      }
+
+      if (mimeType) {
+        filter.mimeType = Array.isArray(mimeType)
+          ? { $in: mimeType }
+          : mimeType;
+      }
+
+      if (accessLevel) {
+        filter.accessLevel = Array.isArray(accessLevel)
+          ? { $in: accessLevel }
+          : accessLevel;
+      }
+
+      if (category) {
+        filter.category = Array.isArray(category)
+          ? { $in: category }
+          : category;
+      }
+
+      if (status) {
+        filter.status = Array.isArray(status) ? { $in: status } : status;
+      } else {
+        filter.status = { $ne: FileStatus.DELETED }; // Hide deleted files by default
+      }
+
+      if (ownerId) {
+        filter.ownerId = new mongoose.Types.ObjectId(ownerId);
+      }
+
+      if (tags && tags.length > 0) {
+        filter.tags = { $in: tags };
+      }
+
+      if (dateFrom || dateTo) {
+        filter.createdAt = {};
+        if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
+        if (dateTo) filter.createdAt.$lte = new Date(dateTo);
+      }
+
+      if (sizeMin || sizeMax) {
+        filter.size = {};
+        if (sizeMin) filter.size.$gte = sizeMin;
+        if (sizeMax) filter.size.$lte = sizeMax;
+      }
+
+      // Kenya-specific filters
+      if (county) {
+        filter["kenyaMetadata.county"] = county;
+      }
+
+      if (hasGps !== undefined) {
+        if (hasGps) {
+          filter["kenyaMetadata.gpsCoordinates.latitude"] = { $exists: true };
+          filter["kenyaMetadata.gpsCoordinates.longitude"] = { $exists: true };
+        } else {
+          filter.$or = [
+            { "kenyaMetadata.gpsCoordinates.latitude": { $exists: false } },
+            { "kenyaMetadata.gpsCoordinates.longitude": { $exists: false } },
+          ];
+        }
+      }
+
+      // Execute query with pagination
+      const skip = (page - 1) * limit;
+      const sort: any = {};
+      sort[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+      const [files, total] = await Promise.all([
+        File.find(filter).sort(sort).skip(skip).limit(limit).exec(),
+        File.countDocuments(filter).exec(),
+      ]);
+
+      return {
+        files: files.map((file) => ({
+          ...file.toObject(),
+          _id: (file._id as mongoose.Types.ObjectId)?.toString(),
+        })) as any,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+        filters: {
+          search,
+          type,
+          category,
+          status,
+          tags,
+          county,
+          hasGps,
+        },
+      };
+    } catch (error) {
+      console.error(`Error getting files: ${error}`);
+      return {
+        files: [] as any,
+        pagination: {
+          page: 1,
+          limit: 10,
+          total: 0,
+          pages: 0,
+        },
+        filters: {
+          search,
+          type,
+          accessLevel,
+          mimeType,
+          category,
+          status,
+        },
+        summary: {
+          totalSize: 0,
+          totalFiles: 0,
+          byCategory: [],
+          byMimeType: [],
+        },
+      };
     }
-
-    // Execute query with pagination
-    const skip = (page - 1) * limit;
-    const sort: any = {};
-    sort[sortBy] = sortOrder === "asc" ? 1 : -1;
-
-    const [files, total] = await Promise.all([
-      File.find(filter).sort(sort).skip(skip).limit(limit).exec(),
-      File.countDocuments(filter).exec(),
-    ]);
-
-    return {
-      files,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-      filters: {
-        search,
-        type,
-        category,
-        status,
-        tags,
-        county,
-        hasGps,
-      },
-    };
   }
 
   /**
@@ -848,6 +987,18 @@ export class FilesService {
       .exec();
   }
 
+  /**
+   * Get files by user ID
+   */
+  getFilesByUserId = async (userId: string): Promise<IFile[]> => {
+    try {
+      return await File.find({ ownerId: new mongoose.Types.ObjectId(userId) });
+    } catch (error) {
+      console.error(`Error getting files by user ID: ${error}`);
+      return [];
+    }
+  };
+
   // ==================== FILE MANAGEMENT ====================
 
   /**
@@ -864,13 +1015,27 @@ export class FilesService {
     }
 
     // Check ownership
-    if (file.ownerId !== userId) {
+    if (file.ownerId.toString() !== userId) {
       throw new BadRequestError("Access denied");
+    }
+
+    // Update only allowed fields
+    const allowedFields = ["originalName", "description", "tags"];
+    for (const key of Object.keys(updates)) {
+      if (!allowedFields.includes(key)) {
+        delete (updates as any)[key];
+      }
     }
 
     // Apply updates
     Object.assign(file, updates);
     await file.save();
+
+    // Clear cache
+    await clearCache(
+      `api:/api/v1/files/${(file._id as mongoose.Types.ObjectId).toString()}`
+    );
+    await clearCache("api:/api/v1/files");
 
     return file;
   }
@@ -885,7 +1050,7 @@ export class FilesService {
     }
 
     // Check ownership
-    if (file.ownerId !== userId) {
+    if (file.ownerId.toString() !== userId) {
       throw new BadRequestError("Access denied");
     }
 
@@ -905,16 +1070,22 @@ export class FilesService {
       throw new NotFoundError("File not found");
     }
 
-    // Check ownership
-    if (file.ownerId !== userId) {
+    if (file.ownerId.toString() !== userId) {
+      // Check ownership
       throw new BadRequestError("Access denied");
     }
 
-    // Delete from S3
-    await this.deleteFromS3(file.bucket ?? "", file.key);
+    if (file.provider === StorageProvider.AWS_S3) {
+      // Delete from S3
+      await this.deleteFromS3(file.bucket ?? "", file.key);
+    }
 
-    // Delete variants
+    if (file.provider === StorageProvider.VERCEL_BLOB) {
+      await this.deleteFromVercelBlob(file.path ?? "");
+    }
+
     if ((file.variants?.size as any) > 0) {
+      // Delete variants
       for (const [, variant] of file?.variants as any) {
         const variantKey = this.extractKeyFromUrl(variant.url);
         if (variantKey) {
@@ -928,73 +1099,412 @@ export class FilesService {
 
     // Delete processing jobs
     await FileProcessingJob.deleteMany({ fileId });
+
+    // Clear cache
+    await clearCache(
+      `api:/api/v1/files/${(file._id as mongoose.Types.ObjectId).toString()}`
+    );
+    await clearCache("api:/api/v1/files");
   }
+
+  // Bulk file operations
+  bulkFileOperation = async (
+    userId: string,
+    operation: IBulkFileOperation
+  ): Promise<{ success: boolean; message: string; results?: any }> => {
+    try {
+      const userObjectId = new mongoose.Types.ObjectId(userId);
+      const fileIds = operation.fileIds.map(
+        (id) => new mongoose.Types.ObjectId(id)
+      );
+
+      // Verify all files belong to the user
+      const userFiles = await File.find({
+        _id: { $in: fileIds },
+        user: userObjectId,
+      });
+
+      if (userFiles.length !== fileIds.length) {
+        return {
+          success: false,
+          message: "Some files not found or access denied",
+        };
+      }
+
+      let result: any;
+
+      switch (operation.operation) {
+        case "DELETE":
+          result = await File.deleteMany({
+            _id: { $in: fileIds },
+            user: userObjectId,
+          });
+          return {
+            success: true,
+            message: `${result.deletedCount} files deleted`,
+            results: { deletedCount: result.deletedCount },
+          };
+
+        case "UPDATE_ACCESS": {
+          const isPublic = operation.parameters?.isPublic;
+          result = await File.updateMany(
+            { _id: { $in: fileIds }, user: userObjectId },
+            { $set: { isPublic } }
+          );
+          return {
+            success: true,
+            message: `${result.modifiedCount} files updated`,
+            results: { modifiedCount: result.modifiedCount },
+          };
+        }
+
+        case "ARCHIVE":
+          // For now, just mark as archived (you can add an archived field)
+          result = await File.updateMany(
+            { _id: { $in: fileIds }, user: userObjectId },
+            { $set: { archived: true } }
+          );
+          return {
+            success: true,
+            message: `${result.modifiedCount} files archived`,
+            results: { modifiedCount: result.modifiedCount },
+          };
+
+        default:
+          return {
+            success: false,
+            message: "Operation not supported",
+          };
+      }
+    } catch (error) {
+      console.error(`Error in bulk operation: ${error}`);
+      return {
+        success: false,
+        message: "Bulk operation failed",
+      };
+    }
+  };
+
+  // Share file
+  shareFile = async (
+    fileId: string,
+    userId: string,
+    settings: { isPublic: boolean; allowDownload?: boolean; expiresAt?: Date }
+  ): Promise<{ success: boolean; shareUrl?: string; message?: string }> => {
+    try {
+      const file = await File.findOne({
+        _id: new mongoose.Types.ObjectId(fileId),
+        user: new mongoose.Types.ObjectId(userId),
+      });
+
+      if (!file) {
+        return { success: false, message: "File not found" };
+      }
+
+      const shareToken = new mongoose.Types.ObjectId().toString();
+      const shareUrl = `${process.env.APP_URL}/shared/${shareToken}`;
+
+      await File.updateOne(
+        { _id: file._id },
+        {
+          $set: {
+            "sharing.isPublic": settings.isPublic,
+            "sharing.allowDownload": settings.allowDownload ?? true,
+            "sharing.expiresAt": settings.expiresAt,
+            "sharing.shareToken": shareToken,
+            "sharing.shareLink": shareUrl,
+          },
+        }
+      );
+
+      return { success: true, shareUrl };
+    } catch (error) {
+      console.error(`Error sharing file: ${error}`);
+      return { success: false, message: "Failed to share file" };
+    }
+  };
+
+  // Get shared file
+  getSharedFile = async (shareToken: string): Promise<IFile | null> => {
+    try {
+      const file = await File.findOne({
+        "sharing.shareToken": shareToken,
+        "sharing.isPublic": true,
+      }).populate("user", "name");
+
+      // Check if share link is expired
+      if (file?.sharing?.expiresAt && file.sharing.expiresAt < new Date()) {
+        return null;
+      }
+
+      return file;
+    } catch (error) {
+      console.error(`Error getting shared file: ${error}`);
+      return null;
+    }
+  };
+
+  // Log file access
+  logFileAccess = async (
+    fileId: string,
+    userId: string,
+    action: string,
+    metadata?: { ipAddress?: string; userAgent?: string }
+  ): Promise<void> => {
+    try {
+      await FileAccessLog.create({
+        fileId: new mongoose.Types.ObjectId(fileId),
+        userId: new mongoose.Types.ObjectId(userId),
+        action,
+        ipAddress: metadata?.ipAddress,
+        userAgent: metadata?.userAgent,
+        metadata,
+      });
+
+      // Update file access statistics
+      if (action === "DOWNLOAD") {
+        await File.updateOne(
+          { _id: new mongoose.Types.ObjectId(fileId) },
+          {
+            $inc: { downloadCount: 1 },
+            $set: { lastAccessedAt: new Date() },
+          }
+        );
+      }
+    } catch (error) {
+      console.error(`Error logging file access: ${error}`);
+      // Don't throw - logging shouldn't break the main operation
+    }
+  };
 
   // ==================== FILE ANALYTICS ====================
 
-  /**
-   * Get file usage statistics
-   */
-  async getUsageStats(
+  // Get file statistics
+  getFileStats = async (
+    userId: string,
     organizationId?: string,
     dateFrom?: Date,
     dateTo?: Date
-  ): Promise<IFileUsageStats> {
-    const matchFilter: any = {};
+  ): Promise<IFileUsageStats> => {
+    try {
+      const userObjectId = new mongoose.Types.ObjectId(userId);
 
-    if (organizationId) {
-      matchFilter.organizationId = organizationId;
-    }
+      const matchFilter: FilterQuery<IFile> = {
+        ownerId: userObjectId,
+      };
 
-    if (dateFrom || dateTo) {
-      matchFilter.createdAt = {};
-      if (dateFrom) matchFilter.createdAt.$gte = dateFrom;
-      if (dateTo) matchFilter.createdAt.$lte = dateTo;
-    }
+      if (organizationId) {
+        matchFilter.organizationId = organizationId;
+      }
 
-    const stats = await File.aggregate([
-      { $match: matchFilter },
-      {
-        $group: {
-          _id: null,
-          totalFiles: { $sum: 1 },
-          totalSize: { $sum: "$size" },
-          totalDownloads: { $sum: "$downloadCount" },
-          totalViews: { $sum: "$viewCount" },
-          typeDistribution: {
-            $push: "$type",
+      if (dateFrom || dateTo) {
+        matchFilter.createdAt = {};
+        if (dateFrom) matchFilter.createdAt.$gte = dateFrom;
+        if (dateTo) matchFilter.createdAt.$lte = dateTo;
+      }
+
+      const [
+        totalStats,
+        categoryStats,
+        mimeTypeStats,
+        uploaderStats,
+        recentUploads,
+        mostDownloaded,
+      ] = await Promise.all([
+        // Total files and size
+        File.aggregate([
+          { $match: matchFilter },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: 1 },
+              totalSize: { $sum: "$size" },
+              avgFileSize: { $avg: "$size" },
+              totalDownloads: { $sum: "$downloadCount" },
+              totalViews: { $sum: "$viewCount" },
+              typeDistribution: {
+                $push: "$type",
+              },
+              categoryDistribution: {
+                $push: "$category",
+              },
+            },
           },
-          categoryDistribution: {
-            $push: "$category",
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          totalFiles: 1,
-          totalSize: 1,
-          totalDownloads: 1,
-          totalViews: 1,
-          averageSize: { $divide: ["$totalSize", "$totalFiles"] },
-          typeDistribution: 1,
-          categoryDistribution: 1,
-        },
-      },
-    ]);
+        ]),
 
-    return (
-      stats[0] || {
-        totalFiles: 0,
+        // By category
+        File.aggregate([
+          { $match: matchFilter },
+          {
+            $group: {
+              _id: {
+                $switch: {
+                  branches: [
+                    {
+                      case: {
+                        $regexMatch: { input: "$mimeType", regex: "^image/" },
+                      },
+                      // biome-ignore lint/suspicious/noThenProperty: false positive
+                      then: "image",
+                    },
+                    {
+                      case: {
+                        $regexMatch: { input: "$mimeType", regex: "^video/" },
+                      },
+                      // biome-ignore lint/suspicious/noThenProperty: false positive
+                      then: "video",
+                    },
+                    {
+                      case: {
+                        $regexMatch: { input: "$mimeType", regex: "^audio/" },
+                      },
+                      // biome-ignore lint/suspicious/noThenProperty: false positive
+                      then: "audio",
+                    },
+                    {
+                      case: {
+                        $regexMatch: {
+                          input: "$mimeType",
+                          regex: "^application/pdf",
+                        },
+                      },
+                      // biome-ignore lint/suspicious/noThenProperty: false positive
+                      then: "document",
+                    },
+                    {
+                      case: {
+                        $regexMatch: {
+                          input: "$mimeType",
+                          regex: "zip|rar|tar",
+                        },
+                      },
+                      // biome-ignore lint/suspicious/noThenProperty: false positive
+                      then: "archive",
+                    },
+                    {
+                      case: {
+                        $regexMatch: {
+                          input: "$mimeType",
+                          regex: "javascript|json|xml",
+                        },
+                      },
+                      // biome-ignore lint/suspicious/noThenProperty: false positive
+                      then: "code",
+                    },
+                  ],
+                  default: "other",
+                },
+              },
+              count: { $sum: 1 },
+              size: { $sum: "$size" },
+            },
+          },
+        ]),
+
+        // By mime type
+        File.aggregate([
+          { $match: matchFilter },
+          {
+            $group: {
+              _id: "$mimeType",
+              count: { $sum: 1 },
+              size: { $sum: "$size" },
+            },
+          },
+          { $sort: { count: -1 } },
+          { $limit: 10 },
+        ]),
+
+        // By uploader
+        File.aggregate([
+          { $match: matchFilter },
+          {
+            $lookup: {
+              from: "users",
+              localField: "user",
+              foreignField: "_id",
+              as: "userInfo",
+            },
+          },
+          {
+            $group: {
+              _id: "$user",
+              userName: { $first: "$userInfo.name" },
+              count: { $sum: 1 },
+              size: { $sum: "$size" },
+            },
+          },
+        ]),
+
+        // Recent uploads (last 7 days)
+        File.find({
+          ...matchFilter,
+          createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+        })
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .select("_id name createdAt"),
+
+        // Most downloaded
+        File.find(matchFilter)
+          .sort({ downloadCount: -1 })
+          .limit(10)
+          .select("_id name downloadCount"),
+      ]);
+
+      const stats = totalStats[0] || {
+        total: 0,
         totalSize: 0,
+        avgFileSize: 0,
         totalDownloads: 0,
         totalViews: 0,
-        averageSize: 0,
         typeDistribution: [],
         categoryDistribution: [],
-      }
-    );
-  }
+      };
+
+      return {
+        totalFiles: stats.total,
+        totalSize: stats.totalSize,
+        totalDownloads: stats.totalDownloads,
+        totalViews: stats.totalViews,
+        averageSize: stats.avgFileSize,
+        typeDistribution: stats.typeDistribution,
+        categoryDistribution: stats.categoryDistribution,
+        avgFileSize: stats.avgFileSize,
+        byCategory: categoryStats.map((cat: any) => ({
+          category: cat._id,
+          count: cat.count,
+          size: cat.size,
+        })),
+        byMimeType: mimeTypeStats.map((mime: any) => ({
+          mimeType: mime._id,
+          count: mime.count,
+          size: mime.size,
+        })),
+        byStatus: [], // Can be implemented based on requirements
+        byUploader: uploaderStats.map((uploader: any) => ({
+          userId: uploader._id.toString(),
+          userName: uploader.userName || "Unknown",
+          count: uploader.count,
+          size: uploader.size,
+        })),
+        byDate: [], // Can be implemented for date-based analytics
+        mostDownloaded: mostDownloaded.map((file: any) => ({
+          fileId: file._id.toString(),
+          fileName: file.name,
+          downloadCount: file.downloadCount || 0,
+        })),
+        recentUploads: recentUploads.map((file: any) => ({
+          fileId: file._id.toString(),
+          fileName: file.name,
+          uploadedAt: file.createdAt,
+        })),
+      };
+    } catch (error) {
+      console.error(`Error getting file stats: ${error}`);
+      throw new Error("Failed to get file statistics");
+    }
+  };
 
   /**
    * Update daily analytics
@@ -1060,8 +1570,110 @@ export class FilesService {
     }
 
     await analytics.save();
-    await analytics.calculateAverageFileSize();
+    await analytics.calculateAverageFileSize?.();
   }
+
+  // Get file analytics
+  getFileAnalytics = async (
+    fileId: string,
+    userId: string,
+    timeRange: "7d" | "30d" | "90d" = "30d"
+  ): Promise<IFileAnalytics | null> => {
+    try {
+      const file = await File.findOne({
+        _id: new mongoose.Types.ObjectId(fileId),
+        ownerId: new mongoose.Types.ObjectId(userId),
+      });
+
+      if (!file) return null;
+
+      const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
+      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+      const logs = await FileAccessLog.find({
+        fileId: new mongoose.Types.ObjectId(fileId),
+        accessedAt: { $gte: startDate },
+      });
+
+      const views = logs.filter((log) => log.action === "VIEW").length;
+      const downloads = logs.filter((log) => log.action === "DOWNLOAD").length;
+      const shares = logs.filter((log) => log.action === "SHARE").length;
+      const uniqueViewers = new Set(logs.map((log) => log.userId.toString()))
+        .size;
+
+      return {
+        id: (file._id as mongoose.Types.ObjectId).toString(),
+        date: file.createdAt,
+        totalUploads: 0,
+        totalUploadSize: 0,
+        uploadsByType: new Map(),
+        uploadsByCategory: new Map(),
+        failedUploads: 0,
+        totalFiles: 0,
+        totalStorage: 0,
+        storageByType: new Map(),
+        storageByCategory: new Map(),
+
+        totalViews: views,
+        totalDownloads: downloads,
+        totalShares: shares,
+        uniqueViewers,
+        uniqueUsers: 0,
+
+        viewsByDate: [], // Can be implemented for detailed date analytics
+        downloadsByDate: [], // Can be implemented for detailed date analytics
+        topReferrers: [], // Can be implemented if tracking referrers
+        topCountries: [], // Can be implemented if tracking geo data
+        avgViewDuration: 0, // Can be implemented if tracking view duration
+
+        processingJobs: 0,
+        processingTime: 0,
+        processingErrors: 0,
+        kenyaMetrics: {
+          uploadsWithGps: 0,
+          uploadsByCounty: new Map(),
+          mobileUploads: 0,
+          averageFileSize: 0,
+        },
+        createdAt: file.createdAt,
+      };
+    } catch (error) {
+      console.error(`Error getting file analytics: ${error}`);
+      return null;
+    }
+  };
+
+  // Copy file
+  copyFile = async (
+    fileId: string,
+    userId: string,
+    newName?: string
+  ): Promise<IFile | null> => {
+    try {
+      const originalFile = await File.findOne({
+        _id: new mongoose.Types.ObjectId(fileId),
+        user: new mongoose.Types.ObjectId(userId),
+      });
+
+      if (!originalFile) return null;
+
+      const copiedFile = new File({
+        ...originalFile.toObject(),
+        _id: new mongoose.Types.ObjectId(),
+        name: newName || `Copy of ${originalFile.originalName}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        downloadCount: 0,
+        sharing: undefined, // Reset sharing settings for copy
+        versions: [], // Reset versions for copy
+      });
+
+      return await copiedFile.save();
+    } catch (error) {
+      console.error(`Error copying file: ${error}`);
+      return null;
+    }
+  };
 
   // ==================== UTILITY METHODS ====================
 
@@ -1076,30 +1688,27 @@ export class FilesService {
     const errors: string[] = [];
 
     // Check file size
-    if (buffer.length > KENYA_FILE_CONSTANTS.MAX_FILE_SIZE) {
+    if (buffer.length > FILE_CONSTANTS.MAX_FILE_SIZE) {
       errors.push(
-        `File size exceeds maximum allowed (${KENYA_FILE_CONSTANTS.MAX_FILE_SIZE / 1024 / 1024}MB)`
+        `File size exceeds maximum allowed (${FILE_CONSTANTS.MAX_FILE_SIZE / 1024 / 1024}MB)`
       );
     }
 
-    if (buffer.length < KENYA_FILE_CONSTANTS.MIN_FILE_SIZE) {
+    if (buffer.length < FILE_CONSTANTS.MIN_FILE_SIZE) {
       errors.push(
-        `File size below minimum required (${KENYA_FILE_CONSTANTS.MIN_FILE_SIZE} bytes)`
+        `File size below minimum required (${FILE_CONSTANTS.MIN_FILE_SIZE} bytes)`
       );
     }
 
     // Check file extension
     const extension = path.extname(fileName).toLowerCase();
-    if (!KENYA_FILE_CONSTANTS.ALLOWED_EXTENSIONS.includes(extension)) {
+    if (!FILE_CONSTANTS.ALLOWED_EXTENSIONS.includes(extension)) {
       errors.push(`File extension '${extension}' not allowed`);
     }
 
     // Check MIME type
     const mimeType = mime.lookup(fileName);
-    if (
-      mimeType &&
-      !KENYA_FILE_CONSTANTS.ALLOWED_MIME_TYPES.includes(mimeType)
-    ) {
+    if (mimeType && !FILE_CONSTANTS.ALLOWED_MIME_TYPES.includes(mimeType)) {
       errors.push(`MIME type '${mimeType}' not allowed`);
     }
 
@@ -1270,7 +1879,7 @@ export class FilesService {
    */
   private checkAccess(file: IFile, userId: string): boolean {
     // Owner can always access
-    if (file.ownerId === userId) return true;
+    if (file.ownerId.toString() === userId) return true;
 
     // Public files are accessible
     if (file.accessLevel === FileAccessLevel.PUBLIC) return true;
@@ -1326,6 +1935,14 @@ export class FilesService {
     });
 
     await this.s3.send(command);
+  }
+
+  /**
+   * Delete file from Vercel Blob
+   */
+  private async deleteFromVercelBlob(path: string): Promise<void> {
+    // Delete from storage
+    await deleteFile(path);
   }
 
   /**

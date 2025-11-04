@@ -290,11 +290,7 @@ export default function PropertyDetailsContainer({
 
         {/* Similar Properties */}
         <div className="mt-12">
-          <SimilarProperties
-            currentProperty={property}
-            currentPropertyId={property._id}
-            properties={[]}
-          />
+          <SimilarProperties currentPropertyId={property._id} />
         </div>
       </div>
 

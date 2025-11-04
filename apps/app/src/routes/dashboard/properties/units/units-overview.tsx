@@ -38,16 +38,18 @@ import {
 } from "@/modules/units/utils/unit-utils";
 
 type UnitsOverviewProps = {
+  property: string;
   onCreateUnit?: () => void;
   onViewUnit?: (unit: Unit) => void;
 };
 
 export function UnitsOverview({
+  property,
   onCreateUnit,
   onViewUnit,
 }: UnitsOverviewProps) {
   const [view, setView] = useState<"overview" | "table" | "grid">("overview");
-  const { data: unitsData, isLoading } = useUnits();
+  const { data: unitsData, isLoading } = useUnits({ property });
 
   const units = unitsData?.items || [];
   const stats = getUnitStats(units);
@@ -227,7 +229,7 @@ export function UnitsOverview({
                         {getUnitDisplayTitle(unit)}
                       </div>
                       <div className="text-muted-foreground text-sm">
-                        {getUnitTypeDisplayName(unit.unitType)} •{" "}
+                        {getUnitTypeDisplayName(unit.type)} •{" "}
                         {formatCurrency(unit.rent)}/month
                       </div>
                     </div>
@@ -273,7 +275,7 @@ export function UnitsOverview({
                 <CardContent>
                   <div className="space-y-2">
                     <div className="text-muted-foreground text-sm">
-                      {getUnitTypeDisplayName(unit.unitType)}
+                      {getUnitTypeDisplayName(unit.type)}
                     </div>
                     <div className="font-semibold">
                       {formatCurrency(unit.rent)}/month
