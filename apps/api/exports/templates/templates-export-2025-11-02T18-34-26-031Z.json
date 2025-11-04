@@ -62,10 +62,7 @@
       "format": "html",
       "version": 1,
       "isActive": true,
-      "tags": [
-        "auth",
-        "verification"
-      ],
+      "tags": ["auth", "verification"],
       "maxLength": 160,
       "encoding": "GSM_7BIT",
       "usageCount": 0,
@@ -163,10 +160,7 @@
       "format": "html",
       "version": 1,
       "isActive": true,
-      "tags": [
-        "auth",
-        "welcome"
-      ],
+      "tags": ["auth", "welcome"],
       "maxLength": 160,
       "encoding": "GSM_7BIT",
       "usageCount": 0,
@@ -246,10 +240,7 @@
       "format": "html",
       "version": 1,
       "isActive": true,
-      "tags": [
-        "auth",
-        "login-alert"
-      ],
+      "tags": ["auth", "login-alert"],
       "maxLength": 160,
       "encoding": "GSM_7BIT",
       "usageCount": 0,

@@ -5,16 +5,10 @@
     "moduleResolution": "bundler",
     "baseUrl": "./",
     "paths": {
-      "#/*": [
-        "./src/*"
-      ],
-      "~/*": [
-        "../api/src/*"
-      ]
+      "#/*": ["./src/*"],
+      "~/*": ["../api/src/*"]
     },
-    "types": [
-      "bun"
-    ],
+    "types": ["bun"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -29,8 +23,5 @@
     "../api/src/services/session-store.ts",
     "../api/src/database/mongoose.setup.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "exclude": ["node_modules", "dist"]
 }

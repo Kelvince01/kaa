@@ -11,6 +11,7 @@
   "devDependencies": {
     "@kaa/tsconfig": "*",
     "@tailwindcss/postcss": "catalog:",
+    "@types/next": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

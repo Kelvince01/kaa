@@ -1,5 +1,9 @@
 import { SecurityEvent, Session } from "@kaa/models";
-import { SecurityEventType, ThreatLevel, SecurityEventStatus } from "@kaa/models/types";
+import {
+  SecurityEventType,
+  ThreatLevel,
+  SecurityEventStatus,
+} from "@kaa/models/types";
 import mongoose from "mongoose";
 import { nanoid } from "nanoid";
 
@@ -41,7 +45,7 @@ export class AuthService {
     memberId?: string,
     ipAddress?: string,
     userAgent?: string,
-    metadata?: any,
+    metadata?: any
   ): Promise<void> {
     try {
       const event = new SecurityEvent({

@@ -1,171 +1,143 @@
 [
-    {
-        "title": "Modern Downtown Apartment",
-        "description": "A modern and stylish 2-bedroom apartment located in the heart of Nairobi CBD. Comes with a spacious living room, fitted kitchen, and access to high-speed internet, gym, and secure parking.",
-        "type": "apartment",
-        "county": "Nairobi",
-        "estate": "Nairobi CBD",
-        "address": "456 Urban Street, Nairobi CBD, Nairobi, Kenya",
-        "coordinates": {
-            "latitude": -1.286389,
-            "longitude": 36.817223
-        },
-        "nearbyAmenities": [
-            "Sarit Centre",
-            "City Market",
-            "Uhuru Park",
-            "Nairobi Hospital",
-            "Public Transport"
-        ],
-        "plotNumber": "CBD-0456",
-        "buildingName": "Urban Heights Apartments",
-        "bedrooms": 2,
-        "bathrooms": 2,
-        "furnished": "fully_furnished",
-        "totalArea": 111,
-        "condition": "new",
-        "rent": 85000,
-        "deposit": 170000,
-        "serviceFee": 5000,
-        "paymentFrequency": "monthly",
-        "advanceMonths": 1,
-        "depositMonths": 2,
-        "amenities": [
-            "Gym",
-            "Parking",
-            "WiFi",
-            "Backup Generator",
-            "24/7 Security",
-            "Elevator"
-        ],
-        "images": [
-            "https://via.placeholder.com/150"
-        ],
-        "availableFrom": "2025-01-01",
-        "viewingContact": {
-            "name": "John Doe",
-            "phone": "+254712345678"
-        },
-        "petsAllowed": true,
-        "minimumLease": 6,
-        "tags": [
-            "downtown",
-            "modern",
-            "wifi",
-            "gym",
-            "parking"
-        ]
+  {
+    "title": "Modern Downtown Apartment",
+    "description": "A modern and stylish 2-bedroom apartment located in the heart of Nairobi CBD. Comes with a spacious living room, fitted kitchen, and access to high-speed internet, gym, and secure parking.",
+    "type": "apartment",
+    "county": "Nairobi",
+    "estate": "Nairobi CBD",
+    "address": "456 Urban Street, Nairobi CBD, Nairobi, Kenya",
+    "coordinates": {
+      "latitude": -1.286389,
+      "longitude": 36.817223
     },
-    {
-        "title": "Cozy Garden Apartment",
-        "description": "A cozy one-bedroom apartment with a small garden area, perfect for singles or young couples. Conveniently located in Nairobi West, offering easy access to the city and nearby malls.",
-        "type": "apartment",
-        "county": "Nairobi",
-        "estate": "Nairobi West",
-        "address": "789 Garden Road, Nairobi West, Nairobi, Kenya",
-        "coordinates": {
-            "latitude": -1.3025,
-            "longitude": 36.8219
-        },
-        "nearbyAmenities": [
-            "T-Mall",
-            "Wilson Airport",
-            "Java House",
-            "Hospitals",
-            "Public Transport"
-        ],
-        "plotNumber": "NW-0789",
-        "buildingName": "Garden View Apartments",
-        "bedrooms": 1,
-        "bathrooms": 1,
-        "furnished": "unfurnished",
-        "totalArea": 74,
-        "condition": "new",
-        "rent": 55000,
-        "deposit": 110000,
-        "serviceFee": 3000,
-        "paymentFrequency": "monthly",
-        "advanceMonths": 1,
-        "depositMonths": 2,
-        "amenities": [
-            "Garden Area",
-            "Security",
-            "Water Supply",
-            "Waste Disposal"
-        ],
-        "images": [
-            "https://via.placeholder.com/150"
-        ],
-        "availableFrom": "2025-01-01",
-        "viewingContact": {
-            "name": "Jane Doe",
-            "phone": "+254711223344"
-        },
-        "petsAllowed": false,
-        "minimumLease": 6,
-        "tags": [
-            "garden",
-            "affordable",
-            "quiet",
-            "nairobi-west"
-        ]
+    "nearbyAmenities": [
+      "Sarit Centre",
+      "City Market",
+      "Uhuru Park",
+      "Nairobi Hospital",
+      "Public Transport"
+    ],
+    "plotNumber": "CBD-0456",
+    "buildingName": "Urban Heights Apartments",
+    "bedrooms": 2,
+    "bathrooms": 2,
+    "furnished": "fully_furnished",
+    "totalArea": 111,
+    "condition": "new",
+    "rent": 85000,
+    "deposit": 170000,
+    "serviceFee": 5000,
+    "paymentFrequency": "monthly",
+    "advanceMonths": 1,
+    "depositMonths": 2,
+    "amenities": [
+      "Gym",
+      "Parking",
+      "WiFi",
+      "Backup Generator",
+      "24/7 Security",
+      "Elevator"
+    ],
+    "images": ["https://via.placeholder.com/150"],
+    "availableFrom": "2025-01-01",
+    "viewingContact": {
+      "name": "John Doe",
+      "phone": "+254712345678"
     },
-    {
-        "title": "Luxury Penthouse Suite",
-        "description": "A breathtaking 3-bedroom luxury penthouse located in Upper Hill, Nairobi. Features a rooftop terrace, private pool, gym, and panoramic views of the city skyline.",
-        "type": "apartment",
-        "county": "Nairobi",
-        "estate": "Upper Hill",
-        "address": "321 Elite Avenue, Upper Hill, Nairobi, Kenya",
-        "coordinates": {
-            "latitude": -1.298,
-            "longitude": 36.814
-        },
-        "nearbyAmenities": [
-            "Nairobi Hospital",
-            "Capital Centre",
-            "Crowne Plaza",
-            "Office Blocks",
-            "Restaurants"
-        ],
-        "plotNumber": "UH-0321",
-        "buildingName": "Elite Residences",
-        "bedrooms": 3,
-        "bathrooms": 3,
-        "furnished": "semi_furnished",
-        "totalArea": 167,
-        "condition": "new",
-        "rent": 150000,
-        "deposit": 300000,
-        "serviceFee": 8000,
-        "paymentFrequency": "monthly",
-        "advanceMonths": 2,
-        "depositMonths": 2,
-        "amenities": [
-            "Swimming Pool",
-            "Gym",
-            "Concierge Service",
-            "Parking",
-            "Balcony",
-            "Backup Generator",
-            "24/7 Security"
-        ],
-        "images": [
-            "https://via.placeholder.com/150"
-        ],
-        "availableFrom": "2025-01-01",
-        "viewingContact": {
-            "name": "John Doe",
-            "phone": "+254700998877"
-        },
-        "petsAllowed": true,
-        "minimumLease": 12,
-        "tags": [
-            "penthouse",
-            "luxury",
-            "upper-hill",
-            "pool",
-            "concierge"
-        ]
-    }
+    "petsAllowed": true,
+    "minimumLease": 6,
+    "tags": ["downtown", "modern", "wifi", "gym", "parking"]
+  },
+  {
+    "title": "Cozy Garden Apartment",
+    "description": "A cozy one-bedroom apartment with a small garden area, perfect for singles or young couples. Conveniently located in Nairobi West, offering easy access to the city and nearby malls.",
+    "type": "apartment",
+    "county": "Nairobi",
+    "estate": "Nairobi West",
+    "address": "789 Garden Road, Nairobi West, Nairobi, Kenya",
+    "coordinates": {
+      "latitude": -1.3025,
+      "longitude": 36.8219
+    },
+    "nearbyAmenities": [
+      "T-Mall",
+      "Wilson Airport",
+      "Java House",
+      "Hospitals",
+      "Public Transport"
+    ],
+    "plotNumber": "NW-0789",
+    "buildingName": "Garden View Apartments",
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "furnished": "unfurnished",
+    "totalArea": 74,
+    "condition": "new",
+    "rent": 55000,
+    "deposit": 110000,
+    "serviceFee": 3000,
+    "paymentFrequency": "monthly",
+    "advanceMonths": 1,
+    "depositMonths": 2,
+    "amenities": ["Garden Area", "Security", "Water Supply", "Waste Disposal"],
+    "images": ["https://via.placeholder.com/150"],
+    "availableFrom": "2025-01-01",
+    "viewingContact": {
+      "name": "Jane Doe",
+      "phone": "+254711223344"
+    },
+    "petsAllowed": false,
+    "minimumLease": 6,
+    "tags": ["garden", "affordable", "quiet", "nairobi-west"]
+  },
+  {
+    "title": "Luxury Penthouse Suite",
+    "description": "A breathtaking 3-bedroom luxury penthouse located in Upper Hill, Nairobi. Features a rooftop terrace, private pool, gym, and panoramic views of the city skyline.",
+    "type": "apartment",
+    "county": "Nairobi",
+    "estate": "Upper Hill",
+    "address": "321 Elite Avenue, Upper Hill, Nairobi, Kenya",
+    "coordinates": {
+      "latitude": -1.298,
+      "longitude": 36.814
+    },
+    "nearbyAmenities": [
+      "Nairobi Hospital",
+      "Capital Centre",
+      "Crowne Plaza",
+      "Office Blocks",
+      "Restaurants"
+    ],
+    "plotNumber": "UH-0321",
+    "buildingName": "Elite Residences",
+    "bedrooms": 3,
+    "bathrooms": 3,
+    "furnished": "semi_furnished",
+    "totalArea": 167,
+    "condition": "new",
+    "rent": 150000,
+    "deposit": 300000,
+    "serviceFee": 8000,
+    "paymentFrequency": "monthly",
+    "advanceMonths": 2,
+    "depositMonths": 2,
+    "amenities": [
+      "Swimming Pool",
+      "Gym",
+      "Concierge Service",
+      "Parking",
+      "Balcony",
+      "Backup Generator",
+      "24/7 Security"
+    ],
+    "images": ["https://via.placeholder.com/150"],
+    "availableFrom": "2025-01-01",
+    "viewingContact": {
+      "name": "John Doe",
+      "phone": "+254700998877"
+    },
+    "petsAllowed": true,
+    "minimumLease": 12,
+    "tags": ["penthouse", "luxury", "upper-hill", "pool", "concierge"]
+  }
 ]

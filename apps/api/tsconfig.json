@@ -4,22 +4,16 @@
     "composite": true,
     "tsBuildInfoFile": "./.tsbuildinfo",
     "target": "ES2022",
-    "lib": [
-      "ES2022"
-    ],
+    "lib": ["ES2022"],
     "module": "esnext",
     "rootDir": "./",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "baseUrl": "./",
     "paths": {
-      "~/*": [
-        "./src/*"
-      ]
+      "~/*": ["./src/*"]
     },
-    "types": [
-      "bun"
-    ],
+    "types": ["bun"],
     "resolveJsonModule": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -28,16 +22,6 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
   },
-  "include": [
-    "src/**/*",
-    "instrument.ts",
-    "scripts/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ]
+  "include": ["src/**/*", "instrument.ts", "scripts/**/*"],
+  "exclude": ["node_modules", "dist", "build", "**/*.test.ts", "**/*.spec.ts"]
 }

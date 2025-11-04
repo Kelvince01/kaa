@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kaa API</title>
-  
-  <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="manifest" href="/site.webmanifest">
-  
-  <style>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaa API</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       max-width: 800px;
@@ -56,60 +56,135 @@
       font-size: 0.9rem;
     }
   </style>
-</head>
-<body>
-  <div class="logo">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="50" height="50">
-      <rect width="64" height="64" rx="12" fill="#008b52"/>
-      <path d="M12 36v16h40v-16L32 12 12 36z" fill="#ffffff"/>
-      <path d="M28 52v-12h8v12" fill="#008b52" stroke="#ffffff" stroke-width="2"/>
-    </svg>
-    <h1>Kaa API</h1>
-  </div>
-  
-  <div class="api-info">
-    <h2>API Documentation</h2>
-    <p>Welcome to the Kaa API. This RESTful API provides endpoints for property listings, user management, bookings, payments, and more.</p>
-    <p>For comprehensive documentation, visit <a href="/docs">API Documentation</a>.</p>
-  </div>
-  
-  <h2>Available Endpoints</h2>
-  <ul>
-    <li><code>/api/v1/auth</code> - Authentication endpoints</li>
-    <li><code>/api/v1/admin</code> - Admin endpoints</li>
-    <li><code>/api/v1/applications</code> - Application endpoints</li>
-    <li><code>/api/v1/audits</code> - Audit endpoints</li>
-    <li><code>/api/v1/analytics</code> - Analytics endpoints</li>
-    <li><code>/api/v1/documents</code> - Document endpoints</li>
-    <li><code>/api/v1/files</code> - File endpoints</li>
-    <li><code>/api/v1/properties</code> - Property management</li>
-    <li><code>/api/v1/units</code> - Property unit management</li>
-    <li><code>/api/v1/favourites</code> - Favourite property management</li>
-    <li><code>/api/v1/references</code> - Reference management</li>
-    <li><code>/api/v1/reviews</code> - Property review endpoints</li>
-    <li><code>/api/v1/ai</code> - AI endpoints</li>
-    <li><code>/api/v1/users</code> - User management</li>
-    <li><code>/api/v1/monitoring</code> - Monitoring endpoints</li>
-    <li><code>/api/v1/notifications</code> - Notification endpoints</li>
-    <li><code>/api/v1/webhooks</code> - Webhook endpoints</li>
-    <li><code>/api/v1/bookings</code> - Booking functionality</li>
-    <li><code>/api/v1/payments</code> - Payment processing</li>
-    <li><code>/api/v1/messages</code> - Messaging system</li>
-    <li><code>/api/v1/contracts</code> - Rental contract management</li>
-    <li><code>/api/v1/tenants</code> - Tenant management</li>
-    <li><code>/api/v1/members</code> - Member management</li>
-  </ul>
+  </head>
+  <body>
+    <div class="logo">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 64 64"
+        width="50"
+        height="50"
+      >
+        <rect width="64" height="64" rx="12" fill="#008b52"/>
+        <path d="M12 36v16h40v-16L32 12 12 36z" fill="#ffffff"/>
+        <path
+          d="M28 52v-12h8v12"
+          fill="#008b52"
+          stroke="#ffffff"
+          stroke-width="2"
+        />
+      </svg>
+      <h1>Kaa API</h1>
+    </div>
 
-  <h2>Health Check</h2>
-  <p>Server health check is available at <a href="/health">Health Check</a>.</p>
-  <p>Detailed server health check is available at <a href="/health/detailed">Detailed Health Check</a>.</p>
+    <div class="api-info">
+      <h2>API Documentation</h2>
+      <p>
+        Welcome to the Kaa API. This RESTful API provides endpoints for property
+        listings, user management, bookings, payments, and more.
+      </p>
+      <p>
+        For comprehensive documentation, visit
+        <a href="/docs">API Documentation</a>.
+      </p>
+    </div>
 
-  <h2>Monitoring</h2>
-  <p>Server and system health and metrics are available at <a href="/metrics">Metrics</a> (JSON format).</p>
-  <p>Server health and metrics are available at <a href="/metrics/prometheus">Prometheus Metrics</a> (Prometheus format).</p>
-  
-  <footer style="margin-top: 3rem; border-top: 1px solid #e5e7eb; padding-top: 1rem;">
-    <p>&copy; 2025 Kaa. All rights reserved.</p>
-  </footer>
-</body>
+    <h2>Available Endpoints</h2>
+    <ul>
+      <li>
+        <code>/api/v1/auth</code>- Authentication endpoints
+      </li>
+      <li>
+        <code>/api/v1/admin</code>- Admin endpoints
+      </li>
+      <li>
+        <code>/api/v1/applications</code>- Application endpoints
+      </li>
+      <li>
+        <code>/api/v1/audits</code>- Audit endpoints
+      </li>
+      <li>
+        <code>/api/v1/analytics</code>- Analytics endpoints
+      </li>
+      <li>
+        <code>/api/v1/documents</code>- Document endpoints
+      </li>
+      <li>
+        <code>/api/v1/files</code>- File endpoints
+      </li>
+      <li>
+        <code>/api/v1/properties</code>- Property management
+      </li>
+      <li>
+        <code>/api/v1/units</code>- Property unit management
+      </li>
+      <li>
+        <code>/api/v1/favourites</code>- Favourite property management
+      </li>
+      <li>
+        <code>/api/v1/references</code>- Reference management
+      </li>
+      <li>
+        <code>/api/v1/reviews</code>- Property review endpoints
+      </li>
+      <li>
+        <code>/api/v1/ai</code>- AI endpoints
+      </li>
+      <li>
+        <code>/api/v1/users</code>- User management
+      </li>
+      <li>
+        <code>/api/v1/monitoring</code>- Monitoring endpoints
+      </li>
+      <li>
+        <code>/api/v1/notifications</code>- Notification endpoints
+      </li>
+      <li>
+        <code>/api/v1/webhooks</code>- Webhook endpoints
+      </li>
+      <li>
+        <code>/api/v1/bookings</code>- Booking functionality
+      </li>
+      <li>
+        <code>/api/v1/payments</code>- Payment processing
+      </li>
+      <li>
+        <code>/api/v1/messages</code>- Messaging system
+      </li>
+      <li>
+        <code>/api/v1/contracts</code>- Rental contract management
+      </li>
+      <li>
+        <code>/api/v1/tenants</code>- Tenant management
+      </li>
+      <li>
+        <code>/api/v1/members</code>- Member management
+      </li>
+    </ul>
+
+    <h2>Health Check</h2>
+    <p>
+      Server health check is available at <a href="/health">Health Check</a>.
+    </p>
+    <p>
+      Detailed server health check is available at
+      <a href="/health/detailed">Detailed Health Check</a>.
+    </p>
+
+    <h2>Monitoring</h2>
+    <p>
+      Server and system health and metrics are available at
+      <a href="/metrics">Metrics</a>(JSON format).
+    </p>
+    <p>
+      Server health and metrics are available at
+      <a href="/metrics/prometheus">Prometheus Metrics</a>(Prometheus format).
+    </p>
+
+    <footer
+      style="margin-top: 3rem; border-top: 1px solid #e5e7eb; padding-top: 1rem;"
+    >
+      <p>&copy; 2025 Kaa. All rights reserved.</p>
+    </footer>
+  </body>
 </html>
