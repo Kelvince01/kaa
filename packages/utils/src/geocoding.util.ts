@@ -156,7 +156,8 @@ export async function reverseGeocodingAPI(lat: number, lon: number) {
       Bun.env.GEOAPIFY_API_KEY
     }`
   );
-  const jsonResp = await resp.json();
+
+  const jsonResp = (await resp.json()) as any;
   const data = jsonResp?.features[0]?.properties;
   return data;
 }
