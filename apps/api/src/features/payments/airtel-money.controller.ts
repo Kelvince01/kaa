@@ -2,7 +2,7 @@
  * Airtel Money Controller for Virtual Tours
  */
 
-import { airtelMoneyService } from "@kaa/services";
+import { airtelMoneyService_v1 as airtelMoneyService } from "@kaa/services";
 import Elysia, { t } from "elysia";
 import { authPlugin } from "~/features/auth/auth.plugin";
 
