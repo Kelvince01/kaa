@@ -538,10 +538,10 @@ export const propertyInspectionController = new Elysia({
         }
       },
       {
+        params: t.Object({
+          inspectionId: t.String(),
+        }),
         detail: {
-          params: t.Object({
-            inspectionId: t.String(),
-          }),
           tags: ["inspections"],
           summary: "Confirm property inspection",
           description: "Confirm property inspection",
