@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/suspicious/noBitwiseOperators: false positive */
 /** biome-ignore-all lint/style/noNonNullAssertion: false positive */
 
-import crypto from "node:crypto";
+import crypto, { type JsonWebKey } from "node:crypto";
 import config from "@kaa/config/api";
 import base32Decode from "base32-decode";
 import base32Encode from "base32-encode";
