@@ -30,8 +30,7 @@ export const getLandlordById = async (id: string, populate: string[] = []) => {
 
     for (const field of populateFields) {
       const [path, select] = field.split(":");
-      // @ts-expect-error
-      query = query.populate(path, select);
+      query = query.populate(path ?? "", select);
     }
 
     const landlord = await query.exec();
@@ -325,8 +324,7 @@ export const getLandlords = async (params: LandlordQueryParams) => {
 
     for (const field of populateFields) {
       const [path, select] = field.split(":");
-      // @ts-expect-error
-      query = query.populate(path, select);
+      query = query.populate(path ?? "", select);
     }
 
     const [items, totalCount] = await Promise.all([
