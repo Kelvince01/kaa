@@ -1,9 +1,9 @@
 "use client";
 
+import { Icon } from "@iconify/react";
 import { Button } from "@kaa/ui/components/button";
 import { Loader2 } from "lucide-react";
 import type React from "react";
-import { Google, Microsoft } from "@/components/ui/icons";
 import { useInitiateOAuth } from "../oauth.queries";
 import type { SupportedOAuthProvider } from "../oauth.type";
 
@@ -42,12 +42,12 @@ export function OAuthConnectButton({
     const configs = {
       google: {
         name: "Google",
-        icon: <Google />,
+        icon: <Icon className="mr-2 h-4 w-4" icon="logos:google-icon" />,
         color: "#4285f4",
       },
       microsoft: {
         name: "Microsoft",
-        icon: <Microsoft />,
+        icon: <Icon className="mr-2 h-4 w-4" icon="logos:microsoft-icon" />,
         color: "#00a1f1",
       },
     };
@@ -70,7 +70,8 @@ export function OAuthConnectButton({
       ) : (
         <span className="mr-2">{config.icon}</span>
       )}
-      {children || `Connect with ${config.name}`}
+      {children ||
+        `${config.name.charAt(0).toUpperCase() + config.name.slice(1)}`}
     </Button>
   );
 }

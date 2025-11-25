@@ -26,16 +26,19 @@ import {
   CircleX,
   Clock,
   Ellipsis,
+  Home,
   Text,
   Timer,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import * as React from "react";
 import { toast } from "sonner";
 import { DataTableColumnHeader } from "@/components/ui/data-table/data-table-column-header";
 import { getErrorMessage } from "@/lib/handle-error";
+import type { Property } from "@/modules/properties";
 import type { DataTableRowAction } from "@/shared/types/data-table";
-import { formatDate } from "@/shared/utils/format.util";
-
+import { formatCurrency, formatDate } from "@/shared/utils/format.util";
 import { type Application, ApplicationStatus } from "../application.type";
 
 export function getStatusIcon(status: Application["status"]) {
@@ -57,11 +60,13 @@ type GetApplicationsTableColumnsProps = {
   setRowAction: React.Dispatch<
     React.SetStateAction<DataTableRowAction<Application> | null>
   >;
+  isLandlord?: boolean;
 };
 
 export function getApplicationsTableColumns({
   statusCounts,
   setRowAction,
+  isLandlord,
 }: GetApplicationsTableColumnsProps): ColumnDef<Application>[] {
   // const updateApplicationMutation = useUpdateApplication();
   console.log(statusCounts);
@@ -99,7 +104,7 @@ export function getApplicationsTableColumns({
         <DataTableColumnHeader column={column} title="Move In Date" />
       ),
       cell: ({ row }) => (
-        <div className="w-20">{row.getValue("moveInDate")}</div>
+        <div className="w-20">{formatDate(row.getValue("moveInDate"))}</div>
       ),
       enableSorting: false,
       enableHiding: false,
@@ -110,13 +115,44 @@ export function getApplicationsTableColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Title" />
       ),
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <span className="max-w-125 truncate font-medium">
-            {row.getValue("property.title")}
-          </span>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const property = row.original.property;
+
+        return (
+          <Link
+            className="block hover:bg-gray-50"
+            href={`/applications/${row.getValue("_id")}`}
+          >
+            <div className="flex items-center">
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gray-200">
+                {(property as Property).media.images?.[0] ? (
+                  <Image
+                    alt={(property as Property).title}
+                    className="h-full w-full object-cover"
+                    height={40}
+                    src={(property as Property).media.images[0]?.url ?? ""}
+                    width={40}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center bg-gray-200">
+                    <Home className="h-5 w-5 text-gray-400" />
+                  </div>
+                )}
+              </div>
+              <div className="ml-4">
+                <p className="truncate font-medium text-primary-600 text-sm">
+                  {(property as Property).title}
+                </p>
+                <p className="truncate text-gray-500 text-sm">
+                  {(property as Property).location.address.line1}{" "}
+                  {(property as Property).location.address.postalCode}
+                  {(property as Property).location.address.town}
+                </p>
+              </div>
+            </div>
+          </Link>
+        );
+      },
       meta: {
         label: "Property name",
         placeholder: "Search property name...",
@@ -131,9 +167,9 @@ export function getApplicationsTableColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),
-      cell: ({ cell }) => {
+      cell: ({ row }) => {
         const status = Object.values(ApplicationStatus).find(
-          (status) => status === cell.getValue<Application["status"]>()
+          (status) => status === row.original.status
         );
 
         if (!status) return null;
@@ -166,9 +202,16 @@ export function getApplicationsTableColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Offer Amount" />
       ),
-      cell: ({ cell }) => {
-        const estimatedHours = cell.getValue<number>();
-        return <div className="w-20 text-right">{estimatedHours}</div>;
+      cell: ({ row }) => {
+        const offerAmount = row.original.offerAmount ?? 0;
+
+        return (
+          <div className="w-20 text-right">
+            {isLandlord
+              ? `${(row.original.tenant as any).personalInfo.firstName} ${(row.original.tenant as any).personalInfo.lastName}`
+              : `${formatCurrency(offerAmount)} /monthly`}
+          </div>
+        );
       },
       meta: {
         label: "Offer Amount",
@@ -183,9 +226,17 @@ export function getApplicationsTableColumns({
       id: "createdAt",
       accessorKey: "createdAt",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created At" />
+        <DataTableColumnHeader column={column} title="Applied On" />
       ),
-      cell: ({ cell }) => formatDate(cell.getValue<Date>()),
+      cell: ({ row }) => (
+        <div className="mt-2 flex items-center text-gray-500 text-sm sm:mt-0">
+          <p>
+            <time dateTime={row.original.appliedAt}>
+              {formatDate(row.original.appliedAt)}
+            </time>
+          </p>
+        </div>
+      ),
       meta: {
         label: "Created At",
         variant: "dateRange",

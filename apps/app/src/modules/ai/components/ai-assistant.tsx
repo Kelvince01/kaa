@@ -102,6 +102,12 @@ export function AIChatAssistant({
     },
   ];
 
+  /*
+  💡 Ask me about your payment history or upcoming due dates
+🔧 I can help you submit maintenance requests with photos
+📊 Get insights about your utility usage and costs
+  */
+
   // Initialize with welcome message
   useEffect(() => {
     const welcomeMessage: Message = {
@@ -305,7 +311,7 @@ export function AIChatAssistant({
   );
 
   return (
-    <div className="flex h-[600px] flex-col rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50">
+    <div className="flex h-[600px] flex-col rounded-lg border border-emerald-200 bg-linear-to-br from-emerald-50 to-teal-50">
       {/* Header */}
       <div className="flex items-center justify-between rounded-t-lg border-emerald-200 border-b bg-white/80 p-4 backdrop-blur-sm">
         <div className="flex items-center gap-3">
@@ -354,7 +360,7 @@ export function AIChatAssistant({
               key={message.id}
             >
               {message.role === "assistant" && (
-                <Avatar className="h-8 w-8 flex-shrink-0">
+                <Avatar className="h-8 w-8 shrink-0">
                   <AvatarFallback className="bg-emerald-500 text-white text-xs">
                     <Bot className="h-4 w-4" />
                   </AvatarFallback>
@@ -431,7 +437,7 @@ export function AIChatAssistant({
               </div>
 
               {message.role === "user" && (
-                <Avatar className="h-8 w-8 flex-shrink-0">
+                <Avatar className="h-8 w-8 shrink-0">
                   <AvatarFallback className="bg-gray-300 text-gray-600 text-xs">
                     <User className="h-4 w-4" />
                   </AvatarFallback>

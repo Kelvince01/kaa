@@ -17,7 +17,6 @@ import {
 } from "@kaa/models/types";
 import Elysia, { t } from "elysia";
 import mongoose, { type FilterQuery } from "mongoose";
-import { authPlugin } from "~/features/auth/auth-v2.plugin";
 import { accessPlugin } from "~/features/rbac/rbac.plugin";
 import { optionalTenantPlugin } from "~/features/users/tenants/tenant.plugin";
 
@@ -26,7 +25,6 @@ export const applicationController = new Elysia().group("applications", (app) =>
     .group("", (app) =>
       app
         .use(accessPlugin("applications", "read"))
-        .use(authPlugin)
         .get(
           "/",
           async ({ user, query, role, set }) => {
@@ -70,10 +68,10 @@ export const applicationController = new Elysia().group("applications", (app) =>
               const skip = (Number(page) - 1) * Number(limit);
 
               // Get total count
-              const total = await Application.countDocuments(query);
+              const total = await Application.countDocuments(queryFilter);
 
               // Get applications with pagination
-              const applications = await Application.find(query)
+              const applications = await Application.find(queryFilter)
                 .populate(
                   "property",
                   "title location.address media.images pricing.rent"
@@ -107,7 +105,7 @@ export const applicationController = new Elysia().group("applications", (app) =>
             }
           },
           {
-            requireAuth: true,
+            // requireAuth: true,
             // requireAccess: ["applications", "read"],
             query: t.Object({
               status: t.Optional(
@@ -366,6 +364,7 @@ export const applicationController = new Elysia().group("applications", (app) =>
           }
         )
     )
+
     .use(optionalTenantPlugin)
     /**
      * Create a new application

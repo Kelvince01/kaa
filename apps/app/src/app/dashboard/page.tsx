@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { RoleBasedContent } from "@/components/role-based-content";
 
-const LandlordDashboard = dynamic(() => import("@/routes/dashboard"), {
+const LandlordDashboard = dynamic(() => import("@/routes/dashboard/landlord"), {
   ssr: false,
   loading: () => (
     <div className="flex h-full items-center justify-center">

@@ -174,6 +174,9 @@ const nextConfig: NextConfig = {
     resolveAlias: {
       canvas: "./empty-module.ts",
     },
+    rules: {
+      external: ["require-in-the-middle"], // Or add to serverExternalPackages array
+    },
   },
   experimental: {
     turbopackFileSystemCacheForDev: true,

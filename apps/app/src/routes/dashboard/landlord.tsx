@@ -1,179 +1,215 @@
 "use client";
 
-// import { usePropertiesByLandlord } from "@/modules/properties";
-// import {
-// 	getPropertiesByLandlord,
-// 	getPropertiesByUser,
-// } from "@/modules/properties/property.service";
-// import { getUnits } from "@/modules/units/unit.service";
-// import { useQuery } from "@tanstack/react-query";
-// import { Building, Home, Plus } from "lucide-react";
-import { useState } from "react";
-import { useAuth } from "@/modules/auth/use-auth";
-import { DashboardAiInsightsAndRecommendations } from "./layout/ai-insights-and-recommendations";
-import { FeaturedPropertyInfo } from "./layout/featured-property-info";
-import { MonthlyRevenueChart } from "./layout/monthly-revenue-chart";
-import { DashboardOverview } from "./layout/overview";
-import { QuickActions } from "./layout/quick-actions";
-import { RecentActivities } from "./layout/recent-activities";
-import { DashboardStats } from "./layout/stats";
+import { Button } from "@kaa/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@kaa/ui/components/card";
+import { Building2, Home, Plus, Users, Wallet } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useUserContext } from "@/modules/me";
+import { useProperties } from "@/modules/properties";
+import { useUnits } from "@/modules/units/unit.queries";
+import { EmptyProperties } from "./layout/landlord/empty-states";
+import { DashboardOverview } from "./layout/landlord/overview";
 
 export default function LandlordDashboard() {
-  const [showPropertyForm, setShowPropertyForm] = useState(false);
-  const [showUnitForm, setShowUnitForm] = useState(false);
+  const { profile } = useUserContext();
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
+  const { data, isLoading } = useProperties({
+    landlordId: profile?.data._id,
+  });
+  const [stats] = useState([
+    {
+      title: "Total Properties",
+      value: "12",
+      icon: Building2,
+      trend: "+2 this month",
+    },
+    {
+      title: "Active Tenants",
+      value: "48",
+      icon: Users,
+      trend: "+5 this month",
+    },
+    {
+      title: "Available Units",
+      value: "8",
+      icon: Home,
+      trend: "-3 this month",
+    },
+    {
+      title: "Revenue Collected",
+      value: "KES 580,000",
+      icon: Wallet,
+      trend: "+12% vs last month",
+    },
+  ]);
+  const { data: unitsData } = useUnits({ property: selectedPropertyId });
 
-  // Get current user
-  const { user: currentUser } = useAuth();
+  const hasProperties = data?.properties && data.properties.length > 0;
 
-  // Get user's properties
-  // const { data: propertiesData, isLoading: isLoadingProperties } = useQuery({
-  // 	queryKey: ["userProperties", currentUser?.id],
-  // 	queryFn: () => getPropertiesByLandlord(currentUser?.id || ""),
-  // 	enabled: !!currentUser?.id,
-  // });
+  useEffect(() => {
+    if (data?.properties && data.properties.length > 0) {
+      setSelectedPropertyId(
+        data.properties.filter((property) => property.featured === true)[0]
+          ?._id || ""
+      );
+    }
+  }, [data?.properties]);
 
-  // Get user's units for selected property
-  // const { data: unitsData } = useQuery({
-  // 	queryKey: ["propertyUnits", selectedPropertyId],
-  // 	queryFn: () => getUnits({ property: selectedPropertyId }),
-  // 	enabled: !!selectedPropertyId,
-  // });
-
-  // const hasProperties = propertiesData?.properties && propertiesData.properties.length > 0;
-
-  // if (isLoadingProperties) {
-  // 	return (
-  // 		<div className="flex min-h-screen items-center justify-center">
-  // 			<div className="text-lg">Loading...</div>
-  // 		</div>
-  // 	);
-  // }
-
-  if (showPropertyForm) {
+  if (isLoading) {
     return (
-      // <PropertyCreateForm
-      // 	onSuccess={() => setShowPropertyForm(false)}
-      // 	onCancel={() => setShowPropertyForm(false)}
-      // />
-      <div>Form</div>
-    );
-  }
-
-  if (showUnitForm && selectedPropertyId) {
-    return (
-      // <UnitCreateForm
-      // 	propertyId={selectedPropertyId}
-      // 	onSuccess={() => setShowUnitForm(false)}
-      // 	onCancel={() => setShowUnitForm(false)}
-      // />
-      <div>Form</div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
     );
   }
 
   return (
-    // <div className="container mx-auto space-y-6 p-6">
-    // 	<div className="flex items-center justify-between">
-    // 		<h1 className="font-bold text-3xl">Landlord Dashboard</h1>
-    // 	</div>
-
-    // 	{!hasProperties ? (
-    // 		<Card className="mx-auto w-full max-w-2xl">
-    // 			<CardHeader className="text-center">
-    // 				<Building className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-    // 				<CardTitle>No Properties Found</CardTitle>
-    // 				<CardDescription>
-    // 					You don't have any properties yet. Create your first property to get started.
-    // 				</CardDescription>
-    // 			</CardHeader>
-    // 			<CardContent className="text-center">
-    // 				<Button onClick={() => setShowPropertyForm(true)} className="w-full max-w-xs">
-    // 					<Plus className="mr-2 h-4 w-4" />
-    // 					Create Property
-    // 				</Button>
-    // 			</CardContent>
-    // 		</Card>
-    // 	) : (
-    // 		<div className="space-y-6">
-    // 			<div className="flex items-center justify-between">
-    // 				<h2 className="font-semibold text-2xl">Your Properties</h2>
-    // 				<Button onClick={() => setShowPropertyForm(true)}>
-    // 					<Plus className="mr-2 h-4 w-4" />
-    // 					Add Property
-    // 				</Button>
-    // 			</div>
-
-    // 			<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-    // 				{propertiesData?.properties.map((property) => {
-    // 					const propertyUnits =
-    // 						unitsData?.items.filter((unit) => unit.property === property._id) || [];
-
-    // 					return (
-    // 						<Card key={property._id} className="relative">
-    // 							<CardHeader>
-    // 								<CardTitle className="flex items-center gap-2">
-    // 									<Home className="h-5 w-5" />
-    // 									{property.title}
-    // 								</CardTitle>
-    // 								<CardDescription>
-    // 									{property.location.address.town}, {property.location.county}
-    // 								</CardDescription>
-    // 							</CardHeader>
-    // 							<CardContent>
-    // 								<div className="space-y-4">
-    // 									<div className="text-muted-foreground text-sm">
-    // 										<p>Type: {property.type}</p>
-    // 										<p>Status: {property.status}</p>
-    // 										<p>Units: {propertyUnits.length}</p>
-    // 									</div>
-
-    // 									{propertyUnits.length === 0 ? (
-    // 										<Button
-    // 											variant="outline"
-    // 											className="w-full"
-    // 											onClick={() => {
-    // 												setSelectedPropertyId(property._id);
-    // 												setShowUnitForm(true);
-    // 											}}
-    // 										>
-    // 											<Plus className="mr-2 h-4 w-4" />
-    // 											Create First Unit
-    // 										</Button>
-    // 									) : (
-    // 										<Button
-    // 											variant="outline"
-    // 											className="w-full"
-    // 											onClick={() => {
-    // 												setSelectedPropertyId(property._id);
-    // 												setShowUnitForm(true);
-    // 											}}
-    // 										>
-    // 											<Plus className="mr-2 h-4 w-4" />
-    // 											Add Unit
-    // 										</Button>
-    // 									)}
-    // 								</div>
-    // 							</CardContent>
-    // 						</Card>
-    // 					);
-    // 				})}
-    // 			</div>
-    // 		</div>
-    // 	)}
-    // </div>
-
     <div className="space-y-6">
       <DashboardOverview />
-      <DashboardStats />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <DashboardAiInsightsAndRecommendations />
 
-        <MonthlyRevenueChart />
+      {hasProperties ? (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-2xl">Your Properties</h2>
+            <Link href="/dashboard/properties/create">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Property
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {data?.properties.map((property) => {
+              const propertyUnits =
+                unitsData?.items.filter(
+                  (unit) => unit.property?._id === property._id
+                ) || [];
+
+              return (
+                <Card className="relative" key={property._id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Home className="h-5 w-5" />
+                      {property.title}
+                    </CardTitle>
+                    <CardDescription>
+                      {property.location.address.town},{" "}
+                      {property.location.county}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="text-muted-foreground text-sm">
+                        <p>Type: {property.type}</p>
+                        <p>Status: {property.status}</p>
+                        <p>Units: {propertyUnits.length}</p>
+                      </div>
+
+                      {propertyUnits.length === 0 ? (
+                        <Link
+                          href={`/dashboard/properties/${property._id}/units/create`}
+                        >
+                          <Button className="w-full" variant="outline">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create First Unit
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/dashboard/properties/${property._id}/units/create`}
+                        >
+                          <Button className="w-full" variant="outline">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Unit
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <EmptyProperties />
+      )}
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => (
+          <Card className="card-hover" key={stat.title}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="font-medium text-muted-foreground text-sm">
+                {stat.title}
+              </CardTitle>
+              <stat.icon className="h-5 w-5 text-accent" />
+            </CardHeader>
+            <CardContent>
+              <div className="font-bold text-2xl">{stat.value}</div>
+              <p className="mt-1 text-muted-foreground text-xs">{stat.trend}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <RecentActivities />
-        <QuickActions />
-        <FeaturedPropertyInfo />
+
+      <div className="mt-8 grid gap-6 md:grid-cols-2">
+        <Card className="card-hover">
+          <CardHeader>
+            <CardTitle>Recent Properties</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  className="flex items-center justify-between rounded-lg bg-secondary/50 p-4"
+                  key={i}
+                >
+                  <div>
+                    <h3 className="font-semibold">Green Valley Apartments</h3>
+                    <p className="text-muted-foreground text-sm">
+                      24 Units • Nairobi
+                    </p>
+                  </div>
+                  <Button size="sm" variant="outline">
+                    View Details
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-hover">
+          <CardHeader>
+            <CardTitle>Recent Activities</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  className="flex items-center gap-4 rounded-lg bg-secondary/50 p-4"
+                  key={i}
+                >
+                  <div className="h-2 w-2 rounded-full bg-accent" />
+                  <div>
+                    <h3 className="font-semibold">New Tenant Registration</h3>
+                    <p className="text-muted-foreground text-sm">
+                      John Doe • Unit 4B
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

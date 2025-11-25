@@ -48,34 +48,34 @@ export function getChangelogEntry(
   try {
     if (!(date && isValidDateFormat(date))) {
       console.error(`Invalid date format: ${date}`);
-      return null;
+      return Promise.resolve(null);
     }
 
     if (!checkDirectoryExists()) {
-      return null;
+      return Promise.resolve(null);
     }
 
     const fullPath = path.join(changelogDirectory, `${date}.md`);
 
     if (!fs.existsSync(fullPath)) {
       console.error(`Changelog file not found: ${fullPath}`);
-      return null;
+      return Promise.resolve(null);
     }
 
     const fileContents = fs.readFileSync(fullPath, "utf8");
 
     const matterResult = matter(fileContents);
 
-    return {
+    return Promise.resolve({
       date,
       title: matterResult.data.title || "",
       excerpt: matterResult.data.excerpt || "",
       type: matterResult.data.type || "",
       content: matterResult.content,
-    };
+    });
   } catch (error) {
     console.error(`Error reading changelog entry for ${date}:`, error);
-    return null;
+    return Promise.resolve(null);
   }
 }
 

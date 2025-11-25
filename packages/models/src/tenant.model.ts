@@ -43,7 +43,7 @@ const tenantSchema: Schema<ITenant> = new Schema<ITenant>(
     },
 
     // Enhanced tenant classification
-    tenantType: {
+    type: {
       type: String,
       enum: Object.values(TenantType),
       required: true,
@@ -312,7 +312,7 @@ tenantSchema.index({ contract: 1 });
 tenantSchema.index({ memberId: 1, status: 1 });
 tenantSchema.index({ isActive: 1 });
 tenantSchema.index({ "tenantScore.overallScore": -1 });
-tenantSchema.index({ tenantType: 1, status: 1 });
+tenantSchema.index({ type: 1, status: 1 });
 tenantSchema.index({ priority: 1 });
 tenantSchema.index({ tags: 1 });
 tenantSchema.index({ "personalInfo.email": 1 });

@@ -8,7 +8,7 @@ import type { SearchParams } from "@/shared/types";
 
 export const metadata: Metadata = {
   title: "Applications | Dashboard",
-  description: "Tenant property applications",
+  description: "Track and manage tenant applications.",
 };
 
 type ApplicationPageProps = {

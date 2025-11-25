@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/query/query-client";
 import * as tenantService from "./tenant.service";
-import type { TenantUpdateInput } from "./tenant.type";
+import type { UpdateTenantDto } from "./tenant.type";
 
 // Create tenant
 export const useCreateTenant = () =>
@@ -15,7 +15,7 @@ export const useCreateTenant = () =>
 // Update tenant
 export const useUpdateTenant = () =>
   useMutation({
-    mutationFn: ({ id, data }: { id: string; data: TenantUpdateInput }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdateTenantDto }) =>
       tenantService.updateTenant(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });

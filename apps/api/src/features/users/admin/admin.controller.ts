@@ -190,7 +190,7 @@ export const adminController = new Elysia().group("admin", (app) =>
             .sort({ createdAt: -1 })
             .limit(5)
             .select("property tenant createdAt")
-            .populate("property", "title location")
+            .populate("property", "title location media")
             .populate("tenant", "personalInfo");
 
           // Calculate growth trends using the filtered periods

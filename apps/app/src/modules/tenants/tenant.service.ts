@@ -1,14 +1,14 @@
 import { httpClient } from "@/lib/axios";
 import type {
-  TenantCreateInput,
+  CreateTenantDto,
   TenantListResponse,
   TenantResponse,
-  TenantUpdateInput,
+  UpdateTenantDto,
 } from "./tenant.type";
 
 // Create tenant
 export const createTenant = async (
-  data: TenantCreateInput
+  data: CreateTenantDto
 ): Promise<TenantResponse> => {
   const response = await httpClient.api.post("/tenants", data);
   return response.data;
@@ -31,7 +31,7 @@ export const getTenant = async (id: string): Promise<TenantResponse> => {
 // Update tenant
 export const updateTenant = async (
   id: string,
-  data: TenantUpdateInput
+  data: UpdateTenantDto
 ): Promise<TenantResponse> => {
   const response = await httpClient.api.patch(`/tenants/${id}`, data);
   return response.data;

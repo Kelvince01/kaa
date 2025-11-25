@@ -6,12 +6,24 @@ import {
 } from "@kaa/ui/components/card";
 import Image from "next/image";
 
-export function FeaturedPropertyInfo() {
+export function PropertyInfo({
+  property,
+  unit,
+  leaseStart,
+  leaseEnd,
+  manager,
+}: {
+  property: string;
+  unit: string;
+  leaseStart: string;
+  leaseEnd: string;
+  manager: string;
+}) {
   return (
     <Card className="border-emerald-200">
       <CardHeader>
         <CardTitle className="font-heading text-emerald-900">
-          Property Info
+          My Property
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 px-6">
@@ -30,22 +42,26 @@ export function FeaturedPropertyInfo() {
         </div>
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-emerald-600">Unit:</span>
-            <span className="font-medium text-emerald-900">3B</span>
+            <span className="text-emerald-600">Property:</span>
+            <span className="font-medium text-emerald-900">{property}</span>
           </div>
           <div className="flex justify-between text-sm">
+            <span className="text-emerald-600">Unit:</span>
+            <span className="font-medium text-emerald-900">{unit}</span>
+          </div>
+          {/* <div className="flex justify-between text-sm">
             <span className="text-emerald-600">Building:</span>
+            <span className="font-medium text-emerald-900">{property}</span>
+          </div> */}
+          <div className="flex justify-between text-sm">
+            <span className="text-emerald-600">Lease:</span>
             <span className="font-medium text-emerald-900">
-              Kileleshwa Heights
+              (Started {leaseStart}) - Until {leaseEnd}
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-emerald-600">Lease:</span>
-            <span className="font-medium text-emerald-900">Until Dec 2024</span>
-          </div>
-          <div className="flex justify-between text-sm">
             <span className="text-emerald-600">Manager:</span>
-            <span className="font-medium text-emerald-900">Sarah Wanjiku</span>
+            <span className="font-medium text-emerald-900">{manager}</span>
           </div>
         </div>
       </CardContent>

@@ -27,7 +27,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Shell } from "@/components/shell";
-import SimpleTenantForm from "@/modules/tenants/components/simple-tenant-form";
+import { TenantForm, TenantsTable } from "@/modules/tenants";
 import SimpleTenantTable from "@/modules/tenants/components/simple-tenant-table";
 import {
   useDeleteTenant,
@@ -395,7 +395,7 @@ export default function TenantsManagement({ property }: { property: string }) {
         </div>
 
         {/* Emergency Contact */}
-        {tenant.emergencyContact && (
+        {tenant.emergencyContacts && (
           <div>
             <h3 className="mb-3 font-medium text-gray-900 text-lg">
               Emergency Contact
@@ -409,7 +409,7 @@ export default function TenantsManagement({ property }: { property: string }) {
                   Name
                 </label>
                 <p className="text-gray-900 text-sm">
-                  {tenant.emergencyContact.name}
+                  {tenant.emergencyContacts[0]?.name}
                 </p>
               </div>
               <div>
@@ -420,7 +420,7 @@ export default function TenantsManagement({ property }: { property: string }) {
                   Relationship
                 </label>
                 <p className="text-gray-900 text-sm">
-                  {tenant.emergencyContact.relationship}
+                  {tenant.emergencyContacts[0]?.relationship}
                 </p>
               </div>
               <div>
@@ -431,7 +431,7 @@ export default function TenantsManagement({ property }: { property: string }) {
                   Phone
                 </label>
                 <p className="text-gray-900 text-sm">
-                  {tenant.emergencyContact.phone}
+                  {tenant.emergencyContacts[0]?.phone}
                 </p>
               </div>
               <div>
@@ -442,7 +442,7 @@ export default function TenantsManagement({ property }: { property: string }) {
                   Email
                 </label>
                 <p className="text-gray-900 text-sm">
-                  {tenant.emergencyContact.email || "N/A"}
+                  {tenant.emergencyContacts[0]?.email || "N/A"}
                 </p>
               </div>
             </div>
@@ -490,7 +490,7 @@ export default function TenantsManagement({ property }: { property: string }) {
                 information below.
               </DialogDescription>
             </DialogHeader>
-            <SimpleTenantForm onSuccess={handleCreateSuccess} />
+            <TenantForm onSuccess={handleCreateSuccess} />
           </DialogContent>
         </Dialog>
       </div>
@@ -560,6 +560,13 @@ export default function TenantsManagement({ property }: { property: string }) {
         onView={handleView}
       />
 
+      <TenantsTable
+        data={tenantsData?.items || []}
+        onCreate={handleCreateNew}
+        onDelete={(tenant) => handleDelete(tenant[0] as any)}
+        pageCount={tenantsData?.pagination.total ?? 0}
+      />
+
       {/* View Tenant Sheet */}
       <Sheet onOpenChange={setIsViewSheetOpen} open={isViewSheetOpen}>
         <SheetContent className="w-[600px] overflow-y-auto sm:w-[700px]">
@@ -584,9 +591,9 @@ export default function TenantsManagement({ property }: { property: string }) {
           </SheetHeader>
           <div className="mt-6">
             {selectedTenant && (
-              <SimpleTenantForm
-                initialData={selectedTenant}
+              <TenantForm
                 onSuccess={handleEditSuccess}
+                tenant={selectedTenant}
               />
             )}
           </div>

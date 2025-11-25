@@ -463,7 +463,7 @@
     "login": {
       "title": "Sign In",
       "create_account": "Or create a new account",
-      "create_account_link": "Create an account",
+      "create_account_link": "Create your account",
       "email_label": "Email",
       "email_description": "Your registered email address",
       "password_label": "Password",

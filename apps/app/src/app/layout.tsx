@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, DM_Serif_Display } from "next/font/google";
+import { DM_Sans, Lora } from "next/font/google";
 import "./globals.css";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
@@ -17,9 +17,9 @@ const dmSans = DM_Sans({
   subsets: ["latin"],
 });
 
-const dmSerifDisplay = DM_Serif_Display({
+const dmSerifDisplay = Lora({
   variable: "--font-serif",
-  weight: ["400"],
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
 });
 

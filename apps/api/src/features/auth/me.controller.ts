@@ -105,6 +105,7 @@ export const meController = new Elysia({
                 const { Landlord } = await import("@kaa/models");
                 const landlord = await Landlord.findOne({ user: user.id })
                   .populate("organizationId")
+                  // .populate("property", "title")
                   .lean();
                 profile = landlord;
                 // Use landlord's organization if it exists
@@ -114,7 +115,12 @@ export const meController = new Elysia({
               } else if (roleName === "tenant") {
                 const { Tenant } = await import("@kaa/models");
                 const tenant = await Tenant.findOne({ user: user.id })
-                  .populate("property")
+                  .populate("property", "title landlord")
+                  .populate("unit", "unitNumber")
+                  // .populate(
+                  //   "landlord",
+                  //   "personalInfo.firstName personalInfo.lastName"
+                  // )
                   .lean();
                 profile = tenant;
                 // Tenants don't have organizations

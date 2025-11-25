@@ -3,7 +3,6 @@
 import { Button } from "@kaa/ui/components/button";
 import { Check, Link2 } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import Separator from "@/components/common/separator";
 import HoverLink from "@/components/ui/hover-link";
 import type { ChangelogEntry } from "@/lib/changelog";
@@ -54,7 +53,7 @@ export default function ChangelogCard({
       onCopyStart: () => setCopying(true),
       onCopyComplete: () => setCopying(false),
       toastMessage: "Article URL copied to clipboard!",
-      toast,
+      showToast: true,
     });
   };
 

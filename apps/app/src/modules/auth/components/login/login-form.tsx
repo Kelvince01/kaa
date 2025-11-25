@@ -1,5 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Icon } from "@iconify/react";
 import { Button } from "@kaa/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@kaa/ui/components/card";
 import { Checkbox } from "@kaa/ui/components/checkbox";
 import {
   Form,
@@ -12,7 +21,7 @@ import {
 } from "@kaa/ui/components/form";
 import { Input } from "@kaa/ui/components/input";
 import { Separator } from "@kaa/ui/components/separator";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type React from "react";
@@ -89,40 +98,50 @@ const LoginForm: React.FC<LoginFormProps> = ({ redirectTo = "/" }) => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-md">
-      <div className="rounded-lg bg-white px-6 py-8 shadow-md">
-        <div className="mb-6 text-center">
-          <h2 className="font-extrabold text-3xl text-gray-900">
-            {t("title")}
-          </h2>
-          <p className="mt-2 text-gray-600 text-sm">
-            {t("create_account")}{" "}
-            <Link
-              className="font-medium text-primary/50 hover:text-primary/80"
-              href="/auth/register"
-            >
-              {t("create_account_link")}
-            </Link>
-          </p>
+    <Card className="relative w-full max-w-md border-emerald-200/50 bg-white/95 shadow-2xl shadow-emerald-500/10 backdrop-blur-sm">
+      <div className="-top-1 -translate-x-1/2 absolute left-1/2 h-1 w-20 transform rounded-full bg-linear-to-r from-emerald-500 to-teal-500" />
+      <CardHeader className="pt-8 pb-6 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 shadow-emerald-500/25 shadow-lg">
+          <Icon
+            className="h-8 w-8 text-white"
+            icon="material-symbols:home-work"
+          />
         </div>
+        <CardTitle className="bg-linear-to-r from-emerald-700 to-teal-700 bg-clip-text font-heading text-2xl text-transparent">
+          {t("title")}
+        </CardTitle>
+        <CardDescription className="text-slate-600">
+          {t("create_account")}
+          {/* <Link
+            className="font-medium text-primary/50 hover:text-primary/80"
+            href="/auth/register"
+          >
+            {t("create_account_link")}
+          </Link> */}
+        </CardDescription>
+      </CardHeader>
 
+      <CardContent className="space-y-6 px-6">
         <Form {...form}>
-          <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+          <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("email_label")}</FormLabel>
+                  <FormLabel className="text-slate-700 text-sm">
+                    {t("email_label")}
+                  </FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <Mail className="text-gray-400" />
-                      </div>
+                      <Icon
+                        className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 transform text-emerald-500"
+                        icon="material-symbols:mail-outline"
+                      />
                       <Input
                         {...field}
                         autoComplete="email"
-                        className="pl-10"
+                        className="border-emerald-200 pl-10 focus:border-emerald-500 focus:ring-emerald-500/20"
                         placeholder="name@example.com"
                         required
                         type="email"
@@ -168,16 +187,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ redirectTo = "/" }) => {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("password_label")}</FormLabel>
+                  <FormLabel className="text-slate-700 text-sm">
+                    {t("password_label")}
+                  </FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <Lock className="text-gray-400" />
-                      </div>
+                      <Icon
+                        className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 transform text-emerald-500"
+                        icon="material-symbols:lock-outline"
+                      />
                       <Input
                         {...field}
                         autoComplete="current-password"
-                        className="pr-10 pl-10"
+                        className="border-emerald-200 pl-10 focus:border-emerald-500 focus:ring-emerald-500/20"
                         required
                         type={showPassword ? "text" : "password"}
                       />
@@ -206,68 +228,95 @@ const LoginForm: React.FC<LoginFormProps> = ({ redirectTo = "/" }) => {
                 control={form.control}
                 name="rememberMe"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-3">
+                  <FormItem className="flex flex-row items-center space-x-2">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
+                        className="border-emerald-300 data-[state=checked]:border-emerald-500 data-[state=checked]:bg-emerald-500"
                         id="rememberMe"
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
                     <div className="leading-none">
-                      <FormLabel htmlFor="rememberMe">
+                      <FormLabel
+                        className="text-slate-600 text-sm"
+                        htmlFor="rememberMe"
+                      >
                         {t("remember_me")}
                       </FormLabel>
                     </div>
                   </FormItem>
                 )}
               />
-              <div className="text-sm">
-                <Link
-                  className="font-medium text-foreground/50 underline underline-offset-4 hover:text-foreground/80"
-                  href="/auth/forgot-password"
+              <Link href="/auth/forgot-password">
+                <Button
+                  className="h-auto p-0 text-emerald-600 text-sm hover:text-emerald-700"
+                  variant="link"
                 >
                   {t("forgot_password")}
-                </Link>
-              </div>
+                </Button>
+              </Link>
             </div>
 
             <Button
-              className="w-full disabled:cursor-not-allowed"
+              className="w-full bg-linear-to-r from-emerald-500 to-teal-600 py-2.5 font-medium text-white shadow-emerald-500/25 shadow-lg transition-all duration-200 hover:from-emerald-600 hover:to-teal-700 disabled:cursor-not-allowed"
               disabled={loginMutation.isPending || !form.formState.isValid}
               type="submit"
             >
+              <Icon className="mr-2 h-4 w-4" icon="material-symbols:login" />
               {loginMutation.isPending ? t("signing_in") : t("submit")}
             </Button>
           </form>
         </Form>
 
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-gray-300 border-t" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500">
-                {t("continue_with")}
-              </span>
-            </div>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="bg-emerald-200" />
           </div>
-
-          {/* Social Login Buttons */}
-          <div className="mt-6 grid grid-cols-1 gap-3">
-            <OAuthConnectButton
-              className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-              provider="google"
-            />
-            <OAuthConnectButton
-              className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-              provider="microsoft"
-            />
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 font-medium text-slate-500">
+              {t("continue_with")}
+            </span>
           </div>
         </div>
-      </div>
-    </div>
+
+        {/* Social Login Buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <OAuthConnectButton
+            className="w-full border-emerald-200 transition-colors hover:border-emerald-300 hover:bg-emerald-50"
+            provider="google"
+          />
+          <OAuthConnectButton
+            className="w-full border-emerald-200 transition-colors hover:border-emerald-300 hover:bg-emerald-50"
+            provider="microsoft"
+          />
+        </div>
+      </CardContent>
+
+      <CardFooter className="pb-8 text-center">
+        <div className="w-full space-y-3">
+          <p className="text-slate-600 text-sm">
+            New to Kaa?
+            <Link href="/auth/register">
+              <Button
+                className="ml-1 h-auto p-0 font-medium text-emerald-600 text-sm hover:text-emerald-700"
+                variant="link"
+              >
+                {t("create_account_link")}
+              </Button>
+            </Link>
+          </p>
+          <div className="flex items-center justify-center gap-2 text-slate-500 text-xs">
+            <Icon
+              className="h-3 w-3 text-emerald-500"
+              icon="material-symbols:verified"
+            />
+            {/* <span>Trusted by 10,000+ Kenyan property owners</span> */}
+            <span>Trusted by landlords and tenants</span>
+          </div>
+        </div>
+      </CardFooter>
+    </Card>
   );
 };
 

@@ -95,7 +95,7 @@ export const getTenants = async (params: TenantQueryParams) => {
       sortBy = "createdAt",
       sortOrder = "desc",
       status,
-      tenantType,
+      type,
       priority,
       property,
       unit,
@@ -133,11 +133,11 @@ export const getTenants = async (params: TenantQueryParams) => {
     }
 
     // Tenant type filters - support arrays
-    if (tenantType) {
-      if (Array.isArray(tenantType)) {
-        filter.tenantType = { $in: tenantType };
+    if (type) {
+      if (Array.isArray(type)) {
+        filter.type = { $in: type };
       } else {
-        filter.tenantType = tenantType;
+        filter.type = type;
       }
     }
 
@@ -417,7 +417,7 @@ export const getTenantAnalytics = async (
       // Type distribution
       Tenant.aggregate([
         { $match: baseFilter },
-        { $group: { _id: "$tenantType", count: { $sum: 1 } } },
+        { $group: { _id: "$type", count: { $sum: 1 } } },
       ]),
 
       // Priority distribution
@@ -653,7 +653,7 @@ export const createTenant = async (
     // Set default values
     const tenantDefaults = {
       status: TenantStatus.ACTIVE,
-      tenantType: TenantType.INDIVIDUAL,
+      type: TenantType.INDIVIDUAL,
       priority: TenantPriority.MEDIUM,
       isActive: true,
       verificationProgress: 0,

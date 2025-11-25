@@ -91,8 +91,8 @@ export function getTenantsTableColumns({
         <DataTableColumnHeader column={column} title="Tenant Name" />
       ),
       cell: ({ row }) => {
-        const personalInfo =
-          row.getValue<Tenant["personalInfo"]>("personalInfo");
+        const personalInfo = row.original.personalInfo;
+
         const fullName = `${personalInfo.firstName} ${personalInfo.middleName ? `${personalInfo.middleName} ` : ""}${personalInfo.lastName}`;
         return (
           <div className="flex items-center gap-2">
@@ -115,11 +115,9 @@ export function getTenantsTableColumns({
         <DataTableColumnHeader column={column} title="Property" />
       ),
       cell: ({ row }) => {
-        const property = row.getValue<Tenant["property"]>("property");
-        const propertyTitle =
-          property && typeof property === "object"
-            ? property.title || property.name
-            : property;
+        const property = row.original.property;
+        const propertyTitle = property.title;
+
         return (
           <div className="flex items-center gap-2">
             <span className="max-w-125 truncate font-medium">
@@ -143,9 +141,9 @@ export function getTenantsTableColumns({
         <DataTableColumnHeader column={column} title="Unit" />
       ),
       cell: ({ row }) => {
-        const unit = row.getValue<Tenant["unit"]>("unit");
-        const unitTitle =
-          unit && typeof unit === "object" ? unit.title || unit.name : unit;
+        const unit = row.original.unit;
+        const unitTitle = unit.unitNumber;
+
         return (
           <div className="flex items-center gap-2">
             <span className="max-w-125 truncate font-medium">
@@ -168,9 +166,9 @@ export function getTenantsTableColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),
-      cell: ({ cell }) => {
+      cell: ({ row }) => {
         const status = Object.values(TenantStatus).find(
-          (status) => status === cell.getValue<Tenant["status"]>()
+          (status) => status === row.original.status
         );
 
         if (!status) return null;
@@ -203,7 +201,7 @@ export function getTenantsTableColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Start Date" />
       ),
-      cell: ({ cell }) => formatDate(cell.getValue<Date>()),
+      cell: ({ row }) => formatDate(row.original.startDate),
       meta: {
         label: "Start Date",
         variant: "dateRange",
@@ -217,8 +215,8 @@ export function getTenantsTableColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="End Date" />
       ),
-      cell: ({ cell }) => {
-        const endDate = cell.getValue<Date>();
+      cell: ({ row }) => {
+        const endDate = row.original.endDate;
         return endDate ? (
           formatDate(endDate)
         ) : (
@@ -238,7 +236,7 @@ export function getTenantsTableColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Created At" />
       ),
-      cell: ({ cell }) => formatDate(cell.getValue<Date>()),
+      cell: ({ row }) => formatDate(row.original.createdAt),
       meta: {
         label: "Created At",
         variant: "dateRange",

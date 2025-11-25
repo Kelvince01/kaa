@@ -48,7 +48,7 @@ export const createTenantSchema = z.object({
   property: z.string().min(1),
   unit: z.string().min(1),
   contract: z.string().min(1),
-  tenantType: z.enum([
+  type: z.enum([
     TenantType.INDIVIDUAL,
     TenantType.CORPORATE,
     TenantType.STUDENT,
@@ -75,7 +75,7 @@ export const updateTenantSchema = z.object({
   property: z.string().optional(),
   unit: z.string().optional(),
   contract: z.string().optional(),
-  tenantType: z
+  type: z
     .enum([TenantType.INDIVIDUAL, TenantType.CORPORATE, TenantType.STUDENT])
     .optional(),
   priority: z

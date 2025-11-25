@@ -36,6 +36,8 @@ export function ApplicationsTableActionBar({
   const [isPending, startTransition] = React.useTransition();
   const [currentAction, setCurrentAction] = React.useState<Action | null>(null);
   const { mutateAsync: updateApplications } = useUpdateApplications();
+  const { useDeleteApplications } = require("../application.mutations");
+  const deleteApplicationsMutation = useDeleteApplications();
 
   const getIsActionPending = React.useCallback(
     (action: Action) => isPending && currentAction === action,
@@ -69,18 +71,18 @@ export function ApplicationsTableActionBar({
 
   const onApplicationDelete = React.useCallback(() => {
     setCurrentAction("delete");
-    startTransition(() => {
-      // const { error } = await deleteApplications({
-      // 	ids: rows.map((row) => row.original._id),
-      // });
+    startTransition(async () => {
+      const { error } = await deleteApplicationsMutation.mutateAsync({
+        ids: rows.map((row) => row.original._id),
+      });
 
-      // if (error) {
-      // 	toast.error(error);
-      // 	return;
-      // }
+      if (error) {
+        toast.error(error);
+        return;
+      }
       table.toggleAllRowsSelected(false);
     });
-  }, [table]);
+  }, [table, deleteApplicationsMutation, rows]);
 
   return (
     <DataTableActionBar table={table} visible={rows.length > 0}>

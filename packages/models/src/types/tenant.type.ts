@@ -39,7 +39,7 @@ export interface ITenant extends Document {
   contract?: Types.ObjectId; // Reference to Lease model
 
   // Enhanced tenant classification
-  tenantType: TenantType;
+  type: TenantType;
   priority: TenantPriority;
 
   // Personal information
@@ -237,7 +237,7 @@ export type CreateTenantDto = {
   property: Types.ObjectId;
   unit: Types.ObjectId;
   contract?: Types.ObjectId;
-  tenantType: TenantType;
+  type: TenantType;
   priority?: TenantPriority;
   startDate: Date;
   endDate?: Date;
@@ -258,7 +258,7 @@ export type UpdateTenantDto = {
   property?: Types.ObjectId;
   unit?: Types.ObjectId;
   contract?: Types.ObjectId;
-  tenantType?: TenantType;
+  type?: TenantType;
   priority?: TenantPriority;
   endDate?: Date;
   status?: TenantStatus;
@@ -277,7 +277,7 @@ export type UpdateTenantDto = {
 
 export type TenantQueryParams = {
   status?: TenantStatus | TenantStatus[];
-  tenantType?: TenantType | TenantType[];
+  type?: TenantType | TenantType[];
   priority?: TenantPriority | TenantPriority[];
   property?: string | string[];
   unit?: string | string[];

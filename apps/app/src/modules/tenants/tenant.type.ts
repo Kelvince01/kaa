@@ -83,6 +83,7 @@ export type Tenant = {
   startDate: string;
   endDate?: string;
   status: TenantStatus;
+  type: TenantType;
   verificationProgress: number;
   isVerified: boolean;
   address: any;
@@ -146,6 +147,29 @@ export type Tenant = {
     autopayEnabled: boolean;
     paymentReminders: boolean;
   };
+  // Lease history and metrics
+  leaseHistory: Array<{
+    property: string;
+    unit: string;
+    startDate: Date;
+    endDate?: Date;
+    monthlyRent: number;
+    securityDeposit: number;
+    reasonForLeaving?: string;
+    landlordRating?: number;
+    landlordReview?: string;
+  }>;
+
+  // Behavioral metrics
+  behaviorMetrics: {
+    communicationRating: number; // 1-5
+    maintenanceCompliance: number; // 1-5
+    respectForProperty: number; // 1-5
+    noiseComplaints: number;
+    latePayments: number;
+    violationsCount: number;
+    lastViolationDate?: Date;
+  };
   backgroundCheck: any;
   source?: "website" | "referral" | "agent" | "walk_in" | "social_media";
   stripeCustomerId?: string;
@@ -160,10 +184,10 @@ export type CreateTenantDto = {
   property: string;
   unit: string;
   contract?: string;
-  tenantType: TenantType;
+  type: TenantType;
   priority?: TenantPriority;
-  startDate: Date;
-  endDate?: Date;
+  startDate: string;
+  endDate?: string;
   status?: TenantStatus;
 
   personalInfo?: Partial<Tenant["personalInfo"]>;
@@ -177,36 +201,25 @@ export type CreateTenantDto = {
   tags?: string[];
 };
 
-export type TenantCreateInput = {
-  user?: string;
-  property: string;
-  unit: string;
-  contract?: string;
-  startDate: string;
-  endDate?: string;
-  status?: TenantStatus;
-  emergencyContact?: {
-    name: string;
-    phone: string;
-    relationship: string;
-    email?: string;
-  };
-  notes?: string;
-};
-
-export type TenantUpdateInput = {
+export type UpdateTenantDto = {
   property?: string;
   unit?: string;
   contract?: string;
+  type?: TenantType;
+  priority?: TenantPriority;
   endDate?: string;
   status?: TenantStatus;
-  emergencyContact?: {
-    name: string;
-    phone: string;
-    relationship: string;
-    email?: string;
-  };
+
+  personalInfo?: Partial<Tenant["personalInfo"]>;
+  corporateInfo?: Tenant["corporateInfo"];
+  emergencyContacts?: Tenant["emergencyContacts"];
+  communicationPreferences?: Partial<Tenant["communicationPreferences"]>;
+  paymentInfo?: Partial<Tenant["paymentInfo"]>;
+  behaviorMetrics?: Partial<Tenant["behaviorMetrics"]>;
   notes?: string;
+  internalNotes?: string;
+  tags?: string[];
+  nextFollowUpDate?: Date;
 };
 
 export type TenantListResponse = {
