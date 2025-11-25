@@ -110,7 +110,7 @@ export class TemplateService {
       const totalPages = Math.ceil(total / limit);
 
       return {
-        templates: templates as ITemplate[],
+        templates: templates as any[],
         pagination: {
           total,
           page,
@@ -148,7 +148,7 @@ export class TemplateService {
         throw new NotFoundError("Template not found");
       }
 
-      return template as ITemplate;
+      return template as any;
     } catch (error) {
       if (error instanceof AppError) throw error;
       logger.error("Error getting template:", error);
@@ -179,7 +179,7 @@ export class TemplateService {
         throw new NotFoundError("Template not found");
       }
 
-      return template as ITemplate;
+      return template as any;
     } catch (error) {
       if (error instanceof AppError) throw error;
       logger.error("Error getting template:", error);
