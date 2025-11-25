@@ -1,8 +1,9 @@
 import { SmsDeliveryReport, SmsMessage } from "@kaa/models";
-import { SmsDeliveryStatus } from "@kaa/models/types";
+import { SmsDeliveryStatus, type SmsType } from "@kaa/models/types";
 import { smsService, smsServiceFactory } from "@kaa/services";
 import { logger } from "@kaa/utils";
 import { Elysia, t } from "elysia";
+import type mongoose from "mongoose";
 import {
   analyticsQuerySchema,
   bulkSmsSchema,
@@ -34,6 +35,7 @@ export const smsController = new Elysia({ prefix: "/sms" })
 
         const result = await smsService.sendSms({
           ...body,
+          type: body.type as SmsType,
           scheduledAt: body.scheduledAt
             ? new Date(body.scheduledAt)
             : undefined,
@@ -101,6 +103,7 @@ export const smsController = new Elysia({ prefix: "/sms" })
 
         const result = await smsService.sendSmsWithTemplate({
           ...body,
+          type: body.type as SmsType,
           scheduledAt: body.scheduledAt
             ? new Date(body.scheduledAt)
             : undefined,
@@ -165,6 +168,7 @@ export const smsController = new Elysia({ prefix: "/sms" })
 
         const result = await smsServiceFactory.sendBulkSms({
           ...body,
+          type: body.type as SmsType,
           context,
         });
 
@@ -480,7 +484,9 @@ export const smsController = new Elysia({ prefix: "/sms" })
         await message.save();
 
         // Queue the message for processing
-        await smsService.processSmsMessage(message._id.toString());
+        await smsService.processSmsMessage(
+          (message._id as mongoose.Types.ObjectId).toString()
+        );
 
         return {
           status: "success",

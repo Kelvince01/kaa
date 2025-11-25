@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import config from "@kaa/config/api";
 import { MFASecret, User } from "@kaa/models";
-import { MFAType } from "@kaa/models/types";
+import { MFAType, SmsType } from "@kaa/models/types";
 import { smsService } from "@kaa/services";
 import { redisClient } from "@kaa/utils";
 import Elysia, { t } from "elysia";
@@ -816,7 +816,8 @@ export const accountRecoveryController = new Elysia({
           await smsService.sendSms({
             to: [{ phoneNumber }],
             message,
-            type: "notification",
+            type: SmsType.NOTIFICATION,
+          
           });
 
           await redisClient.setEx(`recovery_code:${phoneNumber}`, 3600, code);

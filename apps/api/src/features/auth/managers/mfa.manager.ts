@@ -5,6 +5,7 @@ import {
   type IMFASecret,
   MFAStatus,
   MFAType,
+  SmsType,
 } from "@kaa/models/types";
 import { smsService } from "@kaa/services";
 import { redisClient } from "@kaa/utils";
@@ -139,9 +140,13 @@ class MFAManager {
 
     const message = `Your Kaa Rental Platform verification code is: ${code}. Valid for 5 minutes.`;
     const sent = await smsService.sendSms({
-      to: phoneNumber,
+      to: [
+        {
+          phoneNumber,
+        },
+      ],
       message,
-      type: "notification",
+      type: SmsType.NOTIFICATION,
     });
 
     if (!sent.success) {
@@ -228,9 +233,9 @@ class MFAManager {
 
       const message = `Your Kaa Rental Platform login code is: ${code}. Valid for 5 minutes.`;
       const sent = await smsService.sendSms({
-        to: mfaSetup.phoneNumber,
+        to: [{ phoneNumber: mfaSetup.phoneNumber }],
         message,
-        type: "notification",
+        type: SmsType.NOTIFICATION,
       });
 
       if (sent.success) {
