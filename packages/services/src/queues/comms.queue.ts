@@ -1,8 +1,10 @@
 // import { communicationsService } from "@kaa/communications";
-import type { ProcessWebhookJob } from "@kaa/models/types";
+// import type { ProcessWebhookJob } from "@kaa/models/types";
 // import type { CommJob } from "@kaa/models/types";
 import { createQueue, logger, redisOptions } from "@kaa/utils";
 import { Worker } from "bullmq";
+
+type ProcessWebhookJob = { type: string };
 
 // Create queue
 export const communicationsQueue = createQueue("communications");
